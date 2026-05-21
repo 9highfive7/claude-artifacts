@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google I/O 2026 リサーチレポート</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f1f3f5;
+  --bg-header: #1a73e8;
+  --text: #202124;
+  --text-secondary: #5f6368;
+  --border: #dadce0;
+  --accent: #1a73e8;
+  --accent-light: #e8f0fe;
+  --tab-active: #1a73e8;
+  --tab-text: #5f6368;
+  --callout-info-bg: #e8f0fe;
+  --callout-info-border: #1a73e8;
+  --callout-warn-bg: #fef7e0;
+  --callout-warn-border: #f9ab00;
+  --callout-alert-bg: #fce8e6;
+  --callout-alert-border: #d93025;
+  --code-bg: #f1f3f5;
+  --code-text: #202124;
+  --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+  --badge-unconfirmed: #f9ab00;
+  --svg-bg: #f8f9fa;
+  --svg-line: #5f6368;
+  --svg-node: #1a73e8;
+  --svg-node-text: #ffffff;
+  --sidebar-active: #1a73e8;
+  --sidebar-active-bg: #e8f0fe;
+  --tag-bg: #e8f0fe;
+  --tag-text: #1a73e8;
+}
+[data-theme="dark"] {
+  --bg: #1e1e1e;
+  --bg-card: #2d2d2d;
+  --bg-sidebar: #252525;
+  --bg-header: #1565c0;
+  --text: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --border: #3c4043;
+  --accent: #8ab4f8;
+  --accent-light: #1e3a5f;
+  --tab-active: #8ab4f8;
+  --tab-text: #9aa0a6;
+  --callout-info-bg: #1e3a5f;
+  --callout-info-border: #8ab4f8;
+  --callout-warn-bg: #3e3000;
+  --callout-warn-border: #f9ab00;
+  --callout-alert-bg: #3e1210;
+  --callout-alert-border: #f28b82;
+  --code-bg: #1e1e1e;
+  --code-text: #e8eaed;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+  --svg-bg: #2d2d2d;
+  --svg-line: #9aa0a6;
+  --svg-node: #8ab4f8;
+  --svg-node-text: #1e1e1e;
+  --sidebar-active: #8ab4f8;
+  --sidebar-active-bg: #1e3a5f;
+  --tag-bg: #1e3a5f;
+  --tag-text: #8ab4f8;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  transition: background 0.3s, color 0.3s;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Header */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--bg-header);
+  color: #fff;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.header h1 { font-size: 18px; font-weight: 600; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.theme-toggle {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.3); }
+.report-date { font-size: 13px; opacity: 0.85; }
+
+/* Layout */
+.layout {
+  display: flex;
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  bottom: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 0;
+  transition: transform 0.3s ease, background 0.3s;
+  z-index: 90;
+}
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  padding: 0 20px 8px;
+}
+.sidebar a {
+  display: block;
+  padding: 7px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+.sidebar a:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+  text-decoration: none;
+}
+.sidebar a.active {
+  color: var(--sidebar-active);
+  border-left-color: var(--sidebar-active);
+  background: var(--sidebar-active-bg);
+  font-weight: 600;
+}
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 85;
+}
+
+/* Main Content */
+.main {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px 40px;
+  max-width: 960px;
+}
+.section { margin-bottom: 48px; }
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
+}
+
+/* Executive Summary */
+.exec-summary {
+  background: var(--accent-light);
+  border-left: 4px solid var(--accent);
+  padding: 20px 24px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 32px;
+  font-size: 15px;
+}
+.exec-summary p { margin-bottom: 8px; }
+.exec-summary p:last-child { margin-bottom: 0; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+.tab-btn {
+  padding: 10px 18px;
+  border: none;
+  background: none;
+  color: var(--tab-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--accent); }
+.tab-btn.active {
+  color: var(--tab-active);
+  border-bottom-color: var(--tab-active);
+  font-weight: 700;
+}
+
+/* Cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s, transform 0.2s, background 0.3s;
+}
+.card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.card-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  white-space: nowrap;
+}
+.card-body h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 14px 0 6px;
+}
+.card-body h4:first-child { margin-top: 0; }
+.card-body p, .card-body ul { font-size: 14px; color: var(--text); }
+.card-body ul { padding-left: 20px; }
+.card-body li { margin-bottom: 4px; }
+.card-source {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.card-source a { font-size: 12px; }
+.badge-unconfirmed {
+  display: inline-block;
+  background: var(--badge-unconfirmed);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+.availability {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #e6f4ea;
+  color: #137333;
+  font-weight: 600;
+}
+[data-theme="dark"] .availability {
+  background: #1b3626;
+  color: #81c995;
+}
+
+/* Callouts */
+.callout {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  font-size: 14px;
+  border-left: 4px solid;
+}
+.callout-info {
+  background: var(--callout-info-bg);
+  border-color: var(--callout-info-border);
+}
+.callout-warn {
+  background: var(--callout-warn-bg);
+  border-color: var(--callout-warn-border);
+}
+.callout-alert {
+  background: var(--callout-alert-bg);
+  border-color: var(--callout-alert-border);
+}
+.callout-label {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+/* Code Snippet */
+.code-wrapper {
+  position: relative;
+  margin: 16px 0;
+}
+.code-wrapper pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--code-text);
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.copy-btn:hover { opacity: 1; }
+.kw { color: #8b5cf6; font-weight: 600; }
+.str { color: #059669; }
+.cm { color: #9aa0a6; }
+.fn { color: #d97706; }
+.num { color: #dc2626; }
+[data-theme="dark"] .kw { color: #c4b5fd; }
+[data-theme="dark"] .str { color: #6ee7b7; }
+[data-theme="dark"] .fn { color: #fbbf24; }
+[data-theme="dark"] .num { color: #fca5a5; }
+
+/* SVG Diagram */
+.diagram-container {
+  background: var(--svg-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  overflow-x: auto;
+}
+.diagram-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+/* Impact Sections */
+.impact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.impact-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.impact-card h3 {
+  font-size: 18px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
+}
+.impact-card ul { padding-left: 20px; font-size: 14px; }
+.impact-card li { margin-bottom: 8px; }
+
+/* Footer */
+.footer {
+  margin-top: 48px;
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hamburger { display: block; }
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay.open { display: block; }
+  .main {
+    margin-left: 0;
+    padding: 20px 16px;
+  }
+  .header h1 { font-size: 15px; }
+  .report-date { display: none; }
+  .tabs { gap: 2px; }
+  .tab-btn { padding: 8px 12px; font-size: 12px; }
+  .impact-grid { grid-template-columns: 1fr; }
+  .card { padding: 18px; }
+}
+@media (min-width: 1200px) {
+  .cards-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="メニュー">&#9776;</button>
+    <h1>Google I/O 2026 リサーチレポート</h1>
+  </div>
+  <div class="header-right">
+    <span class="report-date">開催日: 2026年5月19-20日</span>
+    <button class="theme-toggle" onclick="toggleTheme()">&#9790; ダーク</button>
+  </div>
+</header>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-title">目次</div>
+  <a href="#summary">エグゼクティブサマリー</a>
+  <a href="#ai-models">AI モデル</a>
+  <a href="#ai-agents">AI エージェント</a>
+  <a href="#search">Google 検索</a>
+  <a href="#shopping">ショッピング</a>
+  <a href="#dev-tools">開発者ツール</a>
+  <a href="#workspace">Workspace &amp; 生産性</a>
+  <a href="#creative">クリエイティブツール</a>
+  <a href="#hardware">ハードウェア</a>
+  <a href="#safety">安全性 &amp; 検証</a>
+  <a href="#science">サイエンス</a>
+  <a href="#subscriptions">サブスクリプション</a>
+  <a href="#diagram">エコシステム関係図</a>
+  <a href="#impact-dev">開発者への影響</a>
+  <a href="#impact-user">個人ユーザーへの影響</a>
+</nav>
+
+<!-- Main -->
+<div class="layout">
+<main class="main">
+
+<!-- Executive Summary -->
+<section id="summary" class="section">
+  <h2 class="section-title">エグゼクティブサマリー</h2>
+  <div class="exec-summary">
+    <p><strong>Google I/O 2026</strong>（2026年5月19-20日開催）の全体テーマは「AIエージェント時代の本格到来」。Gemini 3.5 Flash / Pro の新モデル発表を軸に、24時間稼働のパーソナルエージェント <strong>Gemini Spark</strong>、エージェント開発基盤 <strong>Antigravity 2.0</strong>、25年以上ぶりの検索ボックス刷新、Google横断のユニバーサルカートなど、100以上の発表が行われた。</p>
+    <p>AI Modeは月間10億ユーザーを突破し、Personal Intelligenceは200カ国・98言語に拡大。開発者向けには Managed Agents API、Migration Agent（他フレームワーク→Kotlin自動変換）、WebMCP など、エージェント前提の新ツールが多数発表された。</p>
+    <p>サブスクリプション体系もコンピュートベース課金へ移行し、新たに <strong>Google AI Ultra（$100/月）</strong>が追加。ハードウェアでは Samsung/Gentle Monster/Warby Parker との共同開発による Android XR スマートグラスが2026年秋に登場予定。</p>
+  </div>
+</section>
+
+<!-- Category Tabs + Cards -->
+<section id="announcements" class="section">
+  <h2 class="section-title">主要発表一覧</h2>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="all">すべて</button>
+    <button class="tab-btn" data-tab="ai-models">AI モデル</button>
+    <button class="tab-btn" data-tab="ai-agents">AI エージェント</button>
+    <button class="tab-btn" data-tab="search">検索</button>
+    <button class="tab-btn" data-tab="shopping">ショッピング</button>
+    <button class="tab-btn" data-tab="dev-tools">開発者ツール</button>
+    <button class="tab-btn" data-tab="workspace">Workspace</button>
+    <button class="tab-btn" data-tab="creative">クリエイティブ</button>
+    <button class="tab-btn" data-tab="hardware">ハードウェア</button>
+    <button class="tab-btn" data-tab="safety">安全性</button>
+    <button class="tab-btn" data-tab="science">サイエンス</button>
+    <button class="tab-btn" data-tab="subscriptions">料金</button>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- ===== AI MODELS ===== -->
+    <div id="ai-models" class="card" data-category="ai-models">
+      <div class="card-header">
+        <span class="card-title">Gemini 3.5 Flash</span>
+        <span class="card-tag">AI モデル</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>フロンティアレベルの知能とエージェントタスク実行能力を兼ね備えた次世代モデル。Gemini 3.1 Pro をコーディング・エージェント・マルチモーダルの全ベンチマークで上回る。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Terminal-Bench 2.1 で 76.2% を達成</li>
+          <li>他のフロンティアモデルの<strong>4倍</strong>の出力トークン速度</li>
+          <li>長期間のエージェントタスクを高速処理</li>
+          <li>リッチなインタラクティブ Web UI・グラフィックス生成</li>
+          <li>コストは競合フロンティアモデルの半額以下</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>開発者、アプリケーションビルダー、企業のAI導入担当者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>前世代の Gemini 2.5 Flash と比較して、エージェント能力が大幅に強化。コーディングベンチマークで Gemini 3.1 Pro を凌駕しつつ、Flash シリーズの低コスト・高速性を維持。</p>
+        <p><span class="availability">即日利用可能</span> — Gemini アプリ、Search、Gemini API、Google AI Studio、Android Studio</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="ai-models">
+      <div class="card-header">
+        <span class="card-title">Gemini 3.5 Pro</span>
+        <span class="card-tag">AI モデル</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Gemini 3.5 シリーズの上位モデル。現在は内部テスト中で、来月一般公開予定。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>3.5 Flash を上回る推論・生成能力（詳細は未公開）</li>
+          <li>より複雑なマルチステップタスクへの対応</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>高度な推論が必要なエンタープライズユースケース、研究者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Gemini 3.1 Pro の後継。Flash より高品質な出力を重視したモデル。<span class="badge-unconfirmed">※未確認</span>（詳細ベンチマーク未公開）</p>
+        <p><span class="availability">来月公開予定</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://9to5google.com/2026/05/19/google-io-2026-news/" target="_blank">9to5Google</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="ai-models">
+      <div class="card-header">
+        <span class="card-title">Gemini Omni</span>
+        <span class="card-tag">AI モデル</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Gemini の推論能力とクリエイティブ生成を融合した新シリーズ。画像・音声・動画・テキストを入力し、現実世界の知識に基づいた動画を出力する。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>物理法則の理解（重力、運動エネルギー、流体力学）を反映した動画生成</li>
+          <li>シーン間でのキャラクター一貫性を維持</li>
+          <li>SynthID 透かしを自動付与</li>
+          <li>実写素材と生成コンテンツのブレンド</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>コンテンツクリエイター、映像制作者、デザイナー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の Imagen や Veo とは異なり、Gemini の推論エンジンと統合されたマルチモーダル生成モデル。テキストだけでなく画像・動画・音声からの入力にも対応。</p>
+        <p><span class="availability">Omni Flash: 即日利用可能</span> — Google AI Plus/Pro/Ultra サブスクライバー向け（Gemini アプリ、Google Flow）</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== AI AGENTS ===== -->
+    <div id="ai-agents" class="card" data-category="ai-agents">
+      <div class="card-header">
+        <span class="card-title">Gemini Spark</span>
+        <span class="card-tag">AI エージェント</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>24時間365日稼働するパーソナルAIエージェント。Gemini 3.5 と Antigravity プラットフォーム上で動作し、デバイスを閉じた後もバックグラウンドでタスクを処理する。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Gmail、Docs、Google Workspace 全体を横断してタスク自動実行</li>
+          <li>重要アクション前にユーザーへ確認を求める安全設計</li>
+          <li>ロードマップ: テキスト/メールでの指示、カスタムサブエージェント、予算管理付き支払い承認</li>
+          <li>MCPを通じたサードパーティツール連携（夏に拡張予定）</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>多忙なビジネスパーソン、日常タスクの自動化を求める全ユーザー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の Gemini が「質問に答えるアシスタント」だったのに対し、Spark は「ユーザーの代わりに行動する能動的パートナー」として位置づけ。</p>
+        <p><span class="availability">来週ベータ開始</span> — Google AI Ultra サブスクライバー（米国）</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://techcrunch.com/2026/05/19/google-introduces-gemini-spark-a-24-7-agentic-assistant-with-gmail-integration/" target="_blank">TechCrunch</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="ai-agents">
+      <div class="card-header">
+        <span class="card-title">Google Antigravity 2.0</span>
+        <span class="card-tag">AI エージェント</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>エージェントファーストの開発プラットフォーム。スタンドアロンのデスクトップアプリケーションとして提供され、複数のAIエージェントを並列に指揮できる。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>マルチエージェントオーケストレーション（1つがコード、別が素材生成など）</li>
+          <li>動的サブエージェント、Hooks、非同期タスク管理</li>
+          <li>ネイティブ音声サポート（Gemini オーディオモデル対応）</li>
+          <li>Android / Firebase / Google AI Studio 統合</li>
+          <li>スケジュールタスクによるバックグラウンド自動化</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>ソフトウェア開発者、テックリード、エージェントアプリケーション構築者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来のコード補完ツール（GitHub Copilot など）とは異なり、複数エージェントを並列に動かすオーケストレーション基盤。「数日のエンジニアリング作業が数時間に短縮」とアピール。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-developer-highlights/" target="_blank">Google Developers Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="ai-agents">
+      <div class="card-header">
+        <span class="card-title">Managed Agents (Gemini API)</span>
+        <span class="card-tag">AI エージェント</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>単一のAPI呼び出しでリモートLinux環境を自動構築し、エージェントが推論・計画・コード実行・Web閲覧を行えるサンドボックスを提供。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Antigravity ハーネスによる推論・計画・ツール呼び出し</li>
+          <li>隔離されたサンドボックスでのコード実行・ファイル管理</li>
+          <li>Web ブラウジングによるリアルタイムデータ取得</li>
+          <li>Markdownファイルでカスタム指示・スキル追加可能</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>APIベースでエージェントアプリを構築する開発者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の Gemini API が「テキスト入出力」中心だったのに対し、Managed Agents はインフラ構築不要でフルスタックのエージェント環境を API 一発で提供。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://developers.googleblog.com/all-the-news-from-the-google-io-2026-developer-keynote/" target="_blank">Google Developers Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="ai-agents">
+      <div class="card-header">
+        <span class="card-title">Android Halo</span>
+        <span class="card-tag">AI エージェント</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Androidスマートフォンの画面上部にバックグラウンドで動作中のエージェントの状態を表示する新UI。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Gemini Spark や互換エージェントの動作状況を一目で確認</li>
+          <li>通知バーとは別の常時表示レイヤー</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Android ユーザー全般</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の通知システムとは異なり、エージェント専用のステータス表示として設計された新コンセプト。</p>
+        <p><span class="availability">2026年後半リリース予定</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://9to5google.com/2026/05/19/android-halo/" target="_blank">9to5Google</a>
+      </div>
+    </div>
+
+    <!-- ===== SEARCH ===== -->
+    <div id="search" class="card" data-category="search">
+      <div class="card-header">
+        <span class="card-title">AI Mode アップグレード</span>
+        <span class="card-tag">検索</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Google 検索の AI Mode が Gemini 3.5 Flash をデフォルトモデルとして採用。月間10億ユーザーを突破し、クエリ数は四半期ごとに倍増中。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Gemini 3.5 Flash によるより高品質な回答生成</li>
+          <li>AI Overviews と AI Mode のシームレスな統合</li>
+          <li>検索クエリが過去最高を記録（前四半期比）</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>全 Google 検索ユーザー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の AI Overviews を拡張し、会話的な検索体験として AI Mode を本格展開。検索ボックスから直接 AI による対話が可能に。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/products-and-platforms/products/search/search-io-2026/" target="_blank">Google Search Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="search">
+      <div class="card-header">
+        <span class="card-title">インテリジェント検索ボックス</span>
+        <span class="card-tag">検索</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>25年以上ぶりとなる検索ボックスの大規模リニューアル。テキストだけでなく画像・ファイル・動画・Chrome タブを直接入力可能に。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>マルチモーダル入力（テキスト、画像、ファイル、動画、Chromeタブ）</li>
+          <li>AI による質問意図の先読み予測（従来のオートコンプリート超え）</li>
+          <li>質問→結果→フォローアップ会話のシームレスなフロー</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>全 Google 検索ユーザー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来のテキスト入力のみの検索ボックスから、マルチモーダルかつ会話型の入力インターフェースへ進化。</p>
+        <p><span class="availability">即日展開</span> — デスクトップ・モバイル全世界</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/products-and-platforms/products/search/search-io-2026/" target="_blank">Google Search Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="search">
+      <div class="card-header">
+        <span class="card-title">Information Agents</span>
+        <span class="card-tag">検索</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>ユーザーが関心のあるトピックをバックグラウンドで24時間監視し、変化があれば知的に要約して通知するAIエージェント。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>ブログ、ニュースサイト、SNS、リアルタイムデータ（金融、スポーツ等）を監視</li>
+          <li>複数のエージェントを同時稼働可能</li>
+          <li>監視情報に基づくアクション実行</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Google AI Pro / Ultra サブスクライバー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Google Alerts の大幅進化版。単なるキーワードマッチではなく、AI が文脈を理解して関連情報を合成・要約。</p>
+        <p><span class="availability">夏にローンチ予定</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/products-and-platforms/products/search/search-io-2026/" target="_blank">Google Search Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="search">
+      <div class="card-header">
+        <span class="card-title">Personal Intelligence 拡張</span>
+        <span class="card-tag">検索</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>AI Mode で個人データ（Gmail、Google Photos、今後 Google Calendar）を安全に接続し、パーソナライズされた検索体験を提供。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>200カ国近く、98言語に拡大（サブスクリプション不要）</li>
+          <li>Gmail、Google フォト接続済み。Google カレンダー近日対応</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>全 Google ユーザー（無料）</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来は限定地域のみだったが、ほぼ全世界に拡大。個人データと検索をセキュアに連携する初の大規模展開。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="search">
+      <div class="card-header">
+        <span class="card-title">Generative UI / Mini Apps</span>
+        <span class="card-tag">検索</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>検索が質問に最適化されたカスタムレイアウト・インタラクティブUIを動的に生成。さらに、継続的なプロジェクト管理用のダッシュボード（Mini Apps）も構築可能。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Antigravity による動的なテーブル、グラフ、シミュレーション生成</li>
+          <li>Mini Apps: ウェディングプランナー、引越しトラッカーなどのカスタムダッシュボード</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Generative UI: 全ユーザー（無料）/ Mini Apps: AI Pro/Ultra サブスクライバー（米国）</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の固定レイアウトの検索結果とは異なり、クエリごとに最適化されたUIを動的に構築する点が革新的。</p>
+        <p><span class="availability">夏にローンチ予定</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== SHOPPING ===== -->
+    <div id="shopping" class="card" data-category="shopping">
+      <div class="card-header">
+        <span class="card-title">Universal Cart</span>
+        <span class="card-tag">ショッピング</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Google エコシステム全体で使えるインテリジェントなショッピングカート。検索、Gemini、YouTube、Gmail で見つけた商品をひとつのカートに追加可能。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>バックグラウンドでのセール・値下げ検出</li>
+          <li>価格履歴と在庫アラート</li>
+          <li>製品の互換性チェック（非互換を警告し代替品を提案）</li>
+          <li>Google Wallet 連携（ポイント・ロイヤルティ情報の活用）</li>
+          <li>Universal Commerce Protocol による Google Pay またはリテイラー直接決済</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>オンラインショッピングユーザー全般</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Google Shopping の進化版。複数 Google サービスを横断するカート統合と、AI による能動的な価格監視・互換性チェックが新機能。</p>
+        <p><span class="availability">今夏ローンチ</span> — Search / Gemini アプリ先行（米国）、YouTube / Gmail は後続</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== DEVELOPER TOOLS ===== -->
+    <div id="dev-tools" class="card" data-category="dev-tools">
+      <div class="card-header">
+        <span class="card-title">Google AI Studio 強化</span>
+        <span class="card-tag">開発者ツール</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>AI Studio がネイティブ Android アプリのビルド、Google Workspace 統合、Cloud Run へのワンクリックデプロイに対応。ローカル環境構築が不要に。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>「Build an Android app」を選んでプロンプトするだけでネイティブアプリ構築</li>
+          <li>Kotlin ネイティブサポート</li>
+          <li>Google Workspace 直接アクセス（Sheets ダッシュボード構築、Drive 整理など）</li>
+          <li>Google Play Console 統合で直接アプリ公開</li>
+          <li>最初の2アプリは Google Cloud に無料デプロイ</li>
+          <li>会話履歴ごと Antigravity にエクスポート可能</li>
+          <li>Nano Banana によるカスタム画像生成</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>モバイル開発者、プロトタイピングを高速化したい全開発者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来はモデル試験ツールだった AI Studio が、フルスタックのアプリ開発・デプロイプラットフォームへ進化。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-developer-highlights/" target="_blank">Google Developers Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="dev-tools">
+      <div class="card-header">
+        <span class="card-title">Antigravity CLI / SDK</span>
+        <span class="card-tag">開発者ツール</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Antigravity のコマンドラインインターフェースとプログラマティックSDK。ターミナルから高速にエージェントを作成・操作、または自社インフラでホスト可能。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>CLI: GUIなしでターミナルから高速エージェント開発</li>
+          <li>SDK: Google 製品と同じエージェントハーネスへのプログラムアクセス</li>
+          <li>Gemini モデルに最適化されたカスタムエージェント動作</li>
+          <li>Google Cloud 認証でログイン</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>ターミナル派の開発者、自社インフラでエージェントを運用したい企業</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Antigravity デスクトップアプリの CLI/SDK 版。同等のエージェントオーケストレーション機能をプログラマティックに利用可能。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-developer-highlights/" target="_blank">Google Developers Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="dev-tools">
+      <div class="card-header">
+        <span class="card-title">Android CLI / Android Skills / Migration Agent</span>
+        <span class="card-tag">開発者ツール</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Android 開発向けの3つの新ツール群。Android CLI が安定版リリース、LLM向けリソース Android Skills がオープンソース化、React Native/iOS からの自動変換ツール Migration Agent がプレビュー公開。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li><strong>Android CLI</strong>: SDK管理、セマンティックコード分析、Jetpack Compose レンダリング、UIテスト</li>
+          <li><strong>Android Skills</strong>: Jetpack Compose・Navigation 3 マイグレーションなどのベストプラクティスをLLMに提供</li>
+          <li><strong>Migration Agent</strong>: React Native / Web フレームワーク / iOS コードを Kotlin ネイティブに自動変換（数週間→数時間に短縮）</li>
+          <li><strong>Android Bench</strong>: Android開発タスクのLLMリーダーボード（Gemma 4 を含む）</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Android 開発者、クロスプラットフォーム移行を検討する開発チーム</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Migration Agent は業界初のAIベースのクロスプラットフォーム自動変換ツール。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://developers.googleblog.com/all-the-news-from-the-google-io-2026-developer-keynote/" target="_blank">Google Developers Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="dev-tools">
+      <div class="card-header">
+        <span class="card-title">WebMCP / Chrome DevTools for Agents</span>
+        <span class="card-tag">開発者ツール</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>WebMCP はブラウザベースのエージェントに構造化ツールを公開するオープン標準の提案。Chrome DevTools for Agents はエージェント向けの品質監査・UXエミュレーション機能。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li><strong>WebMCP</strong>: Chrome 149 でオリジントライアル開始</li>
+          <li><strong>Chrome DevTools for Agents</strong>: 自動品質監査、UXエミュレーション、セッションハンドオフ</li>
+          <li><strong>HTML-in-Canvas API</strong>: DOM要素を Canvas（WebGL/WebGPU）に統合するオリジントライアル</li>
+          <li><strong>Modern Web Guidance</strong>: 100以上のユースケースをカバーするエキスパート検証済みエージェントスキル</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Web 開発者、ブラウザエージェント構築者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>WebMCP はエージェントとWebサイト間の標準的なインタラクションプロトコルを定義する初の試み。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://developers.googleblog.com/all-the-news-from-the-google-io-2026-developer-keynote/" target="_blank">Google Developers Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="dev-tools">
+      <div class="card-header">
+        <span class="card-title">Firebase AI Logic</span>
+        <span class="card-tag">開発者ツール</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Firebase が「エージェントネイティブ」プラットフォームへ進化。Gemini モデルを活用し、URL・Maps・Web検索によるグラウンディング付きの知的アシスタントを構築可能。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Gemini モデルとのネイティブ統合</li>
+          <li>URL、Google Maps、Web検索によるグラウンディング</li>
+          <li>AI Studio との深い連携</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Firebase を使用するモバイル・Webアプリ開発者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の Firebase がバックエンドサービス中心だったのに対し、AI/エージェント機能をファーストクラスでサポート。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://cloud.google.com/blog/products/ai-machine-learning/innovations-from-google-io-26-on-google-cloud" target="_blank">Google Cloud Blog</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="dev-tools">
+      <div class="card-header">
+        <span class="card-title">Build with Gemini XPRIZE</span>
+        <span class="card-tag">開発者ツール</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Gemini を使って世界の課題に取り組む実用アプリケーションを開発するハッカソン。賞金総額200万ドル（史上最大のハッカソン賞金）。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>賞金総額 $2,000,000</li>
+          <li>Gemini API / AI Studio を活用した実用アプリ開発</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>世界中の開発者、起業家、研究者</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の Google ハッカソンを大幅にスケールアップ。XPRIZE との共催で社会課題解決にフォーカス。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== WORKSPACE ===== -->
+    <div id="workspace" class="card" data-category="workspace">
+      <div class="card-header">
+        <span class="card-title">Daily Brief</span>
+        <span class="card-tag">Workspace</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Gmail、Calendar、Tasks を夜間に分析し、翌日の優先事項とアクションを整理して朝に提示するパーソナライズされたダイジェスト。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>夜間にメール・カレンダー・タスクを自動分析</li>
+          <li>優先順位付けと次のアクション提案</li>
+          <li>使い込むほどパーソナライズが進化</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Google AI Plus / Pro / Ultra サブスクライバー（18歳以上）</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Google カレンダーの1日の予定表示は従来からあったが、メール・タスクを横断して AI が優先順位付け・アクション提案する機能は新規。</p>
+        <p><span class="availability">即日ローンチ</span> — Gemini アプリ（米国から展開）</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="workspace">
+      <div class="card-header">
+        <span class="card-title">AI Inbox / Gmail Live</span>
+        <span class="card-tag">Workspace</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>AIが重要なメールをインテリジェントに表面化し、返信ドラフトを自動生成する新しい受信トレイ体験。夏には Gmail Live として会話型のメール検索も追加。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>重要メールの自動表面化・優先順位付け</li>
+          <li>コンテキストに基づくパーソナライズされた返信ドラフト生成</li>
+          <li>レビュー必要時の関連ドキュメントリンク表示</li>
+          <li>Gmail Live: 受信トレイに対する会話型クエリ（夏に追加）</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Google AI Plus / Pro サブスクライバー（米国）</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Gmail の既存「スマート返信」の大幅進化版。単なる短文候補ではなく、コンテキストを理解した長文ドラフトを生成。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="workspace">
+      <div class="card-header">
+        <span class="card-title">Docs Live / Talk to Keep</span>
+        <span class="card-tag">Workspace</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Docs Live は音声でドキュメントを作成・編集できる機能。Talk to Keep は音声の思考をAIが整理してノート化する機能。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li><strong>Docs Live</strong>: 音声で文書構造化、Gmail/Drive/Chat/Web からの関連情報自動取得</li>
+          <li><strong>Talk to Keep</strong>: 散漫な音声入力を整理されたノート・リストに変換</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Google AI Pro / Ultra サブスクライバー、Workspace ビジネスプレビュー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の音声入力（ディクテーション）とは異なり、AI が内容を理解して構造化・補足情報の取得まで行う。</p>
+        <p><span class="availability">今夏ローンチ予定</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="workspace">
+      <div class="card-header">
+        <span class="card-title">Google Pics</span>
+        <span class="card-tag">Workspace</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Nano Banana モデルベースの新しいAI画像生成・編集ツール。パーティーフライヤーからインフォグラフィックまで、あらゆるビジュアルを作成。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>白紙からの画像生成、既存写真の編集</li>
+          <li>オブジェクトセグメンテーションによる精密な要素選択</li>
+          <li>テキスト編集・翻訳</li>
+          <li>Workspace 統合</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>Google AI Pro / Ultra サブスクライバー、Workspace ビジネスプレビュー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Google の既存画像ツール（Imagen）の消費者向け製品化。編集機能とWorkspace統合が差別化ポイント。</p>
+        <p><span class="availability">限定テスター向け → 今夏グローバル展開</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== CREATIVE ===== -->
+    <div id="creative" class="card" data-category="creative">
+      <div class="card-header">
+        <span class="card-title">Google Flow 拡張</span>
+        <span class="card-tag">クリエイティブ</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Google のクリエイティブプラットフォーム Flow が140カ国以上に拡大。新たに Flow Agent、Flow Tools、Flow Music を追加。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li><strong>Flow Agent</strong>: ブレスト→作成→編集→バッチ処理のマルチステップタスク実行</li>
+          <li><strong>Flow Tools</strong>: 自然言語でカスタムツール作成（動画エフェクト、アニメーション等）。コミュニティで共有・リミックス可能</li>
+          <li><strong>Flow Music</strong>: Gemini Omni と会話しながらミュージックビデオを演出。楽曲の部分編集も可能</li>
+          <li><strong>Stitch</strong>: テキスト/音声入力でリアルタイムデザイン。既存コードベースやデザインファイルのインポート対応</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>映像クリエイター、デザイナー、ミュージシャン</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の Flow が動画生成中心だったのに対し、エージェント・カスタムツール・音楽制作を統合したフルクリエイティブスイートへ拡張。</p>
+        <p><span class="availability">Flow Agent: 即日グローバル公開</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <div class="card" data-category="creative">
+      <div class="card-header">
+        <span class="card-title">Ask YouTube</span>
+        <span class="card-tag">クリエイティブ</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>YouTube 内の会話型検索体験。複雑なマルチパートの検索クエリをAIが理解し、YouTube カタログ全体（Shorts含む）から関連動画をコンパイル。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>自然言語によるマルチパート検索</li>
+          <li>フォローアップ質問対応</li>
+          <li>Shorts を含むカタログ横断検索</li>
+          <li>インタラクティブで構造化された応答</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>YouTube Premium サブスクライバー（米国、英語、デスクトップ）</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来のキーワードベースの YouTube 検索を、AI による会話型検索に進化。</p>
+        <p><span class="availability">5月より実験的に公開</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== HARDWARE ===== -->
+    <div id="hardware" class="card" data-category="hardware">
+      <div class="card-header">
+        <span class="card-title">Android XR インテリジェントアイウェア</span>
+        <span class="card-tag">ハードウェア</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>Google 初のスマートグラス。音声アシスタンス型の Audio glasses と、情報表示型の Display glasses の2種類を開発中。Samsung / Qualcomm がハードウェア、Gentle Monster / Warby Parker がデザインを担当。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Gemini への音声指示で見ているものの情報取得</li>
+          <li>写真撮影、音声翻訳</li>
+          <li>Android / iOS 両対応</li>
+          <li>Audio glasses が先行リリース（2026年秋）</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>テクノロジーアーリーアダプター、日常的にAIアシスタントを活用したいユーザー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>Google Glass（2013年）の精神的後継だが、Gemini AI とのネイティブ統合、ファッションブランドとのコラボ、iOS 対応など全面的に刷新。</p>
+        <p><span class="availability">2026年秋リリース予定</span></p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://9to5google.com/2026/05/19/google-io-2026-news/" target="_blank">9to5Google</a> |
+        <a href="https://www.tomsguide.com/news/live/google-io-2026-live-news-updates" target="_blank">Tom's Guide</a>
+      </div>
+    </div>
+
+    <!-- ===== SAFETY ===== -->
+    <div id="safety" class="card" data-category="safety">
+      <div class="card-header">
+        <span class="card-title">SynthID 拡張 / C2PA Content Credentials</span>
+        <span class="card-tag">安全性</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>AI生成コンテンツの検証技術 SynthID が全世界で5000万回利用を達成。画像・動画・音声の検証を Gemini アプリ、Search、Chrome に拡大。C2PA Content Credentials による改変検出も追加。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li>Gemini アプリ内での画像・動画・音声の AI 生成検証</li>
+          <li>Search（Lens、AI Mode、Circle to Search）での「これはAI生成？」検出</li>
+          <li>Chrome への展開（数週間以内）</li>
+          <li>C2PA Content Credentials: コンテンツが未改変のカメラ原本か修正済みかを検証</li>
+          <li>OpenAI、Kakao、ElevenLabs も SynthID を採用</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>メディア関係者、事実確認者、全インターネットユーザー</p>
+        <h4>既存サービスとの違い</h4>
+        <p>従来はテキスト透かしが中心だったが、画像・動画・音声にも拡大。他社AIプラットフォームとの相互運用が大きな進展。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== SCIENCE ===== -->
+    <div id="science" class="card" data-category="science">
+      <div class="card-header">
+        <span class="card-title">Gemini for Science / Science Skills Bundle</span>
+        <span class="card-tag">サイエンス</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>科学研究ワークフローを効率化するツール群。マルチエージェントによる仮説生成、並列コード変異による計算科学的発見、科学文献の構造化検索を提供。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li><strong>Hypothesis Generation</strong>: マルチエージェント「アイデアトーナメント」で仮説を生成・討論・検証</li>
+          <li><strong>Computational Discovery</strong>: 太陽予測や疫学分野で数千のコード変異を並列生成</li>
+          <li><strong>Literature Insights</strong>: 科学文献を検索し、検索可能なテーブルに構造化</li>
+          <li><strong>Science Skills Bundle</strong>: UniProt、AlphaFold DB、AlphaGenome API、InterPro など30以上のライフサイエンスDB統合</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <p>研究者、科学者、バイオインフォマティクス専門家</p>
+        <h4>既存サービスとの違い</h4>
+        <p>AlphaFold が構造予測特化だったのに対し、研究ワークフロー全体（仮説→実験→文献レビュー）をAIで支援する包括的プラットフォーム。</p>
+        <p><span class="availability">5月19日から利用可能</span> — <a href="https://labs.google/science" target="_blank">labs.google/science</a> および GitHub</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a>
+      </div>
+    </div>
+
+    <!-- ===== SUBSCRIPTIONS ===== -->
+    <div id="subscriptions" class="card" data-category="subscriptions">
+      <div class="card-header">
+        <span class="card-title">サブスクリプション体系の刷新</span>
+        <span class="card-tag">料金</span>
+      </div>
+      <div class="card-body">
+        <h4>概要</h4>
+        <p>従来の日次プロンプト制限から、プロンプトの複雑さ・機能使用量・会話長を考慮した「コンピュートベース」の課金モデルへ移行。新たに Google AI Ultra（$100/月）が追加。</p>
+        <h4>主な機能</h4>
+        <ul>
+          <li><strong>Google AI Ultra（$100/月）</strong>: Pro の5倍の利用上限、20TB クラウドストレージ、開発サイクル加速機能</li>
+          <li><strong>旧 $250 Ultra</strong>: $200 に値下げ、機能は同等</li>
+          <li><strong>Google AI Pro</strong>: YouTube Premium Lite（$8.99相当）が追加特典として付帯</li>
+          <li>利用制限は5時間ごとにリフレッシュ（週次上限あり）</li>
+        </ul>
+        <h4>ターゲットユーザー</h4>
+        <ul>
+          <li>Ultra: 開発者、テックリード、ナレッジワーカー、先端クリエイター</li>
+          <li>Pro: 一般ユーザー、YouTube ヘビーユーザー</li>
+        </ul>
+        <h4>既存サービスとの違い</h4>
+        <p>従来の Google One AI Premium が Google AI サブスクリプションとしてリブランド。コンピュートベース課金は、軽い質問では制限を消費せず、重い処理では多く消費する公平なモデル。</p>
+      </div>
+      <div class="card-source">
+        出典: <a href="https://blog.google/products-and-platforms/products/google-one/google-ai-subscriptions/" target="_blank">Google AI サブスクリプション</a> |
+        <a href="https://9to5google.com/2026/05/19/google-io-2026-news/" target="_blank">9to5Google</a>
+      </div>
+    </div>
+
+  </div><!-- cards-grid -->
+</section>
+
+<!-- Callouts -->
+<div class="callout callout-info">
+  <div class="callout-label">&#9432; 情報</div>
+  AI Mode は月間10億ユーザーを突破し、検索クエリ数は四半期ごとに倍増中。Google は「検索が置き換えられる」という懸念に対し、「AIにより検索は過去最高のクエリ数を記録」と反論している。
+</div>
+
+<div class="callout callout-warn">
+  <div class="callout-label">&#9888; 注意</div>
+  多くの新機能は Google AI サブスクリプション（Plus $10/月〜 Ultra $100/月）が必要。コンピュートベース課金への移行により、ヘビーユーザーは利用コストが変動する可能性がある。
+</div>
+
+<div class="callout callout-alert">
+  <div class="callout-label">&#9888; 警告</div>
+  Gemini Spark は重要アクション前にユーザー確認を求める設計だが、24時間自律動作するエージェントのセキュリティ・プライバシーへの影響は慎重な評価が必要。現時点では信頼されたテスターへの限定公開。
+</div>
+
+<!-- Code Snippet -->
+<section class="section">
+  <h2 class="section-title">コードサンプル: Managed Agents API</h2>
+  <p>Managed Agents を使って単一のAPI呼び出しでエージェント環境を構築する例（Python）:</p>
+  <div class="code-wrapper">
+    <button class="copy-btn" onclick="copyCode(this)">コピー</button>
+    <pre><code><span class="kw">import</span> google.generativeai <span class="kw">as</span> genai
+
+<span class="cm"># Managed Agent の作成</span>
+client = genai.Client(api_key=<span class="str">"YOUR_API_KEY"</span>)
+
+agent = client.agents.create(
+    model=<span class="str">"gemini-3.5-flash"</span>,
+    instructions=<span class="str">"""
+    You are a code review agent.
+    Analyze the given repository and provide
+    a detailed security audit report.
+    """</span>,
+    tools=[<span class="str">"code_execution"</span>, <span class="str">"web_browse"</span>],
+    sandbox=<span class="kw">True</span>
+)
+
+<span class="cm"># エージェントにタスクを送信</span>
+result = agent.run(
+    prompt=<span class="str">"Review the authentication module for vulnerabilities"</span>,
+    files=[<span class="str">"./src/auth/"</span>]
+)
+
+<span class="fn">print</span>(result.report)</code></pre>
+  </div>
+  <p style="font-size:12px;color:var(--text-secondary);margin-top:8px;">※ 上記はGoogle公式ブログの説明に基づくコンセプト例です。正式なAPIドキュメントは <a href="https://ai.google.dev" target="_blank">ai.google.dev</a> を参照してください。</p>
+</section>
+
+<!-- SVG Diagram -->
+<section id="diagram" class="section">
+  <h2 class="section-title">Google I/O 2026 エコシステム関係図</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">Gemini モデルを中心としたプロダクトエコシステム</div>
+    <svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+      <!-- Background -->
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--svg-line)"/>
+        </marker>
+        <filter id="shadow-f">
+          <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+
+      <!-- Center: Gemini Models -->
+      <rect x="330" y="20" width="240" height="60" rx="30" fill="var(--svg-node)" filter="url(#shadow-f)"/>
+      <text x="450" y="56" text-anchor="middle" fill="var(--svg-node-text)" font-size="16" font-weight="700">Gemini 3.5 Flash / Pro</text>
+
+      <!-- Gemini Omni -->
+      <rect x="660" y="20" width="180" height="50" rx="25" fill="#34a853" filter="url(#shadow-f)"/>
+      <text x="750" y="50" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Gemini Omni</text>
+
+      <!-- Lines from Gemini Models -->
+      <!-- To Spark -->
+      <line x1="370" y1="80" x2="160" y2="155" stroke="var(--svg-line)" stroke-width="2" marker-end="url(#arrow)"/>
+      <!-- To Antigravity -->
+      <line x1="450" y1="80" x2="450" y2="155" stroke="var(--svg-line)" stroke-width="2" marker-end="url(#arrow)"/>
+      <!-- To Search -->
+      <line x1="530" y1="80" x2="740" y2="155" stroke="var(--svg-line)" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Row 2: Platforms -->
+      <!-- Gemini Spark -->
+      <rect x="50" y="155" width="220" height="55" rx="12" fill="#ea4335" filter="url(#shadow-f)"/>
+      <text x="160" y="188" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Gemini Spark (24/7 Agent)</text>
+
+      <!-- Antigravity -->
+      <rect x="320" y="155" width="260" height="55" rx="12" fill="#fbbc04" filter="url(#shadow-f)"/>
+      <text x="450" y="188" text-anchor="middle" fill="#000" font-size="14" font-weight="600">Antigravity 2.0 Platform</text>
+
+      <!-- Search -->
+      <rect x="640" y="155" width="200" height="55" rx="12" fill="var(--svg-node)" filter="url(#shadow-f)"/>
+      <text x="740" y="188" text-anchor="middle" fill="var(--svg-node-text)" font-size="14" font-weight="600">Google Search AI Mode</text>
+
+      <!-- Lines from Spark -->
+      <line x1="100" y1="210" x2="100" y2="290" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="200" y1="210" x2="260" y2="290" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Lines from Antigravity -->
+      <line x1="370" y1="210" x2="260" y2="290" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="450" y1="210" x2="450" y2="290" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="530" y1="210" x2="620" y2="290" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Lines from Search -->
+      <line x1="740" y1="210" x2="770" y2="290" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Row 3: Applications -->
+      <!-- Workspace -->
+      <rect x="20" y="290" width="160" height="48" rx="10" fill="#e8f0fe" stroke="var(--svg-node)" stroke-width="2"/>
+      <text x="100" y="319" text-anchor="middle" fill="var(--svg-node)" font-size="13" font-weight="600">Workspace</text>
+
+      <!-- Managed Agents -->
+      <rect x="200" y="290" width="160" height="48" rx="10" fill="#e8f0fe" stroke="var(--svg-node)" stroke-width="2"/>
+      <text x="280" y="319" text-anchor="middle" fill="var(--svg-node)" font-size="13" font-weight="600">Managed Agents</text>
+
+      <!-- AI Studio -->
+      <rect x="380" y="290" width="140" height="48" rx="10" fill="#e8f0fe" stroke="var(--svg-node)" stroke-width="2"/>
+      <text x="450" y="319" text-anchor="middle" fill="var(--svg-node)" font-size="13" font-weight="600">AI Studio</text>
+
+      <!-- Firebase -->
+      <rect x="540" y="290" width="140" height="48" rx="10" fill="#fef7e0" stroke="#fbbc04" stroke-width="2"/>
+      <text x="610" y="319" text-anchor="middle" fill="#b06000" font-size="13" font-weight="600">Firebase AI Logic</text>
+
+      <!-- Info Agents / Universal Cart -->
+      <rect x="700" y="290" width="160" height="48" rx="10" fill="#e8f0fe" stroke="var(--svg-node)" stroke-width="2"/>
+      <text x="780" y="312" text-anchor="middle" fill="var(--svg-node)" font-size="12" font-weight="600">Info Agents /</text>
+      <text x="780" y="328" text-anchor="middle" fill="var(--svg-node)" font-size="12" font-weight="600">Universal Cart</text>
+
+      <!-- Row 3.5: Connections to products -->
+      <line x1="100" y1="338" x2="100" y2="400" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="280" y1="338" x2="280" y2="400" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="450" y1="338" x2="450" y2="400" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="610" y1="338" x2="610" y2="400" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="780" y1="338" x2="780" y2="400" stroke="var(--svg-line)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Row 4: End Products -->
+      <rect x="20" y="400" width="160" height="42" rx="8" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1.5"/>
+      <text x="100" y="425" text-anchor="middle" fill="var(--text)" font-size="12">Daily Brief / Gmail Live</text>
+
+      <rect x="200" y="400" width="160" height="42" rx="8" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1.5"/>
+      <text x="280" y="425" text-anchor="middle" fill="var(--text)" font-size="12">API / SDK / CLI</text>
+
+      <rect x="380" y="400" width="140" height="42" rx="8" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1.5"/>
+      <text x="450" y="425" text-anchor="middle" fill="var(--text)" font-size="12">Android Apps</text>
+
+      <rect x="540" y="400" width="140" height="42" rx="8" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1.5"/>
+      <text x="610" y="425" text-anchor="middle" fill="var(--text)" font-size="12">Agent-Native Apps</text>
+
+      <rect x="700" y="400" width="160" height="42" rx="8" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1.5"/>
+      <text x="780" y="425" text-anchor="middle" fill="var(--text)" font-size="12">Shopping / Monitoring</text>
+
+      <!-- Gemini Omni connections -->
+      <line x1="700" y1="70" x2="450" y2="155" stroke="#34a853" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+
+      <!-- Google Flow from Omni -->
+      <rect x="660" y="100" width="160" height="42" rx="8" fill="#e6f4ea" stroke="#34a853" stroke-width="1.5"/>
+      <text x="740" y="126" text-anchor="middle" fill="#137333" font-size="13" font-weight="600">Google Flow</text>
+      <line x1="750" y1="70" x2="740" y2="100" stroke="#34a853" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Hardware Layer -->
+      <rect x="20" y="480" width="860" height="50" rx="10" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="450" y="510" text-anchor="middle" fill="var(--text-secondary)" font-size="14" font-weight="600">Android XR Intelligent Eyewear / Android Halo / SynthID + C2PA</text>
+
+      <!-- Subscription Layer -->
+      <rect x="20" y="555" width="860" height="45" rx="10" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="450" y="583" text-anchor="middle" fill="var(--accent)" font-size="13" font-weight="600">Google AI Subscriptions: Plus ($10/mo) | Pro ($25/mo) | Ultra ($100/mo) | Ultra+ ($200/mo)</text>
+
+      <!-- Legend -->
+      <text x="30" y="17" fill="var(--text-secondary)" font-size="11">&#9679; 実線: 直接依存 | 破線: 間接連携</text>
+    </svg>
+  </div>
+</section>
+
+<!-- Impact Sections -->
+<section id="impact-dev" class="section">
+  <h2 class="section-title">開発者への影響</h2>
+  <div class="impact-grid">
+    <div class="impact-card">
+      <h3>即座に活用すべき技術</h3>
+      <ul>
+        <li><strong>Gemini 3.5 Flash API</strong>: 即日利用可能。コスト半額・4倍速のフロンティアモデルで、既存の Gemini API 呼び出しを切り替えるだけで性能向上</li>
+        <li><strong>Managed Agents API</strong>: インフラ構築不要でエージェントアプリを構築。プロトタイプから本番環境まで単一APIで対応</li>
+        <li><strong>AI Studio のAndroidアプリ直接ビルド</strong>: ローカル環境不要でネイティブアプリをプロンプトから生成</li>
+        <li><strong>Firebase AI Logic</strong>: 既存 Firebase プロジェクトに Gemini ベースのエージェント機能を追加</li>
+      </ul>
+    </div>
+    <div class="impact-card">
+      <h3>中長期的な戦略変更</h3>
+      <ul>
+        <li><strong>エージェントファースト設計</strong>: Antigravity 2.0 / WebMCP の登場により、アプリ設計はエージェントとの連携を前提にすべき時代に</li>
+        <li><strong>Migration Agent の活用検討</strong>: React Native / iOS プロジェクトの Kotlin ネイティブ移行コストが大幅低減</li>
+        <li><strong>WebMCP 対応</strong>: Chrome 149 のオリジントライアルに参加し、Web サイトのエージェント対応を先行検証</li>
+        <li><strong>Android CLI + AI ワークフロー</strong>: CI/CDパイプラインに Android CLI を統合し、AI エージェントによる自動テスト・分析を導入</li>
+        <li><strong>コンピュートベース課金への対応</strong>: API 利用コストの予測モデルを見直す必要あり</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="impact-user" class="section">
+  <h2 class="section-title">個人ユーザーへの影響</h2>
+  <div class="impact-grid">
+    <div class="impact-card">
+      <h3>日常生活が変わるポイント</h3>
+      <ul>
+        <li><strong>Gemini Spark</strong>: メール返信、スケジュール調整、タスク管理を24時間代行。「AIアシスタント」から「AIパートナー」へ</li>
+        <li><strong>Daily Brief</strong>: 毎朝の情報整理が自動化。通勤前に1日の優先事項を把握</li>
+        <li><strong>Universal Cart</strong>: YouTube で見た商品を即カートに追加、価格比較を自動で実行</li>
+        <li><strong>Personal Intelligence</strong>: 無料で200カ国・98言語に展開。個人データに基づくパーソナライズ検索が標準に</li>
+        <li><strong>AI 検索ボックス</strong>: 写真を撮って検索、ファイルをドロップして質問が当たり前に</li>
+      </ul>
+    </div>
+    <div class="impact-card">
+      <h3>注意すべきポイント</h3>
+      <ul>
+        <li><strong>サブスクリプション選び</strong>: 多くの新機能は Pro ($25/月) 以上が必要。自分の利用パターンに合ったプランの見極めが重要</li>
+        <li><strong>プライバシー</strong>: Personal Intelligence や Gemini Spark は個人データへのアクセスを前提。どのデータを接続するか慎重に判断を</li>
+        <li><strong>AI 生成コンテンツの真偽</strong>: SynthID / C2PA の普及で検証手段は増えるが、全てのコンテンツがカバーされるわけではない</li>
+        <li><strong>スマートグラス</strong>: 2026年秋の発売予定だが、価格・バッテリー持続時間等の詳細は未発表 <span class="badge-unconfirmed">※未確認</span></li>
+        <li><strong>コンピュートベース課金</strong>: ヘビーユーザーは従来の定額制と比べて実質コスト増の可能性あり</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>本レポートは2026年5月21日時点の公開情報に基づいて作成されています。</p>
+  <p>主要出典:
+    <a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google 公式ブログ</a> |
+    <a href="https://9to5google.com/2026/05/19/google-io-2026-news/" target="_blank">9to5Google</a> |
+    <a href="https://developers.googleblog.com/all-the-news-from-the-google-io-2026-developer-keynote/" target="_blank">Google Developers Blog</a> |
+    <a href="https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-developer-highlights/" target="_blank">Developer Highlights</a> |
+    <a href="https://www.thetechoutlook.com/new-release/software-apps/google-i-o-2026-announcements-new-gemini-models-shopping-ai-search-synthid-ask-youtube-and-more/" target="_blank">The Tech Outlook</a> |
+    <a href="https://forest.watch.impress.co.jp/docs/news/2110048.html" target="_blank">窓の杜</a> |
+    <a href="https://ascii.jp/elem/000/004/403/4403454/" target="_blank">ASCII.jp</a>
+  </p>
+</footer>
+
+</main>
+</div>
+
+<script>
+// Theme Toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const btn = document.querySelector('.theme-toggle');
+  if (html.getAttribute('data-theme') === 'light') {
+    html.setAttribute('data-theme', 'dark');
+    btn.innerHTML = '&#9788; ライト';
+    localStorage.setItem('theme', 'dark');
+  } else {
+    html.setAttribute('data-theme', 'light');
+    btn.innerHTML = '&#9790; ダーク';
+    localStorage.setItem('theme', 'light');
+  }
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.querySelector('.theme-toggle').innerHTML = '&#9788; ライト';
+  }
+})();
+
+// Sidebar Toggle (Mobile)
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.querySelector('.sidebar-overlay').classList.toggle('open');
+}
+document.querySelectorAll('.sidebar a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.querySelector('.sidebar-overlay').classList.remove('open');
+  });
+});
+
+// Sidebar Active Highlight
+const sidebarLinks = document.querySelectorAll('.sidebar a');
+const sections = [];
+sidebarLinks.forEach(link => {
+  const id = link.getAttribute('href').slice(1);
+  const el = document.getElementById(id);
+  if (el) sections.push({ id, el, link });
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      sidebarLinks.forEach(l => l.classList.remove('active'));
+      const match = sections.find(s => s.el === entry.target);
+      if (match) match.link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+
+sections.forEach(s => observer.observe(s.el));
+
+// Category Tabs
+const tabBtns = document.querySelectorAll('.tab-btn');
+const cards = document.querySelectorAll('.card');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.getAttribute('data-tab');
+    cards.forEach(card => {
+      if (tab === 'all' || card.getAttribute('data-category') === tab) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+});
+
+// Copy Code Button
+function copyCode(btn) {
+  const code = btn.nextElementSibling.textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'コピー済み!';
+    setTimeout(() => { btn.textContent = 'コピー'; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

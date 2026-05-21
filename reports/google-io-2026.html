@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google I/O 2026 発表内容まとめ</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-dark: #1557b0;
+    --bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --text: #202124;
+    --text-secondary: #5f6368;
+    --border: #dadce0;
+    --accent-ai: #4285f4;
+    --accent-agent: #34a853;
+    --accent-search: #ea4335;
+    --accent-dev: #fbbc04;
+    --accent-android: #34a853;
+    --accent-creative: #ff6d00;
+    --accent-infra: #9c27b0;
+    --accent-other: #607d8b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Noto Sans JP', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .header {
+    background: linear-gradient(135deg, #4285f4, #34a853, #fbbc04, #ea4335);
+    color: #fff;
+    padding: 60px 20px 40px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 1.1rem;
+    opacity: 0.95;
+  }
+  .header .meta {
+    margin-top: 16px;
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  .toc {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin: -20px auto 32px;
+    position: relative;
+  }
+  .toc h2 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    color: var(--primary);
+  }
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+    columns: 2;
+    column-gap: 24px;
+  }
+  .toc li {
+    counter-increment: toc;
+    margin-bottom: 6px;
+  }
+  .toc li::before {
+    content: counter(toc) ". ";
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .toc a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .toc a:hover {
+    border-bottom-color: var(--primary);
+    color: var(--primary);
+  }
+  .section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+  .section-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .section h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--text);
+  }
+  .section p, .section li {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+  .section ul {
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+  .section li {
+    margin-bottom: 4px;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.93rem;
+  }
+  .info-table th {
+    background: #f1f3f4;
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--text);
+    width: 180px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-table td {
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .sources {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f1f3f4;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+  .sources strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .sources a {
+    color: var(--primary);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .sources a:hover {
+    text-decoration: underline;
+  }
+  .sources ul {
+    padding-left: 18px;
+    margin: 0;
+  }
+  .sources li {
+    margin-bottom: 2px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+  .subsection {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border);
+  }
+  footer {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+  @media (max-width: 640px) {
+    .header h1 { font-size: 1.6rem; }
+    .toc ol { columns: 1; }
+    .section { padding: 20px; }
+    .info-table th { width: 120px; }
+    .section-header { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="container">
+    <h1>Google I/O 2026 発表内容まとめ</h1>
+    <p>AIが「答える」から「動く」時代へ — 全主要発表を徹底解説</p>
+    <div class="meta">開催日: 2026年5月19日 ｜ 会場: Shoreline Amphitheatre, Mountain View ｜ 本レポート作成日: 2026年5月21日</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 目次 -->
+  <nav class="toc" id="toc">
+    <h2>目次</h2>
+    <ol>
+      <li><a href="#gemini-flash">Gemini 3.5 Flash</a></li>
+      <li><a href="#gemini-omni">Gemini Omni（動画生成AI）</a></li>
+      <li><a href="#gemini-spark">Gemini Spark（個人AIエージェント）</a></li>
+      <li><a href="#search">Google検索のAI強化</a></li>
+      <li><a href="#antigravity">Antigravity 2.0（開発者向け）</a></li>
+      <li><a href="#ai-studio">Google AI Studio</a></li>
+      <li><a href="#android17">Android 17</a></li>
+      <li><a href="#android-xr">Android XR スマートグラス</a></li>
+      <li><a href="#stitch">Stitch（AIデザインツール）</a></li>
+      <li><a href="#flow">Google Flow（動画編集）</a></li>
+      <li><a href="#tpu8">TPU 8（AIインフラ）</a></li>
+      <li><a href="#synthid">SynthID（AI透かし技術）</a></li>
+      <li><a href="#notebooklm">NotebookLM Literature Insights</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. Gemini 3.5 Flash -->
+  <section class="section" id="gemini-flash">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-ai)">AIモデル</span>
+      <h2>Gemini 3.5 Flash</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>Google DeepMindが開発した最新フロンティアAIモデル。コーディングやエージェント性能で前世代のGemini 3.1 Proを上回り、競合フロンティアモデルの半額以下で同等水準の知能を実現する。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>1Mトークンのコンテキストウィンドウ</li>
+          <li>他のフロンティアモデル比4倍の出力速度（tokens/sec）</li>
+          <li>Terminal-Bench 2.1: 76.2%、MCP Atlas: 83.6%、CharXiv Reasoning: 84.2%</li>
+          <li>API価格: 入力 $1.50 / 出力 $9 per 1Mトークン</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>開発者、API利用者、エージェント構築者、コーディングツール開発者</td></tr>
+      <tr><th>既存サービスとの違い</th><td>Gemini 3.1 Proのコーディング・マルチモーダルベンチマークを上回りながら、Flashティア（低コスト・高速）で提供。3.5 Proは2026年6月提供予定。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-5/" target="_blank">Google Blog — Gemini 3.5: frontier intelligence with action</a></li>
+        <li><a href="https://www.marktechpost.com/2026/05/20/google-introduces-gemini-3-5-flash-at-i-o-2026-a-faster-and-cheaper-model-for-ai-agents-and-coding/" target="_blank">MarkTechPost — Google Introduces Gemini 3.5 Flash at I/O 2026</a></li>
+        <li><a href="https://llm-stats.com/blog/research/gemini-3.5-flash-launch" target="_blank">LLM Stats — Gemini 3.5 Flash: Benchmarks, Pricing, and Complete Specs</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 2. Gemini Omni -->
+  <section class="section" id="gemini-omni">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-ai)">AIモデル</span>
+      <h2>Gemini Omni（動画生成・編集AI）</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>Demis Hassabis（Google DeepMind CEO）が発表した「世界モデル」。物理的な現実をシミュレーションし、テキスト・画像・音声・動画を入力として組み合わせ、映画品質の動画を生成・編集できる。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>マルチモーダル入力（テキスト/画像/音声/動画）から高品質動画を生成</li>
+          <li>会話型編集: 「背景の人物を消して」「照明をもっと暖かく」と指示するだけで再レンダリング</li>
+          <li>物理法則・歴史的背景・科学的ロジック・文化的コンテキストの理解</li>
+          <li>YouTube Shorts / YouTube Createアプリとの統合</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>動画クリエイター、映像制作者、YouTuber、マーケター</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来のVeoモデルが静的なプロンプト→動画生成だったのに対し、Omniは「会話で編集」「複合入力」「世界理解」を備えた次世代モデル。Google AI Plus/Pro/Ultra加入者に即日提供。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://tech.yahoo.com/ai/gemini/articles/google-unveils-gemini-omni-next-192650474.html" target="_blank">Yahoo Tech — Google Unveils Gemini Omni</a></li>
+        <li><a href="https://www.businesstoday.in/technology/artificial-intelligence/story/google-io-2026-google-unveils-gemini-omni-ai-video-editing-model-532350-2026-05-19" target="_blank">BusinessToday — Google unveils Gemini Omni AI video editing model</a></li>
+        <li><a href="https://incrypted.com/en/google-io-2026-testing/" target="_blank">INCRYPTED — Google I/O 2026: Testing Gemini 3.5, Omni Video Generation</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3. Gemini Spark -->
+  <section class="section" id="gemini-spark">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-agent)">AIエージェント</span>
+      <h2>Gemini Spark（個人AIエージェント）</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>24時間365日稼働する個人AIエージェント。Gemini 3.5とGoogle Antigravityハーネスを基盤とし、Google Cloud上の専用VMで動作するため、PCやスマートフォンを閉じていてもバックグラウンドでタスクを実行し続ける。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>Gmail/Docs/Sheets/Slidesなどの情報を横断的に取得・処理</li>
+          <li>専用Gmailアドレスへのメールでタスク依頼が可能</li>
+          <li>定期タスクの設定・新スキルの学習・マルチステップタスクの自律実行</li>
+          <li>高リスク操作（メール送信等）では明示的な承認を要求</li>
+          <li>Android Haloによるモバイルでのリアルタイム進捗追跡</li>
+          <li>Chromeを通じたWeb直接操作</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>ビジネスパーソン、ナレッジワーカー（ベータ版はGoogle AI Ultra加入者向け、米国から順次展開）</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来のGeminiアシスタントが「質問に答える」受動的な存在だったのに対し、Sparkは「自ら行動する」エージェント。バックグラウンド実行、定期タスク、マルチステップ処理が可能な点で根本的に異なる。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://techcrunch.com/2026/05/19/google-introduces-gemini-spark-a-24-7-agentic-assistant-with-gmail-integration/" target="_blank">TechCrunch — Google introduces Gemini Spark, a 24/7 agentic assistant</a></li>
+        <li><a href="https://qz.com/google-gemini-spark-personal-ai-agent-io-051926" target="_blank">Quartz — Google launches Gemini Spark personal AI agent</a></li>
+        <li><a href="https://blog.google/innovation-and-ai/sundar-pichai-io-2026/" target="_blank">Google Blog — I/O 2026: Welcome to the agentic Gemini era</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4. Google検索 -->
+  <section class="section" id="search">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-search)">検索</span>
+      <h2>Google検索のAI強化</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>25年以上ぶりとなる検索ボックスの大規模刷新。Gemini 3.5 FlashをAI Modeのデフォルトモデルとしてグローバル展開し、「Search Agents」時代の幕開けを宣言。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li><strong>新検索ボックス:</strong> 意図を先読みするAI提案（オートコンプリートを超える）、動的拡張UI</li>
+          <li><strong>マルチモーダル入力:</strong> テキスト・画像・ファイル・動画・Chromeタブを検索入力に利用可能</li>
+          <li><strong>Search Agents:</strong> 検索内で複数のカスタムAIエージェントを作成・管理。Antigravityで「ミニアプリ」を構築可能</li>
+          <li><strong>Personal Intelligence:</strong> Gmail/Google Photos等と連携したパーソナライズド検索を200カ国・98言語に拡大（無料）</li>
+          <li><strong>会話的フロー:</strong> AI Overviewからの追加質問→AI Modeへのシームレスな移行</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>全Google検索ユーザー（Search Agentsの一部機能はAI Pro/Ultra加入者向け）</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来の「10本の青いリンク」やAI Overviewの単発回答から、エージェントがユーザーに代わってタスクを実行する「Search Agents」へと進化。検索が情報検索ツールからアクション実行プラットフォームへと変革。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://blog.google/products-and-platforms/products/search/search-io-2026/" target="_blank">Google Blog — Google Search's I/O 2026 updates: AI agents and more</a></li>
+        <li><a href="https://thenextweb.com/news/google-search-ai-overhaul-information-agents-io-2026" target="_blank">The Next Web — Google replaces the search box with AI agents</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. Antigravity 2.0 -->
+  <section class="section" id="antigravity">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-dev)">開発者ツール</span>
+      <h2>Antigravity 2.0</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>エージェントファーストの開発プラットフォーム。スタンドアロンのデスクトップアプリ、Go製CLI、SDKを提供し、複数のAIエージェントを並列で動かしてタスクを実行できる。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li><strong>デスクトップアプリ:</strong> マルチエージェントの並列実行・オーケストレーション、カスタムサブエージェントワークフロー</li>
+          <li><strong>Antigravity CLI:</strong> Go言語製の高速ターミナルツール、デスクトップアプリと同一のエージェントハーネスを共有</li>
+          <li><strong>SDK:</strong> カスタムエージェントの構築・デプロイ</li>
+          <li><strong>セキュリティ:</strong> クロスプラットフォームのターミナルサンドボックス、資格情報マスキング、Gitポリシー強化</li>
+          <li><strong>音声コマンド:</strong> ネイティブ音声入力対応</li>
+          <li><strong>バックグラウンドタスク:</strong> スケジュール設定による自動実行</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>ソフトウェア開発者、エージェント開発者</td></tr>
+      <tr><th>既存サービスとの違い</th><td>旧Gemini CLIおよびGemini Code Assist IDE拡張の後継。2026年6月18日にGemini CLIは終了し、Antigravity CLIに完全移行。AI Ultraプラン（$100/月）で5倍の利用枠を提供。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://techcrunch.com/2026/05/19/google-launches-antigravity-2-0-with-an-updated-desktop-app-and-cli-tool-at-io-2026/" target="_blank">TechCrunch — Google launches Antigravity 2.0</a></li>
+        <li><a href="https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/" target="_blank">Google Developers Blog — Transitioning Gemini CLI to Antigravity CLI</a></li>
+        <li><a href="https://www.marktechpost.com/2026/05/19/google-launches-antigravity-2-0-at-i-o-2026-a-standalone-agent-first-platform-with-cli-sdk-managed-execution-and-enterprise-support/" target="_blank">MarkTechPost — Google Launches Antigravity 2.0 at I/O 2026</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6. Google AI Studio -->
+  <section class="section" id="ai-studio">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-dev)">開発者ツール</span>
+      <h2>Google AI Studio</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>開発者向けAIプロトタイピング環境の大幅アップデート。ネイティブKotlinサポートによるAndroidアプリ開発対応、Google Workspace連携を強化。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>ネイティブKotlinサポートでAndroidアプリをAI Studio内で直接構築</li>
+          <li>Google Workspace（Sheets/Drive/Docs）への直接アクセス</li>
+          <li>Sheetsデータ上のダッシュボード構築、Drive整理ツール、ドキュメント連携アプリの作成</li>
+          <li>モバイルアプリ版の提供</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>Android開発者、AIアプリ開発者、プロトタイパー</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来はWeb上のプロンプト実験ツールだったが、Kotlin対応・Workspace統合・モバイルアプリにより、本格的なアプリ開発プラットフォームへ進化。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://blog.google/innovation-and-ai/technology/developers-tools/google-ai-studio-io-2026/" target="_blank">Google Blog — Google AI Studio at I/O 2026</a></li>
+        <li><a href="https://www.androidheadlines.com/2026/05/google-io-2026-antigravity-developer-tools-ai-studio-mobile-app.html" target="_blank">Android Headlines — Google AI Studio Gets Mobile App</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 7. Android 17 -->
+  <section class="section" id="android17">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-android)">Android</span>
+      <h2>Android 17</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>Googleが「インテリジェンスシステム」と呼ぶ次世代Android。Gemini Intelligenceをコアに据え、オンデバイスAIを活用した新機能群を搭載。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li><strong>Create My Widget:</strong> AIがユーザーの指示に基づきカスタムウィジェットを自動生成</li>
+          <li><strong>Rambler（Gboard）:</strong> 音声入力の高度化機能</li>
+          <li><strong>Pause Point:</strong> コンテンツ消費の最適なタイミングを提案</li>
+          <li><strong>Android Halo:</strong> AIエージェント（Gemini Spark等）の実行状況を画面上部に表示する通知システム</li>
+          <li>オンデバイスAIによる各種機能の高速化</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>全Androidユーザー</td></tr>
+      <tr><th>既存サービスとの違い</th><td>Android 16まではAIがアシスタント機能に留まっていたが、17ではOS全体にGemini Intelligenceが統合され、エージェントの動作状況可視化（Halo）など、AIネイティブなOS体験を提供。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://www.androidcentral.com/phones/live/google-i-o-2026-live-blog-android-17-android-xr-glasses-and-all-the-gemini-ai-news" target="_blank">Android Central — Google I/O 2026 Live Blog: Android 17</a></li>
+        <li><a href="https://9to5google.com/2026/05/19/google-io-2026-news/" target="_blank">9to5Google — Everything Google announced at I/O 2026</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8. Android XR -->
+  <section class="section" id="android-xr">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-android)">Android</span>
+      <h2>Android XR スマートグラス</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>Xreal・Samsung共同開発のAndroid XR搭載スマートグラス。カメラ・スピーカー・マイクを搭載し、Gemini AIによるリアルタイム情報提供を実現。2026年秋発売予定。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>リアルタイム情報オーバーレイ（視界にナビゲーション・通知を表示）</li>
+          <li>ライブ翻訳</li>
+          <li>リアルタイム物体認識（Gemini AIベース）</li>
+          <li>バーチャルミーティング対応</li>
+          <li>ハンズフリーでの情報取得（音声で耳元にプライベート通知）</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>一般消費者、ビジネスユーザー、旅行者</td></tr>
+      <tr><th>既存サービスとの違い</th><td>Google Glassの後継的位置付けだが、Android XRプラットフォーム上で動作し、SamsungのGalaxy Glassesエコシステムとも連携。Metaのスマートグラスに対抗する「プラットフォーム戦略」で、スマートフォンにおけるAndroidの役割を拡張現実領域で再現する狙い。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://www.androidcentral.com/phones/live/google-i-o-2026-live-blog-android-17-android-xr-glasses-and-all-the-gemini-ai-news" target="_blank">Android Central — Android XR glasses at I/O 2026</a></li>
+        <li><a href="https://www.tomsguide.com/news/live/google-io-2026-live-news-updates" target="_blank">Tom's Guide — Google I/O 2026: Intelligent Eyewear glasses</a></li>
+        <li><a href="https://thenextweb.com/news/google-io-2026-gemini-intelligence-android-xr-glasses" target="_blank">The Next Web — Google I/O 2026: Android XR glasses</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9. Stitch -->
+  <section class="section" id="stitch">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-creative)">クリエイティブ</span>
+      <h2>Stitch（AIデザインツール）</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>Google Labsが提供するUIデザイン生成ツールのメジャーアップデート。従来のターンベース型ワークフローをリアルタイムストリーミングモデルに置き換え、デザイナーが入力するそばからUIがキャンバス上に描画される。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li><strong>Stitch Agent:</strong> テキストや音声の入力に合わせてUIコンポーネントをリアルタイム生成</li>
+          <li><strong>Vibe Design:</strong> テキスト・音声・デザインファイル・既存コードベースからの入力に対応</li>
+          <li><strong>マルチユーザー同時編集:</strong> Google Docsライクなリアルタイム共同編集（本日より提供）</li>
+          <li>無料でグローバル提供</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>UIデザイナー、フロントエンド開発者、プロダクトマネージャー</td></tr>
+      <tr><th>既存サービスとの違い</th><td>Figmaが$15/seatで有料提供しているリアルタイム共同編集機能を無料で実現。Figmaやv0が「生成→確認→修正」のサイクルなのに対し、Stitchは入力と同時にUIが構築されるストリーミング方式を採用。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://blog.google/innovation-and-ai/models-and-research/google-labs/stitch-updates/" target="_blank">Google Blog — We're introducing real time design with Google Stitch</a></li>
+        <li><a href="https://www.techtimes.com/articles/316903/20260520/google-stitch-launches-real-time-ai-agent-multiplayer-editing-figma-charges-15-seat.htm" target="_blank">TechTimes — Google Stitch Launches Real-Time AI Agent</a></li>
+        <li><a href="https://pasqualepillitteri.it/en/news/2964/google-stitch-agent-real-time-design-io-2026" target="_blank">Pasquale Pillitteri — Google Stitch Agent: Real-Time Vibe Design</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 10. Google Flow -->
+  <section class="section" id="flow">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-creative)">クリエイティブ</span>
+      <h2>Google Flow（動画編集プラットフォーム）</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>Google Labsの生成動画制作環境。Veoモデルベースのプラットフォームに、Gemini Omni Flashを新たに統合。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>Gemini Omni Flashによるマルチモーダル動画生成・編集</li>
+          <li>テキスト・画像・動画・音声の組み合わせ入力</li>
+          <li>Flow for Android（ベータ版）の提供開始</li>
+          <li>Flow Music（iOS向け音楽制作アプリ）の新規追加</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>動画クリエイター、音楽制作者、モバイルコンテンツクリエイター</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来のFlowはVeoモデルのみだったが、Omni Flash統合により会話型編集・マルチモーダル入力が可能に。モバイルアプリ対応で出先での動画制作にも対応。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://www.business-standard.com/technology/tech-news/google-i-o-2026-new-workspace-apps-flow-update-omni-flash-126052000609_1.html" target="_blank">Business Standard — Google I/O 2026: Flow gets Omni Flash</a></li>
+        <li><a href="https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-collection/" target="_blank">Google Blog — Google I/O 2026: News and announcements</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 11. TPU 8 -->
+  <section class="section" id="tpu8">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-infra)">インフラ</span>
+      <h2>TPU 8（AIインフラストラクチャ）</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>AIの学習と推論に特化した二種類のカスタムチップ。用途に応じた最適化を行う「デュアルチップアプローチ」を初採用。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li><strong>TPU 8t（Training）:</strong> 大規模事前学習に最適化、前世代比約3倍の演算能力</li>
+          <li><strong>TPU 8i（Inference）:</strong> 推論ワークロードに特化した設計</li>
+          <li>複数サイトにまたがるシームレスな分散学習</li>
+          <li>グローバルで100万TPU以上のスケーリング</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>AI研究者、Google Cloud利用者、大規模モデル開発者</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来のTPUシリーズは学習・推論兼用だったが、TPU 8で初めて用途別に専用設計。学習特化チップにより3倍の性能向上を実現し、100万TPU超のグローバル分散学習を可能にした。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://developers.googleblog.com/all-the-news-from-the-google-io-2026-developer-keynote/" target="_blank">Google Developers Blog — All the news from the Google I/O 2026 Developer keynote</a></li>
+        <li><a href="https://cloud.google.com/blog/products/ai-machine-learning/innovations-from-google-io-26-on-google-cloud" target="_blank">Google Cloud Blog — Innovations from Google I/O 26</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 12. SynthID -->
+  <section class="section" id="synthid">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-other)">その他</span>
+      <h2>SynthID（AI生成コンテンツ透かし技術）</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>AI生成コンテンツに不可視の電子透かしを埋め込むGoogleの技術。外部パートナーへの採用拡大と、Google Search/Chromeへの検証機能統合を発表。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>OpenAI・Kakao・ElevenLabsがSynthIDを採用</li>
+          <li>Google検索（Lens、AI Mode、Circle to Search）での透かし検証機能</li>
+          <li>Chrome拡張での透かし検証を数週間以内に提供</li>
+          <li>グローバルで5,000万回以上の検証実績</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>全インターネットユーザー、メディア、コンテンツプラットフォーム</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来はGoogle内部での利用が中心だったが、競合（OpenAI）を含む外部企業への技術提供に踏み切り、業界標準を目指す方向へ転換。検索・ブラウザへの統合により、一般ユーザーでもAI生成コンテンツの判別が可能に。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://www.thetechoutlook.com/new-release/software-apps/google-i-o-2026-announcements-new-gemini-models-shopping-ai-search-synthid-ask-youtube-and-more/" target="_blank">The Tech Outlook — Google I/O 2026 announcements: SynthID and more</a></li>
+        <li><a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google Blog — 100 things we announced at Google I/O 2026</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 13. NotebookLM -->
+  <section class="section" id="notebooklm">
+    <div class="section-header">
+      <span class="section-badge" style="background:var(--accent-other)">その他</span>
+      <h2>NotebookLM — Literature Insights</h2>
+    </div>
+    <table class="info-table">
+      <tr><th>概要</th><td>NotebookLMに搭載された新機能「Literature Insights」。科学文献を検索・構造化し、カスタム属性による比較分析やレポート・スライド・音声/動画概要の自動生成を可能にする。</td></tr>
+      <tr><th>主な機能</th><td>
+        <ul>
+          <li>科学文献の横断検索と構造化テーブルへの自動整理</li>
+          <li>カスタム属性による並列比較分析</li>
+          <li>チャットによる深掘り分析</li>
+          <li>レポート・スライドデッキ・インフォグラフィック・音声/動画概要の自動生成</li>
+        </ul>
+      </td></tr>
+      <tr><th>ターゲットユーザー</th><td>研究者、学術関係者、大学院生</td></tr>
+      <tr><th>既存サービスとの違い</th><td>従来のNotebookLMはアップロードした文書の分析が主だったが、Literature Insightsにより外部の科学文献を能動的に検索・収集し、構造化された比較分析が可能に。Google Scholarとの差別化は「分析の自動化」にある。</td></tr>
+    </table>
+    <div class="sources">
+      <strong>出典:</strong>
+      <ul>
+        <li><a href="https://blog.google/innovation-and-ai/technology/ai/google-io-2026-all-our-announcements/" target="_blank">Google Blog — 100 things we announced at Google I/O 2026</a></li>
+        <li><a href="https://blog.google/innovation-and-ai/technology/developers-tools/google-io-2026-collection/" target="_blank">Google Blog — Google I/O 2026: News and announcements</a></li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>本レポートはWeb検索結果に基づき作成されています。投資判断やビジネス上の意思決定に使用する場合は、各公式発表をご確認ください。</p>
+  <p>作成日: 2026年5月21日</p>
+</footer>
+
+<script>
+  document.querySelectorAll('.toc a').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
