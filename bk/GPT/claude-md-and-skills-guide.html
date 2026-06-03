@@ -1,0 +1,1883 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CLAUDE.md と Agent Skills 実践ガイド</title>
+  <style>
+    :root {
+      --bg: #fffaf3;
+      --surface: #ffffff;
+      --surface-2: #fff2df;
+      --text: #24201d;
+      --muted: #6b625c;
+      --border: #e4d6c7;
+      --accent: #cc6b2c;
+      --accent-2: #e8904a;
+      --accent-soft: #fff0df;
+      --blue: #2b6cb0;
+      --blue-bg: #eaf4ff;
+      --green: #2f855a;
+      --green-bg: #e9f8ef;
+      --orange: #c05621;
+      --orange-bg: #fff4e6;
+      --red: #c53030;
+      --red-bg: #fff0f0;
+      --code-bg: #201c19;
+      --code-text: #f8efe6;
+      --shadow: 0 12px 40px rgba(60, 40, 20, .12);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #171514;
+      --surface: #211f1d;
+      --surface-2: #2a2623;
+      --text: #f4eee8;
+      --muted: #c4b9ae;
+      --border: #403a35;
+      --accent: #f09a55;
+      --accent-2: #ffb46f;
+      --accent-soft: #3a2a20;
+      --blue: #90cdf4;
+      --blue-bg: #102a43;
+      --green: #9ae6b4;
+      --green-bg: #123524;
+      --orange: #fbd38d;
+      --orange-bg: #3b2b12;
+      --red: #feb2b2;
+      --red-bg: #3b1616;
+      --code-bg: #0f0e0d;
+      --code-text: #fff7ed;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #171514;
+        --surface: #211f1d;
+        --surface-2: #2a2623;
+        --text: #f4eee8;
+        --muted: #c4b9ae;
+        --border: #403a35;
+        --accent: #f09a55;
+        --accent-2: #ffb46f;
+        --accent-soft: #3a2a20;
+        --blue: #90cdf4;
+        --blue-bg: #102a43;
+        --green: #9ae6b4;
+        --green-bg: #123524;
+        --orange: #fbd38d;
+        --orange-bg: #3b2b12;
+        --red: #feb2b2;
+        --red-bg: #3b1616;
+        --code-bg: #0f0e0d;
+        --code-text: #fff7ed;
+        --shadow: 0 12px 40px rgba(0,0,0,.35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.72;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(232,144,74,.18), transparent 34rem),
+        var(--bg);
+    }
+    a { color: var(--accent); text-decoration-thickness: .08em; text-underline-offset: .18em; }
+    a:hover { color: var(--accent-2); }
+    :focus-visible { outline: 3px solid var(--accent-2); outline-offset: 3px; border-radius: 8px; }
+
+    #progress {
+      position: fixed;
+      inset: 0 auto auto 0;
+      height: 4px;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      z-index: 1000;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      transform: translateY(-150%);
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: .6rem .8rem;
+      border-radius: 10px;
+      z-index: 1100;
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 1.25rem;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border-right: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      font-weight: 800;
+      letter-spacing: .02em;
+      margin-bottom: 1rem;
+    }
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: inline-grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: var(--shadow);
+    }
+    .toc-title {
+      margin: 1rem 0 .5rem;
+      font-size: .84rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .toc {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .toc li { margin: .15rem 0; }
+    .toc a {
+      display: block;
+      padding: .42rem .55rem;
+      border-radius: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .94rem;
+      line-height: 1.35;
+    }
+    .toc a:hover,
+    .toc a.active {
+      color: var(--text);
+      background: var(--accent-soft);
+    }
+    .toc .sub a { padding-left: 1.25rem; font-size: .88rem; }
+
+    .main {
+      min-width: 0;
+      padding: 1.25rem clamp(1rem, 3vw, 3rem) 5rem;
+    }
+
+    .hero {
+      max-width: 1120px;
+      margin: 0 auto 2rem;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--surface) 90%, transparent), color-mix(in srgb, var(--surface-2) 82%, transparent));
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 8px);
+      box-shadow: var(--shadow);
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1.1;
+      margin: 0 0 1rem;
+      letter-spacing: -.04em;
+    }
+    .hero p { max-width: 860px; }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin: 1rem 0 1.25rem;
+    }
+    .pill, .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .22rem .55rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .badge.official { color: var(--blue); background: var(--blue-bg); border-color: color-mix(in srgb, var(--blue) 35%, var(--border)); }
+    .badge.ops { color: var(--green); background: var(--green-bg); border-color: color-mix(in srgb, var(--green) 35%, var(--border)); }
+    .badge.verify { color: var(--orange); background: var(--orange-bg); border-color: color-mix(in srgb, var(--orange) 35%, var(--border)); }
+
+    .top-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: .75rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    .search-wrap {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: .4rem;
+    }
+    .search-wrap input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      font: inherit;
+      padding: .55rem .65rem;
+    }
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      padding: .55rem .8rem;
+    }
+    button:hover { border-color: var(--accent); }
+    .theme-toggle { white-space: nowrap; }
+
+    article {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+    section.card {
+      margin: 1.5rem 0;
+      padding: clamp(1.1rem, 3vw, 2rem);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      box-shadow: 0 6px 20px rgba(50,30,20,.05);
+    }
+    h2 {
+      font-size: clamp(1.55rem, 3vw, 2.2rem);
+      line-height: 1.25;
+      margin: 0 0 1rem;
+      letter-spacing: -.025em;
+    }
+    h3 {
+      font-size: 1.28rem;
+      margin: 2rem 0 .65rem;
+      line-height: 1.35;
+    }
+    h4 { margin: 1.2rem 0 .45rem; }
+    p { margin: .7rem 0; }
+    ul, ol { padding-left: 1.35rem; }
+    li { margin: .25rem 0; }
+    code, kbd {
+      font-family: var(--mono);
+      font-size: .92em;
+      background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .08rem .28rem;
+    }
+
+    .learning-objectives {
+      border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+      background: var(--accent-soft);
+      border-radius: 16px;
+      padding: 1rem 1.1rem;
+      margin: 1rem 0 1.25rem;
+    }
+    .learning-objectives strong { display: block; margin-bottom: .35rem; }
+
+    .callout {
+      border-radius: 16px;
+      padding: .9rem 1rem;
+      margin: 1rem 0;
+      border: 1px solid var(--border);
+    }
+    .callout.info { background: var(--blue-bg); border-color: color-mix(in srgb, var(--blue) 35%, var(--border)); }
+    .callout.hint { background: var(--green-bg); border-color: color-mix(in srgb, var(--green) 35%, var(--border)); }
+    .callout.warning { background: var(--orange-bg); border-color: color-mix(in srgb, var(--orange) 35%, var(--border)); }
+    .callout.danger { background: var(--red-bg); border-color: color-mix(in srgb, var(--red) 35%, var(--border)); }
+
+    .source-note {
+      color: var(--muted);
+      font-size: .92rem;
+      border-left: 3px solid var(--border);
+      padding-left: .8rem;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin: 1rem 0;
+    }
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      background: var(--surface);
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: .75rem .85rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface-2);
+      font-size: .9rem;
+    }
+    tr:last-child td { border-bottom: 0; }
+
+    pre {
+      position: relative;
+      margin: 1rem 0;
+      padding: 1rem;
+      overflow: auto;
+      border-radius: 16px;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    pre code {
+      display: block;
+      background: transparent;
+      border: 0;
+      color: inherit;
+      padding: 0;
+      font-family: var(--mono);
+      font-size: .88rem;
+      line-height: 1.65;
+      white-space: pre;
+    }
+    .copy-btn {
+      position: absolute;
+      top: .6rem;
+      right: .6rem;
+      padding: .28rem .55rem;
+      font-size: .78rem;
+      background: rgba(255,255,255,.1);
+      color: var(--code-text);
+      border-color: rgba(255,255,255,.2);
+      backdrop-filter: blur(8px);
+    }
+    .tok-comment { color: #9fb3a8; }
+    .tok-key { color: #ffcf99; }
+    .tok-cmd { color: #8bd3ff; }
+    .tok-kw { color: #f6a6ff; }
+    .tok-heading { color: #ffd166; }
+    .tok-list { color: #a9def9; }
+
+    .before-after {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+      background: var(--surface);
+      min-width: 0;
+    }
+    .panel.bad { border-color: color-mix(in srgb, var(--red) 35%, var(--border)); }
+    .panel.good { border-color: color-mix(in srgb, var(--green) 35%, var(--border)); }
+    .panel h4 { margin-top: 0; }
+
+    .diagram {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+      background: var(--surface);
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    .diagram svg {
+      min-width: 680px;
+      max-width: 100%;
+      height: auto;
+      color: var(--text);
+    }
+
+    details {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: .75rem .9rem;
+      margin: .75rem 0;
+      background: var(--surface);
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .check {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+    }
+    .chapter-summary {
+      border-radius: 16px;
+      padding: 1rem 1.1rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      margin-top: 1.25rem;
+    }
+
+    .route {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: .75rem;
+      margin: 1rem 0;
+    }
+    .route-step {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 16px;
+      padding: .9rem;
+      position: relative;
+    }
+    .route-step strong { display: block; }
+    .route-step span { color: var(--muted); font-size: .9rem; }
+
+    .term {
+      font-weight: 700;
+      text-decoration-style: dotted;
+    }
+
+    .search-hidden { display: none !important; }
+    #noResults[hidden] { display: none; }
+    #noResults {
+      max-width: 1120px;
+      margin: 1rem auto;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--orange-bg);
+    }
+
+    .back-to-top {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      box-shadow: var(--shadow);
+      z-index: 900;
+    }
+    .back-to-top.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: .7rem;
+      left: .7rem;
+      z-index: 1002;
+      box-shadow: var(--shadow);
+    }
+    .nav-backdrop { display: none; }
+
+    @media (max-width: 940px) {
+      .layout { display: block; }
+      .menu-toggle { display: inline-flex; }
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: min(86vw, 330px);
+        transform: translateX(-105%);
+        transition: transform .2s ease;
+        z-index: 1001;
+      }
+      body.nav-open .sidebar { transform: translateX(0); }
+      .nav-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+        z-index: 1000;
+      }
+      body.nav-open .nav-backdrop { display: block; }
+      .main { padding-top: 4rem; }
+      .top-controls { grid-template-columns: 1fr; }
+      .before-after { grid-template-columns: 1fr; }
+      .route { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      body { background: white; color: black; }
+      #progress, .sidebar, .menu-toggle, .back-to-top, .top-controls, .copy-btn { display: none !important; }
+      .layout { display: block; }
+      .main { padding: 0; }
+      section.card, .hero { box-shadow: none; break-inside: avoid; }
+      a[href]::after { content: " (" attr(href) ")"; font-size: .82em; color: #555; }
+      pre { white-space: pre-wrap; border: 1px solid #999; }
+    }
+  </style>
+</head>
+<body>
+  <div id="progress" aria-hidden="true"></div>
+  <a class="skip-link" href="#maincontent">本文へスキップ</a>
+  <button id="menuToggle" class="menu-toggle" aria-label="目次を開く" aria-controls="sidebar" aria-expanded="false">☰</button>
+  <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
+
+  <div class="layout">
+    <aside id="sidebar" class="sidebar">
+      <div class="brand"><span class="brand-mark">C</span><span>Claude学習ガイド</span></div>
+      <div class="toc-title">目次</div>
+      <nav aria-label="ページ内目次">
+        <ul class="toc">
+          <li><a href="#reading-guide">このガイドの読み方</a></li>
+          <li><a href="#part-claude-md">第1部: CLAUDE.md</a></li>
+          <li class="sub"><a href="#claude-md-what">CLAUDE.mdとは</a></li>
+          <li class="sub"><a href="#claude-md-locations">配置場所と階層</a></li>
+          <li class="sub"><a href="#claude-md-writing">書き方</a></li>
+          <li class="sub"><a href="#claude-md-best-practices">ベストプラクティス</a></li>
+          <li class="sub"><a href="#claude-md-examples">実例集</a></li>
+          <li><a href="#part-skills">第2部: Agent Skills</a></li>
+          <li class="sub"><a href="#skills-what">Skillsとは</a></li>
+          <li class="sub"><a href="#skills-structure">構造と形式</a></li>
+          <li class="sub"><a href="#skills-behavior">動作の仕組み</a></li>
+          <li class="sub"><a href="#skills-hands-on">ハンズオン</a></li>
+          <li class="sub"><a href="#skills-best-practices">Skillsの設計原則</a></li>
+          <li><a href="#part-comparison">第3部: 比較と使い分け</a></li>
+          <li><a href="#part-operation">第4部: 運用とチーム展開</a></li>
+          <li><a href="#exercises">実践演習</a></li>
+          <li><a href="#glossary">用語集</a></li>
+          <li><a href="#references">リファレンス</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main id="maincontent" class="main">
+      <header class="hero">
+        <h1>Claude Code「CLAUDE.md」と Agent Skills 実践ガイド</h1>
+        <p>
+          Claude Codeをチームで使うときに重要な
+          <a class="term" href="#glossary-claude-md">CLAUDE.md</a> と
+          <a class="term" href="#glossary-skill">Agent Skills</a> を、
+          概念・構文・実装・運用まで一気通貫で学ぶ教材です。
+        </p>
+        <div class="meta">
+          <span class="pill">最終更新: 2026-05-22</span>
+          <span class="pill">対象: 開発者 / Tech Lead / DevEx</span>
+          <span class="pill">学習目安: 3〜5時間</span>
+          <span class="pill">ハンズオン: 60〜90分</span>
+        </div>
+
+        <div class="callout warning">
+          <strong>検証条件:</strong>
+          このHTMLは公式ドキュメントURLを参照元として整理していますが、本生成環境ではWeb取得・CLI実測を実行していません。
+          CLI出力、Skills API、<code>CLAUDE.local.md</code> の扱いなどはバージョン依存のため、実運用前に公式リンクで再確認してください。
+        </div>
+
+        <div class="top-controls">
+          <div class="search-wrap" role="search">
+            <input id="searchInput" type="search" placeholder="用語・キーワードで検索: 例）CLAUDE.local.md, progressive disclosure, /init" aria-label="ページ内検索">
+            <button id="clearSearch" type="button">クリア</button>
+          </div>
+          <button id="themeToggle" class="theme-toggle" type="button" aria-label="ダークモード切替">🌗 テーマ切替</button>
+        </div>
+      </header>
+
+      <div id="noResults" hidden>検索条件に一致するセクションがありません。</div>
+
+      <article>
+        <section id="reading-guide" class="card" data-search-section>
+          <h2>このガイドの読み方</h2>
+          <div class="learning-objectives">
+            <strong>学習目標</strong>
+            <ul>
+              <li>CLAUDE.mdとSkillsの学習順序を把握する。</li>
+              <li>初級者・経験者それぞれの最短ルートを選べる。</li>
+              <li>公式情報と運用例の区別を意識して読む。</li>
+            </ul>
+          </div>
+
+          <p>
+            本ガイドは「概念 → 構文 → 実践 → 運用」の順に進みます。
+            まずCLAUDE.mdでClaude Codeに常時渡す文脈を整え、次にSkillsでタスク固有の専門能力をパッケージ化します。
+          </p>
+
+          <div class="route" aria-label="学習ルート">
+            <div class="route-step"><strong>1. 概念</strong><span>何を解決する仕組みか</span></div>
+            <div class="route-step"><strong>2. 構文</strong><span>ファイル配置と書き方</span></div>
+            <div class="route-step"><strong>3. 実践</strong><span>小さく作って試す</span></div>
+            <div class="route-step"><strong>4. 運用</strong><span>チームで育てる</span></div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>読者</th><th>推奨パス</th><th>到達目標</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>初めてClaude Codeを使う人</td>
+                  <td>第1部 → 第2部ハンズオン → 演習1・2</td>
+                  <td>自分のリポジトリにCLAUDE.mdと最小Skillを追加できる。</td>
+                </tr>
+                <tr>
+                  <td>既にClaude Codeを使っている人</td>
+                  <td>ベストプラクティス → 比較表 → 運用</td>
+                  <td>既存の指示をCLAUDE.md / Skills / subagentsへ整理できる。</td>
+                </tr>
+                <tr>
+                  <td>チーム展開担当</td>
+                  <td>第3部 → 第4部 → リファレンス</td>
+                  <td>Git管理・レビュー・セキュリティ基準を設計できる。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="part-claude-md" class="card" data-search-section>
+          <h2>第1部: CLAUDE.md 編</h2>
+          <div class="learning-objectives">
+            <strong>学習目標</strong>
+            <ul>
+              <li>CLAUDE.mdの役割、読込階層、書き方を説明できる。</li>
+              <li>プロジェクトに適したCLAUDE.mdテンプレートを作れる。</li>
+              <li>悪い指示を、Claude Codeが実行しやすい指示に改善できる。</li>
+            </ul>
+          </div>
+
+          <section id="claude-md-what">
+            <h3>1. CLAUDE.mdとは何か</h3>
+            <p class="source-note"><span class="badge official">公式</span> 主出典: Claude Code Memory docs</p>
+            <p>
+              <strong>CLAUDE.md</strong> は、Claude Codeに渡す長期記憶・プロジェクトコンテキストをMarkdownで記述するファイルです。
+              毎回チャットで「このプロジェクトはpnpmを使います」「テストはこのコマンドです」と説明する代わりに、
+              リポジトリ内の知識として固定できます。
+            </p>
+            <div class="callout info">
+              <strong>役割:</strong>
+              CLAUDE.mdは「Claudeに常に覚えておいてほしい、リポジトリ固有の情報」を置く場所です。
+              汎用的なプログラミング解説ではなく、あなたのプロジェクト固有の事実・規約・禁止事項を書きます。
+            </div>
+            <ul>
+              <li>解決する課題: 文脈説明の重複、コマンド誤実行、規約忘れ、オンボーディングのばらつき。</li>
+              <li>読まれるタイミング: Claude Codeのセッション開始時や、関連ディレクトリを扱うタイミング。</li>
+              <li>注意点: 常時コンテキストに入るため、冗長にするとトークンを消費します。</li>
+            </ul>
+          </section>
+
+          <section id="claude-md-locations">
+            <h3>2. 配置場所と階層</h3>
+            <p>
+              代表的な配置は次のとおりです。細かな探索順・自動読込仕様はバージョン依存のため、
+              最新のMemory docsで確認してください。
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>場所</th><th>用途</th><th>Git管理</th><th>注意</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>./CLAUDE.md</code></td>
+                    <td>プロジェクト共有メモリ。規約・コマンド・設計概要。</td>
+                    <td>通常コミットする</td>
+                    <td>チーム全員に有効な情報だけを書く。</td>
+                  </tr>
+                  <tr>
+                    <td><code>~/.claude/CLAUDE.md</code></td>
+                    <td>個人のグローバルメモリ。好みの応答形式など。</td>
+                    <td>通常コミットしない</td>
+                    <td>チーム規約を書かない。</td>
+                  </tr>
+                  <tr>
+                    <td><code>./path/CLAUDE.md</code></td>
+                    <td>サブディレクトリ固有の文脈。例: <code>frontend/</code>, <code>infra/</code>。</td>
+                    <td>内容次第でコミット</td>
+                    <td>必要時に読み込まれる設計として使う。</td>
+                  </tr>
+                  <tr>
+                    <td><code>CLAUDE.local.md</code></td>
+                    <td>個人設定・ローカルパス・実験的指示。</td>
+                    <td>コミットしない</td>
+                    <td><span class="badge verify">要確認</span> 自動読込可否は最新仕様を確認。確実にするなら<code>@CLAUDE.local.md</code>で明示インポート。</td>
+                  </tr>
+                  <tr>
+                    <td><code>@path/to/file</code></td>
+                    <td>CLAUDE.mdから別ファイルを取り込む。</td>
+                    <td>参照先次第</td>
+                    <td>長い設計資料・コマンド一覧を分割するのに便利。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="diagram">
+              <svg viewBox="0 0 900 280" role="img" aria-labelledby="diag-memory-title">
+                <title id="diag-memory-title">CLAUDE.mdの読込階層</title>
+                <defs>
+                  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L9,3 z" fill="currentColor"></path>
+                  </marker>
+                </defs>
+                <rect x="30" y="30" width="230" height="55" rx="12" fill="none" stroke="currentColor"></rect>
+                <text x="50" y="64" fill="currentColor">~/.claude/CLAUDE.md</text>
+                <rect x="30" y="110" width="230" height="55" rx="12" fill="none" stroke="currentColor"></rect>
+                <text x="65" y="144" fill="currentColor">repo/CLAUDE.md</text>
+                <rect x="30" y="190" width="230" height="55" rx="12" fill="none" stroke="currentColor"></rect>
+                <text x="56" y="224" fill="currentColor">repo/app/CLAUDE.md</text>
+                <line x1="270" y1="58" x2="520" y2="140" stroke="currentColor" marker-end="url(#arrow)"></line>
+                <line x1="270" y1="138" x2="520" y2="140" stroke="currentColor" marker-end="url(#arrow)"></line>
+                <line x1="270" y1="218" x2="520" y2="150" stroke="currentColor" marker-end="url(#arrow)"></line>
+                <rect x="530" y="92" width="300" height="96" rx="18" fill="rgba(204,107,44,.14)" stroke="currentColor"></rect>
+                <text x="586" y="128" fill="currentColor" font-weight="700">Claude Codeの文脈</text>
+                <text x="565" y="158" fill="currentColor">常時 + 必要時にプロジェクト知識を参照</text>
+              </svg>
+            </div>
+
+            <h4>インポート例</h4>
+            <pre><code class="language-markdown"># Project Memory
+
+このリポジトリでは、詳細情報を以下から読み込む。
+
+@README.md
+@docs/architecture.md
+@docs/testing.md
+
+# 個人ローカル設定
+# チームで合意した場合のみ使う。CLAUDE.local.mdは.gitignoreへ。
+@CLAUDE.local.md</code></pre>
+
+            <h4>.gitignore例</h4>
+            <pre><code class="language-bash"># Claude Code local-only files
+CLAUDE.local.md
+.claude/settings.local.json
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/</code></pre>
+          </section>
+
+          <section id="claude-md-writing">
+            <h3>3. 書き方の基本</h3>
+            <p>
+              CLAUDE.mdはMarkdownで書きます。見出しを分け、Claudeがすぐ使える「事実」と「行動指示」を短く書きます。
+            </p>
+
+            <pre><code class="language-markdown"># Project: &lt;project-name&gt;
+
+## Overview
+- このプロジェクトは &lt;何をするシステムか&gt;。
+- 主要技術: &lt;例: TypeScript, Next.js, PostgreSQL&gt;。
+
+## Commands
+- `pnpm install`: 依存関係をインストール。
+- `pnpm dev`: ローカル開発サーバー。
+- `pnpm test`: テスト実行。
+- `pnpm lint`: lint実行。
+- `pnpm typecheck`: 型チェック。
+
+## Code Style
+- TypeScriptはstrict前提。
+- `any` は原則禁止。必要な場合は理由をコメントに書く。
+- APIクライアントは `src/lib/api/` に置く。
+
+## Testing
+- 変更した機能にはユニットテストを追加する。
+- E2Eは重いため、明示依頼がない限り関連ケースだけ実行する。
+
+## Do Not
+- `generated/` 配下を手編集しない。
+- マイグレーションを勝手に削除しない。
+- 秘密情報をコードやCLAUDE.mdに書かない。</code></pre>
+
+            <div class="callout hint">
+              <strong>目安:</strong>
+              まずは「概要」「コマンド」「規約」「テスト」「禁止事項」の5セクションから始めると、過不足が少なくなります。
+              100〜200行を超える詳細は、<code>@docs/...</code> に分割するのが運用しやすいです。
+              <span class="badge ops">運用例</span>
+            </div>
+          </section>
+
+          <section id="claude-md-best-practices">
+            <h3>4. ベストプラクティス</h3>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>DO</th><th>DON'T</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>プロジェクト固有のコマンドを書く。</td>
+                    <td>「きれいなコードを書いて」のような一般論だけを書く。</td>
+                  </tr>
+                  <tr>
+                    <td>命名規則・ディレクトリ規約・禁止事項を書く。</td>
+                    <td>古い設計メモや変更頻度の高いTODOを大量に書く。</td>
+                  </tr>
+                  <tr>
+                    <td>Claudeに実行してほしい検証手順を書く。</td>
+                    <td>実在しないコマンドや古いコマンドを放置する。</td>
+                  </tr>
+                  <tr>
+                    <td><code>/init</code>で初期生成し、PRで育てる。</td>
+                    <td>個人の秘密情報やアクセストークンを書く。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4>便利なClaude Code操作</h4>
+            <pre><code class="language-bash"># プロジェクトのCLAUDE.md初期生成を支援
+/init
+
+# メモリファイルを確認・編集
+/memory
+
+# 対話中に記憶へ追加したい場合
+# このプロジェクトでは、DB migration後に必ずpnpm db:generateを実行する</code></pre>
+
+            <div class="callout warning">
+              <strong>注意:</strong>
+              <code>#</code> プレフィックスで記憶に追加する動作や、保存先選択UIはバージョンで変わる可能性があります。
+              最新のClaude Code Memory docsとCLIヘルプを確認してください。
+            </div>
+
+            <h4>Before / After: 悪いCLAUDE.mdを改善する</h4>
+            <div class="before-after">
+              <div class="panel bad">
+                <h4>Before: 抽象的すぎる</h4>
+                <pre><code class="language-markdown"># Instructions
+
+- 良いコードを書いてください。
+- バグを作らないでください。
+- テストをちゃんとしてください。
+- なるべく速く実装してください。</code></pre>
+              </div>
+              <div class="panel good">
+                <h4>After: 実行可能で具体的</h4>
+                <pre><code class="language-markdown"># Instructions
+
+## Commands
+- `pnpm test -- --runInBand`: 関連ユニットテスト。
+- `pnpm typecheck`: 変更後に必ず実行。
+
+## Code Style
+- React Server Componentsを優先。
+- client componentが必要な場合のみ `"use client"` を付ける。
+- API routeでは `src/lib/auth.ts` の `requireUser()` を必ず使う。
+
+## Do Not
+- `src/generated/` は手編集しない。
+- DB migrationは削除せず、新しいmigrationを追加する。</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="claude-md-examples">
+            <h3>5. 実例集</h3>
+            <p><span class="badge ops">運用例</span> 以下は本ガイド用の実践テンプレートです。公式サンプルそのものではありません。</p>
+
+            <h4>例1: Web開発 / TypeScript</h4>
+            <pre><code class="language-markdown"># Acme Web
+
+## Overview
+- B2B SaaSの管理画面。
+- Stack: Next.js App Router, TypeScript, Prisma, PostgreSQL, Vitest.
+
+## Commands
+- `pnpm dev`: 開発サーバー。
+- `pnpm lint`: ESLint。
+- `pnpm typecheck`: TypeScript型チェック。
+- `pnpm test src/path/to/file.test.ts`: 単体テスト。
+
+## Architecture
+- `app/`: Next.js routes。
+- `src/features/`: ドメインごとのUIとhooks。
+- `src/server/`: server-only utilities。
+- `prisma/schema.prisma`: DB schema。
+
+## Rules
+- Server Actionsでは入力を必ずzodで検証する。
+- UI部品は既存の `src/components/ui/` を優先して使う。
+- 生成ファイルは手編集しない。</code></pre>
+
+            <h4>例2: Python / CLIツール</h4>
+            <pre><code class="language-markdown"># invoice-cli
+
+## Overview
+- 請求データCSVを検証し、会計システム向けJSONへ変換するCLI。
+
+## Commands
+- `uv run pytest`: テスト。
+- `uv run ruff check .`: lint。
+- `uv run ruff format .`: format。
+- `uv run mypy src`: 型チェック。
+
+## Code Style
+- Python 3.12。
+- 外部I/Oは `src/invoice_cli/io.py` に集約する。
+- 日付処理はtimezone-awareにする。
+
+## Testing
+- 変換ロジックはfixtureベースでテストする。
+- 個人情報を含む実CSVをテストfixtureに入れない。</code></pre>
+
+            <h4>例3: モノレポ</h4>
+            <pre><code class="language-markdown"># Platform Monorepo
+
+@docs/architecture.md
+@docs/release.md
+
+## Workspace
+- `apps/web`: 顧客向けWeb。
+- `apps/admin`: 社内管理画面。
+- `packages/ui`: 共通UI。
+- `packages/api-client`: OpenAPI生成クライアント。
+
+## Commands
+- `pnpm -w lint`: 全体lint。
+- `pnpm --filter web test`: webだけテスト。
+- `pnpm --filter api-client generate`: API client再生成。
+
+## Rules
+- package間の依存は `pnpm-workspace.yaml` に従う。
+- `packages/ui` から `apps/*` へ依存してはいけない。
+- 変更範囲が複数packageにまたがる場合、影響範囲を回答に明記する。</code></pre>
+          </section>
+
+          <div class="check">
+            <h3>理解度チェック: CLAUDE.md</h3>
+            <details>
+              <summary>Q1. CLAUDE.mdに「一般的な良いコードの書き方」を長く書くべきでない理由は？</summary>
+              <p>毎回コンテキストを消費するためです。CLAUDE.mdにはプロジェクト固有のコマンド、規約、禁止事項を短く書くのが効果的です。</p>
+            </details>
+            <details>
+              <summary>Q2. チーム共有の規約と個人のローカルパスはどこに分けるべき？</summary>
+              <p>共有規約は <code>./CLAUDE.md</code>、個人情報はGit管理外の <code>CLAUDE.local.md</code> やユーザーメモリに分けます。</p>
+            </details>
+            <details>
+              <summary>Q3. 長い設計資料をCLAUDE.mdに直接貼らずに扱う方法は？</summary>
+              <p><code>@docs/architecture.md</code> のようにインポートで分割します。詳細な制限は最新公式docsを確認してください。</p>
+            </details>
+          </div>
+
+          <div class="chapter-summary">
+            <strong>この章の要点:</strong>
+            CLAUDE.mdは「常時必要なプロジェクト文脈」の置き場です。短く、具体的に、チーム共有できる内容を書き、個人情報や機密情報は含めません。
+          </div>
+        </section>
+
+        <section id="part-skills" class="card" data-search-section>
+          <h2>第2部: Skills（Agent Skills）編</h2>
+          <div class="learning-objectives">
+            <strong>学習目標</strong>
+            <ul>
+              <li>SkillsをCLAUDE.md・サブエージェント・スラッシュコマンドと区別できる。</li>
+              <li><code>SKILL.md</code> と補助ファイルを含むSkillを作成できる。</li>
+              <li>description設計とProgressive disclosureの重要性を説明できる。</li>
+            </ul>
+          </div>
+
+          <section id="skills-what">
+            <h3>1. Skillsとは何か</h3>
+            <p class="source-note"><span class="badge official">公式</span> 主出典: Agent Skills overview / getting started / best practices</p>
+            <p>
+              <strong>Agent Skills</strong> は、特定タスクの手順・知識・スクリプト・テンプレートを1つのディレクトリにまとめ、
+              Claudeが必要時に呼び出せるようにする拡張パッケージです。
+            </p>
+            <div class="callout info">
+              <strong>メンタルモデル:</strong>
+              CLAUDE.mdが「常に持つプロジェクト記憶」なら、Skillは「必要なときだけ取り出す専門能力」です。
+              たとえば「社内のリリースノート形式で書く」「Conventional Commitsに従ってコミットを作る」
+              「ブランドガイドに沿って資料を作る」といったタスクに向きます。
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>仕組み</th><th>読み込まれ方</th><th>向いている用途</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>CLAUDE.md</td>
+                    <td>常時または階層に応じて読み込まれる</td>
+                    <td>プロジェクト全体の規約・コマンド・設計概要</td>
+                  </tr>
+                  <tr>
+                    <td>Skills</td>
+                    <td>descriptionを手がかりにオンデマンドで読み込まれる</td>
+                    <td>特定タスクの手順、テンプレート、補助スクリプト</td>
+                  </tr>
+                  <tr>
+                    <td>Subagents</td>
+                    <td>別の専門エージェントとして委任</td>
+                    <td>別コンテキストでの調査、レビュー、監査</td>
+                  </tr>
+                  <tr>
+                    <td>Slash commands</td>
+                    <td>ユーザーが明示的に実行</td>
+                    <td>定型プロンプトやワークフローのショートカット</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="skills-structure">
+            <h3>2. 構造とファイル形式</h3>
+            <p>
+              最小構成は、Skill名のディレクトリと <code>SKILL.md</code> です。
+              <code>SKILL.md</code> のYAMLフロントマターには、少なくとも <code>name</code> と <code>description</code> を書きます。
+            </p>
+
+            <pre><code class="language-bash">.claude/
+└── skills/
+    └── conventional-commit/
+        ├── SKILL.md
+        ├── scripts/
+        │   └── suggest_commit.py
+        └── templates/
+            └── commit-message.txt</code></pre>
+
+            <pre><code class="language-markdown">---
+name: conventional-commit
+description: Use when creating, reviewing, or improving git commit messages that must follow Conventional Commits. Trigger on requests about git commit, staged changes, commit message, feat/fix/chore/docs/test/refactor, or release history.
+---
+
+# Conventional Commit
+
+Use this skill to help create safe, clear commit messages.
+
+## Workflow
+1. Inspect staged changes with `git diff --cached --stat` and `git diff --cached`.
+2. Identify the most appropriate type: feat, fix, docs, test, refactor, chore, perf, build, ci.
+3. Propose one concise subject line.
+4. Do not run `git commit` unless the user explicitly confirms.</code></pre>
+
+            <div class="callout hint">
+              <strong>descriptionが重要:</strong>
+              Claudeは最初にSkillのnameとdescriptionを見て、使うべきか判断します。
+              「何をするSkillか」だけでなく、「どんな依頼文・文脈で使うか」を具体的に書きます。
+            </div>
+
+            <p>
+              補助ファイルには、スクリプト、テンプレート、チェックリスト、参考資料を入れられます。
+              Claudeに毎回手で判断させるより、機械的にできる検証はスクリプト化すると安定します。
+            </p>
+          </section>
+
+          <section id="skills-behavior">
+            <h3>3. 動作の仕組み: Progressive disclosure</h3>
+            <p>
+              Skillsの重要概念が <a class="term" href="#glossary-progressive">Progressive disclosure</a> です。
+              すべてのSkill本文を最初から読むのではなく、まずdescriptionだけを見て、必要と判断したSkillの詳細を読みます。
+            </p>
+
+            <div class="diagram">
+              <svg viewBox="0 0 980 260" role="img" aria-labelledby="diag-skill-title">
+                <title id="diag-skill-title">Skillsの動作フロー</title>
+                <defs>
+                  <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L9,3 z" fill="currentColor"></path>
+                  </marker>
+                </defs>
+                <rect x="20" y="80" width="150" height="70" rx="14" fill="none" stroke="currentColor"></rect>
+                <text x="48" y="110" fill="currentColor">ユーザー依頼</text>
+                <text x="38" y="134" fill="currentColor" font-size="13">例: commit作って</text>
+                <line x1="175" y1="115" x2="270" y2="115" stroke="currentColor" marker-end="url(#arrow2)"></line>
+
+                <rect x="280" y="60" width="190" height="110" rx="14" fill="none" stroke="currentColor"></rect>
+                <text x="306" y="96" fill="currentColor">Skill候補の</text>
+                <text x="306" y="122" fill="currentColor">name/descriptionを確認</text>
+                <text x="306" y="148" fill="currentColor" font-size="13">常時読むのは軽量情報</text>
+                <line x1="475" y1="115" x2="570" y2="115" stroke="currentColor" marker-end="url(#arrow2)"></line>
+
+                <rect x="580" y="60" width="160" height="110" rx="14" fill="rgba(204,107,44,.14)" stroke="currentColor"></rect>
+                <text x="612" y="100" fill="currentColor">SKILL.md</text>
+                <text x="615" y="126" fill="currentColor">詳細を読む</text>
+                <line x1="745" y1="115" x2="840" y2="115" stroke="currentColor" marker-end="url(#arrow2)"></line>
+
+                <rect x="850" y="60" width="110" height="110" rx="14" fill="none" stroke="currentColor"></rect>
+                <text x="874" y="98" fill="currentColor">補助</text>
+                <text x="865" y="124" fill="currentColor">ファイル</text>
+                <text x="860" y="148" fill="currentColor" font-size="13">script/template</text>
+              </svg>
+            </div>
+
+            <ul>
+              <li>自動選択: ユーザー依頼とdescriptionが合うと、ClaudeがSkillを使う。</li>
+              <li>明示呼び出し: 「<code>conventional-commit</code> skillを使って」のように依頼できる。</li>
+              <li>失敗例: descriptionが曖昧、複数Skillが重複、必要なファイルが足りない。</li>
+            </ul>
+          </section>
+
+          <section id="skills-hands-on">
+            <h3>4. ハンズオン: Conventional Commit Skillを作る</h3>
+
+            <h4>Step 1: ディレクトリを作る</h4>
+            <pre><code class="language-bash">mkdir -p .claude/skills/conventional-commit/scripts
+mkdir -p .claude/skills/conventional-commit/templates</code></pre>
+
+            <h4>Step 2: SKILL.mdを書く</h4>
+            <pre><code class="language-markdown">---
+name: conventional-commit
+description: Use when creating or reviewing git commit messages from staged changes. This skill helps write Conventional Commits such as feat, fix, docs, test, refactor, chore, build, ci, perf. Trigger on git commit, commit message, staged diff, release notes, or change summary.
+---
+
+# Conventional Commit Skill
+
+## Goal
+Create a clear, safe commit message that follows Conventional Commits.
+
+## Rules
+- Format: `type(scope): subject`
+- Subject must be imperative, concise, and under 72 characters when practical.
+- Allowed types: feat, fix, docs, test, refactor, chore, build, ci, perf.
+- If the change is ambiguous, ask the user before committing.
+- Never run `git commit` unless the user explicitly confirms.
+
+## Workflow
+1. Check staged files:
+   - `git diff --cached --name-status`
+   - `git diff --cached --stat`
+2. Run `scripts/suggest_commit.py` if available.
+3. Inspect the diff when necessary.
+4. Propose 1 primary message and up to 2 alternatives.
+5. Ask for confirmation before executing `git commit`.
+
+## Output format
+- Suggested: `type(scope): subject`
+- Why: one short sentence.
+- Risk: mention if staged changes look too broad.</code></pre>
+
+            <h4>Step 3: 補助スクリプトを入れる</h4>
+            <pre><code class="language-python">#!/usr/bin/env python3
+"""
+Suggest a Conventional Commit skeleton from staged files.
+
+This script is intentionally conservative:
+- It does not create commits.
+- It only reads staged file names and diff stats.
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def run_git(args: list[str]) -> str:
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as exc:
+        print(exc.stderr.strip() or str(exc), file=sys.stderr)
+        sys.exit(exc.returncode)
+
+
+def staged_files() -> list[str]:
+    output = run_git(["diff", "--cached", "--name-only"])
+    return [line.strip() for line in output.splitlines() if line.strip()]
+
+
+def infer_type(files: list[str]) -> str:
+    if not files:
+        return "chore"
+    if all(f.endswith((".md", ".mdx", ".rst")) or f.startswith("docs/") for f in files):
+        return "docs"
+    if all("/test" in f or f.endswith(("_test.py", ".test.ts", ".spec.ts")) for f in files):
+        return "test"
+    if any(f.startswith((".github/", "ci/")) for f in files):
+        return "ci"
+    if any(Path(f).name in {"package.json", "pnpm-lock.yaml", "package-lock.json", "uv.lock"} for f in files):
+        return "build"
+    return "chore"
+
+
+def infer_scope(files: list[str]) -> str:
+    top_levels = [Path(f).parts[0] for f in files if Path(f).parts]
+    if not top_levels:
+        return "repo"
+    [(scope, _count)] = Counter(top_levels).most_common(1)
+    return scope.replace("_", "-")
+
+
+def main() -> None:
+    files = staged_files()
+    if not files:
+        print("No staged files. Stage changes first, e.g. `git add &lt;files&gt;`.")
+        sys.exit(1)
+
+    commit_type = infer_type(files)
+    scope = infer_scope(files)
+    print(f"Suggested skeleton: {commit_type}({scope}): &lt;imperative summary&gt;")
+    print()
+    print("Staged files:")
+    for file in files:
+        print(f"- {file}")
+    print()
+    print("Tip: inspect `git diff --cached` and replace the summary before committing.")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+
+            <h4>Step 4: 動作確認</h4>
+            <pre><code class="language-bash">chmod +x .claude/skills/conventional-commit/scripts/suggest_commit.py
+
+git add src/example.ts
+python .claude/skills/conventional-commit/scripts/suggest_commit.py
+
+# Claude Code内で依頼
+claude "ステージ済み変更からConventional Commits形式のコミットメッセージを提案して。"</code></pre>
+
+            <div class="callout warning">
+              <strong>バージョン依存:</strong>
+              Claude CodeでのSkill配置場所は、既知情報では <code>.claude/skills/</code> と <code>~/.claude/skills/</code> が代表例です。
+              最新のAgent Skills docsで確認してください。
+            </div>
+          </section>
+
+          <section id="skills-best-practices">
+            <h3>5. Skillsのベストプラクティス</h3>
+            <ul>
+              <li><strong>descriptionは具体的に:</strong> タスク名、関連キーワード、使うべき状況を書く。</li>
+              <li><strong>1 Skill = 1責務:</strong> 「リリース」「コミット」「DB migration」など境界を明確にする。</li>
+              <li><strong>スクリプトを活用:</strong> ファイル一覧、lint、変換など機械的処理はスクリプト化する。</li>
+              <li><strong>失敗時の手順を書く:</strong> 権限不足、ファイル不在、曖昧な入力のときにClaudeが迷わないようにする。</li>
+              <li><strong>レビューする:</strong> SkillはClaudeの行動を変えるため、チーム共有する場合はコードレビュー対象にする。</li>
+            </ul>
+
+            <h4>Skillレビュー用チェックリスト</h4>
+            <pre><code class="language-markdown">## Skill Review Checklist
+
+- [ ] nameは短く、衝突しにくいか
+- [ ] descriptionに「いつ使うか」が書かれているか
+- [ ] SKILL.mdは長すぎないか
+- [ ] 補助スクリプトは安全か
+- [ ] 秘密情報・社外秘データを含んでいないか
+- [ ] 実行前にユーザー確認が必要な操作を明記しているか
+- [ ] テスト方法・確認方法があるか</code></pre>
+          </section>
+
+          <section id="skills-examples">
+            <h3>6. 実例アイデア</h3>
+            <p>
+              <span class="badge official">公式</span>
+              AnthropicのSkills関連ドキュメントとEngineering Blogでは、ドキュメント生成、表計算、ブランドガイド、定型業務などの例が紹介されています。
+              公式サンプルの最新一覧は <a href="https://github.com/anthropics/skills">anthropics/skills</a> を確認してください。
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Skill案</th><th>内容</th><th>同梱するとよいもの</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>release-note-writer</td>
+                    <td>git logやPR一覧から社内形式のリリースノートを作る。</td>
+                    <td>テンプレート、分類ルール、除外ラベル一覧。</td>
+                  </tr>
+                  <tr>
+                    <td>openapi-client-update</td>
+                    <td>OpenAPI更新後にクライアント生成、差分確認、テストまで行う。</td>
+                    <td>生成スクリプト、確認チェックリスト。</td>
+                  </tr>
+                  <tr>
+                    <td>db-migration-review</td>
+                    <td>migrationの危険操作、rollback、インデックス影響を確認。</td>
+                    <td>SQLチェック用スクリプト、DB方針。</td>
+                  </tr>
+                  <tr>
+                    <td>incident-postmortem</td>
+                    <td>障害メモからポストモーテムを標準形式で作成。</td>
+                    <td>テンプレート、SLO定義、用語集。</td>
+                  </tr>
+                  <tr>
+                    <td>design-system-component</td>
+                    <td>デザインシステム規約に沿ってUIコンポーネントを追加。</td>
+                    <td>Storybookテンプレート、アクセシビリティチェック。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="check">
+            <h3>理解度チェック: Skills</h3>
+            <details>
+              <summary>Q1. Skillのdescriptionが重要な理由は？</summary>
+              <p>ClaudeがSkillを使うかどうかを最初に判断する手がかりだからです。タスク名だけでなく、発火してほしい文脈やキーワードを書く必要があります。</p>
+            </details>
+            <details>
+              <summary>Q2. CLAUDE.mdではなくSkillにすべき情報は？</summary>
+              <p>常時必要ではなく、特定タスクでだけ必要な手順・テンプレート・スクリプトです。例: リリースノート生成、コミットメッセージ作成。</p>
+            </details>
+            <details>
+              <summary>Q3. Skillにスクリプトを入れる利点は？</summary>
+              <p>ファイル一覧取得、形式変換、検証などの決定的処理を安定化でき、Claudeの推測依存を減らせます。</p>
+            </details>
+          </div>
+
+          <div class="chapter-summary">
+            <strong>この章の要点:</strong>
+            Skillsはオンデマンドで読む専門能力です。description設計、責務の分離、補助スクリプト、安全な実行手順が品質を左右します。
+          </div>
+        </section>
+
+        <section id="part-comparison" class="card" data-search-section>
+          <h2>第3部: 比較と使い分け</h2>
+          <div class="learning-objectives">
+            <strong>学習目標</strong>
+            <ul>
+              <li>CLAUDE.md / Skills / Subagents / Slash commandsを用途で選べる。</li>
+              <li>複数の仕組みを組み合わせた運用パターンを設計できる。</li>
+              <li>「何でもCLAUDE.mdに書く」状態を避けられる。</li>
+            </ul>
+          </div>
+
+          <h3>比較表</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>仕組み</th><th>主な目的</th><th>起動方法</th><th>保存場所例</th><th>向くもの</th><th>避けるもの</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CLAUDE.md</td>
+                  <td>常時必要な記憶</td>
+                  <td>セッション開始・階層に応じて読込</td>
+                  <td><code>./CLAUDE.md</code>, <code>~/.claude/CLAUDE.md</code></td>
+                  <td>コマンド、規約、設計概要、禁止事項</td>
+                  <td>長大な手順書、個人秘密情報、頻繁に変わるTODO</td>
+                </tr>
+                <tr>
+                  <td>Skills</td>
+                  <td>タスク固有の専門能力</td>
+                  <td>descriptionに基づき自動または明示使用</td>
+                  <td><code>.claude/skills/&lt;name&gt;/SKILL.md</code></td>
+                  <td>リリース、コミット、帳票、社内形式、補助スクリプト</td>
+                  <td>常に必要な基本規約、曖昧で巨大な万能Skill</td>
+                </tr>
+                <tr>
+                  <td>Subagents</td>
+                  <td>別役割への委任</td>
+                  <td>自動選択または明示依頼</td>
+                  <td><code>.claude/agents/*.md</code></td>
+                  <td>レビュー、調査、セキュリティ監査、専門担当</td>
+                  <td>単純な定型プロンプト</td>
+                </tr>
+                <tr>
+                  <td>Slash commands</td>
+                  <td>手動実行する定型操作</td>
+                  <td><code>/command</code></td>
+                  <td><code>.claude/commands/*.md</code></td>
+                  <td>PRレビュー依頼、要約、定型ワークフロー</td>
+                  <td>自動発火してほしい専門手順</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>判断フロー</h3>
+          <ol>
+            <li>その情報は、ほぼすべての作業で必要か？ → <strong>CLAUDE.md</strong></li>
+            <li>特定タスクのときだけ必要な手順・資料・スクリプトか？ → <strong>Skill</strong></li>
+            <li>別の専門家として独立した文脈で調査・レビューさせたいか？ → <strong>Subagent</strong></li>
+            <li>人間が明示的に呼び出すショートカットか？ → <strong>Slash command</strong></li>
+            <li>権限、hooks、環境設定を制御したいか？ → <strong>Settings</strong></li>
+          </ol>
+
+          <h3>組み合わせ運用パターン</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>パターン</th><th>構成</th><th>例</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>最小チーム標準</td>
+                  <td>CLAUDE.md + settings</td>
+                  <td>コマンド、規約、禁止事項、許可ツールをチームで共有。</td>
+                </tr>
+                <tr>
+                  <td>定型業務自動化</td>
+                  <td>CLAUDE.md + Skills</td>
+                  <td>CLAUDE.mdに全体規約、Skillにリリースノートやコミット手順。</td>
+                </tr>
+                <tr>
+                  <td>レビュー強化</td>
+                  <td>Slash command + Subagent + Skill</td>
+                  <td><code>/review-pr</code> でレビュー担当subagentを呼び、必要時にセキュリティSkillを参照。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="check">
+            <h3>理解度チェック: 使い分け</h3>
+            <details>
+              <summary>Q1. 「このリポジトリではpnpmを使う」はどこに書く？</summary>
+              <p>ほぼ全作業で必要なので <code>CLAUDE.md</code> が適切です。</p>
+            </details>
+            <details>
+              <summary>Q2. 「障害報告書を社内テンプレートで作る」はどれが適切？</summary>
+              <p>特定タスクの手順とテンプレートなのでSkillが適切です。</p>
+            </details>
+            <details>
+              <summary>Q3. 「セキュリティ専門家として別観点でレビュー」は？</summary>
+              <p>Subagentが向いています。必要に応じてセキュリティSkillを併用します。</p>
+            </details>
+          </div>
+        </section>
+
+        <section id="part-operation" class="card" data-search-section>
+          <h2>第4部: 運用とチーム展開</h2>
+          <div class="learning-objectives">
+            <strong>学習目標</strong>
+            <ul>
+              <li>Git管理すべきファイルと除外すべきファイルを分けられる。</li>
+              <li>CLAUDE.mdとSkillsのレビュー・更新サイクルを設計できる。</li>
+              <li>セキュリティ上の注意点をチーム標準に落とし込める。</li>
+            </ul>
+          </div>
+
+          <h3>1. Gitで管理するもの / しないもの</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>コミット推奨</th><th>コミット非推奨</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <ul>
+                      <li><code>CLAUDE.md</code></li>
+                      <li><code>.claude/skills/**</code> のチーム共有Skill</li>
+                      <li><code>.claude/commands/**</code> の共有コマンド</li>
+                      <li><code>.claude/agents/**</code> の共有subagent</li>
+                      <li><code>.claude/settings.json</code> はレビュー前提で検討</li>
+                    </ul>
+                  </td>
+                  <td>
+                    <ul>
+                      <li><code>CLAUDE.local.md</code></li>
+                      <li><code>.claude/settings.local.json</code></li>
+                      <li>個人トークン、秘密鍵、社外秘データ</li>
+                      <li><code>~/.claude/</code> 配下の個人設定</li>
+                      <li>Claudeの会話ログや一時ファイル</li>
+                    </ul>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>2. レビュー・更新サイクル</h3>
+          <ul>
+            <li><strong>PR必須:</strong> CLAUDE.mdや共有Skillの変更はコード同様にレビューする。</li>
+            <li><strong>オーナーを決める:</strong> DevEx、Tech Lead、各ドメイン担当が承認する。</li>
+            <li><strong>四半期棚卸し:</strong> 存在しないコマンド、古い設計、使われないSkillを削除する。</li>
+            <li><strong>変更理由を書く:</strong> 「なぜこの指示を足したか」をPR本文に残す。</li>
+            <li><strong>オンボーディングに組み込む:</strong> 新メンバーはCLAUDE.mdと主要Skillを読む。</li>
+          </ul>
+
+          <h3>3. セキュリティ上の注意</h3>
+          <div class="callout danger">
+            <strong>絶対に避ける:</strong>
+            APIキー、秘密鍵、顧客データ、未公開脆弱性、個人情報をCLAUDE.mdやSkillに直接書かないでください。
+            ローカル専用でも、共有・誤コミット・ログ出力のリスクがあります。
+          </div>
+          <ul>
+            <li>破壊的操作を行うSkillには「明示確認なしに実行しない」と書く。</li>
+            <li>補助スクリプトは通常のコードと同じくレビュー・テストする。</li>
+            <li>外部通信、ファイル削除、DB migration、deployは権限と承認フローを明確にする。</li>
+            <li>社内規約や法務・コンプライアンス要件は最新の内部資料にリンクする。</li>
+          </ul>
+
+          <h4>PRテンプレート例</h4>
+          <pre><code class="language-markdown">## Claude Context Change
+
+### 変更対象
+- [ ] CLAUDE.md
+- [ ] Skill
+- [ ] Slash command
+- [ ] Subagent
+- [ ] Settings
+
+### 目的
+なぜこの変更が必要か:
+
+### 安全性
+- [ ] 秘密情報を含まない
+- [ ] 破壊的操作は明示確認を要求している
+- [ ] 実在するコマンドで確認した
+- [ ] 影響範囲を説明した</code></pre>
+
+          <div class="check">
+            <h3>理解度チェック: 運用</h3>
+            <details>
+              <summary>Q1. 共有Skillをレビュー対象にすべき理由は？</summary>
+              <p>SkillはClaudeの行動を変え、スクリプト実行や生成物品質に影響するためです。通常のコードと同様に安全性・正確性を確認します。</p>
+            </details>
+            <details>
+              <summary>Q2. 個人のローカルパスや好みはどこに置く？</summary>
+              <p>Git管理外の <code>CLAUDE.local.md</code>、<code>.claude/settings.local.json</code>、またはユーザーグローバルメモリに置きます。</p>
+            </details>
+            <details>
+              <summary>Q3. 古くなったCLAUDE.mdを放置すると何が起きる？</summary>
+              <p>Claudeが存在しないコマンドを実行したり、古い設計前提で修正したりして、作業品質が下がります。</p>
+            </details>
+          </div>
+        </section>
+
+        <section id="exercises" class="card" data-search-section>
+          <h2>実践演習</h2>
+          <div class="learning-objectives">
+            <strong>学習目標</strong>
+            <ul>
+              <li>自分のプロジェクト用CLAUDE.mdを書ける。</li>
+              <li>小さなSkillを作って動作確認できる。</li>
+              <li>要件に応じて適切なClaude Code拡張を選べる。</li>
+            </ul>
+          </div>
+
+          <h3>演習1: 自分のリポジトリ用CLAUDE.mdを作る</h3>
+          <p>以下を含む30〜80行のCLAUDE.mdを作ってください。</p>
+          <ul>
+            <li>プロジェクト概要</li>
+            <li>開発・テスト・lint・型チェックコマンド</li>
+            <li>ディレクトリ構成</li>
+            <li>禁止事項</li>
+            <li>変更後の確認手順</li>
+          </ul>
+          <details>
+            <summary>解答例を表示</summary>
+            <pre><code class="language-markdown"># My API
+
+## Overview
+- 社内向け在庫API。
+- Stack: Python 3.12, FastAPI, PostgreSQL, pytest.
+
+## Commands
+- `uv run pytest`: tests.
+- `uv run ruff check .`: lint.
+- `uv run mypy app`: type check.
+- `docker compose up db`: local database.
+
+## Architecture
+- `app/routes/`: HTTP routes.
+- `app/services/`: business logic.
+- `app/repositories/`: database access.
+- `migrations/`: Alembic migrations.
+
+## Rules
+- routeから直接SQLを書かない。
+- DB変更時はmigrationを追加する。
+- PIIをfixtureに入れない。
+
+## Done Criteria
+- 関連テスト、ruff、mypyを実行し、結果を回答に含める。</code></pre>
+          </details>
+
+          <h3>演習2: 「リリースノート生成」Skillを設計する</h3>
+          <p><code>.claude/skills/release-note-writer/SKILL.md</code> を作り、descriptionとワークフローを書いてください。</p>
+          <details>
+            <summary>解答例を表示</summary>
+            <pre><code class="language-markdown">---
+name: release-note-writer
+description: Use when writing release notes from git log, pull requests, issue lists, or changelog drafts. Trigger on release note, changelog, version summary, shipped changes, bug fixes, breaking changes.
+---
+
+# Release Note Writer
+
+## Goal
+Create release notes in the team's standard format.
+
+## Inputs
+- version
+- date
+- git range or PR list
+- audience: internal, customer, developer
+
+## Workflow
+1. Collect changes from the provided range or PR list.
+2. Group into Added, Changed, Fixed, Deprecated, Removed, Security.
+3. Highlight breaking changes.
+4. Do not invent issue numbers or customer impact.
+5. Ask for missing version/date if not provided.
+
+## Output
+- Title: `vX.Y.Z - YYYY-MM-DD`
+- Summary: 2-3 sentences.
+- Sections: Added / Changed / Fixed / Breaking Changes.</code></pre>
+          </details>
+
+          <h3>演習3: どの仕組みを使うか選ぶ</h3>
+          <ol>
+            <li>全開発者が守るReactコンポーネント規約。</li>
+            <li>DB migrationの危険操作をレビューする専門担当。</li>
+            <li>毎週、同じ形式で週報を作るショートカット。</li>
+            <li>顧客向けリリースノートをテンプレートに沿って生成。</li>
+          </ol>
+          <details>
+            <summary>解答例を表示</summary>
+            <ol>
+              <li>CLAUDE.md。常時必要なチーム規約だから。</li>
+              <li>Subagent。専門ロールで別観点レビューしたいから。必要に応じてSkillも併用。</li>
+              <li>Slash command。人間が明示実行する定型プロンプトだから。</li>
+              <li>Skill。特定タスクの手順・テンプレート・分類ルールが必要だから。</li>
+            </ol>
+          </details>
+        </section>
+
+        <section id="glossary" class="card" data-search-section>
+          <h2>用語集（Glossary）</h2>
+          <dl>
+            <dt id="glossary-claude-md"><strong>CLAUDE.md</strong></dt>
+            <dd>Claude Codeにプロジェクト固有の長期記憶・指示を渡すMarkdownファイル。</dd>
+
+            <dt id="glossary-skill"><strong>Agent Skill / Skill</strong></dt>
+            <dd>特定タスクの手順、知識、スクリプト、テンプレートをパッケージ化した拡張機能。</dd>
+
+            <dt id="glossary-skill-md"><strong>SKILL.md</strong></dt>
+            <dd>Skillの中心ファイル。YAMLフロントマターに <code>name</code> と <code>description</code> を持つ。</dd>
+
+            <dt id="glossary-progressive"><strong>Progressive disclosure</strong></dt>
+            <dd>最初は軽量な説明だけを読み、必要になったら詳細を読む設計。Skillsのコンテキスト効率を支える考え方。</dd>
+
+            <dt id="glossary-subagent"><strong>Subagent</strong></dt>
+            <dd>特定ロール・ツール・文脈を持つ専門エージェント。レビュー、調査、監査などに向く。</dd>
+
+            <dt id="glossary-slash"><strong>Slash command</strong></dt>
+            <dd><code>/init</code> やカスタム <code>/review-pr</code> のように、ユーザーが明示的に呼び出すコマンド。</dd>
+
+            <dt id="glossary-frontmatter"><strong>Front matter</strong></dt>
+            <dd>Markdown冒頭の <code>---</code> で囲まれたYAMLメタデータ。</dd>
+
+            <dt id="glossary-context"><strong>Context window</strong></dt>
+            <dd>モデルが一度に参照できる入力範囲。CLAUDE.mdを長くしすぎると消費が増える。</dd>
+
+            <dt id="glossary-import"><strong>@ import</strong></dt>
+            <dd>CLAUDE.md内で <code>@docs/file.md</code> のように別ファイルを取り込む機能。</dd>
+          </dl>
+        </section>
+
+        <section id="references" class="card" data-search-section>
+          <h2>リファレンス / 参考リンク</h2>
+          <div class="learning-objectives">
+            <strong>学習目標</strong>
+            <ul>
+              <li>公式ドキュメントと運用例の出典を確認する。</li>
+              <li>仕様変更されやすい箇所を公式リンクで再確認できる。</li>
+            </ul>
+          </div>
+
+          <h3>公式ドキュメント</h3>
+          <ul>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/claude-code/overview">Claude Code overview</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/claude-code/memory">Claude Code memory</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/claude-code/settings">Claude Code settings</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/claude-code/sub-agents">Claude Code sub-agents</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/claude-code/slash-commands">Claude Code slash commands</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview">Agent Skills overview</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/getting-started">Agent Skills getting started</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices">Agent Skills best practices</a></li>
+            <li><span class="badge official">公式</span> <a href="https://docs.claude.com/en/api/agent-skills">Agent Skills API reference</a> <span class="badge verify">要確認</span></li>
+          </ul>
+
+          <h3>公式ブログ / GitHub</h3>
+          <ul>
+            <li><span class="badge official">公式</span> <a href="https://www.anthropic.com/engineering/equipping-claude-with-skills">Equipping Claude with Skills</a></li>
+            <li><span class="badge official">公式</span> <a href="https://www.anthropic.com/engineering/claude-code-best-practices">Claude Code best practices</a></li>
+            <li><span class="badge official">公式</span> <a href="https://github.com/anthropics/claude-code">anthropics/claude-code</a></li>
+            <li><span class="badge official">公式</span> <a href="https://github.com/anthropics/skills">anthropics/skills</a></li>
+          </ul>
+
+          <h3>古くなりやすい仕様</h3>
+          <ul>
+            <li>Claude Code CLIのコマンド一覧とヘルプ出力。</li>
+            <li>Skills APIのbeta仕様、アップロード形式、認証ヘッダー。</li>
+            <li><code>CLAUDE.local.md</code> の自動読み込み可否。</li>
+            <li>Skill配置場所、管理コマンド、公式サンプルリポジトリの内容。</li>
+          </ul>
+        </section>
+      </article>
+
+      <footer class="hero" style="margin-top:2rem">
+        <h2>フッター</h2>
+        <p>
+          本教材は学習目的で作成されています。公式ドキュメント由来の内容には「公式」バッジを付け、
+          本ガイド独自のテンプレートや運用例には「運用例」または文脈上の注記を付けています。
+          実運用前には必ずAnthropic公式ドキュメントと利用中のClaude Codeバージョンで確認してください。
+        </p>
+        <p>最終更新日: 2026-05-22</p>
+      </footer>
+    </main>
+  </div>
+
+  <button id="backToTop" class="back-to-top" type="button" aria-label="ページトップへ戻る">↑ Top</button>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light" || savedTheme === "dark") {
+        root.dataset.theme = savedTheme;
+      }
+
+      const themeToggle = document.getElementById("themeToggle");
+      themeToggle.addEventListener("click", () => {
+        const isDark = root.dataset.theme
+          ? root.dataset.theme === "dark"
+          : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const next = isDark ? "light" : "dark";
+        root.dataset.theme = next;
+        localStorage.setItem("theme", next);
+      });
+
+      const progress = document.getElementById("progress");
+      const backToTop = document.getElementById("backToTop");
+      const updateScroll = () => {
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        const pct = max > 0 ? (doc.scrollTop / max) * 100 : 0;
+        progress.style.width = pct + "%";
+        backToTop.classList.toggle("show", doc.scrollTop > 500);
+      };
+      document.addEventListener("scroll", updateScroll, { passive: true });
+      updateScroll();
+
+      backToTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+      const menuToggle = document.getElementById("menuToggle");
+      const navBackdrop = document.getElementById("navBackdrop");
+      const closeNav = () => {
+        document.body.classList.remove("nav-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+      };
+      menuToggle.addEventListener("click", () => {
+        const open = document.body.classList.toggle("nav-open");
+        menuToggle.setAttribute("aria-expanded", String(open));
+      });
+      navBackdrop.addEventListener("click", closeNav);
+      document.querySelectorAll(".toc a").forEach(a => a.addEventListener("click", closeNav));
+
+      const normalize = value => value.toLowerCase().replace(/\s+/g, " ").trim();
+      const searchInput = document.getElementById("searchInput");
+      const clearSearch = document.getElementById("clearSearch");
+      const sections = [...document.querySelectorAll("[data-search-section]")];
+      const noResults = document.getElementById("noResults");
+
+      const applySearch = () => {
+        const q = normalize(searchInput.value);
+        let visible = 0;
+        sections.forEach(section => {
+          const hit = !q || normalize(section.textContent).includes(q);
+          section.classList.toggle("search-hidden", !hit);
+          if (hit) visible += 1;
+        });
+        noResults.hidden = !q || visible > 0;
+      };
+      searchInput.addEventListener("input", applySearch);
+      clearSearch.addEventListener("click", () => {
+        searchInput.value = "";
+        applySearch();
+        searchInput.focus();
+      });
+
+      const escapeHtml = str => str.replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[ch]));
+
+      const highlight = (text, lang) => {
+        let html = escapeHtml(text);
+        if (lang.includes("bash")) {
+          html = html.replace(/^(\s*#.*)$/gm, '<span class="tok-comment">$1</span>');
+          html = html.replace(/\b(git|claude|npm|pnpm|uv|python|pytest|mkdir|chmod|docker|cat|echo)\b/g, '<span class="tok-cmd">$1</span>');
+        } else if (lang.includes("python")) {
+          html = html.replace(/^(\s*#.*)$/gm, '<span class="tok-comment">$1</span>');
+          html = html.replace(/\b(import|from|def|return|if|else|elif|for|in|try|except|with|as|class|print|sys|subprocess|list|str|int)\b/g, '<span class="tok-kw">$1</span>');
+        } else if (lang.includes("markdown")) {
+          html = html.replace(/^(#+ .+)$/gm, '<span class="tok-heading">$1</span>');
+          html = html.replace(/^(\s*[-*] .+)$/gm, '<span class="tok-list">$1</span>');
+          html = html.replace(/^(\s*#.*)$/gm, '<span class="tok-heading">$1</span>');
+        } else if (lang.includes("yaml")) {
+          html = html.replace(/^(\s*[\w.-]+:)/gm, '<span class="tok-key">$1</span>');
+        }
+        return html;
+      };
+
+      document.querySelectorAll("pre code").forEach(code => {
+        const lang = [...code.classList].find(c => c.startsWith("language-")) || "";
+        const original = code.textContent;
+        code.innerHTML = highlight(original, lang);
+        const pre = code.closest("pre");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "copy-btn";
+        btn.textContent = "Copy";
+        btn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(code.textContent);
+            btn.textContent = "Copied";
+          } catch {
+            const range = document.createRange();
+            range.selectNodeContents(code);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            btn.textContent = "Select";
+          }
+          setTimeout(() => { btn.textContent = "Copy"; }, 1200);
+        });
+        pre.appendChild(btn);
+      });
+
+      const tocLinks = [...document.querySelectorAll(".toc a")];
+      const linkById = new Map(tocLinks.map(a => [decodeURIComponent(a.hash.slice(1)), a]));
+      const observed = [...document.querySelectorAll("main section[id]")];
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        tocLinks.forEach(a => a.classList.remove("active"));
+        const active = linkById.get(visible.target.id);
+        if (active) active.classList.add("active");
+      }, { rootMargin: "-20% 0px -70% 0px", threshold: [0.1, 0.25, 0.5] });
+      observed.forEach(section => observer.observe(section));
+    })();
+  </script>
+</body>
+</html>

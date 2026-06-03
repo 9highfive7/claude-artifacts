@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude トークン最適化ガイド</title>
+<script>
+(function(){
+  var t = localStorage.getItem('cc-tok-theme');
+  if (t) document.documentElement.setAttribute('data-theme', t);
+  else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+<style>
+:root {
+  --bg: #f8f9fa; --bg-card: #fff; --bg-sidebar: #f1f3f5; --bg-header: #E87040;
+  --text: #1a1a2e; --text-secondary: #5f6368; --border: #dadce0;
+  --accent: #E87040; --accent-dark: #C85A30; --accent-light: #FFF0EB;
+  --sidebar-active: #E87040; --sidebar-active-bg: #FFF0EB;
+  --code-bg: #f6f1eb; --code-text: #1a1a2e;
+  --kbd-bg: #e8eaed; --kbd-border: #bdc1c6;
+  --callout-info-bg: #e8f0fe; --callout-info-border: #4285f4;
+  --callout-warn-bg: #fef7e0; --callout-warn-border: #f9ab00;
+  --callout-tip-bg: #e6f4ea; --callout-tip-border: #34a853;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
+  --tag-bg: #FFF0EB; --tag-text: #C85A30;
+  --table-stripe: #f8f9fa;
+  --badge-easy-bg: #e6f4ea; --badge-easy-text: #1e8e3e;
+  --badge-mid-bg: #fef7e0; --badge-mid-text: #e37400;
+  --badge-adv-bg: #fce8e6; --badge-adv-text: #c5221f;
+  --badge-sm-bg: #e8eaed; --badge-sm-text: #5f6368;
+  --badge-md-bg: #e8f0fe; --badge-md-text: #1967d2;
+  --badge-lg-bg: #e6f4ea; --badge-lg-text: #137333;
+  --top5-bg: linear-gradient(135deg, #FFF0EB 0%, #ffe8d6 100%);
+  --top5-border: #E87040;
+}
+[data-theme="dark"] {
+  --bg: #1a1a2e; --bg-card: #2a2a3e; --bg-sidebar: #1e1e32; --bg-header: #C85A30;
+  --text: #e8eaed; --text-secondary: #9aa0a6; --border: #3c4043;
+  --accent: #F0925C; --accent-dark: #E87040; --accent-light: #3D2A22;
+  --sidebar-active: #F0925C; --sidebar-active-bg: #3D2A22;
+  --code-bg: #1e1e1e; --code-text: #e8eaed;
+  --kbd-bg: #3c4043; --kbd-border: #5f6368;
+  --callout-info-bg: #1e3a5f; --callout-info-border: #8ab4f8;
+  --callout-warn-bg: #3e3000; --callout-warn-border: #f9ab00;
+  --callout-tip-bg: #1e3e2a; --callout-tip-border: #81c995;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+  --tag-bg: #3D2A22; --tag-text: #F0925C;
+  --table-stripe: #252538;
+  --badge-easy-bg: #1e3e2a; --badge-easy-text: #81c995;
+  --badge-mid-bg: #3e3000; --badge-mid-text: #f9ab00;
+  --badge-adv-bg: #3e1210; --badge-adv-text: #f28b82;
+  --badge-sm-bg: #3c4043; --badge-sm-text: #9aa0a6;
+  --badge-md-bg: #1e3a5f; --badge-md-text: #8ab4f8;
+  --badge-lg-bg: #1e3e2a; --badge-lg-text: #81c995;
+  --top5-bg: linear-gradient(135deg, #3D2A22 0%, #2a2a3e 100%);
+  --top5-border: #F0925C;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{font-family:system-ui,-apple-system,'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:16px;transition:background .3s,color .3s}
+a{color:var(--accent-dark);text-decoration:none}
+[data-theme="dark"] a{color:var(--accent)}
+a:hover{text-decoration:underline}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.skip-link{position:absolute;top:-100px;left:16px;background:var(--accent);color:#fff;padding:8px 16px;border-radius:0 0 4px 4px;z-index:200;font-weight:600}
+.skip-link:focus{top:0}
+
+.header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg-header);color:#fff;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.header-left{display:flex;align-items:center;gap:12px}
+.hamburger{display:none;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:4px 8px}
+.header h1{font-size:17px;font-weight:600;white-space:nowrap}
+.header-center{flex:1;max-width:380px;margin:0 20px}
+.search-wrapper{position:relative}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);font-size:14px;pointer-events:none}
+.search-box{width:100%;padding:7px 14px 7px 34px;border:none;border-radius:8px;background:rgba(255,255,255,.2);color:#fff;font-size:14px;outline:none}
+.search-box::placeholder{color:rgba(255,255,255,.7)}
+.search-box:focus{background:rgba(255,255,255,.3)}
+.header-right{display:flex;align-items:center;gap:12px}
+.theme-toggle{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:14px;white-space:nowrap}
+.theme-toggle:hover{background:rgba(255,255,255,.3)}
+
+.layout{display:flex;margin-top:60px;min-height:calc(100vh - 60px)}
+.sidebar{width:250px;position:fixed;top:60px;left:0;bottom:0;background:var(--bg-sidebar);border-right:1px solid var(--border);overflow-y:auto;padding:14px 0;transition:transform .3s ease;z-index:90}
+.sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);padding:10px 18px 4px;margin-top:4px}
+.sidebar-title:first-child{margin-top:0}
+.sidebar a{display:block;padding:5px 18px 5px 22px;font-size:13px;color:var(--text-secondary);border-left:3px solid transparent;transition:all .15s;line-height:1.4}
+.sidebar a:hover{color:var(--accent);background:var(--accent-light);text-decoration:none}
+.sidebar a.active{color:var(--sidebar-active);border-left-color:var(--sidebar-active);background:var(--sidebar-active-bg);font-weight:600}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:85}
+
+.main{flex:1;margin-left:250px;padding:32px 40px;max-width:960px}
+.section{margin-bottom:52px}
+.section-title{font-size:24px;font-weight:700;margin-bottom:18px;padding-bottom:8px;border-bottom:3px solid var(--accent)}
+.subsection-title{font-size:19px;font-weight:600;margin:28px 0 12px}
+
+.intro-box{background:var(--accent-light);border-left:4px solid var(--accent);padding:18px 22px;border-radius:0 8px 8px 0;margin-bottom:24px;font-size:15px}
+
+/* TOP5 */
+.top5-section{background:var(--top5-bg);border:2px solid var(--top5-border);border-radius:12px;padding:28px;margin-bottom:40px}
+.top5-title{font-size:22px;font-weight:700;margin-bottom:16px;color:var(--accent-dark)}
+[data-theme="dark"] .top5-title{color:var(--accent)}
+.top5-item{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;padding:14px 18px;background:var(--bg-card);border-radius:8px;box-shadow:var(--shadow)}
+.top5-item:last-child{margin-bottom:0}
+.top5-num{font-size:28px;font-weight:800;color:var(--accent);min-width:36px;text-align:center;line-height:1.2}
+.top5-content h4{font-size:15px;font-weight:700;margin-bottom:4px}
+.top5-content p{font-size:14px;color:var(--text-secondary);line-height:1.5}
+
+/* Cards */
+.opt-card{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:0 10px 10px 0;padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.opt-card:hover{box-shadow:var(--shadow-hover)}
+.opt-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.opt-name{font-size:16px;font-weight:700;margin:0}
+.badge{font-size:11px;font-weight:600;padding:2px 10px;border-radius:12px;white-space:nowrap}
+.badge-easy{background:var(--badge-easy-bg);color:var(--badge-easy-text)}
+.badge-mid{background:var(--badge-mid-bg);color:var(--badge-mid-text)}
+.badge-adv{background:var(--badge-adv-bg);color:var(--badge-adv-text)}
+.badge-sm{background:var(--badge-sm-bg);color:var(--badge-sm-text)}
+.badge-md{background:var(--badge-md-bg);color:var(--badge-md-text)}
+.badge-lg{background:var(--badge-lg-bg);color:var(--badge-lg-text)}
+.opt-desc{color:var(--text-secondary);font-size:14px;margin-bottom:10px;line-height:1.6}
+
+table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:14px}
+th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--accent-light);font-weight:600;font-size:13px;position:sticky;top:0}
+tbody tr:nth-child(even){background:var(--table-stripe)}
+tbody tr:hover{background:var(--accent-light)}
+td code{font-family:'SF Mono','Cascadia Code',Consolas,monospace;background:var(--code-bg);padding:1px 5px;border-radius:3px;font-size:13px}
+
+.code-wrapper{position:relative;margin:10px 0 14px;background:var(--code-bg);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.code-wrapper pre{margin:0;padding:14px 18px;overflow-x:auto;font-family:'SF Mono','Cascadia Code',Consolas,monospace;font-size:13px;line-height:1.6;color:var(--code-text)}
+.copy-btn{position:absolute;top:6px;right:6px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;opacity:0;transition:opacity .2s}
+.code-wrapper:hover .copy-btn{opacity:1}
+.copy-btn:hover{color:var(--accent);border-color:var(--accent)}
+.copy-btn.copied{color:var(--callout-tip-border);border-color:var(--callout-tip-border)}
+
+.callout{padding:14px 18px;border-radius:0 8px 8px 0;margin:14px 0;font-size:14px;line-height:1.6;border-left:4px solid}
+.callout-title{font-weight:700;margin-bottom:4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.callout-info{background:var(--callout-info-bg);border-color:var(--callout-info-border)}
+.callout-warn{background:var(--callout-warn-bg);border-color:var(--callout-warn-border)}
+.callout-tip{background:var(--callout-tip-bg);border-color:var(--callout-tip-border)}
+
+.checklist{list-style:none;padding:0}
+.checklist li{padding:7px 0 7px 28px;position:relative;font-size:14px;border-bottom:1px solid var(--border)}
+.checklist li::before{content:"\\2610";position:absolute;left:0;font-size:18px;color:var(--accent)}
+
+.faq-item{margin-bottom:16px}
+.faq-item summary{cursor:pointer;font-weight:600;font-size:15px;padding:10px 0;color:var(--text)}
+.faq-item summary:hover{color:var(--accent)}
+.faq-answer{padding:0 0 8px 16px;font-size:14px;color:var(--text-secondary);line-height:1.6}
+
+.back-to-top{position:fixed;bottom:28px;right:28px;width:42px;height:42px;background:var(--accent);color:#fff;border:none;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s,transform .2s;z-index:80}
+.back-to-top.visible{opacity:1;visibility:visible}
+.back-to-top:hover{transform:scale(1.1)}
+
+.footer{margin-top:44px;padding:28px 0;border-top:2px solid var(--border);font-size:13px;color:var(--text-secondary)}
+.footer h3{font-size:15px;margin-bottom:10px;color:var(--text)}
+.footer ul{list-style:none;padding:0}
+.footer li{padding:3px 0}
+.footer li::before{content:"\2192 ";color:var(--accent)}
+
+.search-hidden{display:none!important}
+.no-results{text-align:center;padding:40px 20px;color:var(--text-secondary);font-size:15px;display:none}
+.no-results.visible{display:block}
+
+@media(max-width:768px){
+  .hamburger{display:block}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.active{display:block}
+  .main{margin-left:0;padding:18px 14px}
+  .header h1{font-size:14px}
+  .header-center{max-width:180px;margin:0 10px}
+  .section-title{font-size:20px}
+  .opt-card{padding:14px}
+  .top5-section{padding:18px}
+  .top5-item{flex-direction:column;gap:8px}
+  table{font-size:13px}
+  th,td{padding:7px 9px}
+}
+@media(max-width:480px){.header-center{display:none}}
+@media print{
+  .header,.sidebar,.sidebar-overlay,.back-to-top,.copy-btn,.search-wrapper{display:none!important}
+  .main{margin-left:0!important;padding:0!important;max-width:100%!important}
+  .layout{margin-top:0!important}
+  .opt-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+  details[open]>*{display:block!important}
+}
+</style>
+</head>
+<body>
+<a href="#mainContent" class="skip-link">本文へスキップ</a>
+
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" id="hamburger" aria-label="メニューを開く" aria-expanded="false">&#9776;</button>
+    <h1>Claude トークン最適化ガイド</h1>
+  </div>
+  <div class="header-center">
+    <div class="search-wrapper" role="search">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" class="search-box" id="searchBox" placeholder="手法を検索..." aria-label="手法を検索">
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="テーマを切り替え">&#9790; Dark</button>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<nav class="sidebar" id="sidebar" aria-label="目次">
+  <div class="sidebar-title">概要</div>
+  <a href="#intro">はじめに</a>
+  <a href="#top5">クイックウィン TOP5</a>
+  <div class="sidebar-title">最適化テクニック</div>
+  <a href="#context">A. コンテキスト管理</a>
+  <a href="#caching">B. プロンプトキャッシュ</a>
+  <a href="#memory">C. CLAUDE.md 最適化</a>
+  <a href="#tools">D. ツール・MCP 最適化</a>
+  <a href="#prompts">E. プロンプト設計</a>
+  <a href="#files">F. ファイル読み込み</a>
+  <a href="#batch">G. バッチ処理</a>
+  <a href="#output">H. 出力量コントロール</a>
+  <a href="#monitoring">I. モニタリング</a>
+  <a href="#architecture">J. アーキテクチャ</a>
+  <div class="sidebar-title">まとめ</div>
+  <a href="#checklist">チェックリスト</a>
+  <a href="#faq">FAQ</a>
+  <a href="#pricing">価格表</a>
+</nav>
+
+<div class="layout">
+<main class="main" id="mainContent">
+
+<!-- INTRO -->
+<section id="intro" class="section">
+<h2 class="section-title">はじめに</h2>
+<div class="intro-box">
+<p><strong>モデルの品質は落とさず、トークン消費だけを減らす。</strong>このガイドは、Claude Code および Claude API を利用する開発者のための、トークンコスト最適化テクニック集です。「安いモデルに切り替える」以外のすべての手法を網羅しています。</p>
+<p>企業の平均利用コストは<strong>1日あたり約$13/開発者</strong>（月額$150-250）ですが、適切な最適化で<strong>50〜90%のコスト削減</strong>が可能です。</p>
+</div>
+<div class="callout callout-info">
+<div class="callout-title">&#9432; 対象バージョン</div>
+<p>Claude Code CLI v2.1.121 / Claude API (2026年5月時点) に基づいています。価格や機能は変更される可能性があります。</p>
+</div>
+<p style="font-size:14px;color:var(--text-secondary);">最終更新: 2026-05-22</p>
+</section>
+
+<!-- TOP5 -->
+<section id="top5" class="section">
+<div class="top5-section">
+<h2 class="top5-title">&#9889; クイックウィン TOP5 &mdash; まずこれをやれ</h2>
+
+<div class="top5-item">
+<div class="top5-num">1</div>
+<div class="top5-content">
+<h4>タスク完了ごとに /clear する（効果: 即座にコスト低減）</h4>
+<p>Claude はメッセージごとに全会話履歴を再読み込みします。50発目のメッセージは5発目より大幅にコストが高くなります。タスクが変わったら <code>/clear</code> で新しいセッションを開始しましょう。「クリアしない方がもったいない」が正解です。</p>
+</div>
+</div>
+
+<div class="top5-item">
+<div class="top5-num">2</div>
+<div class="top5-content">
+<h4>フェーズ完了ごとに /compact する（効果: 80-90%圧縮）</h4>
+<p>20,000+トークンの会話履歴を2,000-3,000トークンに圧縮します。劣化を感じてからでは遅い &mdash; 調査フェーズ完了時、実装完了時など、フェーズの切れ目で実行するのが最適です。</p>
+</div>
+</div>
+
+<div class="top5-item">
+<div class="top5-num">3</div>
+<div class="top5-content">
+<h4>CLAUDE.md を200行以下に保つ（効果: ベースラインコスト削減）</h4>
+<p>CLAUDE.md は毎リクエストに読み込まれます。5,000トークンの CLAUDE.md は、何もしなくても毎回コストが発生します。冗長な情報を削り、タスク固有の指示はスキルに移動しましょう。</p>
+</div>
+</div>
+
+<div class="top5-item">
+<div class="top5-num">4</div>
+<div class="top5-content">
+<h4>プロンプトキャッシュを活用する（効果: 入力コスト90%削減）</h4>
+<p>API利用時、キャッシュ読み込みは基本入力価格の<strong>0.1倍</strong>。システムプロンプトに <code>cache_control</code> を付けるだけで、繰り返し呼び出しのコストが劇的に下がります。</p>
+</div>
+</div>
+
+<div class="top5-item">
+<div class="top5-num">5</div>
+<div class="top5-content">
+<h4>不要なMCPサーバー・ツールを無効化する（効果: コンテキスト15-30%削減）</h4>
+<p>有効な全ツールの定義がコンテキストを消費します。使わないMCPサーバーは外し、<code>--allowedTools</code> で必要なツールだけ有効化しましょう。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- A. CONTEXT MANAGEMENT -->
+<section id="context" class="section">
+<h2 class="section-title">A. コンテキスト管理</h2>
+
+<article class="opt-card" data-search-text="/clear クリア 会話リセット セッション分割 タスク切替 新しいセッション">
+<div class="opt-header">
+  <h3 class="opt-name">/clear で会話履歴をリセット</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">タスクが完了したら <code>/clear</code> で新しいセッションを開始します。古いデバッグログや試行錯誤の履歴が残ると、以降のすべてのメッセージでコストが増加します。</p>
+<div class="code-wrapper"><pre>/clear</pre></div>
+<div class="callout callout-tip">
+<div class="callout-title">&#128161; ヒント</div>
+<p>「クリアするともったいない」は誤解です。クリアしない方がはるかにコストがかかります。</p>
+</div>
+</article>
+
+<article class="opt-card" data-search-text="/compact コンパクト 圧縮 要約 コンテキスト 80% フェーズ">
+<div class="opt-header">
+  <h3 class="opt-name">/compact で会話履歴を要約圧縮</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">20,000+トークンの会話を2,000-3,000トークンに圧縮します。カスタム指示で保持する情報を制御できます。</p>
+<div class="code-wrapper"><pre>/compact                              # デフォルト圧縮
+/compact Focus on code samples and API usage  # 保持情報を指定</pre></div>
+<p class="opt-desc"><strong>いつ実行するか:</strong> 調査→実装、実装→テストなどフェーズが変わるタイミングが最適。コンテキスト警告が出てからでは遅い場合があります。</p>
+</article>
+
+<article class="opt-card" data-search-text="セッション分割 短い会話 メッセージ数 再読み込み コスト増加 単一トピック">
+<div class="opt-header">
+  <h3 class="opt-name">セッションを短く保つ</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">Claude はメッセージごとに全会話履歴を再読み込みします。メッセージ50は、メッセージ5と比べて蓄積されたコンテキスト分だけコストが高くなります。1セッション1トピックの原則を意識しましょう。</p>
+</article>
+
+<article class="opt-card" data-search-text=".claudeignore settings 除外 node_modules logs dist build 無視 ブロック">
+<div class="opt-header">
+  <h3 class="opt-name">.claudeignore / settings.json で読み込み除外</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc"><code>node_modules</code>、<code>dist</code>、<code>build</code>、ログファイルなど不要なディレクトリをブロックします。曖昧なプロンプトは大規模なコードベーススキャンを誘発します。</p>
+<div class="code-wrapper"><pre># .claudeignore の例
+node_modules/
+dist/
+build/
+*.log
+coverage/
+.next/</pre></div>
+</article>
+</section>
+
+<!-- B. PROMPT CACHING -->
+<section id="caching" class="section">
+<h2 class="section-title">B. プロンプトキャッシュの活用</h2>
+
+<div class="callout callout-info">
+<div class="callout-title">&#9432; 対象</div>
+<p>プロンプトキャッシュは <strong>Claude API</strong> を直接利用する場合のテクニックです。Claude Code CLI を通常利用する場合は自動的に管理されます。</p>
+</div>
+
+<article class="opt-card" data-search-text="cache_control ephemeral キャッシュ 仕組み ブレークポイント 0.1倍 90%割引 読み込み 書き込み 1.25倍">
+<div class="opt-header">
+  <h3 class="opt-name">cache_control の基本</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">システムプロンプトやツール定義に <code>cache_control</code> を付与すると、以降のリクエストでキャッシュから読み込まれます。<strong>キャッシュ読み込みは入力価格の0.1倍</strong>（90%割引）。</p>
+<div class="code-wrapper"><pre>response = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=1024,
+    system=[
+        {
+            "type": "text",
+            "text": "あなたは経験豊富なソフトウェアエンジニアです...",
+            "cache_control": {"type": "ephemeral"}  # 5分TTL
+        }
+    ],
+    messages=[{"role": "user", "content": "このコードをレビューして"}],
+)</pre></div>
+
+<table>
+<thead><tr><th>操作</th><th>コスト倍率</th><th>Opus 4.7 (per MTok)</th></tr></thead>
+<tbody>
+<tr><td>通常入力</td><td>1.0x</td><td>$5.00</td></tr>
+<tr><td>キャッシュ書き込み (5m)</td><td>1.25x</td><td>$6.25</td></tr>
+<tr><td>キャッシュ書き込み (1h)</td><td>2.0x</td><td>$10.00</td></tr>
+<tr><td><strong>キャッシュ読み込み</strong></td><td><strong>0.1x</strong></td><td><strong>$0.50</strong></td></tr>
+</tbody>
+</table>
+</article>
+
+<article class="opt-card" data-search-text="キャッシュヒット率 再配置 動的 静的 先頭 末尾 ProjectDiscovery 59% 84%">
+<div class="opt-header">
+  <h3 class="opt-name">キャッシュヒット率を最大化する</h3>
+  <span class="badge badge-adv">上級</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc"><strong>最重要テクニック: 静的コンテンツを先頭、動的コンテンツを末尾に配置。</strong>ProjectDiscovery社はこの再配置だけでキャッシュ率を7%→84%に改善し、コスト59%削減を達成しました。</p>
+
+<h4 class="subsection-title" style="font-size:15px;">3段ブレークポイント構成</h4>
+<div class="code-wrapper"><pre>system=[
+    # BP1: 静的システムプロンプト（1h TTL = 長期キャッシュ）
+    {"type": "text", "text": "静的な指示...",
+     "cache_control": {"type": "ephemeral", "ttl": "1h"}},
+
+    # BP2: ツール定義（静的なものから順に配置）
+    {"type": "text", "text": "ツール定義...",
+     "cache_control": {"type": "ephemeral"}},
+
+    # BP3: 会話コンテキスト（5m TTL = 頻繁に変わる部分）
+    {"type": "text", "text": "最近の会話...",
+     "cache_control": {"type": "ephemeral", "ttl": "5m"}}
+]</pre></div>
+
+<div class="callout callout-warn">
+<div class="callout-title">&#9888; キャッシュを殺す行為</div>
+<p>システムプロンプトへのタイムスタンプ埋め込み、空白のドリフト（<code>\n\n</code> と <code>\n</code> の混在）、頻繁なスキーマバージョン変更 &mdash; これらはキャッシュを無効化します。</p>
+</div>
+</article>
+
+<article class="opt-card" data-search-text="キャッシュ 損益分岐点 1.25回 5分 TTL 1時間 最小トークン数 4096 1024">
+<div class="opt-header">
+  <h3 class="opt-name">キャッシュの損益分岐点と制約</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">5分以内に同一セグメントで<strong>1.25回以上</strong>呼び出せばペイします。本番環境では容易に超えます。</p>
+
+<table>
+<thead><tr><th>モデル</th><th>最小キャッシュ長</th></tr></thead>
+<tbody>
+<tr><td>Opus 4.7/4.6/4.5, Haiku 4.5</td><td>4,096 トークン</td></tr>
+<tr><td>Sonnet 4.6/4.5, Opus 4.1</td><td>1,024 トークン</td></tr>
+</tbody>
+</table>
+<p class="opt-desc">最大4つのブレークポイント/リクエスト。キャッシュは最初のレスポンス開始後に利用可能になります。</p>
+</article>
+
+<article class="opt-card" data-search-text="キャッシュ プリウォーム 事前読み込み max_tokens 0 ウォームアップ レイテンシ">
+<div class="opt-header">
+  <h3 class="opt-name">キャッシュのプリウォーム</h3>
+  <span class="badge badge-adv">上級</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<p class="opt-desc">最初のリクエストのレイテンシを避けるため、<code>max_tokens: 0</code> でキャッシュだけ作成できます。</p>
+<div class="code-wrapper"><pre>prewarm = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=0,  # 出力なし（キャッシュ作成のみ）
+    system=[{
+        "type": "text",
+        "text": "大量のシステムプロンプト...",
+        "cache_control": {"type": "ephemeral"}
+    }],
+    messages=[{"role": "user", "content": "warmup"}],
+)</pre></div>
+</article>
+</section>
+
+<!-- C. CLAUDE.MD -->
+<section id="memory" class="section">
+<h2 class="section-title">C. CLAUDE.md / メモリの最適化</h2>
+
+<article class="opt-card" data-search-text="CLAUDE.md 200行 簡潔 毎回読み込み ベースライン コスト 冗長">
+<div class="opt-header">
+  <h3 class="opt-name">CLAUDE.md を200行以下に保つ</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">CLAUDE.md は<strong>毎リクエスト</strong>に読み込まれます。1,000行の CLAUDE.md を80行に削減した事例もあります。すべてのセッションで必要な情報だけを残しましょう。</p>
+<div class="callout callout-tip">
+<div class="callout-title">&#128161; 実践ルール</div>
+<p>「このセッションでも次のセッションでも必要か？」を基準に取捨選択。タスク固有の指示はスキル (<code>.claude/skills/</code>) に移動しましょう。</p>
+</div>
+</article>
+
+<article class="opt-card" data-search-text="MEMORY.md 25KB 200行 先頭 オートメモリ path-scoped ルール rules">
+<div class="opt-header">
+  <h3 class="opt-name">メモリの階層化とスコープ制御</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">MEMORY.md は先頭200行 or 25KB のみロードされます。path-scoped rules (<code>.claude/rules/</code>) を使えば、特定のファイルパターンにマッチした場合のみ指示が読み込まれます。</p>
+<div class="code-wrapper"><pre># .claude/rules/frontend.md (*.tsx にのみ適用)
+---
+paths: ["src/components/**/*.tsx"]
+---
+React コンポーネントは関数コンポーネントで書く。
+CSS-in-JS は使わず Tailwind を使用する。</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="スキル オンデマンド ロード skills 30% 埋め込み 移動">
+<div class="opt-header">
+  <h3 class="opt-name">指示をスキルに移動する</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">CLAUDE.md に全指示を詰め込む代わりに、タスク固有の指示をスキルとして分離します。スキルは呼び出し時のみロードされるため、約<strong>30%のトークン節約</strong>になります。</p>
+</article>
+</section>
+
+<!-- D. TOOLS/MCP -->
+<section id="tools" class="section">
+<h2 class="section-title">D. ツール使用・MCP の最適化</h2>
+
+<article class="opt-card" data-search-text="MCP 無効化 ツール定義 コンテキスト消費 不要 サーバー 外す allowedTools">
+<div class="opt-header">
+  <h3 class="opt-name">不要な MCP サーバー・ツールを無効化</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">有効な全ツールの定義テキストがコンテキストを消費します。使わない MCP サーバーは外し、必要なツールだけ有効化しましょう。</p>
+<div class="code-wrapper"><pre># 必要なツールだけ指定して起動
+claude --allowedTools "Bash(git *) Edit Read Glob Grep"
+
+# MCP サーバーを削除
+claude mcp remove unused-server</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="ツール出力 蓄積 サイレントドレイン BASH_MAX_OUTPUT_LENGTH MAX_MCP_OUTPUT_TOKENS キャップ 制限">
+<div class="opt-header">
+  <h3 class="opt-name">ツール出力の蓄積を抑える</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">ファイル読み込み、MCP レスポンス、シェルコマンド出力はすべてコンテキストに永続的に追加されます。これが<strong>最大のサイレントドレイン</strong>です。出力サイズに上限を設けましょう。</p>
+<div class="code-wrapper"><pre># settings.json の env で出力上限を設定
+{
+  "env": {
+    "BASH_MAX_OUTPUT_LENGTH": "20000",
+    "MAX_MCP_OUTPUT_TOKENS": "8000"
+  }
+}</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="skillListingBudgetFraction maxSkillDescriptionChars スキル一覧 バジェット 1%">
+<div class="opt-header">
+  <h3 class="opt-name">スキル一覧のバジェットを制限</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<p class="opt-desc">設定でスキル一覧に割り当てるコンテキスト量を制御できます。</p>
+<div class="code-wrapper"><pre>{
+  "skillListingBudgetFraction": 0.01,
+  "maxSkillDescriptionChars": 1536
+}</pre></div>
+</article>
+</section>
+
+<!-- E. PROMPT DESIGN -->
+<section id="prompts" class="section">
+<h2 class="section-title">E. プロンプト設計の工夫</h2>
+
+<article class="opt-card" data-search-text="明確 簡潔 冗長 前置き 具体的 指示 プロンプト設計">
+<div class="opt-header">
+  <h3 class="opt-name">明確・簡潔な指示</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">冗長な前置きを削り、具体的に指示します。「何をどうしてほしいか」を直接的に書くことで、入力トークンと出力トークンの両方を削減できます。</p>
+<div class="code-wrapper"><pre># NG: 冗長
+「もしよろしければ、このファイルの中で、パフォーマンスに関連する
+問題がないかどうか、確認していただけると助かります。」
+
+# OK: 簡潔
+「src/api.ts のパフォーマンス問題を指摘して。」</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="few-shot 例示 3-5個 最適 XMLタグ 構造化 example">
+<div class="opt-header">
+  <h3 class="opt-name">例示（few-shot）を最適化する</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc"><strong>3-5個</strong>の例が最も効果的です。10個以上の例を入れてもほとんど精度は上がらず、トークンだけ消費します。例は多様性・関連性を重視しましょう。</p>
+</article>
+
+<article class="opt-card" data-search-text="extended thinking 拡張思考 考えすぎ effort level budget_tokens adaptive 思考トークン">
+<div class="opt-header">
+  <h3 class="opt-name">拡張思考のコントロール</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">思考トークンは<strong>最大のコストドライバー</strong>です。Effort Level を下げるか、必要時以外は無効化します。30-40%のコスト削減が期待できます。</p>
+<div class="code-wrapper"><pre># Claude Code 内でエフォートレベルを変更
+/effort low       # 短いタスク向け
+/effort medium    # コスト重視
+/effort high      # 推奨バランス（デフォルト）
+
+# API での Adaptive Thinking
+client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=64000,
+    thinking={"type": "adaptive"},
+    output_config={"effort": "high"},
+    messages=[...]
+)</pre></div>
+
+<table>
+<thead><tr><th>Effort Level</th><th>用途</th><th>コスト影響</th></tr></thead>
+<tbody>
+<tr><td><code>max</code></td><td>最大能力が必要な場合</td><td>最高コスト（収穫逓減あり）</td></tr>
+<tr><td><code>xhigh</code></td><td>コーディング・エージェント作業</td><td>高</td></tr>
+<tr><td><code>high</code></td><td>ほとんどのタスクの推奨値</td><td>中〜高</td></tr>
+<tr><td><code>medium</code></td><td>コスト重視のタスク</td><td>中</td></tr>
+<tr><td><code>low</code></td><td>短い質問・レイテンシ重視</td><td>低（30-40%削減）</td></tr>
+</tbody>
+</table>
+</article>
+
+<article class="opt-card" data-search-text="出力スタイル prose markdown 箇条書き 冗長 応答 長さ">
+<div class="opt-header">
+  <h3 class="opt-name">出力スタイルの制御</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<p class="opt-desc">Markdown の箇条書きは散文より冗長になりがちです。公式ドキュメントでは、長文出力には prose（散文）を推奨しています。</p>
+</article>
+</section>
+
+<!-- F. FILE READING -->
+<section id="files" class="section">
+<h2 class="section-title">F. ファイル読み込みの工夫</h2>
+
+<article class="opt-card" data-search-text="offset limit 範囲指定 全文 部分読み込み 大きなファイル 巨大">
+<div class="opt-header">
+  <h3 class="opt-name">必要な範囲だけ読み込む</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">大きなファイルは全文ではなく、<code>offset</code> と <code>limit</code> を指定して必要な範囲だけ読みましょう。API の Read ツールは行番号指定に対応しています。</p>
+<div class="code-wrapper"><pre># Claude Code での指示例
+「src/app.ts の 100-150 行目を読んで」
+「package.json の dependencies セクションだけ見て」</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="grep glob 事前絞り込み 検索 フィルタ バイナリ ログ 誤読">
+<div class="opt-header">
+  <h3 class="opt-name">grep / glob で事前に絞り込む</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">ファイルを直接読む前に、<code>grep</code> や <code>glob</code> で対象を絞り込みます。バイナリファイルや巨大ログファイルを誤って読ませると大量のトークンが浪費されます。</p>
+<div class="code-wrapper"><pre># Claude Code への指示例
+「まず grep で "handleAuth" を含むファイルを探して、
+  見つかったファイルの該当箇所だけ読んで」</pre></div>
+</article>
+</section>
+
+<!-- G. BATCH PROCESSING -->
+<section id="batch" class="section">
+<h2 class="section-title">G. バッチ処理</h2>
+
+<article class="opt-card" data-search-text="batch バッチ 50% 割引 非同期 Message Batches API 100000 リクエスト">
+<div class="opt-header">
+  <h3 class="opt-name">Message Batches API で50%割引</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">リアルタイム性が不要な処理は Batches API に回すと、<strong>入力・出力トークンともに50%割引</strong>になります。</p>
+
+<table>
+<thead><tr><th>モデル</th><th>通常 Input</th><th>Batch Input</th><th>通常 Output</th><th>Batch Output</th></tr></thead>
+<tbody>
+<tr><td>Opus 4.7</td><td>$5.00</td><td><strong>$2.50</strong></td><td>$25.00</td><td><strong>$12.50</strong></td></tr>
+<tr><td>Sonnet 4.6</td><td>$3.00</td><td><strong>$1.50</strong></td><td>$15.00</td><td><strong>$7.50</strong></td></tr>
+<tr><td>Haiku 4.5</td><td>$1.00</td><td><strong>$0.50</strong></td><td>$5.00</td><td><strong>$2.50</strong></td></tr>
+</tbody>
+</table>
+
+<div class="code-wrapper"><pre>message_batch = client.messages.batches.create(
+    requests=[
+        {
+            "custom_id": "req-1",
+            "params": {
+                "model": "claude-opus-4-7",
+                "max_tokens": 1024,
+                "messages": [{"role": "user", "content": "分析して..."}]
+            }
+        },
+        # ...最大100,000リクエスト
+    ]
+)</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="バッチ キャッシュ 組み合わせ 95% 最大削減 スタック">
+<div class="opt-header">
+  <h3 class="opt-name">バッチ + キャッシュの組み合わせ</h3>
+  <span class="badge badge-adv">上級</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">バッチ処理の50%割引とキャッシュ読み込みの90%割引は<strong>スタック（重複適用）</strong>します。キャッシュ読み込み部分は最大<strong>95%のコスト削減</strong>になります。</p>
+<div class="callout callout-tip">
+<div class="callout-title">&#128161; ヒント</div>
+<p>バッチ処理ではキャッシュ TTL を <code>1h</code> に設定すると、非同期処理の間にキャッシュが切れるリスクを軽減できます。バッチ内の典型的なキャッシュヒット率は30%〜98%です。</p>
+</div>
+</article>
+
+<article class="opt-card" data-search-text="バッチ ユースケース 向いている 向いていない 評価 ETL データ分類 リアルタイム">
+<div class="opt-header">
+  <h3 class="opt-name">バッチ処理が向くケース・向かないケース</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<table>
+<thead><tr><th>向いている</th><th>向いていない</th></tr></thead>
+<tbody>
+<tr><td>大規模評価パイプライン</td><td>リアルタイムチャット</td></tr>
+<tr><td>バルクコンテンツ生成</td><td>ストリーミング応答</td></tr>
+<tr><td>オーバーナイトETL</td><td>結果が相互依存するワークフロー</td></tr>
+<tr><td>データ分類</td><td>即座のフィードバックが必要な作業</td></tr>
+</tbody>
+</table>
+<p class="opt-desc">制約: 最大100,000リクエスト or 256MB/バッチ。通常1時間以内に完了。結果は29日間保持されます。</p>
+</article>
+</section>
+
+<!-- H. OUTPUT CONTROL -->
+<section id="output" class="section">
+<h2 class="section-title">H. 出力量のコントロール</h2>
+
+<article class="opt-card" data-search-text="max_tokens 設定 上限 出力トークン 適切 制限">
+<div class="opt-header">
+  <h3 class="opt-name">max_tokens の適切な設定</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">API 利用時、<code>max_tokens</code> を不必要に大きく設定すると、Claude が長文を生成しがちです。タスクに応じた適切な上限を設定しましょう。</p>
+<div class="code-wrapper"><pre># 短い応答が欲しい場合
+client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=256,  # 必要十分な値に制限
+    messages=[...]
+)</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="簡潔 N文字以内 短い応答 指示 要件明確化 やり直し 再生成">
+<div class="opt-header">
+  <h3 class="opt-name">出力の簡潔さを指示する</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<p class="opt-desc">「簡潔に」「3行以内で」「JSON のみ出力」などの明示的な指示で、不要に長い応答を防ぎます。最初に要件を明確にすることで、やり直し（＝追加トークン）も減らせます。</p>
+</article>
+</section>
+
+<!-- I. MONITORING -->
+<section id="monitoring" class="section">
+<h2 class="section-title">I. モニタリング</h2>
+
+<article class="opt-card" data-search-text="/usage /cost コスト 使用量 セッション トラッキング 確認">
+<div class="opt-header">
+  <h3 class="opt-name">/usage でセッションコストを確認</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<p class="opt-desc">Claude Code 内で <code>/usage</code> を実行すると、現在のセッションのトークン使用量とコストを確認できます。最適化の効果測定に活用しましょう。</p>
+<div class="code-wrapper"><pre>/usage</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="ccusage ツール npx ローカル 日次 月次 セッション別 GitHub 4800 stars コスト追跡">
+<div class="opt-header">
+  <h3 class="opt-name">ccusage でローカルコスト追跡</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc"><strong>ccusage</strong>（GitHub 4,800+ stars）は、Claude Code のローカルセッションファイルを読み取ってコストを可視化するツールです。API キー不要でプライバシーに配慮されています。</p>
+<div class="code-wrapper"><pre>npx ccusage claude daily     # 日次レポート
+npx ccusage monthly          # 月次レポート
+npx ccusage session          # セッション別コスト
+bunx ccusage blocks          # 5時間課金ウィンドウ分析</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="token counting API 事前見積もり 無料 レート制限 count_tokens">
+<div class="opt-header">
+  <h3 class="opt-name">Token Counting API で事前見積もり</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<p class="opt-desc">API のトークンカウントエンドポイントを使えば、実際にリクエストを送る前にトークン数を見積もれます。<strong>無料</strong>で利用可能（レート制限あり）。</p>
+<div class="code-wrapper"><pre>curl https://api.anthropic.com/v1/messages/count_tokens \
+  --header "x-api-key: $ANTHROPIC_API_KEY" \
+  --header "content-type: application/json" \
+  --header "anthropic-version: 2023-06-01" \
+  --data '{
+    "model": "claude-opus-4-7",
+    "messages": [{"role": "user", "content": "テスト"}]
+  }'</pre></div>
+</article>
+
+<article class="opt-card" data-search-text="Anthropic Console ダッシュボード 使用量 ワークスペース 予算 制限">
+<div class="opt-header">
+  <h3 class="opt-name">Anthropic Console ダッシュボード</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-sm">効果: 小</span>
+</div>
+<p class="opt-desc">Anthropic Console の Usage ページで、ワークスペース全体の使用量とコストを確認できます。予算上限の設定も可能です。</p>
+</article>
+</section>
+
+<!-- J. ARCHITECTURE -->
+<section id="architecture" class="section">
+<h2 class="section-title">J. アーキテクチャレベルの工夫</h2>
+
+<article class="opt-card" data-search-text="サブエージェント subagent タスク分離 冗長出力 隔離 メインコンテキスト 保護">
+<div class="opt-header">
+  <h3 class="opt-name">サブエージェントでコンテキストを隔離</h3>
+  <span class="badge badge-mid">中級</span>
+  <span class="badge badge-lg">効果: 大</span>
+</div>
+<p class="opt-desc">テスト実行、ドキュメント取得、ログ処理などの冗長な出力を生むタスクはサブエージェントに委任します。冗長出力はサブエージェントのコンテキスト内に留まり、メイン会話には要約だけが返ります。</p>
+<div class="code-wrapper"><pre># Claude Code 内での指示例
+「テストの実行とログ分析はサブエージェントに任せて、
+  結果のサマリーだけ報告して」</pre></div>
+<div class="callout callout-warn">
+<div class="callout-title">&#9888; 注意: Agent Teams</div>
+<p>Agent Teams（複数エージェントの協調）は通常セッションの<strong>約7倍のトークン</strong>を消費します。コスト意識が必要な場面では単一エージェント+サブエージェントの構成を検討しましょう。</p>
+</div>
+</article>
+
+<article class="opt-card" data-search-text="大タスク 分割 小タスク 探索 実装 フェーズ分離 段階的">
+<div class="opt-header">
+  <h3 class="opt-name">大タスクを小タスクに分割</h3>
+  <span class="badge badge-easy">簡単</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">探索フェーズと実装フェーズを分離し、各フェーズを独立したセッションで実行します。探索の結果を CLAUDE.md やスキルに記録してから実装に入ると、コンテキストの無駄な蓄積を防げます。</p>
+</article>
+
+<article class="opt-card" data-search-text="フック hooks 前処理 データ加工 ツール出力 フィルタ 自動化">
+<div class="opt-header">
+  <h3 class="opt-name">フックで前処理する</h3>
+  <span class="badge badge-adv">上級</span>
+  <span class="badge badge-md">効果: 中</span>
+</div>
+<p class="opt-desc">フック（<code>PreToolUse</code>、<code>PostToolUse</code>）を使って、Claude に渡す前にデータをフィルタリング・加工できます。大量のログやAPI応答を事前に要約してからコンテキストに追加する使い方が有効です。</p>
+</article>
+</section>
+
+<!-- CHECKLIST -->
+<section id="checklist" class="section">
+<h2 class="section-title">日々のチェックリスト</h2>
+<p class="opt-desc">毎日の作業で意識すべき項目です。</p>
+<ul class="checklist">
+<li>タスクが変わったら <code>/clear</code> で新しいセッションを開始したか？</li>
+<li>フェーズの区切りで <code>/compact</code> を実行したか？</li>
+<li>CLAUDE.md は200行以下に収まっているか？</li>
+<li>使わない MCP サーバーを無効化しているか？</li>
+<li>大きなファイルを全文読み込みしていないか？</li>
+<li>grep / glob で事前に対象を絞り込んでいるか？</li>
+<li>指示は簡潔で具体的か？（冗長な前置きはないか）</li>
+<li>effort level はタスクの複雑さに合っているか？</li>
+<li>冗長なタスクをサブエージェントに委任しているか？</li>
+<li><code>/usage</code> でコストを定期的に確認しているか？</li>
+</ul>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="section">
+<h2 class="section-title">FAQ</h2>
+
+<details class="faq-item">
+<summary>/clear と /compact、どちらを使うべき？</summary>
+<div class="faq-answer">
+<p><strong>/clear</strong> は完全にセッションをリセットし、新しい会話を開始します。タスクが完全に切り替わる場合に使います。<strong>/compact</strong> は同じタスク内で会話を圧縮し、重要な情報を保持したまま続行します。同じタスクの途中（フェーズの区切り）では <code>/compact</code>、別タスクに移る時は <code>/clear</code> が最適です。</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>プロンプトキャッシュは Claude Code でも使えるの？</summary>
+<div class="faq-answer">
+<p>Claude Code CLI は内部的にプロンプトキャッシュを自動管理しています。ユーザーが明示的に <code>cache_control</code> を設定する必要はありません。プロンプトキャッシュのテクニック（静的コンテンツを先頭に配置するなど）は、Claude API を直接利用するアプリケーション開発で特に重要です。</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>Effort Level を下げると品質は落ちる？</summary>
+<div class="faq-answer">
+<p><code>low</code> にすると思考トークンが大幅に減り、複雑な推論が必要なタスクでは品質に影響します。ただし、「ファイルの修正箇所を教えて」「このエラーの意味は？」のような単純なタスクでは <code>low</code> でも十分な品質です。タスクの複雑さに合わせて使い分けましょう。<code>high</code> がほとんどのタスクでの推奨値です。</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>バッチ処理とキャッシュは同時に使える？</summary>
+<div class="faq-answer">
+<p>はい、割引は<strong>スタック（重複適用）</strong>します。バッチ処理の50%割引とキャッシュ読み込みの90%割引が組み合わさると、キャッシュされた入力トークンは最大<strong>95%のコスト削減</strong>になります。バッチ内のキャッシュ TTL は <code>1h</code> を推奨します。</p>
+</div>
+</details>
+
+<details class="faq-item">
+<summary>ccusage はどうやってコストを計算している？</summary>
+<div class="faq-answer">
+<p>ccusage はローカルの Claude Code セッションファイル（JSONL 形式）を読み取り、各メッセージのトークン数と利用モデルから料金を計算します。API キーは不要で、すべてローカルで完結します。<code>npx ccusage claude daily</code> で日次レポートを確認できます。</p>
+</div>
+</details>
+</section>
+
+<!-- PRICING TABLE -->
+<section id="pricing" class="section">
+<h2 class="section-title">価格表（参考）</h2>
+<div class="callout callout-info">
+<div class="callout-title">&#9432; 出典</div>
+<p>以下の価格は Anthropic 公式ドキュメント（2026年5月時点）に基づいています。最新情報は<a href="https://docs.claude.com/en/docs/build-with-claude/prompt-caching" target="_blank" rel="noopener">公式ページ</a>を確認してください。</p>
+</div>
+
+<table>
+<thead><tr><th>モデル</th><th>Input</th><th>Output</th><th>Cache Write (5m)</th><th>Cache Write (1h)</th><th>Cache Read</th><th>Batch Input</th><th>Batch Output</th></tr></thead>
+<tbody>
+<tr><td>Opus 4.7/4.6/4.5</td><td>$5</td><td>$25</td><td>$6.25</td><td>$10</td><td><strong>$0.50</strong></td><td>$2.50</td><td>$12.50</td></tr>
+<tr><td>Sonnet 4.6/4.5</td><td>$3</td><td>$15</td><td>$3.75</td><td>$6</td><td><strong>$0.30</strong></td><td>$1.50</td><td>$7.50</td></tr>
+<tr><td>Haiku 4.5</td><td>$1</td><td>$5</td><td>$1.25</td><td>$2</td><td><strong>$0.10</strong></td><td>$0.50</td><td>$2.50</td></tr>
+</tbody>
+</table>
+<p class="opt-desc" style="margin-top:8px;">単位: USD per Million Tokens (MTok)。Cache Read は基本入力価格の<strong>0.1倍</strong>、Batch は標準価格の<strong>0.5倍</strong>。</p>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+<h3>出典・参考リンク</h3>
+<ul>
+<li><a href="https://docs.claude.com/en/docs/build-with-claude/prompt-caching" target="_blank" rel="noopener">Prompt Caching &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/build-with-claude/batch-processing" target="_blank" rel="noopener">Batch Processing &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/build-with-claude/context-windows" target="_blank" rel="noopener">Context Windows &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener">Prompt Engineering &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/claude-code/costs" target="_blank" rel="noopener">Claude Code Costs &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/claude-code/memory" target="_blank" rel="noopener">Memory &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/claude-code/settings" target="_blank" rel="noopener">Settings &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">Extended Thinking &mdash; Anthropic公式</a></li>
+<li><a href="https://docs.claude.com/en/docs/build-with-claude/token-counting" target="_blank" rel="noopener">Token Counting &mdash; Anthropic公式</a></li>
+<li><a href="https://github.com/ryoppippi/ccusage" target="_blank" rel="noopener">ccusage &mdash; GitHub</a></li>
+<li><a href="https://projectdiscovery.io/blog/how-we-cut-llm-cost-with-prompt-caching" target="_blank" rel="noopener">ProjectDiscovery: How We Cut LLM Costs by 59%</a></li>
+</ul>
+<p style="margin-top:14px;">このガイドは Claude Code によって自動生成されました。価格・機能は変更される可能性があります。最新情報は公式ドキュメントで確認してください。</p>
+</footer>
+
+</main>
+</div>
+
+<button class="back-to-top" id="backToTop" aria-label="ページ上部に戻る">&#8679;</button>
+<div class="no-results" id="noResults">検索結果が見つかりません。別のキーワードで試してください。</div>
+
+<script>
+(function(){
+'use strict';
+var themeBtn=document.getElementById('themeToggle');
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  themeBtn.innerHTML=t==='dark'?'&#9788; Light':'&#9790; Dark';
+}
+var s=localStorage.getItem('cc-tok-theme');
+if(s)applyTheme(s);
+else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)applyTheme('dark');
+else applyTheme('light');
+themeBtn.addEventListener('click',function(){
+  var c=document.documentElement.getAttribute('data-theme');
+  var n=c==='dark'?'light':'dark';applyTheme(n);localStorage.setItem('cc-tok-theme',n);
+});
+
+var hamburger=document.getElementById('hamburger');
+var sidebar=document.getElementById('sidebar');
+var overlay=document.getElementById('sidebarOverlay');
+function closeSb(){sidebar.classList.remove('open');overlay.classList.remove('active');hamburger.setAttribute('aria-expanded','false');}
+hamburger.addEventListener('click',function(){
+  var o=sidebar.classList.toggle('open');overlay.classList.toggle('active',o);hamburger.setAttribute('aria-expanded',o);
+});
+overlay.addEventListener('click',closeSb);
+sidebar.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){if(window.innerWidth<=768)closeSb();});});
+
+var sLinks=sidebar.querySelectorAll('a[href^="#"]');
+var sMap={};
+sLinks.forEach(function(l){sMap[l.getAttribute('href').slice(1)]=l;});
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      sLinks.forEach(function(l){l.classList.remove('active');});
+      var lk=sMap[e.target.id];
+      if(lk){lk.classList.add('active');if(window.innerWidth>768)lk.scrollIntoView({block:'nearest',behavior:'smooth'});}
+    }
+  });
+},{rootMargin:'-70px 0px -60% 0px',threshold:0});
+Object.keys(sMap).forEach(function(id){var el=document.getElementById(id);if(el)obs.observe(el);});
+
+var searchBox=document.getElementById('searchBox');
+var noRes=document.getElementById('noResults');
+var entries=document.querySelectorAll('[data-search-text]');
+var sections=document.querySelectorAll('.section');
+var st;
+searchBox.addEventListener('input',function(){clearTimeout(st);st=setTimeout(function(){doSearch(searchBox.value);},200);});
+function doSearch(q){
+  q=q.toLowerCase().trim();
+  if(!q){entries.forEach(function(e){e.classList.remove('search-hidden');});sections.forEach(function(s){s.classList.remove('search-hidden');});noRes.classList.remove('visible');return;}
+  var any=false;
+  entries.forEach(function(e){var m=e.getAttribute('data-search-text').indexOf(q)!==-1;e.classList.toggle('search-hidden',!m);if(m)any=true;});
+  sections.forEach(function(sec){var v=sec.querySelectorAll('[data-search-text]:not(.search-hidden)');sec.classList.toggle('search-hidden',v.length===0);});
+  noRes.classList.toggle('visible',!any);
+}
+
+document.querySelectorAll('.code-wrapper').forEach(function(w){
+  var pre=w.querySelector('pre');if(!pre)return;
+  var btn=document.createElement('button');btn.className='copy-btn';btn.textContent='コピー';
+  btn.addEventListener('click',function(){navigator.clipboard.writeText(pre.textContent).then(function(){btn.textContent='コピー済み!';btn.classList.add('copied');setTimeout(function(){btn.textContent='コピー';btn.classList.remove('copied');},2000);});});
+  w.appendChild(btn);
+});
+
+var bb=document.getElementById('backToTop');
+window.addEventListener('scroll',function(){bb.classList.toggle('visible',window.scrollY>400);},{passive:true});
+bb.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+if(window.location.hash){var tgt=document.getElementById(window.location.hash.slice(1));if(tgt)setTimeout(function(){tgt.scrollIntoView();},100);}
+})();
+</script>
+</body>
+</html>

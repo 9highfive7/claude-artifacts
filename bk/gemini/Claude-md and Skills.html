@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLAUDE.md & Agent Skills 究極マスターガイド</title>
+  <style>
+    :root {
+      --bg-color: #fcfbfa;
+      --text-color: #2c2520;
+      --sidebar-bg: #f4f0ec;
+      --accent-color: #e05e26;
+      --accent-hover: #b84314;
+      --border-color: #e5dfd8;
+      --card-bg: #ffffff;
+      --code-bg: #f5f0eb;
+      --code-text: #8c2d19;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      
+      --callout-info-bg: #ebf5ff;
+      --callout-info-border: #3b82f6;
+      --callout-hint-bg: #f0fdf4;
+      --callout-hint-border: #22c55e;
+      --callout-warn-bg: #fffbeb;
+      --callout-warn-border: #f59e0b;
+      --callout-danger-bg: #fef2f2;
+      --callout-danger-border: #ef4444;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #161412;
+      --text-color: #f3ece5;
+      --sidebar-bg: #221d1a;
+      --accent-color: #f26c36;
+      --accent-hover: #ff8e61;
+      --border-color: #38312a;
+      --card-bg: #1e1916;
+      --code-bg: #2b231f;
+      --code-text: #ff9d85;
+      
+      --callout-info-bg: #1e293b;
+      --callout-info-border: #60a5fa;
+      --callout-hint-bg: #14532d;
+      --callout-hint-border: #4ade80;
+      --callout-warn-bg: #78350f;
+      --callout-warn-border: #fbbf24;
+      --callout-danger-bg: #451a03;
+      --callout-danger-border: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 読書進捗バー */
+    #progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 1000;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: var(--accent-color);
+    }
+
+    /* 全体構造 */
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* サイドバー */
+    aside {
+      width: 320px;
+      background-color: var(--sidebar-bg);
+      border-right: 1px solid var(--border-color);
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 検索ボックス */
+    .search-box {
+      margin-bottom: 20px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: var(--accent-color);
+    }
+
+    /* 目次 */
+    .toc-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      color: var(--accent-color);
+    }
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex-grow: 1;
+    }
+    .toc-item {
+      margin-bottom: 8px;
+    }
+    .toc-link {
+      display: block;
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 0.95rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      opacity: 0.8;
+    }
+    .toc-link:hover, .toc-link.active {
+      opacity: 1;
+      background-color: var(--card-bg);
+      color: var(--accent-color);
+      font-weight: 500;
+    }
+
+    /* メインコンテンツ */
+    main {
+      flex: 1;
+      padding: 40px 60px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 20px;
+      margin-bottom: 40px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      color: var(--accent-color);
+      margin-top: 0;
+    }
+    h2 {
+      font-size: 1.6rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-top: 40px;
+      color: var(--accent-color);
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin-top: 30px;
+    }
+    h4 {
+      font-size: 1.05rem;
+      margin-top: 20px;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+    }
+
+    /* コールアウト */
+    .callout {
+      border-left: 4px solid;
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .callout.info {
+      background-color: var(--callout-info-bg);
+      border-color: var(--callout-info-border);
+    }
+    .callout.hint {
+      background-color: var(--callout-hint-bg);
+      border-color: var(--callout-hint-border);
+    }
+    .callout.warn {
+      background-color: var(--callout-warn-bg);
+      border-color: var(--callout-warn-border);
+    }
+    .callout.danger {
+      background-color: var(--callout-danger-bg);
+      border-color: var(--callout-danger-border);
+    }
+
+    /* 学習目標 / 要点 */
+    .goal-box {
+      background-color: var(--sidebar-bg);
+      border-left: 4px solid var(--accent-color);
+      padding: 15px 20px;
+      border-radius: 4px;
+      margin-bottom: 30px;
+    }
+    .goal-box h4 {
+      margin: 0 0 10px 0;
+      color: var(--accent-color);
+    }
+
+    /* 比較並列コンテナ */
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    @media (max-width: 768px) {
+      .compare-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    .compare-card {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      background-color: var(--card-bg);
+    }
+    .compare-card.bad {
+      border-top: 4px solid var(--callout-danger-border);
+    }
+    .compare-card.good {
+      border-top: 4px solid var(--callout-hint-border);
+    }
+
+    /* コードブロック */
+    .code-wrapper {
+      position: relative;
+      margin: 20px 0;
+    }
+    pre {
+      background-color: var(--code-bg);
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 0;
+      border: 1px solid var(--border-color);
+    }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--code-text);
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+    .copy-btn:hover {
+      background-color: var(--sidebar-bg);
+    }
+
+    /* 理解度チェック */
+    .quiz-box {
+      border: 1px dashed var(--accent-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 30px 0;
+      background-color: var(--card-bg);
+    }
+    .quiz-title {
+      font-weight: bold;
+      color: var(--accent-color);
+      margin-bottom: 15px;
+    }
+    details {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      background: var(--sidebar-bg);
+    }
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    details[open] summary {
+      margin-bottom: 10px;
+      color: var(--accent-color);
+    }
+
+    /* テーブル */
+    .table-responsive {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background-color: var(--sidebar-bg);
+      color: var(--accent-color);
+    }
+
+    /* テーマ切替ボタン */
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      align-self: flex-start;
+    }
+
+    /* ページトップに戻る */
+    #back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: var(--accent-color);
+      color: #fff;
+      border: none;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+
+    /* ダイアグラム風のSVG/CSSボックス */
+    .diagram-box {
+      background: var(--sidebar-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 25px 0;
+      text-align: center;
+    }
+
+    /* 印刷スタイル */
+    @media print {
+      aside, #progress-container, #back-to-top, .theme-toggle, .copy-btn {
+        display: none !important;
+      }
+      main {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 進捗インジケータ -->
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- サイドバー -->
+    <aside>
+      <button class="theme-toggle" id="theme-toggle">モード切替</button>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="キーワードで探す...">
+      </div>
+      <div class="toc-title">目次</div>
+      <ul class="toc-list" id="toc">
+        <!-- JSで自動生成 -->
+      </ul>
+    </aside>
+
+    <!-- メイン -->
+    <main>
+      <header>
+        <h1>CLAUDE.md & Agent Skills 究極マスターガイド</h1>
+        <p><strong>対象読者:</strong> Claude Codeを導入する開発者・チームリーダー</p>
+        <p><strong>学習目安時間:</strong> 45分 (実践演習含む)</p>
+        <p><strong>最終更新日:</strong> 2026年5月22日 | <strong>対応バージョン:</strong> Claude Code v2.1.145+</p>
+      </header>
+
+      <section id="path-guide">
+        <h2>**このガイドの読み方 (学習ロードマップ)**</h2>
+        <div class="goal-box">
+          <h4>🎯 本セクションの学習目標</h4>
+          <p>現在の自分のスキルレベルと目的に応じた、最適な学習ルートを把握します。</p>
+        </div>
+        
+        <div class="diagram-box">
+          <div style="font-weight: bold; margin-bottom: 15px; color: var(--accent-color);">🌟 推奨される学習パス</div>
+          <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+            <div style="background: var(--card-bg); padding: 15px; border-radius: 6px; width: 45%; min-width: 250px; border: 1px solid var(--border-color);">
+              <h5 style="margin:0 0 8px 0; color: var(--accent-color);">🟢 初学者ルート (まず動かす)</h5>
+              <p style="font-size: 0.85rem; margin: 0; text-align: left;">1. 第1部でCLAUDE.mdの基本を学ぶ<br>2. 自動生成(/init)を試す<br>3. 実践演習1に挑戦する</p>
+            </div>
+            <div style="background: var(--card-bg); padding: 15px; border-radius: 6px; width: 45%; min-width: 250px; border: 1px solid var(--border-color);">
+              <h5 style="margin:0 0 8px 0; color: var(--accent-color);">🔥 実践者・リード向け (自作・高度運用)</h5>
+              <p style="font-size: 0.85rem; margin: 0; text-align: left;">1. 第2部でAgent Skillsをマスターする<br>2. 第4部で組織展開ルールを学ぶ<br>3. 実践演習3でコード自動ビジュアライザを動かす</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 第1部 -->
+      <section id="part1-claude-md">
+        <h2>**第1部: CLAUDE.md 編**</h2>
+        <div class="goal-box">
+          <h4>🎯 本セクションの学習目標</h4>
+          <p>CLAUDE.mdが果たす役割、ロードされる仕組み、そしてモデルに命令を正しく遵守させるための「引き算の書き方」を習得します。</p>
+        </div>
+
+        <h3>1. CLAUDE.mdとは何か</h3>
+        <p>
+          Claude Codeにおいて、**CLAUDE.md** は「エージェントにプロジェクト特有のコンテキスト（不変のルール・常識）を与えるための静的な長期記憶ファイル」です。
+          毎セッションの立ち上げ時に、Claudeは自動的にこのファイルを走査して読み込み、自分がどのプロジェクトで、どのような規約に従って行動すべきかを理解します。
+        </p>
+
+        <div class="callout info">
+          <h5>ℹ️ なぜ必要なのか？何を解決するのか？</h5>
+          毎回のチャットで「このプロジェクトはPythonで動いていて、インデントはスペース4つで、ビルドコマンドは `make build` です」と説明し直す必要をなくします。開発者の認知的負荷を激減させる、プロジェクト専用のオンボーディング・資料の役割を果たします。
+        </div>
+
+        <h3>2. 配置場所と多層的なロード階層</h3>
+        <p>
+          CLAUDE.mdは単一のファイルに留まりません。カレントディレクトリからファイルシステムのルート（/）までを遡る形で、異なるスコープのルールを検出し、結合して読み込みます。
+        </p>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>適用範囲 (スコープ)</th>
+                <th>配置場所</th>
+                <th>主な用途</th>
+                <th>共有範囲</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>組織共通ルール</strong></td>
+                <td><code>/etc/claude-code/CLAUDE.md</code></td>
+                <td>企業のコーディング標準、セキュリティポリシー</td>
+                <td>社内全員 (マシン共有)</td>
+              </tr>
+              <tr>
+                <td><strong>ユーザー個人設定</strong></td>
+                <td><code>~/.claude/CLAUDE.md</code></td>
+                <td>個人開発者の書き方の好み、よく使う短縮コマンド</td>
+                <td>自分自身 (全プロジェクト)</td>
+              </tr>
+              <tr>
+                <td><strong>プロジェクト規約</strong></td>
+                <td><code>./CLAUDE.md</code> または <code>./.claude/CLAUDE.md</code></td>
+                <td>プロジェクト固有のビルド/検証、アーキテクチャ方針</td>
+                <td>Gitを介してチーム全員で共有</td>
+              </tr>
+              <tr>
+                <td><strong>個人ローカル設定</strong></td>
+                <td><code>./CLAUDE.local.md</code></td>
+                <td>Git追跡対象外にする個人的なローカル検証用設定</td>
+                <td>自分専用 (現在のプロジェクト)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <h5>⚠️ ローカル環境設定の注意</h5>
+          <code>CLAUDE.local.md</code> は個人の認証情報やサンドボックスURLを格納するのに適していますが、誤ってリポジトリにコミットしないよう、<strong>必ず <code>.gitignore</code> に追加</strong>してください。
+        </div>
+
+        <h3>3. 書き方の基本と推奨構成</h3>
+        <p>
+          CLAUDE.mdはプレーンなMarkdownで記述します。ロードされた内容は常にコンテキストウィンドウを消費するため、**「200行以下」**で簡潔に保つ必要があります。
+        </p>
+
+        <h4>推奨セクション構成:</h4>
+        <ul>
+          <li>**Build & Test:** 実際に動作する正確なコマンド。</li>
+          <li>**Coding Standards:** インデント数、エラー処理、命名規則。</li>
+          <li>**Architecture:** 主要技術スタック、ディレクトリ構成。</li>
+          <li>**Imports:** `@path/to/file` の構文を使用し、READMEやpackage.json、その他個別のルール（<code>.claude/rules/</code>）をインポート可能。</li>
+        </ul>
+
+        <h3>4. Before & After で見る記述例</h3>
+        <div class="compare-container">
+          <div class="compare-card bad">
+            <h5 style="color:var(--callout-danger-border);">❌ 悪い例 (抽象的で冗長)</h5>
+            <p style="font-size: 0.85rem;">「コードはきれいに書いてください。テストもちゃんと走らせること。フロントエンドはReactを使っていますが、色々古いコンポーネントもあります。エラーは適切にログに出力するように心がけてください。」</p>
+          </div>
+          <div class="compare-card good">
+            <h5 style="color:var(--callout-hint-border);">👍 良い例 (具体的・機械可読)</h5>
+            <div class="code-wrapper">
+              <pre><code class="language-markdown"># Build & Test commands
+- Build: `npm run build`
+- Test: `npm test`
+
+# Code Style
+- Use 2-space indentation
+- Use Functional Components in React
+- Error handling: Always wrap in try/catch and log to `logger.error`</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <h3>5. 便利な機能：対話中の「#」プレフィックス</h3>
+        <p>
+          セッション中に <code>#</code> キーを押してインストラクションを入力すると、Claude Codeは対話中での開発者の修正やメモを検知し、該当する `CLAUDE.md` ファイルに自動的にその「記憶」をマージ・追記します。これにより、マニュアルで編集する手間を省きながらメモリを最新に維持できます。
+        </p>
+
+        <div class="quiz-box">
+          <div class="quiz-title">🧩 理解度チェック：CLAUDE.md</div>
+          <details>
+            <summary>Q1. CLAUDE.mdは1ファイルあたり何行以内に抑えるべきですか？</summary>
+            <p><strong>A1. 200行未満。</strong> それ以上長いファイルは、Claudeの命令遵守率を下げ、無用なトークンを毎ターン消費させてしまいます。</p>
+          </details>
+          <details>
+            <summary>Q2. プロジェクト内でチーム共通ルールと自分専用のローカル環境定義を使い分けたい場合、どうすればいいですか？</summary>
+            <p><strong>A2. 共通ルールは <code>CLAUDE.md</code> に記述してGit管理し、個人設定は <code>CLAUDE.local.md</code> に書いて <code>.gitignore</code> に追加します。</strong></p>
+          </details>
+        </div>
+      </section>
+
+      <!-- 第2部 -->
+      <section id="part2-agent-skills">
+        <h2>**第2部: Skills (Agent Skills) 編**</h2>
+        <div class="goal-box">
+          <h4>🎯 本セクションの学習目標</h4>
+          <p>Agent Skillsのメンタルモデルを確立し、YAMLフロントマターを用いた設計手順と、事前評価式のシェルコマンド埋め込み（事前処理）の実装方法を習得します。</p>
+        </div>
+
+        <h3>1. Skillsとは何か</h3>
+        <p>
+          **Agent Skills**は、特定の手続きや複雑なタスクを、Claudeが「必要な時にだけ」引き出して実行できる機能です。
+          常時脳内にロードされているCLAUDE.mdとは異なり、**必要なときだけ読み込まれるため、大幅なトークンの節約**になります。
+        </p>
+
+        <div class="diagram-box">
+          <div style="font-weight: bold; margin-bottom: 10px;">🧠 オンデマンドロードの仕組み (Progressive Disclosure)</div>
+          <p style="font-size:0.9rem; margin-bottom: 5px;">Claudeは起動時にすべてのSkillの「description」のみを薄く記憶します。</p>
+          <div style="font-size: 1.5rem; margin: 10px 0;">📂 <code>description</code> で適合判定 ➡️ 🎯 特定Skillの中身全体をロード</div>
+        </div>
+
+        <h3>2. 構造とファイル形式</h3>
+        <p>
+          Skillは必ず <code>SKILL.md</code> というファイルを含む、独立したフォルダで構成されます。
+        </p>
+        <div class="code-wrapper">
+          <button class="copy-btn">コピー</button>
+          <pre><code class="language-bash">my-skill/
+ ├── SKILL.md       # メインの指示とフロントマター（必須）
+ ├── template.md    # 補助的なテンプレート（オプション）
+ └── scripts/
+     └── helper.py  # Claudeが呼び出す補助スクリプト（オプション）</code></pre>
+        </div>
+
+        <h3>3. SKILL.md のフロントマター</h3>
+        <p>YAML形式で動作パラメーターを指定します。</p>
+        <div class="code-wrapper">
+          <button class="copy-btn">コピー</button>
+          <pre><code class="language-yaml">---
+name: create-pr
+description: Gitのステージング領域から綺麗なプルリクエストを生成します
+disable-model-invocation: true
+allowed-tools:
+  - Bash
+---
+ここに、Claudeに実行させたい詳細な手順を記載します。</code></pre>
+        </div>
+
+        <h3>4. 高度な実装パターン：動的なコンテキスト注入</h3>
+        <p>
+          `` !`command` `` 構文を使うことで、ClaudeがこのSkillを読み込む**直前**に、ホストマシンのシェルで事前コマンドを実行し、その実行結果（stdout）を自動的にプロンプトへ埋め込むことができます。
+        </p>
+
+        <div class="code-wrapper">
+          <button class="copy-btn">コピー</button>
+          <pre><code class="language-markdown"># システムの稼働状況
+```!
+uptime
+uname -a
+```</code></pre>
+        </div>
+
+        <div class="callout danger">
+          <h5>🔥 組織導入時のセキュリティリスク</h5>
+          誰が書いたか分からない不正なリポジトリを不用意にローカルで開くと、Skillsの読み込み時に悪意のあるコマンドが事前実行される（RCE）リスクがあります。組織展開の際は、共有設定ファイル等で <code>"disableSkillShellExecution": true</code> を指定し、この評価型コマンド実行を無効化することを推奨します。
+        </div>
+
+        <div class="quiz-box">
+          <div class="quiz-title">🧩 理解度チェック：Agent Skills</div>
+          <details>
+            <summary>Q1. CLAUDE.mdとSkillsの最も大きな違いは何ですか？</summary>
+            <p><strong>A1. ロードのタイミングとトークン消費。</strong> CLAUDE.mdは常時ロードされるため継続的にトークンを消費しますが、Skillsは該当タスクが発生した時にオンデマンドでロードされるため無駄なトークンを消費しません。</p>
+          </details>
+          <details>
+            <summary>Q2. Skill内の markdown に <code>!「コマンド」</code> と書いた場合、いつ実行されますか？</summary>
+            <p><strong>A2. ClaudeがSkillを読み込む（呼び出される）直前に、開発者のローカル環境（ホスト）上で実行されます。</strong> 実行結果の文字列が、プロンプトの一部に変換されてからClaudeに渡されます。</p>
+          </details>
+        </div>
+      </section>
+
+      <!-- 第3部 -->
+      <section id="part3-comparison">
+        <h2>**第3部: 比較と使い分け**</h2>
+        <div class="goal-box">
+          <h4>🎯 本セクションの学習目標</h4>
+          <p>Claude Codeで利用可能な複数の文脈制御機能（CLAUDE.md、Skills、サブエージェント、スラッシュコマンド）を状況に応じて最適に使い分けられるようにします。</p>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ツール</th>
+                <th>ロード条件</th>
+                <th>最適ユースケース</th>
+                <th>ファイル実体</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>CLAUDE.md</strong></td>
+                <td>常時自動</td>
+                <td>常に適用すべき基本的な命名規則、ビルド・テスト環境の定義</td>
+                <td><code>CLAUDE.md</code></td>
+              </tr>
+              <tr>
+                <td><strong>Skills</strong></td>
+                <td>必要に応じて（自動/手動）</td>
+                <td>定形手順（デプロイ、PR作成、定型コードビジュアル生成など）</td>
+                <td><code>.claude/skills/*/SKILL.md</code></td>
+              </tr>
+              <tr>
+                <td><strong>サブエージェント</strong></td>
+                <td>ユーザーが指示した時</td>
+                <td>大きなコードリファクタリング、広範囲なコード影響度調査の分離</td>
+                <td><code>.claude/agents/*.md</code></td>
+              </tr>
+              <tr>
+                <td><strong>スラッシュコマンド</strong></td>
+                <td>ユーザーによる手動のみ</td>
+                <td>環境管理、コンテキスト圧縮（/compact）、モデル切替</td>
+                <td>組み込み (またはカスタム)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>使い分け決定ツリー</h3>
+        <ul>
+          <li>**「すべてのチャットで、Claudeにビルド方法を知っていてほしい」** ➡️ **CLAUDE.md**</li>
+          <li>**「特定の言語や特定のディレクトリだけで適用したいルールがある」** ➡️ **.claude/rules/** の path-specific ルール</li>
+          <li>**「普段は忘れていてほしいが、週に1回のデプロイ時だけ長文マニュアルを参照してほしい」** ➡️ **Agent Skills**</li>
+        </ul>
+      </section>
+
+      <!-- 第4部 -->
+      <section id="part4-operations">
+        <h2>**第4部: 運用とチーム展開**</h2>
+        <div class="goal-box">
+          <h4>🎯 本セクションの学習目標</h4>
+          <p>チームでClaude Codeを導入する際のGit運用ポリシー、レビューサイクル、および機密情報の安全な取り扱い方を学びます。</p>
+        </div>
+
+        <h3>1. Git管理のゴールデンルール</h3>
+        <ul>
+          <li>**コミットすべきもの:** <code>CLAUDE.md</code>、<code>.claude/rules/</code>、<code>.claude/skills/</code>。これらはチーム全体で共通の「AI協働用ドキュメント」として常にバージョン管理下に置きます。</li>
+          <li>**Git無視（.gitignore）すべきもの:** <code>CLAUDE.local.md</code>、<code>.claude/settings.local.json</code>。</li>
+        </ul>
+
+        <h3>2. チーム内での標準化プロセス</h3>
+        <p>
+          チームの誰かがClaude Codeに「変なコードの書き方をされた」または「テストコマンドを間違えられた」場合、対話側で修正させるだけでなく、<strong>その場で <code>CLAUDE.md</code> のルールを1行改善（Pull Requestを作成）する文化</strong>を醸成することがAI協働をスケールさせる鍵となります。
+        </p>
+
+        <div class="callout warn">
+          <h5>⚠️ 機密情報の漏洩を防ぐ</h5>
+          CLAUDE.md や SKILL.md に直接、パスワードや秘密鍵（APIキー）を書き込んではいけません。それらは環境変数経由（例：`${MY_API_KEY}`）で参照するよう設定するか、前述の <code>CLAUDE.local.md</code> に追い出してください。
+        </div>
+      </section>
+
+      <!-- 実践演習 -->
+      <section id="exercises">
+        <h2>**実践演習（ハンズオン）**</h2>
+        <div class="goal-box">
+          <h4>🛠️ 手を動かして学ぶ課題</h4>
+          <p>以下の課題に実際に取り組み、設計スキルを確固たるものにしましょう。</p>
+        </div>
+
+        <h3>課題1: 黄金のCLAUDE.mdを `/init` から育てる</h3>
+        <p><strong>状況:</strong> あなたはNode.js + Jest環境のWeb開発プロジェクトにClaudeを導入しようとしています。</p>
+        <p><strong>手順:</strong></p>
+        <ol>
+          <li>プロジェクトのルートで <code>claude /init</code> を実行します。</li>
+          <li>自動生成された <code>CLAUDE.md</code> の中身をエディタで確認します。</li>
+          <li>コーディング基準セクションに「非推奨の関数（例: `var` 宣言は禁止、必ず `const` を使う）」を追記します。</li>
+        </ol>
+
+        <h3>課題2: コミット作成オートメーションSkill</h3>
+        <p><strong>状況:</strong> コミットメッセージに「[FE]」「[BE]」などのプレフィックス付与を強制したいとします。</p>
+        <p><strong>実装サンプル (<code>.claude/skills/smart-commit/SKILL.md</code>):</strong></p>
+        <div class="code-wrapper">
+          <button class="copy-btn">コピー</button>
+          <pre><code class="language-markdown">---
+name: smart-commit
+description: プロジェクト規約に合わせた丁寧なGitコミットを作成します
+disable-model-invocation: true
+allowed-tools:
+  - Bash
+---
+
+# 役割
+以下のGitコミット規約に厳格に従ってコミットを作成してください。
+
+## 規約
+- フロントエンド関連の変更: `feat[FE]: &lt;内容&gt;` もしくは `fix[FE]: &lt;内容&gt;`
+- バックエンド関連の変更: `feat[BE]: &lt;内容&gt;` もしくは `fix[BE]: &lt;内容&gt;`
+- それ以外の雑多なタスク: `chore: &lt;内容&gt;`
+
+## 手順
+1. `git diff --cached` で現在のステージング状況を確認する。
+2. 変更履歴に基づいて適切なプレフィックスを自動判定する。
+3. `git commit -m "&lt;作成したメッセージ&gt;"` を実行する。</code></pre>
+        </div>
+
+        <h3>課題3: Python版・コード構造自動ビジュアライザ</h3>
+        <p>
+          Claudeに以下のように依頼してください。「プロジェクトを分析して可視化するスクリプトを Skills として実装してほしい」と伝えるだけで、Claudeは <code>.claude/skills/code-visualizer/</code> を立ち上げ、自動的にHTMLグラフを生成するPythonコードを作成してくれます。
+        </p>
+      </section>
+
+      <!-- 用語集 -->
+      <section id="glossary">
+        <h2>**用語集 (Glossary)**</h2>
+        <dl>
+          <dt id="term-compaction"><strong>Compaction (コンテキスト圧縮)</strong></dt>
+          <dd>チャット履歴がモデルのコンテキスト制限に近づいた際、過去の履歴を要約し、不要なトークンを解放するClaude Codeの内製プロセス。</dd>
+          
+          <dt id="term-progressive-disclosure"><strong>Progressive Disclosure (段階的開示)</strong></dt>
+          <dd>必要な瞬間にのみ詳細な情報を展開し、通常時は不要な注意リソース（トークン）を削減する設計思想。Agent Skillsに採用されている。</dd>
+
+          <dt id="term-subagent"><strong>サブエージェント (Sub-agents)</strong></dt>
+          <dd>メインの対話とは完全に別の独立したシステム文脈をフォークして並行起動し、特定の重たい作業を完全に裏で並列処理させる仕組み。</dd>
+        </dl>
+      </section>
+
+      <!-- 参考リンク -->
+      <section id="references">
+        <h2>**リファレンス／参考リンク**</h2>
+        <ul>
+          <li><a href="https://code.claude.com/docs/en/memory" target="_blank">Claude Code Memory (CLAUDE.md) 公式ドキュメント</a></li>
+          <li><a href="https://code.claude.com/docs/en/skills" target="_blank">Claude Code Skills (SKILL.md) 公式ドキュメント</a></li>
+          <li><a href="https://github.com/anthropics/skills" target="_blank">GitHub - anthropics/skills (公式Agent Skills例)</a></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <button id="back-to-top" title="トップへ戻る">▲</button>
+
+  <script>
+    // ダークモード切替
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      themeToggleBtn.textContent = theme === 'dark' ? '☀️ ライトモード' : '🌙 ダークモード';
+    }
+
+    // 初期テーマ決定
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      setTheme(systemPrefersDark.matches ? 'dark' : 'light');
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    // 目次の動的生成
+    const tocContainer = document.getElementById('toc');
+    const headings = document.querySelectorAll('main h2, main h3');
+    headings.forEach((heading, index) => {
+      const id = heading.id || `heading-${index}`;
+      heading.id = id;
+      
+      const li = document.createElement('li');
+      li.className = 'toc-item';
+      
+      const a = document.createElement('a');
+      a.className = 'toc-link';
+      a.href = `#${id}`;
+      a.textContent = heading.textContent.replace(/\*\*/g, '');
+      
+      // H3の場合はインデント
+      if (heading.tagName === 'H3') {
+        a.style.paddingLeft = '20px';
+        a.style.fontSize = '0.85rem';
+      }
+      
+      li.appendChild(a);
+      tocContainer.appendChild(li);
+    });
+
+    // 読書進捗バー & TOCハイライト & ページトップボタン
+    const progressBar = document.getElementById('progress-bar');
+    const backToTopBtn = document.getElementById('back-to-top');
+
+    window.addEventListener('scroll', () => {
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      progressBar.style.width = scrolled + '%';
+
+      if (winScroll > 300) {
+        backToTopBtn.style.display = 'flex';
+      } else {
+        backToTopBtn.style.display = 'none';
+      }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // 検索フィルタ機能
+    const searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const sections = document.querySelectorAll('main section');
+      
+      sections.forEach(section => {
+        const text = section.textContent.toLowerCase();
+        if (text.includes(query)) {
+          section.style.display = 'block';
+        } else {
+          section.style.display = 'none';
+        }
+      });
+    });
+
+    // コピーボタンの動作
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.nextElementSibling.querySelector('code').textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          btn.textContent = 'コピー完了！';
+          setTimeout(() => { btn.textContent = 'コピー'; }, 2000);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
