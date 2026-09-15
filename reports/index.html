@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>レポート一覧 — claude-artifacts</title>
+<style>
+  :root{
+    --ink:#1c1a17; --sub:#5f5a52; --line:#e3ded6;
+    --bg:#faf8f5; --card:#ffffff; --accent:#c2532c; --accent-soft:#fdf1ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.85;font-size:16px}
+  .wrap{max-width:940px;margin:0 auto;padding:0 22px 90px}
+  header{background:linear-gradient(160deg,#1c1a17,#3b332c);color:#fdfcfa;padding:56px 22px 48px;margin-bottom:40px}
+  header .inner{max-width:940px;margin:0 auto}
+  header .tag{display:inline-block;font-size:12px;letter-spacing:.14em;border:1px solid rgba(255,255,255,.35);
+    padding:4px 12px;border-radius:20px;margin-bottom:18px}
+  header h1{font-size:28px;line-height:1.4;margin:0 0 12px}
+  header p{margin:0;color:#d8d1c7;font-size:15px;max-width:660px}
+  h2{font-size:20px;margin:44px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+  a{color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:16px 0;
+    display:block;text-decoration:none;color:var(--ink);transition:border-color .15s}
+  .card:hover{border-color:var(--accent)}
+  .card h3{margin:0 0 6px;font-size:17px;color:var(--accent)}
+  .card p{margin:0;font-size:14.5px;color:#3a352e}
+  .card .date{display:block;font-size:12.5px;color:var(--sub);margin-top:10px;
+    border-top:1px dashed var(--line);padding-top:8px}
+  .sub{font-size:13.5px;color:var(--sub);margin:10px 0 0}
+  .sub a{font-size:13.5px}
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
+  @media(max-width:600px){
+    header h1{font-size:23px}
+    .wrap{padding:0 16px 60px}
+    body{font-size:15.5px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <span class="tag">claude-artifacts / reports</span>
+    <h1>レポート一覧</h1>
+    <p>Claude Code で調査・作成したレポートを置いている場所です。各レポートは単一のHTMLファイルで完結しています。</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<h2>レポート</h2>
+
+<a class="card" href="ai-security.html">
+  <h3>AIセキュリティ入門 ― 守る側のための教科書</h3>
+  <p>AIを扱う際のセキュリティリスクを、一次資料をたどって整理した個人学習用の教材。プロンプトインジェクション、情報漏えい、AIエージェント／MCP、RAGポイズニング、サプライチェーン、幻覚、国際・国内の各ガイドライン、実務チェックリストまで全14章。</p>
+  <span class="date">2026-09-15 追加</span>
+</a>
+<p class="sub">└ 調査ログ（検索クエリ・参照URL・未確認項目）：<a href="ai-security-sources.md">ai-security-sources.md</a></p>
+
+<a class="card" href="dynamic-workflows.html">
+  <h3>Dynamic Workflows 実践ガイド — Claude Code</h3>
+  <p>Claude Code における動的ワークフローの実践的な使い方をまとめたガイド。</p>
+  <span class="date">2026-06-04 追加</span>
+</a>
+
+<a class="card" href="google-io-2026-second.html">
+  <h3>Google I/O 2026 リサーチレポート</h3>
+  <p>Google I/O 2026 の発表内容を掘り下げたリサーチレポート。</p>
+  <span class="date">2026-06-04 追加</span>
+</a>
+
+<a class="card" href="google-io-2026.html">
+  <h3>Google I/O 2026 発表内容まとめ</h3>
+  <p>Google I/O 2026 の発表内容を概観としてまとめたもの。</p>
+  <span class="date">2026-06-04 追加</span>
+</a>
+
+<footer>
+  <p>リポジトリ：<a href="https://github.com/9highfive7/claude-artifacts">github.com/9highfive7/claude-artifacts</a></p>
+  <p>このページは <code>reports/index.html</code> です。新しいレポートを追加したら、このファイルにカードを1つ足してください。</p>
+</footer>
+
+</div>
+</body>
+</html>
