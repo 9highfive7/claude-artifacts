@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Gitのブランチとは何か</title>
+<style>
+  :root{
+    --ink:#1c1a17; --sub:#5f5a52; --line:#e3ded6;
+    --bg:#faf8f5; --card:#ffffff; --accent:#c2532c; --accent-soft:#fdf1ec;
+    --code-bg:#2b2620; --code-fg:#f4efe8; --code-inline:#efe9e0;
+    --warn-bg:#fbf2e6; --warn-line:#e0b48a; --warn-ink:#8a5a00;
+    --tip-bg:#eef6ec; --tip-line:#a9c9a4; --tip-ink:#3f6b45;
+    --hero-a:#1c1a17; --hero-b:#3b332c; --hero-ink:#fdfcfa; --hero-sub:#d8d1c7;
+    --fig-bg:#fffdfa; --fig-line:#cfc7bb; --fig-ink:#2c2721; --fig-sub:#6b645b;
+    --c-main:#3f6b8a; --c-main-soft:#e8f0f6;
+    --c-feat:#c2532c; --c-feat-soft:#fbeae2;
+    --c-merge:#6b8f5e; --c-merge-soft:#ecf3e9;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#ece7df; --sub:#a8a094; --line:#3a342d;
+      --bg:#14120f; --card:#1e1b17; --accent:#e9906a; --accent-soft:#2c211b;
+      --code-bg:#0f0d0b; --code-fg:#eee8df; --code-inline:#2a2521;
+      --warn-bg:#2d2317; --warn-line:#7a5a33; --warn-ink:#e7b878;
+      --tip-bg:#1b2519; --tip-line:#4b6b46; --tip-ink:#a8cfa2;
+      --hero-a:#221e19; --hero-b:#0f0d0b; --hero-ink:#f6f1e9; --hero-sub:#b8b0a4;
+      --fig-bg:#1a1714; --fig-line:#4a4238; --fig-ink:#e7e1d8; --fig-sub:#a49b8f;
+      --c-main:#7fb3d5; --c-main-soft:#1d2a33;
+      --c-feat:#e9906a; --c-feat-soft:#33231c;
+      --c-merge:#9dc48e; --c-merge-soft:#1f2a1c;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.9;font-size:16.5px;letter-spacing:.012em;
+    text-rendering:optimizeLegibility}
+  .wrap{max-width:880px;margin:0 auto;padding:0 22px 90px}
+
+  /* ---- hero ---- */
+  header.hero{background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
+    color:var(--hero-ink);padding:56px 22px 48px;margin-bottom:38px;
+    border-bottom:1px solid var(--line)}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero .tag{display:inline-block;font-size:12px;letter-spacing:.14em;
+    border:1px solid rgba(255,255,255,.35);padding:4px 12px;border-radius:20px;margin-bottom:18px}
+  header.hero h1{font-size:clamp(24px,5.2vw,32px);line-height:1.42;margin:0 0 14px;letter-spacing:.01em}
+  header.hero p{margin:0;color:var(--hero-sub);font-size:15.5px;max-width:64ch}
+
+  /* ---- 見出し・本文 ---- */
+  h2{font-size:clamp(20px,3.6vw,23px);margin:60px 0 8px;padding-bottom:12px;
+    border-bottom:2px solid var(--ink);scroll-margin-top:16px}
+  h2 .num{display:block;color:var(--accent);font-size:12.5px;letter-spacing:.14em;margin-bottom:8px}
+  h3{font-size:17.5px;margin:34px 0 10px;color:var(--accent);line-height:1.6}
+  h4{font-size:15.5px;margin:20px 0 6px}
+  p{margin:0 0 15px}
+  a{color:var(--accent);text-underline-offset:3px}
+  a:hover{text-decoration:none}
+  ul,ol{margin:0 0 16px;padding-left:1.35em}
+  li{margin-bottom:8px}
+  strong{font-weight:700}
+  .lead{color:var(--sub);font-size:15.5px}
+
+  /* ---- 目次 ---- */
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px 24px;margin:0 0 10px}
+  nav.toc .toc-ttl{display:block;font-size:12.5px;letter-spacing:.14em;color:var(--accent);
+    font-weight:700;margin-bottom:6px}
+  nav.toc ol{margin:6px 0 0;padding-left:1.3em}
+  nav.toc li{margin:5px 0;font-size:15px}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  nav.toc a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+
+  /* ---- 表 ---- */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0 20px}
+  table{border-collapse:collapse;width:100%;font-size:14.8px;background:var(--card);
+    min-width:460px;line-height:1.75}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;white-space:nowrap}
+  tbody th{white-space:normal}
+  td:first-child{white-space:nowrap}
+  table.wide-first td:first-child{white-space:normal}
+
+  /* ---- コード ---- */
+  code{background:var(--code-inline);padding:1px 6px;border-radius:4px;font-size:.9em;
+    font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+  pre{background:var(--code-bg);color:var(--code-fg);padding:18px 20px;border-radius:10px;
+    overflow-x:auto;font-size:13.8px;line-height:1.85;margin:0 0 18px;
+    border:1px solid rgba(0,0,0,.25);tab-size:2}
+  pre code{background:none;padding:0;color:inherit;font-size:inherit}
+  pre .cm{color:#a79b88}
+
+  /* ---- 図 ---- */
+  figure.fig{margin:22px 0 26px;background:var(--fig-bg);border:1px solid var(--line);
+    border-radius:12px;padding:16px 16px 12px}
+  .fig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  figure.fig svg{display:block;width:100%;min-width:470px;height:auto}
+  figcaption{margin-top:10px;font-size:13.2px;line-height:1.75;color:var(--sub)}
+  figcaption b{color:var(--accent);font-weight:700}
+  .fig .lbl{font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    fill:var(--fig-ink)}
+  .fig .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+  .fig .sub{fill:var(--fig-sub)}
+  .fig .ttl{fill:var(--fig-ink);font-weight:700}
+  .fig .edge{stroke:var(--fig-line);stroke-width:2;fill:none}
+  .fig .panel{fill:var(--card);stroke:var(--fig-line)}
+
+  /* ---- ボックス ---- */
+  .box{border:1px solid var(--line);background:var(--card);border-radius:12px;
+    padding:18px 20px;margin:0 0 18px}
+  .box > :last-child{margin-bottom:0}
+  .box h4{margin:0 0 8px;font-size:15.5px;color:var(--ink)}
+  .box.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+  .box.warn h4,.box.warn strong{color:var(--warn-ink)}
+  .box.tip{border-color:var(--tip-line);background:var(--tip-bg)}
+  .box.tip h4{color:var(--tip-ink)}
+  .box .mark{display:block;font-size:11.5px;letter-spacing:.14em;margin-bottom:6px;color:var(--sub)}
+
+  /* ---- 確認問題 ---- */
+  .q{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 20px;margin:0 0 14px}
+  .q p.question{font-weight:700;margin:0 0 8px;line-height:1.7}
+  .q .qno{color:var(--accent);margin-right:.4em}
+  details{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
+  details p{margin:10px 0 2px;font-size:15px}
+  summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14.5px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";}
+  details[open] summary::before{content:"▾ ";}
+
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:13.2px;color:var(--sub);line-height:1.8}
+  .refs li{margin-bottom:10px;font-size:15px}
+  .scroll-hint{display:none;font-size:12px;color:var(--sub);margin-top:6px}
+
+  @media (max-width:620px){
+    body{font-size:16px;line-height:1.85}
+    .wrap{padding:0 16px 70px}
+    header.hero{padding:40px 16px 36px;margin-bottom:28px}
+    h2{margin-top:46px}
+    figure.fig{padding:12px 12px 10px}
+    .box,.q{padding:14px 16px}
+    pre{padding:14px 14px;font-size:13px}
+    .scroll-hint{display:block}
+  }
+  @media print{
+    header.hero{background:none;color:#000;border-bottom:2px solid #000}
+    nav.toc,.scroll-hint{display:none}
+    details{display:block}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <span class="tag">GIT 入門レポート</span>
+    <h1>Gitのブランチとは何か</h1>
+    <p>
+      「ブランチ」はGitを使ううえで避けて通れない概念ですが、最初は「コピー」や「並行世界」のようなイメージで誤解しやすいものです。
+      このレポートでは、ブランチの正体（コミットへのポインタ）から、基本コマンド、マージとrebaseの違い、代表的なブランチ戦略、よくあるつまずきポイントまでを整理します。
+    </p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc" aria-label="目次">
+  <span class="toc-ttl">目次</span>
+  <ol>
+    <li><a href="#overview">概要</a></li>
+    <li><a href="#terms">基本用語</a></li>
+    <li><a href="#howitworks">仕組み・全体像</a></li>
+    <li><a href="#usage">具体例・使いどころ</a></li>
+    <li><a href="#pitfalls">注意点・よくある誤解</a></li>
+    <li><a href="#quiz">確認問題</a></li>
+    <li><a href="#refs">参考リンク</a></li>
+  </ol>
+</nav>
+
+<h2 id="overview"><span class="num">SECTION 1</span>概要</h2>
+<ul>
+  <li>Gitのブランチは、ファイルのコピーではなく「特定のコミットを指す軽量なポインタ（矢印）」にすぎない。</li>
+  <li>ブランチを使うことで、本番用のコードに影響を与えずに、機能追加やバグ修正を独立した作業として進められる。</li>
+  <li>作業が終わったら <code>merge</code> や <code>rebase</code> で元のブランチに取り込むが、両者は履歴の残り方が異なるため使い分けが必要。</li>
+</ul>
+
+<h2 id="terms"><span class="num">SECTION 2</span>基本用語</h2>
+<div class="table-scroll">
+<table>
+  <thead>
+    <tr><th>用語</th><th>意味</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>commit</code></td><td>変更内容のスナップショットを記録した履歴の1単位。前のコミットへの参照（親）を持つ。</td></tr>
+    <tr><td>ブランチ</td><td>あるコミットを指す軽量なポインタ。コミットするたびに自動的に最新コミットへ移動する。</td></tr>
+    <tr><td><code>HEAD</code></td><td>「今どのブランチ（またはコミット）にいるか」を示す特殊なポインタ。通常は現在のブランチを指している。</td></tr>
+    <tr><td><code>main</code> / <code>master</code></td><td>リポジトリ作成時に自動的にできる既定のブランチ名。近年は <code>main</code> が主流。</td></tr>
+    <tr><td>fast-forward</td><td>マージ先のブランチが、マージ元の直系の祖先である場合に、新しいコミットを作らずポインタを単純に前へ進めるマージ方式。</td></tr>
+    <tr><td>マージコミット</td><td>2つの履歴を統合したときにできる、親を2つ持つ特別なコミット。</td></tr>
+    <tr><td>detached HEAD</td><td><code>HEAD</code>がブランチではなく、特定のコミットを直接指してしまっている状態。</td></tr>
+    <tr><td>コンフリクト（競合）</td><td>同じ箇所を異なる内容に変更した2つの履歴をGitが自動的に統合できず、手動での解決が必要になる状態。</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<h2 id="howitworks"><span class="num">SECTION 3</span>仕組み・全体像</h2>
+
+<h3>3-1. ブランチの正体は「ポインタ」</h3>
+<p>
+多くの入門者は「ブランチを作る＝ファイル一式をコピーする」とイメージしがちですが、実際は違います。
+Gitのブランチとは、あるコミットのSHA-1ハッシュ値を指し示す、40バイト程度の小さなファイル（参照）にすぎません。
+</p>
+<p>
+そのため、ブランチの作成はほぼ一瞬で終わり、ディスク容量もほとんど消費しません。
+</p>
+<p>
+コミットを1つ行うと、今いるブランチのポインタが自動的にその新しいコミットへ移動します。
+複数のブランチが同じコミットを指すこともできますし、開発が進むにつれてそれぞれ別のコミット列を指すようになります。
+</p>
+
+<!-- FIGURE: mainブランチとfeatureブランチが同じコミットから分岐し、それぞれ別のコミットを指すポインタとして進んでいく様子の図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 680 270" role="img" aria-label="mainブランチとfeatureブランチが同じコミットから分岐し、それぞれ別のコミットを指している図">
+    <defs>
+      <marker id="ptr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
+      </marker>
+      <marker id="ptrF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-feat)"/>
+      </marker>
+      <marker id="ptrM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-main)"/>
+      </marker>
+    </defs>
+
+    <!-- main line -->
+    <path class="edge" d="M112,180 H168 M212,180 H286 M332,180 H406" marker-end="url(#ptr1)"/>
+    <!-- branch off -->
+    <path class="edge" d="M208,166 C250,140 258,104 292,92" marker-end="url(#ptr1)"/>
+    <!-- feature line -->
+    <path class="edge" d="M334,80 H406" marker-end="url(#ptr1)"/>
+
+    <!-- commits: main -->
+    <g>
+      <circle cx="90" cy="180" r="22" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+      <text class="lbl mono" x="90" y="185" font-size="14" text-anchor="middle">C1</text>
+      <circle cx="190" cy="180" r="22" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+      <text class="lbl mono" x="190" y="185" font-size="14" text-anchor="middle">C2</text>
+      <circle cx="310" cy="180" r="22" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+      <text class="lbl mono" x="310" y="185" font-size="14" text-anchor="middle">C3</text>
+      <circle cx="430" cy="180" r="22" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+      <text class="lbl mono" x="430" y="185" font-size="14" text-anchor="middle">C4</text>
+    </g>
+    <!-- commits: feature -->
+    <g>
+      <circle cx="312" cy="80" r="22" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+      <text class="lbl mono" x="312" y="85" font-size="14" text-anchor="middle">F1</text>
+      <circle cx="430" cy="80" r="22" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+      <text class="lbl mono" x="430" y="85" font-size="14" text-anchor="middle">F2</text>
+    </g>
+
+    <!-- main pointer -->
+    <rect x="490" y="164" width="86" height="32" rx="7" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="533" y="185" font-size="14" text-anchor="middle" fill="var(--c-main)">main</text>
+    <path d="M486,180 H458" stroke="var(--c-main)" stroke-width="2" fill="none" marker-end="url(#ptrM)"/>
+    <!-- feature pointer -->
+    <rect x="490" y="64" width="128" height="32" rx="7" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+    <text class="lbl mono" x="554" y="85" font-size="14" text-anchor="middle" fill="var(--c-feat)">feature</text>
+    <path d="M486,80 H458" stroke="var(--c-feat)" stroke-width="2" fill="none" marker-end="url(#ptrF)"/>
+    <!-- HEAD -->
+    <text class="lbl mono" x="554" y="40" font-size="13" text-anchor="middle" fill="var(--c-feat)">HEAD</text>
+    <path d="M554,46 V60" stroke="var(--c-feat)" stroke-width="2" fill="none" marker-end="url(#ptrF)"/>
+
+    <text class="lbl sub" x="24" y="34" font-size="13">ポインタはコミットを指すだけ（コピーではない）</text>
+    <text class="lbl sub" x="24" y="240" font-size="13">C2 までは共通の履歴。分岐後はそれぞれ別のコミットを積んでいく。</text>
+  </svg>
+  </div>
+  <figcaption><b>図1</b>　コミット履歴を横に並べた図に、<code>main</code>・<code>feature</code>といったラベルの付いた矢印（ポインタ）がそれぞれ異なるコミットを指している様子。<code>HEAD</code>は、いま作業しているブランチ（ここでは<code>feature</code>）を指している。</figcaption>
+</figure>
+
+<h3>3-2. HEADは「今いる場所」を示す</h3>
+<p>
+<code>HEAD</code>は「現在作業しているブランチ」を指す特殊なポインタです。
+<code>git switch</code>や<code>git checkout</code>でブランチを切り替えると、<code>HEAD</code>が指す先が変わります。
+ここで新しくコミットすると、<code>HEAD</code>が指しているブランチのポインタだけが前進し、他のブランチには影響しません。
+</p>
+<p>
+なお、コミットハッシュを直接指定して <code>checkout</code> すると、<code>HEAD</code>がブランチではなくコミットを直接指す「detached HEAD（分離HEAD）」状態になります。
+この状態のまま新しいコミットを作ると、あとでどのブランチからも参照されない「迷子コミット」になりやすいため注意が必要です（詳しくは5章）。
+</p>
+
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 680 210" role="img" aria-label="通常状態とdetached HEAD状態の比較図">
+    <defs>
+      <marker id="ptr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-main)"/>
+      </marker>
+      <marker id="ptr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-feat)"/>
+      </marker>
+    </defs>
+
+    <!-- 通常 -->
+    <text class="lbl ttl" x="20" y="28" font-size="15">通常の状態</text>
+    <rect x="20" y="52" width="88" height="36" rx="8" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="64" y="75" font-size="14" text-anchor="middle" fill="var(--c-main)">HEAD</text>
+    <path d="M112,70 H152" stroke="var(--c-main)" stroke-width="2" fill="none" marker-end="url(#ptr2)"/>
+    <rect x="156" y="52" width="88" height="36" rx="8" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="200" y="75" font-size="14" text-anchor="middle" fill="var(--c-main)">main</text>
+    <path d="M248,70 H286" stroke="var(--c-main)" stroke-width="2" fill="none" marker-end="url(#ptr2)"/>
+    <circle cx="312" cy="70" r="22" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="312" y="75" font-size="14" text-anchor="middle">C3</text>
+    <text class="lbl sub" x="350" y="75" font-size="13">コミットすると main が前に進む</text>
+
+    <!-- detached -->
+    <text class="lbl ttl" x="20" y="146" font-size="15">detached HEAD</text>
+    <rect x="156" y="152" width="88" height="36" rx="8" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+    <text class="lbl mono" x="200" y="175" font-size="14" text-anchor="middle" fill="var(--c-feat)">HEAD</text>
+    <path d="M248,170 H286" stroke="var(--c-feat)" stroke-width="2" fill="none" marker-end="url(#ptr3)"/>
+    <circle cx="312" cy="170" r="22" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2" stroke-dasharray="5 4"/>
+    <text class="lbl mono" x="312" y="175" font-size="14" text-anchor="middle">C2</text>
+    <text class="lbl sub" x="350" y="167" font-size="13">ブランチを介さずコミットを直接指している</text>
+    <text class="lbl sub" x="350" y="188" font-size="13">→ ここでのコミットは迷子になりやすい</text>
+  </svg>
+  </div>
+  <figcaption><b>図2</b>　通常は <code>HEAD</code> → ブランチ → コミットの順に参照が連なる。コミットを直接<code>checkout</code>すると、間のブランチが抜けて<code>HEAD</code>がコミットを直接指す（detached HEAD）。</figcaption>
+</figure>
+
+<h3>3-3. 基本コマンド</h3>
+<pre><code><span class="cm"># ブランチの一覧を見る</span>
+git branch
+
+<span class="cm"># 新しいブランチを作る（切り替えはしない）</span>
+git branch feature/login
+
+<span class="cm"># ブランチを作って同時に切り替える</span>
+git switch -c feature/login
+<span class="cm"># 従来の書き方（今も使える）</span>
+git checkout -b feature/login
+
+<span class="cm"># ブランチを切り替える</span>
+git switch main
+git checkout main
+
+<span class="cm"># ブランチをmainに統合する</span>
+git switch main
+git merge feature/login
+
+<span class="cm"># 不要になったブランチを削除する</span>
+git branch -d feature/login</code></pre>
+<p>
+Git 2.23（2019年公開）以降は、ブランチ切り替え専用の <code>git switch</code> と、ファイルを元に戻す専用の <code>git restore</code> が追加されました。
+</p>
+<p>
+従来の <code>git checkout</code> はブランチ切り替え・コミットのチェックアウト・ファイルの復元まで何でもこなす万能コマンドで便利な反面、
+意図しないdetached HEADを招きやすいという弱点がありました。初心者にはより安全な <code>git switch</code> / <code>git restore</code> の利用が推奨されています。
+</p>
+
+<h3>3-4. マージとrebaseの違い</h3>
+<p>
+枝分かれしたブランチを1本に統合する方法には、主に <code>merge</code> と <code>rebase</code> の2種類があります。
+</p>
+<div class="table-scroll">
+<table class="wide-first">
+  <thead>
+    <tr><th></th><th>git merge</th><th>git rebase</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>履歴</strong></td>
+      <td>そのまま残す（非破壊的）</td>
+      <td>コミットを別の土台の上に「再適用」し、履歴を書き換える</td>
+    </tr>
+    <tr>
+      <td><strong>結果の形</strong></td>
+      <td>分岐・合流を表すマージコミットができ、履歴は枝分かれした形（非直線的）になる</td>
+      <td>コミットが一直線に並ぶ（直線的な履歴になる）</td>
+    </tr>
+    <tr>
+      <td><strong>向いている場面</strong></td>
+      <td>他の人と共有しているブランチを統合するとき</td>
+      <td>まだ共有していない自分の作業ブランチの履歴を整理したいとき</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- FIGURE: merge と rebase の履歴の違いを並べた比較図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 680 430" role="img" aria-label="git merge と git rebase の履歴の形の違いを比較した図">
+    <defs>
+      <marker id="ptr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
+      </marker>
+    </defs>
+
+    <!-- ===== merge ===== -->
+    <text class="lbl ttl mono" x="20" y="28" font-size="15" fill="var(--c-merge)">git merge</text>
+    <text class="lbl sub" x="108" y="28" font-size="13">枝分かれを残したまま、合流点（マージコミット）を作る</text>
+    <line x1="20" y1="40" x2="660" y2="40" stroke="var(--fig-line)" stroke-width="1"/>
+
+    <!-- edges -->
+    <path class="edge" d="M102,150 H158 M202,150 H278" marker-end="url(#ptr4)"/>
+    <path class="edge" d="M198,136 C236,112 244,84 276,74" marker-end="url(#ptr4)"/>
+    <path class="edge" d="M322,74 H378" marker-end="url(#ptr4)"/>
+    <path class="edge" d="M322,150 H378" marker-end="url(#ptr4)"/>
+    <path class="edge" d="M422,86 C452,104 458,124 486,138" marker-end="url(#ptr4)"/>
+    <path class="edge" d="M422,150 H486" marker-end="url(#ptr4)"/>
+
+    <circle cx="80" cy="150" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="80" y="155" font-size="13" text-anchor="middle">C1</text>
+    <circle cx="180" cy="150" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="180" y="155" font-size="13" text-anchor="middle">C2</text>
+    <circle cx="300" cy="150" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="300" y="155" font-size="13" text-anchor="middle">C3</text>
+    <circle cx="400" cy="150" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="400" y="155" font-size="13" text-anchor="middle">C4</text>
+    <circle cx="300" cy="74" r="20" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+    <text class="lbl mono" x="300" y="79" font-size="13" text-anchor="middle">F1</text>
+    <circle cx="400" cy="74" r="20" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+    <text class="lbl mono" x="400" y="79" font-size="13" text-anchor="middle">F2</text>
+    <circle cx="510" cy="150" r="22" fill="var(--c-merge-soft)" stroke="var(--c-merge)" stroke-width="3"/>
+    <text class="lbl mono" x="510" y="155" font-size="13" text-anchor="middle">M</text>
+    <text class="lbl sub" x="552" y="146" font-size="12.5">マージコミット</text>
+    <text class="lbl sub" x="552" y="165" font-size="12.5">（親が2つ）</text>
+    <text class="lbl sub" x="20" y="200" font-size="12.5">元のコミット（C・F）はハッシュも並びもそのまま残る</text>
+
+    <!-- ===== rebase ===== -->
+    <text class="lbl ttl mono" x="20" y="258" font-size="15" fill="var(--c-feat)">git rebase</text>
+    <text class="lbl sub" x="112" y="258" font-size="13">main の先端に作業コミットを作り直し、履歴を一直線にする</text>
+    <line x1="20" y1="270" x2="660" y2="270" stroke="var(--fig-line)" stroke-width="1"/>
+
+    <!-- ghost -->
+    <g opacity="0.45">
+      <circle cx="300" cy="308" r="17" fill="none" stroke="var(--fig-line)" stroke-width="2" stroke-dasharray="4 4"/>
+      <text class="lbl mono sub" x="300" y="313" font-size="12" text-anchor="middle">F1</text>
+      <circle cx="380" cy="308" r="17" fill="none" stroke="var(--fig-line)" stroke-width="2" stroke-dasharray="4 4"/>
+      <text class="lbl mono sub" x="380" y="313" font-size="12" text-anchor="middle">F2</text>
+      <text class="lbl sub" x="410" y="313" font-size="12.5">← 元のコミットは使われなくなる</text>
+    </g>
+    <path d="M440,326 C470,344 470,352 486,362" stroke="var(--fig-line)" stroke-width="2" stroke-dasharray="4 4" fill="none" marker-end="url(#ptr4)"/>
+
+    <path class="edge" d="M102,380 H158 M202,380 H278 M322,380 H378 M422,380 H478" marker-end="url(#ptr4)"/>
+    <circle cx="80" cy="380" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="80" y="385" font-size="13" text-anchor="middle">C1</text>
+    <circle cx="180" cy="380" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="180" y="385" font-size="13" text-anchor="middle">C2</text>
+    <circle cx="300" cy="380" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="300" y="385" font-size="13" text-anchor="middle">C3</text>
+    <circle cx="400" cy="380" r="20" fill="var(--c-main-soft)" stroke="var(--c-main)" stroke-width="2"/>
+    <text class="lbl mono" x="400" y="385" font-size="13" text-anchor="middle">C4</text>
+    <circle cx="500" cy="380" r="20" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+    <text class="lbl mono" x="500" y="385" font-size="13" text-anchor="middle">F1'</text>
+    <circle cx="590" cy="380" r="20" fill="var(--c-feat-soft)" stroke="var(--c-feat)" stroke-width="2"/>
+    <text class="lbl mono" x="590" y="385" font-size="13" text-anchor="middle">F2'</text>
+    <path class="edge" d="M522,380 H568" marker-end="url(#ptr4)"/>
+    <text class="lbl sub" x="20" y="418" font-size="12.5">F1'・F2' は内容は同じでもハッシュが変わった「別のコミット」</text>
+  </svg>
+  </div>
+  <figcaption><b>図3</b>　<code>merge</code>は分岐した2本の履歴を合流させ、親を2つ持つマージコミットを作る。<code>rebase</code>は作業コミットを<code>main</code>の先端に再適用するため、履歴は直線になるがコミットは作り直される（ハッシュが変わる）。</figcaption>
+</figure>
+
+<div class="box warn">
+<p><strong>注意：</strong>すでにリモートで他の人と共有しているブランチに対して <code>rebase</code> を行うと、コミット履歴（ハッシュ値）が書き換わってしまい、
+他の人のローカル履歴と食い違いが生じます。共有ブランチのrebaseは避けるのが原則です。</p>
+</div>
+
+<h2 id="usage"><span class="num">SECTION 4</span>具体例・使いどころ</h2>
+
+<h3>4-1. 典型的な作業の流れ</h3>
+<ol>
+  <li><code>main</code>ブランチから新しいブランチ（例：<code>feature/add-login</code>）を作る。</li>
+  <li>そのブランチ上でコミットを積み重ねながら機能を実装する。</li>
+  <li>作業中に<code>main</code>側で他の変更が進んでいても、ブランチが分かれているので互いに干渉しない。</li>
+  <li>実装が完了したらプルリクエスト（Pull Request）を作成し、レビューを経てから<code>main</code>へマージする。</li>
+  <li>不要になった作業ブランチは削除する。</li>
+</ol>
+
+<h3>4-2. 代表的なブランチ戦略</h3>
+<div class="table-scroll">
+<table class="wide-first">
+  <thead>
+    <tr><th>戦略</th><th>特徴</th><th>向いているケース</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Git Flow</strong></td>
+      <td><code>main</code>・<code>develop</code>・<code>feature</code>・<code>release</code>・<code>hotfix</code>など複数の長期ブランチを役割ごとに分ける、やや重厚な運用</td>
+      <td>バージョンを区切ってリリースするアプリ（モバイルアプリ、SDK、パッケージ製品など）</td>
+    </tr>
+    <tr>
+      <td><strong>GitHub Flow</strong></td>
+      <td>長期ブランチは<code>main</code>のみ。<code>main</code>から短命の作業ブランチを切り、Pull Request経由でマージする</td>
+      <td>継続的にデプロイする小〜中規模チームのWebサービス開発</td>
+    </tr>
+    <tr>
+      <td><strong>トランクベース開発</strong></td>
+      <td>ブランチをほぼ作らず、1日に何度も<code>main</code>（トランク）へ直接、または非常に短命のブランチ経由で統合する</td>
+      <td>CI/CDとテストが十分に整備された、経験豊富なチーム</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<h2 id="pitfalls"><span class="num">SECTION 5</span>注意点・よくある誤解</h2>
+
+<div class="box">
+<h4>「ブランチ＝ファイルのコピー」という誤解</h4>
+<p>実際にはコピーではなく、コミットを指すポインタが増えるだけです。ブランチ作成が一瞬で終わるのはこのためです。</p>
+</div>
+
+<div class="box">
+<h4>detached HEAD状態に気づかずコミットしてしまう</h4>
+<p>
+コミットハッシュやタグを直接<code>checkout</code>すると、ブランチではなくコミットに直接<code>HEAD</code>が付いた状態（detached HEAD）になります。
+</p>
+<p>
+この状態で作業してコミットすると、後で別のブランチに切り替えた瞬間にそのコミット群がどのブランチからも参照されなくなり、
+いずれガベージコレクションの対象になって消えてしまう可能性があります。作業を始める前に、自分がブランチ上にいるか（<code>git status</code>や<code>git branch</code>で確認）をチェックする習慣が重要です。
+</p>
+</div>
+
+<div class="box warn">
+<h4>共有ブランチをrebaseしてしまう</h4>
+<p>他の人と共有しているブランチの履歴をrebaseで書き換えると、リモートとローカルで履歴が食い違い、混乱やコンフリクトの温床になります。rebaseは「まだ自分だけが使っている、共有前のブランチ」に限定するのが安全です。</p>
+</div>
+
+<div class="box">
+<h4>長生きしすぎるブランチはコンフリクトの元</h4>
+<p>
+作業ブランチを長期間<code>main</code>から更新せずに放置すると、双方の変更が積み重なり、マージ時に大きなコンフリクトが発生しやすくなります。
+</p>
+<p>
+こまめに（少なくとも1日1回程度は）最新の<code>main</code>を取り込む、ブランチの寿命を短く保つといった運用が、コンフリクトの予防に有効です。
+</p>
+</div>
+
+<div class="box tip">
+<h4>コンフリクトは「異常」ではない</h4>
+<p>複数人が同じ箇所を変更すれば当然起こり得るものです。エディタ上に表示される <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> / <code>=======</code> / <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> の記号で挟まれた部分を確認し、どちらの内容を残すか（あるいは両方を組み合わせるか）を決めて保存し直せば解決できます。</p>
+</div>
+
+<!-- FIGURE: コンフリクトマーカー（<<<<<<< / ======= / >>>>>>>）が挿入されたファイルの例と、解決後のファイルを並べた図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 680 300" role="img" aria-label="コンフリクトマーカーが入ったファイルと、解決後のファイルを並べた図">
+    <defs>
+      <marker id="ptr5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-merge)"/>
+      </marker>
+    </defs>
+
+    <!-- 解決前 -->
+    <text class="lbl ttl" x="20" y="26" font-size="14">解決前：コンフリクト発生中</text>
+    <rect class="panel" x="20" y="40" width="290" height="216" rx="10" stroke-width="2"/>
+    <rect x="20" y="88" width="290" height="72" fill="var(--c-main-soft)"/>
+    <rect x="20" y="160" width="290" height="48" fill="var(--c-feat-soft)"/>
+    <rect class="panel" x="20" y="40" width="290" height="216" rx="10" stroke-width="2" fill="none"/>
+    <g class="lbl mono" font-size="12.5">
+      <text x="36" y="72">ログイン処理を実装</text>
+      <text x="36" y="106" fill="var(--c-main)">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</text>
+      <text x="36" y="130">timeout = 30</text>
+      <text x="36" y="154" fill="var(--c-main)">=======</text>
+      <text x="36" y="178">timeout = 60</text>
+      <text x="36" y="202" fill="var(--c-feat)">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/login</text>
+      <text x="36" y="234">保存して終了</text>
+    </g>
+    <text class="lbl sub" x="322" y="112" font-size="11.5">自分側</text>
+    <text class="lbl sub" x="322" y="184" font-size="11.5">相手側</text>
+
+    <!-- 矢印 -->
+    <path d="M318,272 H392" stroke="var(--c-merge)" stroke-width="2.5" fill="none" marker-end="url(#ptr5)"/>
+    <text class="lbl sub" x="356" y="264" font-size="12" text-anchor="middle" fill="var(--c-merge)">手動で解決</text>
+
+    <!-- 解決後 -->
+    <text class="lbl ttl" x="390" y="26" font-size="14">解決後：残す内容を決めて整理</text>
+    <rect class="panel" x="390" y="40" width="270" height="216" rx="10" stroke-width="2"/>
+    <g class="lbl mono" font-size="12.5">
+      <text x="406" y="72">ログイン処理を実装</text>
+      <text x="406" y="106">timeout = 60</text>
+      <text x="406" y="140">保存して終了</text>
+    </g>
+    <text class="lbl sub" x="406" y="180" font-size="12">マーカー（&lt;&lt;&lt;&lt;&lt;&lt;&lt; / ======= /</text>
+    <text class="lbl sub" x="406" y="200" font-size="12">&gt;&gt;&gt;&gt;&gt;&gt;&gt;）はすべて取り除く</text>
+    <text class="lbl sub" x="406" y="228" font-size="12">→ 保存して add / commit すれば完了</text>
+  </svg>
+  </div>
+  <figcaption><b>図4</b>　コンフリクトが発生したファイルの中身（マーカー付き）と、手動で解決した後のファイルを並べて比較した図。どちらを残すか（あるいは両方を組み合わせるか）を決め、マーカーを消して保存する。</figcaption>
+</figure>
+
+<h2 id="quiz"><span class="num">SECTION 6</span>確認問題</h2>
+
+<div class="q">
+<p class="question"><span class="qno">Q1.</span>Gitのブランチの実体として最も正確なものはどれか。</p>
+<details>
+<summary>答えを見る</summary>
+<p>ブランチとは、あるコミットを指す軽量なポインタ（参照）である。ファイル一式のコピーではない。コミットするたびに、現在のブランチのポインタが自動的に最新のコミットへ移動する。</p>
+</details>
+</div>
+
+<div class="q">
+<p class="question"><span class="qno">Q2.</span><code>HEAD</code>とは何を指しているか。</p>
+<details>
+<summary>答えを見る</summary>
+<p>現在作業しているブランチ（または特定のコミット）を示す特殊なポインタ。通常はブランチを指しているが、コミットを直接checkoutすると「detached HEAD」状態になり、ブランチではなくコミットそのものを直接指す。</p>
+</details>
+</div>
+
+<div class="q">
+<p class="question"><span class="qno">Q3.</span><code>git merge</code>と<code>git rebase</code>の違いを説明せよ。</p>
+<details>
+<summary>答えを見る</summary>
+<p><code>merge</code>は元の履歴をそのまま残し、2つの履歴をつなぐマージコミットを新しく作る（非破壊的、履歴は枝分かれした形になる）。
+<code>rebase</code>はコミットを別の土台の上に再適用することで履歴を直線的に書き換える（破壊的、共有済みブランチには使わない方がよい）。</p>
+</details>
+</div>
+
+<div class="q">
+<p class="question"><span class="qno">Q4.</span>fast-forwardマージが起こるのはどのような条件のときか。</p>
+<details>
+<summary>答えを見る</summary>
+<p>マージ先のブランチが指すコミットが、マージ元のブランチの直系の祖先になっている（つまりマージ先で新しいコミットが積まれていない）場合。この場合Gitは新しいマージコミットを作らず、ポインタを単純に前へ進めるだけで済ませる。</p>
+</details>
+</div>
+
+<div class="q">
+<p class="question"><span class="qno">Q5.</span>作業ブランチを長期間放置するとどのような問題が起きやすいか。またその対策は？</p>
+<details>
+<summary>答えを見る</summary>
+<p><code>main</code>側と作業ブランチ側の双方で変更が積み重なり、マージ時に大きなコンフリクトが発生しやすくなる。対策として、ブランチの寿命を短く保つこと、こまめに（例えば1日1回程度）最新の<code>main</code>を作業ブランチに取り込むことが有効。</p>
+</details>
+</div>
+
+<h2 id="refs"><span class="num">SECTION 7</span>参考リンク</h2>
+<ul class="refs">
+  <li><a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell" target="_blank" rel="noopener">Git Book – Branches in a Nutshell（公式ドキュメント / 英語）</a></li>
+  <li><a href="https://git-scm.com/book/ja/v2/Git-%E3%81%AE%E3%83%96%E3%83%A9%E3%83%B3%E3%83%81%E6%A9%9F%E8%83%BD-%E3%83%96%E3%83%A9%E3%83%B3%E3%83%81%E3%81%A8%E3%83%9E%E3%83%BC%E3%82%B8%E3%81%AE%E5%9F%BA%E6%9C%AC" target="_blank" rel="noopener">Git Book（日本語訳）– ブランチとマージの基本</a></li>
+  <li><a href="https://www.atlassian.com/git/tutorials/using-branches" target="_blank" rel="noopener">Atlassian Git Tutorial – Using Branches</a></li>
+  <li><a href="https://www.atlassian.com/git/tutorials/merging-vs-rebasing" target="_blank" rel="noopener">Atlassian Git Tutorial – Merging vs. Rebasing</a></li>
+  <li><a href="https://phoenixnap.com/kb/git-switch-vs-checkout" target="_blank" rel="noopener">phoenixNAP KB – Git Switch vs. Checkout</a></li>
+  <li><a href="https://inventivehq.com/blog/git-branching-strategies-guide" target="_blank" rel="noopener">InventiveHQ – Git Branching Strategies: GitFlow vs GitHub Flow vs Trunk-Based</a></li>
+  <li><a href="https://zenn.dev/shunsuke_stack/articles/git-conflict-basics-for-beginners" target="_blank" rel="noopener">Zenn – Gitのコンフリクトとは？予防と解決のベストプラクティス</a></li>
+</ul>
+
+<footer>
+  <p>この資料はGit公式ドキュメントおよび各種技術記事をもとに要約・再構成した学習用レポートです（初稿）。内容の正確性は一次情報（git-scm.com）を優先して確認しています。</p>
+</footer>
+
+</div>
+</body>
+</html>
