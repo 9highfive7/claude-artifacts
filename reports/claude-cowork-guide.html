@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Cowork 活用ガイド ― 何ができるのか、株取引にどう使えるのか</title>
+<style>
+  :root{
+    --ink:#1c1a17; --sub:#5f5a52; --line:#e3ded6;
+    --bg:#faf8f5; --card:#ffffff; --accent:#c2532c; --accent-soft:#fdf1ec;
+    --note:#f4f7f4; --warn:#fff8e6; --warn-line:#e8c86a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.85;font-size:16px}
+  .wrap{max-width:940px;margin:0 auto;padding:0 22px 90px}
+  header{background:linear-gradient(160deg,#1c1a17,#3b332c);color:#fdfcfa;padding:60px 22px 52px;margin-bottom:44px}
+  header .inner{max-width:940px;margin:0 auto}
+  header .tag{display:inline-block;font-size:12px;letter-spacing:.14em;border:1px solid rgba(255,255,255,.35);
+    padding:4px 12px;border-radius:20px;margin-bottom:20px}
+  header h1{font-size:30px;line-height:1.4;margin:0 0 14px}
+  header p{margin:0;color:#d8d1c7;font-size:15px;max-width:660px}
+  h2{font-size:23px;margin:56px 0 6px;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+  h2 .num{color:var(--accent);font-size:14px;display:block;letter-spacing:.1em;margin-bottom:6px}
+  h3{font-size:18px;margin:34px 0 10px;color:#2c2721}
+  h4{font-size:15px;margin:20px 0 6px}
+  p{margin:12px 0}
+  a{color:var(--accent)}
+  .lead{font-size:17px;color:#332e28}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin:18px 0}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));margin:20px 0}
+  .grid .card{margin:0}
+  .card h4{margin-top:0;color:var(--accent);font-size:15px}
+  .who{font-size:13px;color:var(--sub);margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+  .prompt{background:#f1ece4;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;
+    padding:12px 15px;margin:12px 0;font-size:14.5px;color:#302b25}
+  .prompt::before{content:"指示例";display:block;font-size:11px;letter-spacing:.12em;color:var(--accent);margin-bottom:4px}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14.5px;background:var(--card)}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{background:#f3efe9;font-weight:600}
+  code{background:#f0ebe3;padding:2px 6px;border-radius:4px;font-size:13.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  ul,ol{padding-left:1.35em}
+  li{margin:7px 0}
+  .note{background:var(--note);border-left:4px solid #8aa88f;border-radius:0 8px 8px 0;padding:16px 18px;margin:20px 0;font-size:14.5px}
+  .warn{background:var(--warn);border:1px solid var(--warn-line);border-radius:10px;padding:18px 20px;margin:24px 0;font-size:14.5px}
+  .warn strong{color:#8a5a00}
+  .step{display:flex;gap:14px;margin:14px 0}
+  .step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+  .step div p{margin:0}
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px}
+  nav.toc ol{margin:8px 0 0}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:20px;
+    padding:2px 11px;font-size:12.5px;margin:3px 4px 3px 0}
+  footer{margin-top:70px;padding-top:24px;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
+  footer ul{padding-left:1.2em}
+  .src{font-size:12.5px;color:var(--sub);margin-top:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <span class="tag">2026年9月時点の公開情報にもとづくガイド</span>
+    <h1>Claude Cowork でできること<br>― はじめての人のための活用ガイド ―</h1>
+    <p>「AIに“お願い”を投げて、席を外して、戻ってきたら仕事が仕上がっている」。Claude Cowork はそういう使い方を目指したツールです。基本の仕組みから、日常業務での活用例、そして株式投資のリサーチにどう使えるかまで整理しました。</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+  <strong>目次</strong>
+  <ol>
+    <li><a href="#what">Claude Cowork とは何か（チャットとの違い）</a></li>
+    <li><a href="#how">どう動くのか ― 仕組みと安全装置</a></li>
+    <li><a href="#usecases">活用例カタログ（一般業務編）</a></li>
+    <li><a href="#plugins">プラグインで「専門家化」する</a></li>
+    <li><a href="#stock">株取引における Claude Cowork の活用術</a></li>
+    <li><a href="#tips">失敗しないための使い方のコツ</a></li>
+    <li><a href="#limit">注意点・現時点での限界</a></li>
+  </ol>
+</nav>
+
+<h2 id="what"><span class="num">SECTION 1</span>Claude Cowork とは何か</h2>
+
+<p class="lead">Claude Cowork は、AI企業 Anthropic が提供する「エージェント型」の作業ツールです。公式ヘルプの説明では、エンジニア向けツール <strong>Claude Code のエージェント機能を、コーディング以外の知識作業に広げたもの</strong>で、ターミナル（黒い画面）は不要とされています。</p>
+
+<p>いちばん大きな違いは、<strong>1問1答ではないこと</strong>です。通常のチャットは質問に1回答えて終わりますが、Cowork は「こういう成果物が欲しい」と伝えると、計画を立て、複数のステップを自分で実行し、フォーマット済みの文書・整理されたファイル・まとめられた調査結果として返してきます。公式サイトの表現を借りると「<strong>How（やり方）ではなく What（何が欲しいか）を伝える</strong>」ツールです。</p>
+
+<table>
+  <thead><tr><th>比較</th><th>通常のチャット</th><th>Claude Cowork</th></tr></thead>
+  <tbody>
+    <tr><td>やりとり</td><td>1つの質問に1つの回答</td><td>目的を1回伝えると、複数ステップを自律実行</td></tr>
+    <tr><td>ファイル</td><td>アップロード／ダウンロードが必要</td><td>指定したフォルダのファイルを直接読み書き</td></tr>
+    <tr><td>作業時間</td><td>すぐ返答</td><td>複雑さに応じて長時間走ることもある</td></tr>
+    <tr><td>途中の様子</td><td>―</td><td>開いたファイル・使ったツール・判断が逐次表示され、途中で軌道修正できる</td></tr>
+    <tr><td>繰り返し作業</td><td>毎回指示が必要</td><td><code>/schedule</code> で定期実行を予約できる</td></tr>
+  </tbody>
+</table>
+
+<h3>使える人・使える場所</h3>
+<p>公式ヘルプによると、Claude Cowork は<strong>有料プラン（Pro / Max / Team / Enterprise）</strong>で利用できます。デスクトップ・Web・モバイルでチャットと同じ入力欄を共有していて、メッセージボックスで「Cowork」を選ぶと開始、「Chat」を選べば通常会話に戻ります。Chrome のサイドパネルでは、パネルを開いた時点で Cowork セッションが始まります。</p>
+<p>また、セッションは<strong>クラウド上で動く（ベータ）</strong>ため、ノートPCを閉じても作業が続き、あとからスマホや別の端末で同じセッションを開いて進捗を見られます。ローカルのファイルやブラウザが必要な作業のときだけ、そのPCの Claude デスクトップアプリ経由でアクセスします。</p>
+<p class="src">出典：Anthropic 公式ヘルプ「Claude Cowork を始める」／claude.com の Cowork 製品ページ</p>
+
+<div class="note">
+<strong>日本語でそのまま使えます。</strong>「ダウンロードフォルダを種類別に整理して、わかりやすい名前にして」のように日本語で指示でき、作業計画も日本語で返ってくることが、国内の解説記事で報告されています。（出典：japan-ai.co.jp、biz.bytech.jp）
+</div>
+
+<h2 id="how"><span class="num">SECTION 2</span>どう動くのか ― 仕組みと安全装置</h2>
+
+<h3>特徴的な4つの仕組み</h3>
+<div class="grid">
+  <div class="card">
+    <h4>作業の様子が見える</h4>
+    <p>Claude が開いたファイル、使ったツール、下した判断が1ステップずつ表示されます。「勝手に何かされる」不安を減らし、必要なら途中で方向を変えられます。</p>
+  </div>
+  <div class="card">
+    <h4>複数の作業を並行処理</h4>
+    <p>大きな案件は分割され、同時に走ります。公式サイトでは「下書きしながら、同時に調査と整理を進める」と説明されています。</p>
+  </div>
+  <div class="card">
+    <h4>専用ブラウザを内蔵</h4>
+    <p>サイトを開く・ページを読む・フォームを埋める作業は、Cowork のサイドパネル内のブラウザで実行。自分のブラウザやタブ・ログインとは分離されています（Pro/Max/Team のデスクトップアプリ）。</p>
+  </div>
+  <div class="card">
+    <h4>寝ている間も働く</h4>
+    <p><code>/schedule</code> で日次・週次・月次の定期タスクを登録。スケジュール実行はクラウド側で走るため、PCがスリープでも動きます。</p>
+  </div>
+</div>
+
+<h3>「勝手にやらせる度合い」を3段階で選べる</h3>
+<p>Cowork には、Claude がどこまで確認を取るかを決める3つのモードがあります（公式ヘルプより）。</p>
+<table>
+  <thead><tr><th>モード</th><th>挙動</th><th>向いている場面</th></tr></thead>
+  <tbody>
+    <tr><td><strong>手動で承認</strong></td><td>行動ごとに一時停止して許可を求める。ユーザーが都度 許可／拒否 を選ぶ。</td><td>お金、あなたの名義で送るメッセージ、重要ファイルが絡む作業</td></tr>
+    <tr><td><strong>自動承認</strong></td><td>止まらずに作業を続けるが、Claude が各アクションの安全性（データ流出やプロンプトインジェクション）を審査し、危険と判断したものは自動ブロック。ブロックが続くと都度確認モードに戻る。<em>他モードより使用量を多く消費する。</em></td><td>速さを優先したいが、ある程度の防御層は残したい作業</td></tr>
+    <tr><td><strong>すべての承認をスキップ</strong></td><td>一時停止せず、自動チェックもかからない。</td><td>関係するファイル・ツールを完全に信頼できる場合のみ</td></tr>
+  </tbody>
+</table>
+<p>公式ヘルプは、自動モードの安全チェックについて外部のセキュリティ専門家と検証したとしつつ、<strong>「完璧な防御はなく、どのモードもあなたの判断に代わるものではない」</strong>と明記しています。実害が出うる作業では近くで見ておくのが前提です。</p>
+
+<h3>覚えさせておく設定</h3>
+<ul>
+  <li><strong>グローバル指示</strong>：全セッションに効く常設ルール。文体、出力形式、自分の職種の背景などを登録できます。</li>
+  <li><strong>フォルダ指示</strong>：特定のローカルフォルダを選んだときに追加されるプロジェクト固有の文脈。Claude が作業中に自分で更新することもあります。</li>
+  <li><strong>プロジェクト</strong>：関連タスクを、独自のファイル・リンク・指示・メモリを持つ独立ワークスペースとして整理できます。</li>
+</ul>
+
+<h2 id="usecases"><span class="num">SECTION 3</span>活用例カタログ（一般業務編）</h2>
+<p class="lead">公式ヘルプは Cowork の得意分野を「ファイル／文書管理」「リサーチと分析」「文書作成」「データと分析」の4カテゴリとしています。ここに、国内外の検証記事で実際に報告された例を重ねて紹介します。</p>
+
+<h3>1. 散らかったファイルを片付ける</h3>
+<div class="grid">
+  <div class="card">
+    <h4>ダウンロードフォルダの自動整理</h4>
+    <p>フォルダ内を全スキャンして種類を判定し、カテゴリ別サブフォルダを作って移動・リネームまで実行。実行前に分類方針の確認が入ります。</p>
+    <div class="prompt">ダウンロードフォルダを種類別に整理して、わかりやすい名前にして</div>
+    <p class="who">こんな人に：デスクトップが「あとで整理する」ファイルで埋まっている人</p>
+  </div>
+  <div class="card">
+    <h4>スクリーンショットを月別に分類</h4>
+    <p>WIRED の記者による検証では、雑多なスクリーンショットについて整理方針を確認した上で月別フォルダを作成し、約1分で分類が完了したと報告されています。写真のExif撮影日時に基づく <code>YYYYMMDD_HHMMSS</code> 形式への一括リネームも約2分。</p>
+    <p class="who">こんな人に：スマホ・PCの画像整理を溜め込んでいる人</p>
+  </div>
+  <div class="card">
+    <h4>条件つきの画像処理</h4>
+    <p>「横800px以上なら縦横比を保ってリサイズ、未満ならそのまま保存」といった条件分岐を理解して処理し、指定フォルダに振り分けます。</p>
+    <div class="prompt">Testフォルダの画像を縦横比を維持して横800ピクセルにリサイズし、指定フォルダに保存して</div>
+    <p class="who">こんな人に：ブログやECの画像を毎回手作業でリサイズしている人</p>
+  </div>
+</div>
+
+<h3>2. 紙・画像のデータを表に変える</h3>
+<div class="grid">
+  <div class="card">
+    <h4>領収書・レシート → 経費精算Excel</h4>
+    <p>フォルダ内のレシート画像や領収書PDFを一括で読み取り、日付・金額・店舗名・カテゴリを抽出して台帳フォーマットに集約。PDFと画像が混在していても処理できたと報告されています。</p>
+    <p class="who">こんな人に：フリーランス、経費精算を毎月まとめてやる人</p>
+  </div>
+  <div class="card">
+    <h4>名刺画像のデータベース化</h4>
+    <p>ある検証では、53枚の名刺画像から90名以上の情報を抽出し、ヘッダー書式や列幅まで整えたExcelを出力。ローマ字表記のある名刺では日本語名とローマ字の両方を取得できたとされています。</p>
+    <p class="who">こんな人に：展示会・交流会で名刺が溜まる営業職</p>
+  </div>
+  <div class="card">
+    <h4>銀行明細と請求書の突合・消込</h4>
+    <p>明細からベンダー名を整理し、請求書とマッチング。未対応取引にフラグを立てた一覧をExcelで出力し、請求書ファイル名の命名規則統一まで実行した例が報告されています。公式サイトでも「地域別エクスポートと予算ファイルのフォルダを指定すると、差異にフラグを立てた稼働するスプレッドシートと、合わなかった項目のメモが返ってくる」と紹介されています。</p>
+    <p class="who">こんな人に">経理・月次締め担当</p>
+  </div>
+</div>
+
+<h3>3. 調べて、資料にする</h3>
+<div class="grid">
+  <div class="card">
+    <h4>大量PDFの横断サマリー</h4>
+    <p>複数の調査レポートや議事録を横断的に読み込み、共通テーマや矛盾点を整理したサマリーを生成。Word／PDF／PowerPoint など目的に応じた形式で出力できます。</p>
+    <div class="prompt">10個の調査レポートPDFを読み込み、主要な発見事項を1つのサマリーにまとめて</div>
+  </div>
+  <div class="card">
+    <h4>仕様書から商談資料をつくる</h4>
+    <p>Impress Watch の検証では、開発中ツールの仕様書フォルダを指定して営業用バトルカードを依頼し、競合比較・想定反論への対応・ページごとのトークスクリプトを含む7ページのPowerPointが約10分で完成したと報告されています。</p>
+  </div>
+  <div class="card">
+    <h4>社内資料 × Webリサーチの比較スライド</h4>
+    <p>手元の自社サービス資料を読み、ブラウザで競合の公式サイト情報を取得し、価格・機能・操作性などの観点で比較したスライドを自動生成。レイアウトの微調整は必要だが「たたき台として十分」との評価。</p>
+  </div>
+  <div class="card">
+    <h4>契約書のファーストレビュー</h4>
+    <p>公式サイトの例では、受領した契約書フォルダと自社プレイブックを指定すると、契約ごとに1本のメモが返り、逸脱箇所を条項番号つきで指摘し、severity（高・中・低）で「押し返す／交渉する／受け入れる」を仕分け。<strong>プレイブックが何も定めていない論点は「あなたの判断が必要」として明示</strong>されます。</p>
+  </div>
+</div>
+
+<h3>4. メール・定期業務を自動で回す</h3>
+<div class="grid">
+  <div class="card">
+    <h4>返信漏れの検出と下書き作成</h4>
+    <p>受信トレイをスキャンして返信が必要なメールを検出し、設定した文体でドラフトを作成。ある検証では6件の返信候補を検出し、約10分で2件の下書きを作成したと報告されています。</p>
+    <div class="prompt">受信トレイをスキャンして、3日以上返信していない取引先メールを洗い出し、丁寧な文体で返信ドラフトを作って（送信はしないで）</div>
+  </div>
+  <div class="card">
+    <h4>定期レポートの予約実行</h4>
+    <p>公式サイトの例：レポートを一度スケジュールすれば、日次・週次・月次で数値を集めて前期と比較し、資料まで組み上げてくれる。「月曜が“資料づくり”ではなく“読み合わせ”から始まる」状態にする使い方です。</p>
+    <div class="prompt">毎週月曜朝にGoogleカレンダーの予定を収集して、週間スケジュールをメールで送って</div>
+  </div>
+  <div class="card">
+    <h4>商談メモの棚卸し</h4>
+    <p>四半期分の通話メモを指定すると、各案件の現状、顧客が語った障害、繰り返し出てくる反論を、元メモからの引用つきでメモにまとめる、という例が公式サイトで示されています。</p>
+  </div>
+</div>
+
+<h3>5. 外部サービスとつなぐ（コネクタ）</h3>
+<p>Cowork は「コネクタ」で外部サービスに接続できます。CNBC の報道によれば、2026年2月24日の企業向けアップデートで、組織が Google Drive、Gmail、DocuSign、FactSet などの既存ツールに接続できるようになりました。国内記事では Gmail・Google Drive・Slack・Notion などの用途が紹介されています。使えるコネクタは、チャットボックスの「+」メニューまたは設定の「コネクター」ページで自分で管理します。</p>
+<p class="src">出典：CNBC（2026年2月24日）／Anthropic 公式ヘルプ</p>
+
+<h2 id="plugins"><span class="num">SECTION 4</span>プラグインで「専門家化」する</h2>
+<p class="lead">プラグインは、<strong>スキル（手順や専門知識）＋コネクタ（データ接続）＋サブエージェント（下請けのAI）</strong>を1つのパッケージにまとめたもの。入れるだけで、Claude が初日からその職種の専門家として振る舞うようにするための仕組みです（公式ヘルプ・公式サイト）。</p>
+
+<p>公式サイトでは、ブランドボイスの抽出、法務（契約レビュー・NDAトリアージ・コンプライアンス）、財務（仕訳、照合、財務諸表、差異分析）などのプラグインが紹介されています。国内記事では Sales / Legal / Finance / Marketing / Data といった業務別プラグインの活用例が報告されており、<code>/legal:review-contract</code> のようなスラッシュコマンドで定型手順を呼び出せます。</p>
+
+<div class="note">
+<strong>非公式まとめによる補足：</strong>Claude Cowork の解説サイト claudecowork.im（Anthropic とは無関係と明記された非公式ガイド）は、2026年2月24日の更新で HR・Design・Engineering・Operations・Financial Analysis などの業務プラグインと、Investment Banking / Equity Research / Private Equity / Wealth Management の金融プラグイン、および12種の新コネクタが追加されたと整理しています。スラッシュコマンドが「入力フォーム付き」で起動するようになり、正確な構文を知らなくても使えるようになった点も挙げられています。公式情報より詳しい代わりに、一次情報ではない点はご留意ください。
+</div>
+
+<h2 id="stock"><span class="num">SECTION 5</span>株取引における Claude Cowork の活用術</h2>
+
+<div class="warn">
+<strong>先にいちばん大事なこと。</strong>
+Anthropic 公式の学習サイト（Claude Academy）は、金融サービス向けプラグインの説明のなかで
+<strong>「AIが生成した財務分析は、意思決定に使う前に必ず有資格の専門家がレビューすべき」</strong>と明記しています。
+また Anthropic の金融向け発表でも、成果物が顧客に渡る前・提出される前・実行される前に、ユーザーがレビューし承認する「人が輪の中にいる」状態が前提とされています。<br><br>
+このセクションは<strong>リサーチと作業の自動化</strong>の話であり、投資助言ではありません。売買の最終判断はご自身の責任で行ってください。Claude は証券アナリストでも投資顧問でもありません。
+</div>
+
+<h3>5-1. そもそも Cowork は株式投資の何に効くのか</h3>
+<p>Cowork が効くのは「<strong>売買の判断そのもの</strong>」ではなく、その手前にある<strong>読む・集める・突き合わせる・書く</strong>という重労働です。Anthropic は金融サービス向けページで、Claude が支援する領域として、デューデリジェンスや市場調査、競合ベンチマーキングといった投資・分析ワークフローを挙げています。決算資料を読み込んでモデルを更新し、論点を洗い出す——ここが自動化の主戦場です。</p>
+
+<h3>5-2. 公式が用意している「金融エージェント」10種</h3>
+<p>Anthropic は金融サービス向けに、Cowork（および Claude Code）のプラグインとして使える<strong>10種のエージェント・テンプレート</strong>を公開しています。株式リサーチに直接関係するものを中心に挙げると：</p>
+<table>
+  <thead><tr><th>エージェント</th><th>やること</th><th>個人投資家目線での意味</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Earnings reviewer</strong>（決算レビュー）</td><td>決算説明会のトランスクリプトと開示資料を読み、モデルを更新し、投資判断の前提に関わる変化にフラグを立てる</td><td>「前提が崩れた点」の検出。決算のたびに自分の想定と実績のズレを洗い出す</td></tr>
+    <tr><td><strong>Model builder</strong>（モデル構築）</td><td>開示資料・データフィード・アナリスト入力から財務モデルを作成・維持</td><td>業績予想の自作と更新の手間を圧縮</td></tr>
+    <tr><td><strong>Market researcher</strong>（市場調査）</td><td>セクターや発行体の動きを追い、ニュース・開示・ブローカーレポートを統合し、リスク面の要注意事項を抽出</td><td>保有・監視銘柄まわりの情報を毎朝ひとまとめに</td></tr>
+    <tr><td><strong>Valuation reviewer</strong>（バリュエーション検証）</td><td>類似企業・手法・社内基準に照らして評価額を点検</td><td>「自分の目標株価、根拠は妥当か」のセルフチェック役</td></tr>
+    <tr><td><strong>Meeting preparer</strong> / <strong>Pitch builder</strong></td><td>ブリーフ作成、ターゲットリスト、コンプス、ピッチブック作成</td><td>投資仮説を人に説明する資料づくり</td></tr>
+    <tr><td><strong>Statement auditor</strong>（財務諸表点検）</td><td>財務諸表の整合性・網羅性・監査対応度をレビュー</td><td>数字の粗さ・不整合の検出</td></tr>
+  </tbody>
+</table>
+<p class="src">出典：Anthropic「Agents for financial services」。ほかに General ledger reconciler、Month-end closer、KYC screener を含む計10種。すべて <code>github.com/anthropics/financial-services</code> のマーケットプレイスで公開され、有料プランの Cowork / Claude Code でプラグインとして使えるとされています。</p>
+
+<h3>5-3. Equity Research（株式リサーチ）プラグインの中身</h3>
+<p>Claude Academy によると、金融サービス向けプラグイン群は<strong>コア（Financial analysis）＋アドオン</strong>の構成で、コアには類似企業分析（コンプス）、DCF、LBO、3表モデルの機能と、すべての金融データ接続がまとまっています。<strong>まずコアを入れる</strong>のが手順です。その上に載るアドオンのうち、株式投資に近いのが Equity research（決算アップデート、新規カバレッジ、カタリスト管理、アイデアのスクリーニング）と Wealth management（顧客面談準備、資産計画、ポートフォリオのリバランス、税務上の損失計上機会の特定）です。</p>
+
+<h4>公式に例示されているスキル（スラッシュコマンド）</h4>
+<p>
+<span class="pill">/comps [企業] 類似企業分析</span>
+<span class="pill">/dcf [企業] DCF評価モデル</span>
+<span class="pill">/earnings [企業] [四半期] 決算後アップデート</span>
+<span class="pill">/one-pager [企業] 1枚企業プロファイル</span>
+<span class="pill">/ic-memo 投資委員会メモ</span>
+<span class="pill">/source [条件] 条件に沿った案件ソーシング</span>
+<span class="pill">/client-review [顧客] 面談準備</span>
+</p>
+<p class="src">出典：Claude Academy「Install financial services plugins for Claude Cowork」</p>
+
+<h4>データはどこから来るのか（ここが最重要）</h4>
+<p>コアプラグインには、Daloopa、Morningstar、S&amp;P Global、FactSet、Moody's、MT Newswires、Aiera、LSEG、PitchBook、Chronograph、Egnyte といった金融データプロバイダ向けのコネクタが含まれます。ただし公式は<strong>「これらのコネクタの利用には、各プロバイダとの別契約やAPIキーが必要な場合がある」</strong>と注記しています。つまり<strong>プラグインを入れれば institutional なデータが無料で湧いてくるわけではありません</strong>。個人投資家がそのまま使うなら、有料データの代わりに、公開情報（適時開示、決算短信・説明資料PDF、自分の手元のCSV）を Cowork に読ませる構成が現実的です。</p>
+<p>なお、2026年の金融向けアップデートでは Dun &amp; Bradstreet、Fiscal AI（上場株のリアルタイム財務データ）、Financial Modeling Prep（株式・ETF・暗号資産・為替・商品のリアルタイム価格、財務、開示、トランスクリプト）、Guidepoint／Third Bridge（エキスパートインタビューの記録）、IBISWorld（業界統計）、Verisk などのコネクタと、Moody's の MCP アプリ（6億社超の信用データ）が追加されたと発表されています。</p>
+
+<h3>5-4. 個人投資家向け：現実的な7つのワークフロー</h3>
+<p>ここからは、上記の公式機能を組み合わせた実践パターンです。いずれも<strong>「Cowork が調べて整える／判断は自分」</strong>の設計にしてあります。</p>
+
+<div class="step"><div class="n">1</div><div>
+<h4 style="margin-top:0">決算資料の一括読み込み → 論点メモ</h4>
+<p>保有銘柄の決算短信・説明資料PDFを1フォルダに入れて丸ごと渡します。Cowork は複数PDFを横断して読み、共通テーマや矛盾点を整理するのが得意（第3章参照）なので、「前四半期からの変化」を軸に指示すると効きます。</p>
+<div class="prompt">/earnings で決算フォルダの各社を処理して。①ガイダンス変更 ②経営陣コメントのトーン変化 ③前四半期から悪化した指標 の3点を銘柄ごとに1ページで、必ず原文の該当箇所を引用してまとめて。推測はメモの末尾に「推測」と明示して分けて。</div>
+</div></div>
+
+<div class="step"><div class="n">2</div><div>
+<h4 style="margin-top:0">投資仮説の「反対尋問」をさせる</h4>
+<p>公式が Valuation reviewer や Statement auditor のような「検証役」エージェントを用意していることを応用します。自分のメモを渡して、強気の材料ではなく<strong>弱点</strong>を出させるのがポイント。AIは同意しがちなので、役割を明示的に反転させます。</p>
+<div class="prompt">この投資仮説メモを読んで、これを否定する側のレポートを書いて。①仮説が依拠している前提を列挙 ②各前提が崩れる具体的な条件 ③その兆候が最初に現れる指標 を挙げて。強気の根拠は書かなくていい。</div>
+</div></div>
+
+<div class="step"><div class="n">3</div><div>
+<h4 style="margin-top:0">保有ポートフォリオの棚卸しシート</h4>
+<p>Wealth management プラグインが担うのは、公式説明では「ポートフォリオのリバランス」「税務上の損失計上機会の特定」など。個人でも、証券会社からエクスポートした保有一覧CSVを渡せば、配分の偏り・セクター集中・目標配分からのズレを一覧化させられます。<strong>売買指示ではなく「現状の可視化」</strong>として使うのが安全です。</p>
+<div class="prompt">保有一覧CSVを読んで、セクター別・通貨別・時価総額別の構成比表と、目標配分（別ファイル）とのズレ一覧をExcelで出力して。ズレが5%超の行に色を付けて。売買の推奨は書かないで。</div>
+</div></div>
+
+<div class="step"><div class="n">4</div><div>
+<h4 style="margin-top:0">毎朝の監視銘柄ブリーフィング（スケジュール実行）</h4>
+<p><code>/schedule</code> と内蔵ブラウザの組み合わせ。公式サイトが挙げる「定期レポートを一度予約すれば、数値を集めて前期と比較し、資料まで組む」という使い方を、監視銘柄に当てはめます。スケジュール実行はクラウド側で走るのでPCがスリープでも動きます。</p>
+<div class="prompt">毎営業日7時に、監視リスト（watchlist.csv）の各銘柄について、前営業日以降に出た適時開示・ニュース見出しを収集して、①開示があった銘柄 ②見出しだけの銘柄 ③何もなかった銘柄 に分けた1枚のブリーフィングをMarkdownで保存して。出典URLを必ず付けて。</div>
+</div></div>
+
+<div class="step"><div class="n">5</div><div>
+<h4 style="margin-top:0">スクリーニング条件の“文章化”と検証</h4>
+<p>「なんとなくの銘柄選び」を、再現可能なルールに落とす作業に使います。Cowork は条件分岐を理解して処理できる（画像リサイズの例と同じ性質）ので、自分の判断基準を言語化させ、過去の自分の売買と突き合わせる、という使い方ができます。</p>
+<div class="prompt">過去2年の私の売買履歴CSVと、各取引時に書いたメモを読んで、私が実際に使っている判断基準を推定して条件式として書き出して。次に、その基準に反した取引を抽出して、共通点を指摘して。</div>
+</div></div>
+
+<div class="step"><div class="n">6</div><div>
+<h4 style="margin-top:0">取引記録の自動整理と売買日誌の生成</h4>
+<p>第3章の「銀行明細と請求書の突合」「領収書→Excel」と同じ仕組みを、証券口座の取引履歴に適用します。複数口座のCSVを1つの台帳に統合し、実現損益・手数料・保有期間を整理させる。<strong>数値の再計算は必ず自分で検算してください</strong>（後述）。</p>
+<div class="prompt">3つの証券口座の取引履歴CSVを統合して、銘柄別・決済日別の実現損益台帳をExcelで作って。手数料と税区分の列を分けて、合計が各CSVの合計と一致するか検算結果も併記して。</div>
+</div></div>
+
+<div class="step"><div class="n">7</div><div>
+<h4 style="margin-top:0">Excel／PowerPoint／Word と直結させる</h4>
+<p>Anthropic は Microsoft 365 向けアドインを提供しており、Excel でモデル構築・数式監査・感度分析、PowerPoint で数値が変われば自動更新される資料作成、Word でテンプレートに沿った文書編集ができるとしています。アプリ間で文脈が引き継がれるため、Excel で作ったモデルを PowerPoint に持っていくときに説明し直す必要がない、と説明されています。Excel／PowerPoint／Word のアドインは一般提供、Outlook は「近日提供」とされています。</p>
+</div></div>
+
+<h3>5-5. Cowork に「やらせないこと」</h3>
+<p>ここは調べた範囲で、はっきり線を引いておくべき部分です。</p>
+<ul>
+  <li><strong>発注・約定の自動執行</strong>：今回確認した Anthropic の公式資料（Cowork ヘルプ、金融サービス発表、Academy のプラグイン解説）には、<strong>証券会社の口座に接続して注文を出す機能は出てきません</strong>。掲載されているのは市場データ・調査・モデリング・書類作成のコネクタです。公式が繰り返しているのは「ユーザーが確実に輪の中にいて、レビューし承認する」という構図です。AIに売買ボタンを押させる構成は、公開情報の裏付けがない領域なので、少なくとも「Cowork の想定用途」として扱うべきではありません。</li>
+  <li><strong>数値の丸呑み</strong>：金融プラグインを実際に精読した第三者の批評記事は、AIが「自信たっぷりに作った数字」に基づくリバランス提案や、ウォッシュセール規制を見落とした税務分析が起こりうる、という趣旨の懸念を示しています。出力された数字は、必ず一次資料（決算短信・有価証券報告書・取引明細）と突き合わせてください。</li>
+  <li><strong>投資助言としての利用</strong>：Claude は投資顧問ではありません。公式も、有資格の専門家によるレビューを前提としています。</li>
+</ul>
+
+<h3>5-6. 株関連で使うときの安全設定チェックリスト</h3>
+<ul>
+  <li>お金が絡む作業では<strong>「手動で承認」モード</strong>を使う（公式ヘルプが、お金・あなた名義のメッセージ・重要ファイルについて明示的に推奨）。</li>
+  <li>証券口座にログインしたブラウザを触らせない。Web作業は<strong>Cowork 内蔵の分離ブラウザ</strong>で行わせる（自分のログインやタブとは別）。</li>
+  <li>グローバル指示に「数値は出典を併記」「推測と事実を分けて書く」「売買推奨は書かない」を登録しておく。</li>
+  <li>信頼できないサイトやMCPにアクセス権を広げる前に慎重に評価する（公式ヘルプの注意）。自動モードはプロンプトインジェクションのチェックを行うが、完璧ではないと明記されている。</li>
+  <li>出力は「たたき台」として扱う。競合比較スライドの検証でも「レイアウト微調整は必要だがたたき台として十分」という評価でした。</li>
+</ul>
+
+<h2 id="tips"><span class="num">SECTION 6</span>失敗しないための使い方のコツ</h2>
+<div class="grid">
+  <div class="card">
+    <h4>チャットと使い分ける</h4>
+    <p>公式ヘルプは、Cowork は通常チャットより使用量を多く消費するため、<strong>単純な質問はチャット、ファイルアクセスと長時間実行が要る複雑な作業を Cowork に</strong>と案内しています。</p>
+  </div>
+  <div class="card">
+    <h4>「何が欲しいか」を具体的に</h4>
+    <p>手順ではなく成果物を伝えます。出力形式（Excel／Word／PowerPoint／Markdown）、保存場所、含めてほしい項目を明示すると、そのまま使える品質に近づきます。</p>
+  </div>
+  <div class="card">
+    <h4>命名規則はグローバル指示へ</h4>
+    <p>「ファイル名は <code>YYYYMMDD_名前</code>」「処理済みの元ファイルは old フォルダへ退避」といったルールを常設指示に入れておくと、定期実行でも一貫性が保たれます。</p>
+  </div>
+  <div class="card">
+    <h4>まずは小さく、捨てて良いフォルダで</h4>
+    <p>初回はコピーを作ったテスト用フォルダで試し、Claude が提示する分類方針を確認してから本番のフォルダに向けるのが安全です。</p>
+  </div>
+</div>
+
+<h2 id="limit"><span class="num">SECTION 7</span>注意点・現時点での限界</h2>
+<ul>
+  <li><strong>有料プラン限定</strong>：Pro / Max / Team / Enterprise。プラットフォームによって使える範囲が異なります。</li>
+  <li><strong>使用量を多く消費する</strong>：複雑なマルチステップ処理は計算負荷が高く、特に自動承認モードは追加の安全チェックを行うため消費が増えます。</li>
+  <li><strong>ローカル作業にはデスクトップアプリが必要</strong>：ローカルセッションでは、アプリが閉じたりPCがスリープするとセッションが終わることがあります（クラウドセッションは継続）。</li>
+  <li><strong>クラウド実行はベータ</strong>：公式ヘルプでベータと明記されています。また「一部の Cowork 機能はまだ利用できない」ともされており、機能は継続的に変化しています。</li>
+  <li><strong>金融データは別契約が必要な場合あり</strong>：FactSet などのコネクタ利用には、各プロバイダとの契約やAPIキーが必要になる場合があります。</li>
+  <li><strong>情報の鮮度</strong>：Cowork は2026年1月に研究プレビューとして公開され、2月に企業向け機能とプラグインが大幅拡張、その後も内蔵ブラウザなどの追加が続いています。本ガイドは2026年9月時点の公開情報にもとづくため、最新の対応範囲は公式ドキュメントでご確認ください。</li>
+</ul>
+
+<footer>
+  <p><strong>主な参照元</strong></p>
+  <ul>
+    <li>Anthropic 公式ヘルプ「Claude Cowork を始める」（日本語版・英語版）— 提供プラン、仕組み、3つの承認モード、グローバル／フォルダ指示、スケジュール、使用量、制限事項</li>
+    <li>claude.com Cowork 製品ページ（研究プレビュー）— 「What, not How」、進捗の可視化、並列処理、内蔵ブラウザ、定期レポート、スプレッドシート照合、契約書レビュー、商談メモ分析、プラグイン</li>
+    <li>CNBC（2026年2月24日）— 企業向けコネクタ・プラグイン拡張（Google Drive、Gmail、DocuSign、FactSet ほか）</li>
+    <li>Anthropic「Agents for financial services」— 金融エージェント10種、Microsoft 365 アドイン、Dispatch、新規コネクタ群、Moody's MCP アプリ、人が輪の中にいる前提</li>
+    <li>Claude Academy「Install financial services plugins for Claude Cowork」— コア＋アドオン構成、スラッシュコマンド、データプロバイダ一覧と別契約の注記、専門家レビューの必要性</li>
+    <li>Anthropic「Claude for Financial Services」— デューデリジェンス、市場調査、競合ベンチマーキング</li>
+    <li>国内解説記事（biz.bytech.jp、japan-ai.co.jp、aismiley.co.jp）および同記事が引用する WIRED・Impress Watch・SAMURAI の検証 — 日本語での具体的な活用事例</li>
+    <li>claudecowork.im（Anthropic 非公式ガイド）— プラグイン一覧の詳細</li>
+  </ul>
+  <p><strong>免責</strong>：本ページは公開情報を整理した解説であり、Anthropic による公式文書ではありません。また、特定の銘柄の売買を推奨するものでも、投資助言でもありません。投資判断はご自身の責任で行ってください。税務・法務に関わる判断は、それぞれの資格を持つ専門家にご相談ください。</p>
+</footer>
+
+</div>
+</body>
+</html>
