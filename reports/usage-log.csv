@@ -9,3 +9,5 @@ run_id,timestamp,theme,file,model,input_tokens,output_tokens,cache_write_tokens,
 "4339cc69-f7ba-5401-b3f7-7df10f6e5d80@2026-09-18T14:28:21.588Z","2026-09-18T14:42:04.751Z","MCP（Model Context Protocol）とは何か","reports/what-is-mcp.html","claude-opus-5","18","5381","120738","391599","1.0850"
 "2ce7b0f4-d9a8-5fe3-9a16-b4b5146468ad@2026-09-18T15:13:21.563Z","2026-09-18T15:29:01.028Z","AIエージェントとワークフローの違い","reports/ai-agents-vs-workflows.html","claude-sonnet-5","34","11625","45550","648213","0.3598"
 "2ce7b0f4-d9a8-5fe3-9a16-b4b5146468ad@2026-09-18T15:13:21.563Z","2026-09-18T15:29:01.028Z","AIエージェントとワークフローの違い","reports/ai-agents-vs-workflows.html","claude-opus-5","18","3600","207950","295341","1.5374"
+"928b3550-ab31-5416-a13c-5f31c3281c9a@2026-09-18T17:10:59.757Z","2026-09-18T17:25:57.065Z","コンピュータ構成要素: CPU、キャッシュ、メモリ、RAID、入出力装置","reports/cpu-cache-memory-raid-io.html","claude-sonnet-5","42","10065","125703","879502","0.5909"
+"928b3550-ab31-5416-a13c-5f31c3281c9a@2026-09-18T17:10:59.757Z","2026-09-18T17:25:57.065Z","コンピュータ構成要素: CPU、キャッシュ、メモリ、RAID、入出力装置","reports/cpu-cache-memory-raid-io.html","claude-opus-5","44","36525","109903","1797564","2.4990"
