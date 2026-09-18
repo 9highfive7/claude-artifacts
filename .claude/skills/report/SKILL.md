@@ -23,7 +23,12 @@ designer サブエージェントを呼び出す。呼び出し時は model に 
 2で作られたファイルのパスを渡し、完了を待つ。
 
 ## 4. トップページ更新
-index.html を読み、既存のリンク一覧と同じ書式で新しいレポートへのリンクを先頭に追加する。
+index.html を読み、先頭の <!-- ENTRY TEMPLATE --> コメントの書式どおりに
+新しい <article class="entry"> を該当する月の <section class="month"> の先頭に追加する。
+月のセクションがなければ新しく作る。
+直前まで新着だったエントリから class="is-new" と <li class="new">新着</li> を外し、
+新しいエントリに付ける。data-topic は ai / infra / security / dev から選ぶ。
+reports/index.html は触らない（トップへのリダイレクトになっている）。
 
 ## 5. GitHubへ反映
 ```
