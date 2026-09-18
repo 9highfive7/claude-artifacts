@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>セキュリティ基礎：暗号方式・認証・攻撃手法・マルウェア・ファイアウォール | 学習レポート</title>
+<style>
+  :root{
+    --ink:#1b2027; --sub:#5a6675; --line:#dfe5ec;
+    --bg:#f7f9fb; --card:#ffffff; --accent:#0b6fbf; --accent-soft:#e8f2fb;
+    --code-inline:#e7ecf2;
+    --warn-bg:#fdf6e7; --warn-line:#e0bd85; --warn-ink:#8a5a00;
+    --tip-bg:#eef6ec; --tip-line:#a9c9a4; --tip-ink:#3f6b45;
+    --note-bg:#eef4fa; --note-line:#a8c4dd; --note-ink:#125c96;
+    --hero-a:#10263a; --hero-b:#0b3d63; --hero-ink:#f6fafd; --hero-sub:#c6d8e6;
+    --fig-bg:#fcfdfe; --fig-line:#c6d0da; --fig-ink:#232a32; --fig-sub:#63707e;
+    --panel-soft:#f2f6fa;
+    /* 図で使う役割別の色（本文の分類と対応） */
+    --c-key:#4f8a5b;  --c-key-soft:#eaf3ec;   /* 共通鍵 */
+    --c-pub:#2b7fc4;  --c-pub-soft:#e6f1fa;   /* 公開鍵 */
+    --c-sec:#7a54b5;  --c-sec-soft:#efe9f8;   /* 秘密鍵 */
+    --c-atk:#c2532c;  --c-atk-soft:#fbeae2;   /* 攻撃・脅威 */
+    --c-def:#3f7d58;  --c-def-soft:#e9f2ec;   /* 防御 */
+    --c-neu:#6b7787;  --c-neu-soft:#eef1f5;   /* 中立（機器・データ） */
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#e4eaf1; --sub:#98a5b4; --line:#2f3841;
+      --bg:#11151a; --card:#1a1f26; --accent:#68b6f0; --accent-soft:#16283a;
+      --code-inline:#242c35;
+      --warn-bg:#2b2416; --warn-line:#755a31; --warn-ink:#e7bd79;
+      --tip-bg:#19241a; --tip-line:#466b47; --tip-ink:#a6cfa4;
+      --note-bg:#17232f; --note-line:#35536e; --note-ink:#8cc2ee;
+      --hero-a:#16212b; --hero-b:#0a1a26; --hero-ink:#f2f7fb; --hero-sub:#aebdcb;
+      --fig-bg:#161b21; --fig-line:#3d4854; --fig-ink:#e2e8ef; --fig-sub:#95a2b0;
+      --panel-soft:#171d24;
+      --c-key:#93c79c;  --c-key-soft:#1c2a1e;
+      --c-pub:#6cb4e8;  --c-pub-soft:#16283a;
+      --c-sec:#b49ae0;  --c-sec-soft:#241d33;
+      --c-atk:#e9906a;  --c-atk-soft:#33231c;
+      --c-def:#8dc4a3;  --c-def-soft:#1b2a22;
+      --c-neu:#9aa8b8;  --c-neu-soft:#222a33;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.9;font-size:16.5px;letter-spacing:.012em;
+    text-rendering:optimizeLegibility}
+  .wrap{max-width:880px;margin:0 auto;padding:0 22px 90px}
+
+  /* ---- hero ---- */
+  header.hero{background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
+    color:var(--hero-ink);padding:56px 22px 48px;margin-bottom:38px;
+    border-bottom:1px solid var(--line)}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero .tag{display:inline-block;font-size:12px;letter-spacing:.14em;
+    border:1px solid rgba(255,255,255,.35);padding:4px 12px;border-radius:20px;margin-bottom:18px}
+  header.hero h1{font-size:clamp(21px,4.4vw,29px);line-height:1.5;margin:0 0 14px;letter-spacing:.01em}
+  header.hero p{margin:0;color:var(--hero-sub);font-size:14.5px;letter-spacing:.06em}
+
+  /* ---- 見出し・本文 ---- */
+  h2{font-size:clamp(20px,3.6vw,23px);margin:60px 0 8px;padding-bottom:12px;
+    border-bottom:2px solid var(--ink);scroll-margin-top:16px}
+  h2 .num{display:block;color:var(--accent);font-size:12.5px;letter-spacing:.14em;margin-bottom:8px}
+  h3{font-size:17.5px;margin:40px 0 10px;color:var(--accent);line-height:1.6;scroll-margin-top:16px}
+  h4{font-size:15.5px;margin:26px 0 8px;line-height:1.6;scroll-margin-top:16px;
+    padding-left:11px;border-left:4px solid var(--accent)}
+  p{margin:0 0 15px}
+  a{color:var(--accent);text-underline-offset:3px}
+  a:hover{text-decoration:none}
+  ul,ol{margin:0 0 16px;padding-left:1.35em}
+  li{margin-bottom:8px}
+  strong{font-weight:700}
+
+  /* ---- 目次 ---- */
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px 24px;margin:0 0 10px}
+  nav.toc .toc-ttl{display:block;font-size:12.5px;letter-spacing:.14em;color:var(--accent);
+    font-weight:700;margin-bottom:6px}
+  nav.toc ol{margin:6px 0 0;padding-left:1.3em}
+  nav.toc li{margin:5px 0;font-size:15px}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  nav.toc a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  nav.toc ul.sub{margin:4px 0 2px;padding-left:1.1em;list-style:none}
+  nav.toc ul.sub li{font-size:13.6px;margin:3px 0;color:var(--sub)}
+  nav.toc ul.sub a{color:var(--sub)}
+
+  /* ---- 表 ---- */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0 20px}
+  table{border-collapse:collapse;width:100%;font-size:14.8px;background:var(--card);
+    min-width:460px;line-height:1.75}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;white-space:nowrap}
+  td:first-child{white-space:nowrap;font-weight:600}
+  table.wide-first td:first-child{white-space:normal;font-weight:400}
+  table.cmp th:first-child{background:var(--card)}
+  table.mal td:last-child{white-space:nowrap;color:var(--sub);font-weight:600}
+  table.fw td:nth-child(2){white-space:normal;font-weight:400}
+
+  /* ---- コード ---- */
+  code{background:var(--code-inline);padding:1px 6px;border-radius:4px;font-size:.9em;
+    font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+
+  /* ---- 図 ---- */
+  figure.fig{margin:22px 0 28px;background:var(--fig-bg);border:1px solid var(--line);
+    border-radius:12px;padding:16px 16px 12px}
+  .fig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  figure.fig svg{display:block;width:100%;min-width:480px;height:auto}
+  figcaption{margin-top:12px;font-size:13.2px;line-height:1.8;color:var(--sub)}
+  figcaption b{color:var(--accent);font-weight:700}
+  .fig .lbl{font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    fill:var(--fig-ink)}
+  .fig .sub{fill:var(--fig-sub)}
+  .fig .ttl{fill:var(--fig-ink);font-weight:700}
+  .fig .step{fill:var(--accent);font-size:11.5px;letter-spacing:.12em;font-weight:700}
+  .fig .edge{stroke:var(--fig-line);stroke-width:2;fill:none}
+  .fig .panel{fill:var(--panel-soft);stroke:var(--fig-line);stroke-width:1.2}
+  .fig .cardbox{fill:var(--card);stroke:var(--fig-line);stroke-width:1.5}
+  .fig .dash{stroke:var(--fig-line);stroke-width:1.4;fill:none;stroke-dasharray:4 4}
+  .fig .onfill{fill:#fff}
+
+  /* ---- ボックス ---- */
+  .box{border:1px solid var(--line);background:var(--card);border-radius:12px;
+    padding:18px 20px;margin:0 0 18px}
+  .box > :last-child{margin-bottom:0}
+  .box.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+  .box.warn strong{color:var(--warn-ink)}
+  .box.tip{border-color:var(--tip-line);background:var(--tip-bg)}
+  .box.note{border-color:var(--note-line);background:var(--note-bg)}
+  .box .mark{display:block;font-size:11.5px;letter-spacing:.14em;margin-bottom:8px;color:var(--sub)}
+  .box.tip .mark{color:var(--tip-ink)}
+  .box.warn .mark{color:var(--warn-ink)}
+  .box.note .mark{color:var(--note-ink)}
+  .box .ttl{display:block;font-weight:700;margin-bottom:6px}
+
+  /* ---- 確認問題 ---- */
+  .q{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 20px;margin:0 0 14px}
+  .q p.question{font-weight:700;margin:0 0 8px;line-height:1.7}
+  .q .qno{color:var(--accent);margin-right:.4em}
+  details{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
+  details p{margin:10px 0 2px;font-size:15px}
+  summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14.5px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";}
+  details[open] summary::before{content:"▾ ";}
+
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:13.2px;color:var(--sub);line-height:1.8}
+  .refs li{margin-bottom:10px;font-size:15px}
+  .scroll-hint{display:none;font-size:12px;color:var(--sub);margin-top:6px}
+
+  @media (max-width:620px){
+    body{font-size:16px;line-height:1.85}
+    .wrap{padding:0 16px 70px}
+    header.hero{padding:40px 16px 36px;margin-bottom:28px}
+    h2{margin-top:46px}
+    figure.fig{padding:12px 12px 10px}
+    .box,.q{padding:14px 16px}
+    .scroll-hint{display:block}
+  }
+  @media print{
+    header.hero{background:none;color:#000;border-bottom:2px solid #000}
+    nav.toc,.scroll-hint{display:none}
+    details{display:block}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <span class="tag">SECURITY 入門レポート</span>
+    <h1>セキュリティ基礎：暗号方式・認証・攻撃手法・マルウェア・ファイアウォール</h1>
+    <p>作成日 2026-09-18 ／ テーマ: 情報セキュリティの基礎</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc" aria-label="目次">
+  <span class="toc-ttl">目次</span>
+  <ol>
+    <li><a href="#overview">概要</a></li>
+    <li><a href="#terms">基本用語</a></li>
+    <li><a href="#mechanism">仕組み・全体像</a>
+      <ul class="sub">
+        <li><a href="#crypto">3-1. 暗号方式の基礎</a></li>
+        <li><a href="#auth">3-2. 認証の基礎</a></li>
+        <li><a href="#attacks">3-3. 代表的な攻撃手法の概要</a></li>
+        <li><a href="#malware">3-4. マルウェアの分類</a></li>
+        <li><a href="#firewall">3-5. ファイアウォールの役割と種類</a></li>
+      </ul>
+    </li>
+    <li><a href="#examples">具体例・使いどころ</a></li>
+    <li><a href="#pitfalls">注意点・よくある誤解</a></li>
+    <li><a href="#quiz">確認問題</a></li>
+    <li><a href="#links">参考リンク</a></li>
+  </ol>
+</nav>
+
+<h2 id="overview"><span class="num">SECTION 1</span>概要</h2>
+<div class="box tip">
+  <span class="mark">SUMMARY</span>
+  <p>情報セキュリティとは、大切な情報を「盗まれない・改ざんされない・使えなくならない」ように守るための考え方と技術の総称である。</p>
+  <p>守るための道具（暗号化・認証・ファイアウォールなど）と、攻める側の手口（フィッシング・マルウェアなど）の両方を知ることで、初めて適切な対策が選べるようになる。</p>
+</div>
+<div class="box note">
+  <span class="mark">SCOPE</span>
+  <p>本レポートは攻撃の実行方法を教えるものではなく、あくまで「守る側（ディフェンダー）」の視点で仕組みと対策を理解するための学習用資料である。</p>
+</div>
+
+<h2 id="terms"><span class="num">SECTION 2</span>基本用語</h2>
+<div class="table-scroll">
+<table class="wide-first">
+  <thead>
+    <tr><th>用語</th><th>意味</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>暗号化</td><td>データを第三者に読めない形に変換すること。元に戻すことを復号という。</td></tr>
+    <tr><td>共通鍵暗号</td><td>暗号化と復号に同じ鍵を使う方式。処理は速いが鍵の受け渡しが課題。</td></tr>
+    <tr><td>公開鍵暗号</td><td>暗号化用の「公開鍵」と復号用の「秘密鍵」がペアになった方式。鍵配布問題を解決する。</td></tr>
+    <tr><td>ハッシュ関数</td><td>任意のデータを固定長の値（ハッシュ値）に変換する一方向関数。改ざん検知やパスワード保存に使う。</td></tr>
+    <tr><td>TLS/SSL</td><td>インターネット通信を暗号化する仕組み。HTTPSの「S」はTLSによる保護を意味する。</td></tr>
+    <tr><td>多要素認証（MFA）</td><td>知識情報・所持情報・生体情報のうち複数を組み合わせて本人確認する方式。</td></tr>
+    <tr><td>OAuth / SSO</td><td>OAuthはアプリ間で「権限（認可）」を連携する仕組み、SSOは1回のログインで複数サービスを使える仕組み。</td></tr>
+    <tr><td>マルウェア</td><td>ウイルス・ワーム・トロイの木馬・ランサムウェアなど、悪意あるソフトウェアの総称。</td></tr>
+    <tr><td>ファイアウォール</td><td>通信を監視し、許可されたものだけを通過させるネットワークの関所。</td></tr>
+    <tr><td>WAF</td><td>Webアプリケーションを狙う攻撃（SQLインジェクションやXSSなど）を防ぐための専門ファイアウォール。</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<h2 id="mechanism"><span class="num">SECTION 3</span>仕組み・全体像</h2>
+
+<h3 id="crypto">3-1. 暗号方式の基礎</h3>
+
+<h4>共通鍵暗号と公開鍵暗号の違い</h4>
+<p>暗号方式は大きく2種類に分けられる。<strong>共通鍵暗号</strong>は暗号化と復号に同じ鍵を使うため処理が高速だが、その鍵を安全に相手へ渡す方法が課題になる。代表的なアルゴリズムは<strong>AES</strong>である。</p>
+<p>一方<strong>公開鍵暗号</strong>は「公開鍵」と「秘密鍵」のペアを使い、公開鍵で暗号化したデータは対応する秘密鍵でしか復号できない。公開鍵は誰にでも渡してよいため、鍵配布の問題を解決できるが、計算量が多く処理は遅い。代表的なアルゴリズムは<strong>RSA</strong>や<strong>楕円曲線暗号（ECC）</strong>である。</p>
+
+<!-- FIGURE: 共通鍵暗号（同じ鍵で暗号化・復号）と公開鍵暗号（公開鍵で暗号化・秘密鍵で復号）を対比する図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 720 470" role="img" aria-label="共通鍵暗号は同じ鍵で暗号化と復号を行い、公開鍵暗号は公開鍵で暗号化して秘密鍵で復号することを対比した図">
+    <defs>
+      <marker id="c1arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
+      </marker>
+      <g id="c1key">
+        <circle cx="0" cy="0" r="6"/>
+        <rect x="5" y="-2.5" width="20" height="5" rx="1.5"/>
+        <rect x="16" y="1" width="3.5" height="6"/>
+        <rect x="22" y="1" width="3.5" height="6"/>
+      </g>
+    </defs>
+
+    <!-- ① 共通鍵暗号 -->
+    <rect class="panel" x="12" y="32" width="696" height="186" rx="12"/>
+    <text class="lbl ttl" x="30" y="58" font-size="13.5">① 共通鍵暗号 ─ 暗号化と復号に同じ鍵を使う</text>
+
+    <rect class="cardbox" x="58" y="74" width="120" height="58" rx="8"/>
+    <text class="lbl" x="118" y="99" font-size="12.5" text-anchor="middle">送信者</text>
+    <text class="lbl sub" x="118" y="119" font-size="11" text-anchor="middle">平文</text>
+
+    <path class="edge" d="M180,103 H268" marker-end="url(#c1arrow)"/>
+    <text class="lbl sub" x="226" y="92" font-size="11.5" text-anchor="middle">暗号化</text>
+
+    <rect x="278" y="74" width="150" height="58" rx="8" fill="var(--c-key-soft)" stroke="var(--c-key)" stroke-width="1.5"/>
+    <text class="lbl" x="353" y="99" font-size="12.5" text-anchor="middle">暗号文</text>
+    <text class="lbl sub" x="353" y="119" font-size="11" text-anchor="middle">第三者には読めない</text>
+
+    <path class="edge" d="M430,103 H518" marker-end="url(#c1arrow)"/>
+    <text class="lbl sub" x="476" y="92" font-size="11.5" text-anchor="middle">復号</text>
+
+    <rect class="cardbox" x="528" y="74" width="120" height="58" rx="8"/>
+    <text class="lbl" x="588" y="99" font-size="12.5" text-anchor="middle">受信者</text>
+    <text class="lbl sub" x="588" y="119" font-size="11" text-anchor="middle">平文</text>
+
+    <path class="dash" d="M344,162 L232,120"/>
+    <path class="dash" d="M366,162 L470,120"/>
+    <use href="#c1key" x="343" y="170" fill="var(--c-key)"/>
+    <text class="lbl" x="353" y="199" font-size="12" text-anchor="middle" style="fill:var(--c-key)">同じ鍵を両者で共有（AES など）</text>
+
+    <!-- ② 公開鍵暗号 -->
+    <rect class="panel" x="12" y="246" width="696" height="206" rx="12"/>
+    <text class="lbl ttl" x="30" y="272" font-size="13.5">② 公開鍵暗号 ─ 公開鍵で暗号化し、対応する秘密鍵で復号</text>
+
+    <rect class="cardbox" x="58" y="290" width="120" height="58" rx="8"/>
+    <text class="lbl" x="118" y="315" font-size="12.5" text-anchor="middle">送信者</text>
+    <text class="lbl sub" x="118" y="335" font-size="11" text-anchor="middle">平文</text>
+
+    <path class="edge" d="M180,319 H268" marker-end="url(#c1arrow)"/>
+    <text class="lbl sub" x="226" y="308" font-size="11.5" text-anchor="middle">暗号化</text>
+
+    <rect x="278" y="290" width="150" height="58" rx="8" fill="var(--c-pub-soft)" stroke="var(--c-pub)" stroke-width="1.5"/>
+    <text class="lbl" x="353" y="315" font-size="12.5" text-anchor="middle">暗号文</text>
+    <text class="lbl sub" x="353" y="335" font-size="11" text-anchor="middle">秘密鍵でしか戻せない</text>
+
+    <path class="edge" d="M430,319 H518" marker-end="url(#c1arrow)"/>
+    <text class="lbl sub" x="476" y="308" font-size="11.5" text-anchor="middle">復号</text>
+
+    <rect class="cardbox" x="528" y="290" width="120" height="58" rx="8"/>
+    <text class="lbl" x="588" y="315" font-size="12.5" text-anchor="middle">受信者</text>
+    <text class="lbl sub" x="588" y="335" font-size="10.5" text-anchor="middle">鍵ペアの持ち主</text>
+
+    <path class="dash" d="M226,332 V366"/>
+    <use href="#c1key" x="216" y="376" fill="var(--c-pub)"/>
+    <text class="lbl" x="226" y="404" font-size="12" text-anchor="middle" style="fill:var(--c-pub)">受信者の公開鍵</text>
+    <text class="lbl sub" x="226" y="423" font-size="10.5" text-anchor="middle">誰に渡してもよい</text>
+
+    <path class="dash" d="M476,332 V366"/>
+    <use href="#c1key" x="466" y="376" fill="var(--c-sec)"/>
+    <text class="lbl" x="476" y="404" font-size="12" text-anchor="middle" style="fill:var(--c-sec)">受信者の秘密鍵</text>
+    <text class="lbl sub" x="476" y="423" font-size="10.5" text-anchor="middle">本人だけが持つ</text>
+  </svg>
+  </div>
+  <figcaption><b>図1</b>　共通鍵暗号と公開鍵暗号の対比。共通鍵暗号は1つの鍵を送受信者で共有するため高速だが鍵の受け渡しが課題になり、公開鍵暗号は「公開鍵で暗号化・秘密鍵で復号」という非対称な仕組みで鍵配布の問題を解決する。</figcaption>
+</figure>
+
+<div class="table-scroll">
+<table class="cmp">
+  <thead>
+    <tr><th></th><th>共通鍵暗号</th><th>公開鍵暗号</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>鍵の数</td><td>1つ（送受信で共有）</td><td>2つ（公開鍵・秘密鍵のペア）</td></tr>
+    <tr><td>速度</td><td>速い</td><td>遅い</td></tr>
+    <tr><td>代表例</td><td>AES</td><td>RSA、ECC</td></tr>
+    <tr><td>弱点</td><td>鍵の受け渡しが難しい</td><td>処理コストが高い</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>ハッシュ関数</h4>
+<p>ハッシュ関数は、どんなデータでも決まった長さの「指紋」のような値に変換する仕組みである（例：SHA-256は256ビットの値を出力）。同じ入力からは必ず同じ出力が得られ、入力が1文字でも変わると出力は大きく変化する。</p>
+<p>この性質を利用して、ファイルの改ざん検知やパスワードの安全な保存（平文のまま保存せずハッシュ値だけを保存する）に使われる。なお暗号化とは異なり、ハッシュ値から元のデータを復元することは想定されていない（一方向性）。</p>
+
+<h4>TLS/SSLでの使われ方</h4>
+<p>Webサイトの通信を守るHTTPSでは、TLS（SSLの後継規格）が使われている。まず接続開始時に<strong>公開鍵暗号</strong>を使ってサーバーの身元を確認し、これから使う共通鍵（セッション鍵）を安全に共有する。</p>
+<p>その後の実際のデータのやり取りは処理が速い<strong>共通鍵暗号</strong>で行う、という「いいとこ取り」の仕組みになっている。これにより通信の「盗聴」「改ざん」「なりすまし」を防いでいる。</p>
+
+<!-- FIGURE: TLSハンドシェイクの概要（サーバー証明書の確認→公開鍵暗号で鍵交換→共通鍵で通信）を示す図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 400" role="img" aria-label="TLS接続の流れ。接続要求、サーバー証明書の確認、公開鍵暗号によるセッション鍵の共有、共通鍵による暗号化通信の順に進むことを示した図">
+    <defs>
+      <marker id="t1arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+
+    <rect class="cardbox" x="46" y="22" width="180" height="48" rx="8"/>
+    <text class="lbl ttl" x="136" y="52" font-size="13" text-anchor="middle">クライアント（ブラウザ）</text>
+    <rect class="cardbox" x="474" y="22" width="180" height="48" rx="8"/>
+    <text class="lbl ttl" x="564" y="52" font-size="13" text-anchor="middle">サーバー</text>
+
+    <path class="dash" d="M136,70 V318"/>
+    <path class="dash" d="M564,70 V318"/>
+
+    <path d="M136,122 H556" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#t1arrow)"/>
+    <text class="lbl" x="350" y="110" font-size="12.5" text-anchor="middle">① 接続の開始を要求する</text>
+
+    <path d="M564,178 H144" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#t1arrow)"/>
+    <text class="lbl" x="350" y="166" font-size="12.5" text-anchor="middle">② サーバー証明書（公開鍵つき）を受け取る</text>
+    <text class="lbl sub" x="350" y="197" font-size="11.5" text-anchor="middle">公開鍵暗号でサーバーの身元を確認 → なりすまし対策</text>
+
+    <path d="M136,238 H556" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#t1arrow)"/>
+    <text class="lbl" x="350" y="226" font-size="12.5" text-anchor="middle">③ 共通鍵（セッション鍵）を安全に共有する</text>
+
+    <path d="M144,290 H556" stroke="var(--c-key)" stroke-width="2.4" fill="none" marker-end="url(#t1arrow)" marker-start="url(#t1arrow)"/>
+    <text class="lbl" x="350" y="278" font-size="12.5" text-anchor="middle">④ 以降のデータは共通鍵暗号でやり取りする</text>
+
+    <rect x="46" y="326" width="608" height="58" rx="10" fill="var(--accent-soft)" stroke="var(--fig-line)" stroke-width="1.2"/>
+    <text class="lbl" x="350" y="350" font-size="12.5" text-anchor="middle">公開鍵暗号 ＝ 身元の確認と鍵の共有　／　共通鍵暗号 ＝ 実データの高速な暗号化</text>
+    <text class="lbl sub" x="350" y="371" font-size="11.5" text-anchor="middle">両者を組み合わせることで「盗聴」「改ざん」「なりすまし」を防ぐ</text>
+  </svg>
+  </div>
+  <figcaption><b>図2</b>　HTTPSで使われるTLSの流れ。接続開始時だけ処理の重い公開鍵暗号を使ってサーバーの身元確認とセッション鍵の共有を行い、その後の通信は高速な共通鍵暗号に切り替える「いいとこ取り」の構成になっている。</figcaption>
+</figure>
+
+<h3 id="auth">3-2. 認証の基礎</h3>
+<p>パスワードだけによる認証（知識情報のみ）には弱点が多い。単純なパスワードは総当たり攻撃（ブルートフォース）で破られやすく、複数サービスで同じパスワードを使い回していると、どこか1つのサービスから漏れた情報が他のサービスへの不正ログインに悪用される「パスワードリスト攻撃」の被害にもつながる。</p>
+
+<p><strong>多要素認証（MFA）</strong>は、「知識情報（パスワードなど）」「所持情報（スマートフォンやICカードなど）」「生体情報（指紋・顔など）」のうち異なる種類を組み合わせて本人確認を行う方式である。1つの要素が破られても他の要素で防げるため安全性が大きく向上する。</p>
+<p>ただし万能ではなく、偽のログイン画面でセッション情報ごと盗む「AiTM（Adversary-in-the-Middle）型フィッシング」や、確認通知を何度も送りつけてユーザーに誤って承認させる手口など、MFAを前提とした攻撃も登場している。</p>
+
+<!-- FIGURE: MFAの3要素（知識・所持・生体）とその組み合わせ例を示す図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 350" role="img" aria-label="認証の3要素である知識情報・所持情報・生体情報と、異なる種類を組み合わせることで多要素認証になることを示した図">
+    <text class="lbl step" x="16" y="22">認証の3要素 ─ 異なる種類を組み合わせるとMFA</text>
+
+    <!-- 知識情報 -->
+    <rect class="cardbox" x="16" y="40" width="216" height="176" rx="12"/>
+    <circle cx="124" cy="78" r="19" fill="var(--c-pub-soft)" stroke="var(--c-pub)" stroke-width="1.5"/>
+    <rect x="115" y="76" width="18" height="13" rx="2.5" fill="var(--c-pub)"/>
+    <path d="M118.5,76 v-4 a5.5,5.5 0 0 1 11,0 v4" fill="none" stroke="var(--c-pub)" stroke-width="2.4"/>
+    <text class="lbl ttl" x="124" y="124" font-size="13.5" text-anchor="middle">知識情報</text>
+    <text class="lbl sub" x="124" y="142" font-size="10" text-anchor="middle">本人だけが知っている</text>
+    <text class="lbl sub" x="124" y="166" font-size="11.5" text-anchor="middle">パスワード</text>
+    <text class="lbl sub" x="124" y="185" font-size="11.5" text-anchor="middle">暗証番号（PIN）</text>
+    <text class="lbl sub" x="124" y="204" font-size="11.5" text-anchor="middle">秘密の質問</text>
+
+    <!-- 所持情報 -->
+    <rect class="cardbox" x="242" y="40" width="216" height="176" rx="12"/>
+    <circle cx="350" cy="78" r="19" fill="var(--c-key-soft)" stroke="var(--c-key)" stroke-width="1.5"/>
+    <rect x="343" y="67" width="14" height="22" rx="3" fill="none" stroke="var(--c-key)" stroke-width="2.2"/>
+    <circle cx="350" cy="85" r="1.6" fill="var(--c-key)"/>
+    <text class="lbl ttl" x="350" y="124" font-size="13.5" text-anchor="middle">所持情報</text>
+    <text class="lbl sub" x="350" y="142" font-size="10" text-anchor="middle">本人だけが持っている</text>
+    <text class="lbl sub" x="350" y="166" font-size="11.5" text-anchor="middle">スマートフォン</text>
+    <text class="lbl sub" x="350" y="185" font-size="11.5" text-anchor="middle">ICカード</text>
+    <text class="lbl sub" x="350" y="204" font-size="11.5" text-anchor="middle">ワンタイムコード</text>
+
+    <!-- 生体情報 -->
+    <rect class="cardbox" x="468" y="40" width="216" height="176" rx="12"/>
+    <circle cx="576" cy="78" r="19" fill="var(--c-sec-soft)" stroke="var(--c-sec)" stroke-width="1.5"/>
+    <path d="M566,86 a10,11 0 0 1 20,0" fill="none" stroke="var(--c-sec)" stroke-width="2"/>
+    <path d="M570,88 a6,7 0 0 1 12,0" fill="none" stroke="var(--c-sec)" stroke-width="2"/>
+    <path d="M573.5,89 a2.5,3 0 0 1 5,0" fill="none" stroke="var(--c-sec)" stroke-width="2"/>
+    <text class="lbl ttl" x="576" y="124" font-size="13.5" text-anchor="middle">生体情報</text>
+    <text class="lbl sub" x="576" y="142" font-size="10" text-anchor="middle">本人の身体的な特徴</text>
+    <text class="lbl sub" x="576" y="166" font-size="11.5" text-anchor="middle">指紋</text>
+    <text class="lbl sub" x="576" y="185" font-size="11.5" text-anchor="middle">顔</text>
+    <text class="lbl sub" x="576" y="204" font-size="11.5" text-anchor="middle">静脈・虹彩</text>
+
+    <rect x="16" y="244" width="668" height="92" rx="12" fill="var(--accent-soft)" stroke="var(--fig-line)" stroke-width="1.2"/>
+    <text class="lbl" x="40" y="273" font-size="12.5">組み合わせの例：パスワード（知識情報）＋ スマートフォンのワンタイムコード（所持情報）</text>
+    <text class="lbl ttl" x="40" y="299" font-size="12.5" style="fill:var(--accent)">＝ 異なる2種類の要素を使うので多要素認証（MFA）</text>
+    <text class="lbl sub" x="40" y="322" font-size="11">1つの要素が破られても、もう一方の要素で不正ログインを防ぎやすくなる</text>
+  </svg>
+  </div>
+  <figcaption><b>図3</b>　認証の3要素。MFAは「知識情報・所持情報・生体情報」のうち<b>異なる種類</b>を組み合わせる方式で、1つの要素が破られても他の要素で防げる点が強み。ただしAiTM型フィッシングなどMFAを前提とした攻撃もあるため過信は禁物である。</figcaption>
+</figure>
+
+<p><strong>OAuth</strong>はアプリやサービスの間で「どの範囲の操作を許可するか（認可）」を安全にやり取りするための仕組みであり、「他サービスの情報にアクセスする権限を与える」目的で使われる。</p>
+<p><strong>SSO（シングルサインオン）</strong>は1度のログインだけで複数のサービスを使えるようにする仕組みで、OAuthの拡張であるOpenID Connect（OIDC）や、企業向けの規格であるSAMLなどを使って実現されることが多い。パスワードを何度も入力せずに済み利便性が上がる一方、SSOのアカウントが乗っ取られると連携する全サービスに影響が及ぶ点には注意が必要である。</p>
+
+<h3 id="attacks">3-3. 代表的な攻撃手法の概要</h3>
+<div class="box note">
+  <span class="mark">NOTE</span>
+  <p>ここでは仕組みの概要と、なぜ危険か、どう防ぐかを中心に解説する。実際の攻撃コードや悪用手順には触れない。</p>
+</div>
+
+<h4>フィッシング</h4>
+<p>実在する企業やサービスを装った偽のメールやサイトでユーザーをだまし、IDやパスワード、クレジットカード情報などを入力させて盗み取る手口。技術的な脆弱性ではなく「人の心理的な隙（緊急性をあおる文面など）」を突く点が特徴で、多要素認証を導入していても、リアルタイムで正規サイトとやり取りしながら情報を中継する高度な手口（AiTM型）で突破されることがある。</p>
+<p>対策は、送信元やURLをよく確認する習慣、メールのリンクを直接クリックしない、正規サイトからの通知かをブックマーク等で確認することなどである。</p>
+
+<h4>SQLインジェクション</h4>
+<p>Webアプリケーションの入力欄（検索窓やログインフォームなど）に、データベースへの命令文（SQL）の一部となるような特殊な文字列を送り込み、想定外のデータベース操作をさせる攻撃。成功すると、本来見えないはずの個人情報が漏えいしたり、データが改ざん・削除されたりする危険がある。サーバー側（データベース）が標的となる点が特徴。</p>
+<p>対策の基本は、入力値をそのままSQL文に組み込まず「プレースホルダ（プレースホルダを使ったパラメータ化クエリ）」を用いること、入力値の検証、データベースアカウントの権限を最小限にすることなどである。</p>
+
+<h4>XSS（クロスサイトスクリプティング）</h4>
+<p>脆弱なWebサイトに悪意のあるスクリプトを埋め込み、そのページを閲覧した別のユーザーのブラウザ上でスクリプトを実行させる攻撃。SQLインジェクションがサーバー（データベース）を狙うのに対し、XSSは閲覧者のブラウザを狙う点が異なる。成功するとログイン情報（Cookieなど）を盗まれたり、偽の画面を表示されたりする。</p>
+<p>対策は、ユーザーが入力した内容をそのままページに表示せず、HTMLとして解釈されないよう「エスケープ処理」を行うことが基本である。</p>
+
+<h4>DDoS攻撃</h4>
+<p>多数の機器（乗っ取られたパソコンやIoT機器など）から特定のサーバーやサービスに大量の通信を送りつけ、処理能力をパンクさせてサービスを利用できなくする攻撃。「Distributed（分散）」の名の通り攻撃元が多数に分散しているため、どの通信が正規の利用者でどれが攻撃かを見分けにくく、防御が難しい。</p>
+<p>対策としては、通信量の急増を検知して遮断する仕組み（DDoS対策サービス）の利用、CDNによる負荷分散、不要なポート・サービスを閉じておくことなどが挙げられる。</p>
+
+<h4>中間者攻撃（MITM）</h4>
+<p>通信している二者（例：利用者とWebサイト）の間に攻撃者がひそかに割り込み、通信内容を盗み見たり書き換えたりする攻撃。公共のフリーWi-Fiや暗号化されていない通信（HTTPでの通信など）で特に起こりやすい。利用者からは正規の相手と直接通信しているように見えるため気づきにくいのが危険な点である。</p>
+<p>対策は、通信全体がTLSで暗号化されているか（URLが<code>https://</code>になっているか）を確認すること、信頼できないWi-Fiへの接続を避けること、VPNを利用することなどである。</p>
+
+<!-- FIGURE: フィッシング・SQLインジェクション・XSS・DDoS・MITMそれぞれの攻撃対象（ユーザー/DB/ブラウザ/サーバー/通信路）を一覧化した図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 380" role="img" aria-label="フィッシングは利用者、中間者攻撃は通信路、DDoSはサーバー、XSSは閲覧者のブラウザ、SQLインジェクションはデータベースを狙うことを示した図">
+    <defs>
+      <marker id="a1arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-atk)"/>
+      </marker>
+      <marker id="a1gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
+      </marker>
+    </defs>
+
+    <text class="lbl step" x="16" y="22">代表的な攻撃は、それぞれ違う場所を狙う</text>
+
+    <!-- 上段の攻撃 -->
+    <rect x="29" y="44" width="140" height="38" rx="19" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.5"/>
+    <text class="lbl" x="99" y="68" font-size="12.5" text-anchor="middle" style="fill:var(--c-atk)">フィッシング</text>
+    <text class="lbl sub" x="99" y="104" font-size="10.5" text-anchor="middle">人の心理をだます</text>
+    <path d="M99,116 V146" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#a1arrow)"/>
+
+    <rect x="176" y="44" width="124" height="38" rx="19" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.5"/>
+    <text class="lbl" x="238" y="68" font-size="12" text-anchor="middle" style="fill:var(--c-atk)">中間者攻撃</text>
+    <text class="lbl sub" x="238" y="104" font-size="10.5" text-anchor="middle">通信を盗み見・改ざん</text>
+    <path d="M238,116 V182" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#a1arrow)"/>
+
+    <rect x="310" y="44" width="140" height="38" rx="19" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.5"/>
+    <text class="lbl" x="380" y="68" font-size="12.5" text-anchor="middle" style="fill:var(--c-atk)">DDoS攻撃</text>
+    <text class="lbl sub" x="380" y="104" font-size="10.5" text-anchor="middle">大量の通信で機能停止</text>
+    <path d="M380,116 V146" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#a1arrow)"/>
+
+    <!-- 中央：守る対象 -->
+    <rect class="cardbox" x="24" y="152" width="150" height="82" rx="10"/>
+    <text class="lbl ttl" x="99" y="184" font-size="13" text-anchor="middle">利用者</text>
+    <text class="lbl sub" x="99" y="206" font-size="11" text-anchor="middle">ブラウザ</text>
+
+    <path class="edge" d="M182,196 H292" marker-end="url(#a1gray)" marker-start="url(#a1gray)"/>
+    <text class="lbl sub" x="238" y="176" font-size="11" text-anchor="middle">通信路</text>
+
+    <rect class="cardbox" x="300" y="152" width="160" height="82" rx="10"/>
+    <text class="lbl ttl" x="380" y="184" font-size="13" text-anchor="middle">Webサーバー</text>
+    <text class="lbl sub" x="380" y="206" font-size="11" text-anchor="middle">アプリケーション</text>
+
+    <path class="edge" d="M466,196 H514" marker-end="url(#a1gray)"/>
+
+    <rect class="cardbox" x="520" y="152" width="156" height="82" rx="10"/>
+    <text class="lbl ttl" x="598" y="184" font-size="13" text-anchor="middle">データベース</text>
+    <text class="lbl sub" x="598" y="206" font-size="11" text-anchor="middle">個人情報など</text>
+
+    <!-- 下段の攻撃 -->
+    <path d="M99,288 V240" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#a1arrow)"/>
+    <rect x="29" y="292" width="140" height="38" rx="19" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.5"/>
+    <text class="lbl" x="99" y="316" font-size="12.5" text-anchor="middle" style="fill:var(--c-atk)">XSS</text>
+    <text class="lbl sub" x="99" y="352" font-size="10.5" text-anchor="middle">閲覧者のブラウザで実行</text>
+
+    <path d="M598,288 V240" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#a1arrow)"/>
+    <rect x="508" y="292" width="180" height="38" rx="19" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.5"/>
+    <text class="lbl" x="598" y="316" font-size="12.5" text-anchor="middle" style="fill:var(--c-atk)">SQLインジェクション</text>
+    <text class="lbl sub" x="598" y="352" font-size="10.5" text-anchor="middle">入力欄経由でDBを不正操作</text>
+  </svg>
+  </div>
+  <figcaption><b>図4</b>　攻撃ごとの標的の違い。フィッシングは<b>利用者本人</b>、中間者攻撃（MITM）は<b>通信路</b>、DDoSは<b>サーバーの処理能力</b>、XSSは<b>閲覧者のブラウザ</b>、SQLインジェクションは<b>データベース</b>を狙う。狙われる場所が違うため、必要な対策もそれぞれ異なる。</figcaption>
+</figure>
+
+<h3 id="malware">3-4. マルウェアの分類</h3>
+<p>マルウェア（Malicious Software）は悪意あるソフトウェアの総称であり、代表的な種類とその特徴は次の通りである。</p>
+
+<div class="table-scroll">
+<table class="mal wide-first">
+  <thead>
+    <tr><th>種類</th><th>特徴</th><th>自己増殖</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>ウイルス</td><td>他の正規ファイルに寄生して感染を広げる。ファイルが実行されるときに一緒に動作する。</td><td>あり（宿主が必要）</td></tr>
+    <tr><td>ワーム</td><td>他のファイルに寄生せず単独で自己複製し、ネットワークを通じて自力で拡散する。</td><td>あり（単独で増殖）</td></tr>
+    <tr><td>トロイの木馬</td><td>正規のソフトや便利なファイルを装って侵入し、内部で不正な動作（情報窃取・遠隔操作など）を行う。</td><td>なし</td></tr>
+    <tr><td>ランサムウェア</td><td>ファイルを暗号化して使用不能にし、復号と引き換えに金銭（身代金）を要求する。盗んだデータの公開を脅す「二重恐喝」も増えている。</td><td>種類による</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<!-- FIGURE: ウイルス・ワーム・トロイの木馬・ランサムウェアの感染の広がり方の違いを示す図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 420" role="img" aria-label="ウイルスは正規ファイルに寄生、ワームは単独で自己複製してネットワーク拡散、トロイの木馬は正規ソフトを装って侵入、ランサムウェアはファイルを暗号化して身代金を要求することを示した図">
+    <defs>
+      <marker id="m1arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-atk)"/>
+      </marker>
+      <g id="m1doc">
+        <path d="M0,3 a3,3 0 0 1 3,-3 h15 l12,12 v21 a3,3 0 0 1 -3,3 h-24 a3,3 0 0 1 -3,-3 Z"/>
+        <path d="M18,0 v9 a3,3 0 0 0 3,3 h9" fill="none"/>
+      </g>
+      <g id="m1lock">
+        <rect x="0" y="4" width="14" height="10" rx="2"/>
+        <path d="M3,4 v-2.5 a4,4 0 0 1 8,0 v2.5" fill="none" stroke-width="2"/>
+      </g>
+    </defs>
+
+    <text class="lbl step" x="16" y="24">感染の広がり方の違い</text>
+
+    <!-- ウイルス -->
+    <rect class="panel" x="16" y="44" width="326" height="166" rx="12"/>
+    <text class="lbl ttl" x="34" y="70" font-size="13.5">ウイルス</text>
+    <text class="lbl sub" x="324" y="70" font-size="10.5" text-anchor="end">自己増殖：あり（宿主が必要）</text>
+    <use href="#m1doc" x="60" y="94" fill="var(--card)" stroke="var(--c-neu)" stroke-width="1.6"/>
+    <circle cx="92" cy="126" r="7" fill="var(--c-atk)"/>
+    <path d="M104,112 H160" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#m1arrow)"/>
+    <text class="lbl sub" x="132" y="102" font-size="10.5" text-anchor="middle">感染</text>
+    <use href="#m1doc" x="172" y="94" fill="var(--card)" stroke="var(--c-neu)" stroke-width="1.6"/>
+    <circle cx="204" cy="126" r="7" fill="var(--c-atk)"/>
+    <path d="M216,112 H262" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#m1arrow)"/>
+    <text class="lbl sub" x="288" y="117" font-size="11" text-anchor="middle">…拡大</text>
+    <text class="lbl sub" x="34" y="176" font-size="11">正規ファイルに寄生し、そのファイルが</text>
+    <text class="lbl sub" x="34" y="194" font-size="11">実行されるときに一緒に動いて広がる</text>
+
+    <!-- ワーム -->
+    <rect class="panel" x="358" y="44" width="326" height="166" rx="12"/>
+    <text class="lbl ttl" x="376" y="70" font-size="13.5">ワーム</text>
+    <text class="lbl sub" x="666" y="70" font-size="10.5" text-anchor="end">自己増殖：あり（単独で増殖）</text>
+    <circle cx="416" cy="122" r="16" fill="var(--c-atk)"/>
+    <path d="M436,110 L492,92" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#m1arrow)"/>
+    <path d="M436,122 L492,122" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#m1arrow)"/>
+    <path d="M436,134 L492,152" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#m1arrow)"/>
+    <circle cx="512" cy="88" r="13" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.6"/>
+    <circle cx="512" cy="122" r="13" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.6"/>
+    <circle cx="512" cy="156" r="13" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.6"/>
+    <path d="M528,88 L566,110" stroke="var(--c-atk)" stroke-width="1.6" fill="none" marker-end="url(#m1arrow)"/>
+    <path d="M528,156 L566,134" stroke="var(--c-atk)" stroke-width="1.6" fill="none" marker-end="url(#m1arrow)"/>
+    <circle cx="586" cy="122" r="13" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.6"/>
+    <text class="lbl sub" x="376" y="176" font-size="11">他のファイルに寄生せず自力で複製し、</text>
+    <text class="lbl sub" x="376" y="194" font-size="11">ネットワークを通じて自分で拡散する</text>
+
+    <!-- トロイの木馬 -->
+    <rect class="panel" x="16" y="230" width="326" height="166" rx="12"/>
+    <text class="lbl ttl" x="34" y="256" font-size="13.5">トロイの木馬</text>
+    <text class="lbl sub" x="324" y="256" font-size="10.5" text-anchor="end">自己増殖：なし</text>
+    <rect x="60" y="284" width="92" height="62" rx="8" fill="var(--c-def-soft)" stroke="var(--c-def)" stroke-width="1.6"/>
+    <text class="lbl sub" x="106" y="278" font-size="10.5" text-anchor="middle">正規のソフトを装う</text>
+    <circle cx="106" cy="318" r="12" fill="var(--c-atk)"/>
+    <text class="lbl onfill" x="106" y="323" font-size="14" text-anchor="middle" font-weight="700">!</text>
+    <path d="M160,315 H206" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#m1arrow)"/>
+    <text class="lbl sub" x="183" y="303" font-size="10.5" text-anchor="middle">侵入</text>
+    <rect class="cardbox" x="214" y="288" width="96" height="54" rx="8"/>
+    <text class="lbl" x="262" y="311" font-size="12" text-anchor="middle">端末の内部</text>
+    <text class="lbl sub" x="262" y="330" font-size="10.5" text-anchor="middle">情報窃取・遠隔操作</text>
+    <text class="lbl sub" x="34" y="374" font-size="11">自分では増殖せず、便利なソフトに見せかけて招き入れられる形で侵入する</text>
+
+    <!-- ランサムウェア -->
+    <rect class="panel" x="358" y="230" width="326" height="166" rx="12"/>
+    <text class="lbl ttl" x="376" y="256" font-size="13.5">ランサムウェア</text>
+    <text class="lbl sub" x="666" y="256" font-size="10.5" text-anchor="end">自己増殖：種類による</text>
+    <text class="lbl sub" x="428" y="278" font-size="10.5" text-anchor="middle">ファイルを暗号化</text>
+    <use href="#m1doc" x="382" y="288" fill="var(--card)" stroke="var(--c-neu)" stroke-width="1.6"/>
+    <use href="#m1lock" x="398" y="310" fill="var(--c-atk)" stroke="var(--c-atk)"/>
+    <use href="#m1doc" x="434" y="288" fill="var(--card)" stroke="var(--c-neu)" stroke-width="1.6"/>
+    <use href="#m1lock" x="450" y="310" fill="var(--c-atk)" stroke="var(--c-atk)"/>
+    <path d="M492,312 H536" stroke="var(--c-atk)" stroke-width="2" fill="none" marker-end="url(#m1arrow)"/>
+    <rect x="544" y="286" width="118" height="54" rx="8" fill="var(--c-atk-soft)" stroke="var(--c-atk)" stroke-width="1.6"/>
+    <text class="lbl" x="603" y="309" font-size="12" text-anchor="middle" style="fill:var(--c-atk)">身代金の要求</text>
+    <text class="lbl sub" x="603" y="328" font-size="10.5" text-anchor="middle">データ公開の脅しも</text>
+    <text class="lbl sub" x="376" y="374" font-size="11">ファイルを使えなくしたうえで、復号と引き換えに金銭を要求する</text>
+  </svg>
+  </div>
+  <figcaption><b>図5</b>　マルウェア4種の広がり方の違い。増殖の仕方（宿主が必要か／単独で増えるか／増えないか）と目的が異なるため、日常会話で使われる「ウイルス」という言葉ですべてをまとめると実態を見誤りやすい。</figcaption>
+</figure>
+
+<div class="box warn">
+  <span class="mark">CAUTION</span>
+  <p><strong>主な感染経路：</strong> 不審なメールの添付ファイルやリンク、改ざんされたWebサイトの閲覧、不正なソフトウェアのインストール、USBメモリなどの外部媒体、ソフトウェアの脆弱性を突いた自動感染などが挙げられる。</p>
+</div>
+<div class="box tip">
+  <span class="mark">COUNTERMEASURE</span>
+  <p><strong>基本的な対策：</strong> OSやソフトウェアを常に最新の状態に保つ（脆弱性を放置しない）、セキュリティソフトを導入し定義ファイルを最新化する、不審なメールやリンクを開かない、重要なデータは定期的にバックアップを取る（ランサムウェア対策として特に重要）、不要な権限やアカウントを与えないことなどである。</p>
+</div>
+
+<h3 id="firewall">3-5. ファイアウォールの役割と種類</h3>
+<p>ファイアウォールは、ネットワークの出入り口で通信を監視し、あらかじめ決めたルールに従って通信を許可・拒否する「関所」のような役割を果たす。</p>
+
+<div class="table-scroll">
+<table class="fw wide-first">
+  <thead>
+    <tr><th>種類</th><th>仕組み</th><th>得意な防御</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>パケットフィルタ型</td><td>送信元/宛先IPアドレス、ポート番号などパケットのヘッダ情報だけを見て通過の可否を判断する、最も基本的な方式。</td><td>単純な不正アクセスの遮断</td></tr>
+    <tr><td>ステートフルインスペクション型</td><td>単発のパケットだけでなく、それまでの通信の流れ（セッションの状態）を記憶し、文脈に沿った正当な通信かを判断して動的にポートの開閉を行う。</td><td>より精密な不正通信の検知</td></tr>
+    <tr><td>WAF（Web Application Firewall）</td><td>アプリケーション層で動作し、通信データの「中身」まで解析してSQLインジェクションやXSSのような攻撃パターンを検知・遮断する。</td><td>Webアプリケーションを狙う攻撃</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<p>一般的なファイアウォールがネットワーク層・トランスポート層の通信（IPアドレスやポート番号）を見て防御するのに対し、WAFはアプリケーション層でHTTP通信の中身まで踏み込んで守るため、両者は役割が異なり、併用されることが多い。</p>
+
+<!-- FIGURE: インターネットと社内ネットワークの間にファイアウォールを置き、その先のWebサーバーの手前にWAFを配置する構成図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 620 340" role="img" aria-label="インターネットと社内ネットワークの境界にファイアウォールを置き、公開Webサーバーの手前にWAFを配置した構成図">
+    <defs>
+      <marker id="f1arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
+      </marker>
+    </defs>
+
+    <text class="lbl step" x="16" y="22">ファイアウォールとWAFの配置</text>
+
+    <rect x="16" y="140" width="112" height="70" rx="12" fill="var(--c-neu-soft)" stroke="var(--c-neu)" stroke-width="1.5"/>
+    <text class="lbl ttl" x="72" y="172" font-size="12.5" text-anchor="middle">インターネット</text>
+    <text class="lbl sub" x="72" y="192" font-size="10.5" text-anchor="middle">不特定多数の通信</text>
+
+    <path class="edge" d="M128,175 H164" marker-end="url(#f1arrow)"/>
+
+    <!-- 分岐線（壁より先に描く） -->
+    <path class="edge" d="M212,175 H244 M244,110 V245" marker-end="none"/>
+    <path class="edge" d="M244,110 H280" marker-end="url(#f1arrow)"/>
+    <path class="edge" d="M244,245 H280" marker-end="url(#f1arrow)"/>
+
+    <!-- ファイアウォール -->
+    <rect x="170" y="95" width="42" height="160" rx="6" fill="var(--c-def-soft)" stroke="var(--c-def)" stroke-width="1.8"/>
+    <path d="M170,125 H212 M170,155 H212 M170,185 H212 M170,215 H212" stroke="var(--c-def)" stroke-width="1" opacity=".6"/>
+    <path d="M191,95 V125 M191,155 V185 M191,215 V255" stroke="var(--c-def)" stroke-width="1" opacity=".6"/>
+    <text class="lbl ttl" x="191" y="84" font-size="12" text-anchor="middle" style="fill:var(--c-def)">ファイアウォール</text>
+    <text class="lbl sub" x="191" y="274" font-size="10.5" text-anchor="middle">IPアドレス・ポート番号で判定（L3/L4）</text>
+
+    <!-- WAF -->
+    <rect x="286" y="78" width="38" height="64" rx="6" fill="var(--c-pub-soft)" stroke="var(--c-pub)" stroke-width="1.8"/>
+    <path d="M286,98 H324 M286,120 H324" stroke="var(--c-pub)" stroke-width="1" opacity=".6"/>
+    <text class="lbl ttl" x="305" y="68" font-size="12" text-anchor="middle" style="fill:var(--c-pub)">WAF</text>
+    <text class="lbl sub" x="305" y="158" font-size="10.5" text-anchor="middle">HTTPの中身まで解析（L7）</text>
+    <path class="edge" d="M324,110 H362" marker-end="url(#f1arrow)"/>
+
+    <rect class="cardbox" x="366" y="78" width="238" height="64" rx="10"/>
+    <text class="lbl ttl" x="485" y="106" font-size="12.5" text-anchor="middle">公開Webサーバー</text>
+    <text class="lbl sub" x="485" y="127" font-size="10.5" text-anchor="middle">SQLインジェクション・XSS などが狙う先</text>
+
+    <rect class="cardbox" x="286" y="215" width="318" height="62" rx="10"/>
+    <text class="lbl ttl" x="445" y="243" font-size="12.5" text-anchor="middle">社内ネットワーク</text>
+    <text class="lbl sub" x="445" y="263" font-size="10.5" text-anchor="middle">PC・ファイルサーバーなど</text>
+    <text class="lbl sub" x="445" y="300" font-size="10.5" text-anchor="middle">外部からの不審な通信はファイアウォールの段階で遮断する</text>
+  </svg>
+  </div>
+  <figcaption><b>図6</b>　防御の役割分担。ファイアウォールはIPアドレスやポート番号といったネットワーク層・トランスポート層の情報で通信を許可・拒否し、WAFはアプリケーション層でHTTP通信の中身まで踏み込んで守る。役割が異なるため併用されることが多い。</figcaption>
+</figure>
+
+<h2 id="examples"><span class="num">SECTION 4</span>具体例・使いどころ</h2>
+<div class="box">
+  <ul>
+    <li><strong>ネットショッピングサイトへのログイン：</strong> パスワードに加えてSMSやアプリでのワンタイムコードを求められるのは多要素認証の例。パスワードが漏れても不正ログインを防ぎやすくなる。</li>
+    <li><strong>「https://」で始まるサイト：</strong> TLSによって通信が暗号化されている証。錠前アイコンが表示されるブラウザも多いが、フィッシングサイトでもTLSを使うケースがあるため過信は禁物である。</li>
+    <li><strong>会社のPCが急にファイルを開けなくなった：</strong> ランサムウェア感染の典型的な症状。日頃のバックアップがあれば、身代金を払わずに復旧できる可能性が高まる。</li>
+    <li><strong>問い合わせフォームに <code>' OR '1'='1</code> のような文字を入れると挙動がおかしくなる：</strong> SQLインジェクションの脆弱性がある兆候。実際に検証・悪用するのではなく、開発者は入力値の扱いを見直す必要がある。</li>
+    <li><strong>会社のネットワークとインターネットの境目にある機器：</strong> ファイアウォールが外部からの不審な通信を遮断し、社内システムをインターネットの脅威から隔てている。</li>
+  </ul>
+</div>
+
+<h2 id="pitfalls"><span class="num">SECTION 5</span>注意点・よくある誤解</h2>
+<div class="box warn">
+  <span class="mark">CAUTION</span>
+  <ul>
+    <li><strong>「暗号化していれば安全」という誤解：</strong> 暗号化は通信内容の盗聴・改ざんを防ぐが、フィッシングのように利用者自身をだます攻撃や、端末そのものがマルウェアに感染しているケースは防げない。</li>
+    <li><strong>「多要素認証を入れれば絶対安全」という誤解：</strong> MFAは大幅にリスクを下げるが、AiTM型フィッシングなどMFA自体を回避する手口も存在するため、過信せず複数の対策を組み合わせる必要がある。</li>
+    <li><strong>「ウイルス対策ソフトを入れていればマルウェアは防げる」という誤解：</strong> 未知の攻撃（ゼロデイ）には検知が追いつかないことがあり、OS・ソフトのアップデートやバックアップなど多層的な対策が欠かせない。</li>
+    <li><strong>「ファイアウォールがあればWebアプリは安全」という誤解：</strong> 一般的なファイアウォールはネットワークレベルの防御が中心で、SQLインジェクションやXSSのようなアプリケーションの脆弱性を突く攻撃にはWAFなど別の対策が必要になる。</li>
+    <li><strong>ウイルス・ワーム・トロイの木馬という呼び方の混同：</strong> 日常会話では「ウイルス」がマルウェア全般を指す言葉として使われがちだが、技術的には増殖の仕方などで分類が異なる。</li>
+  </ul>
+</div>
+
+<h2 id="quiz"><span class="num">SECTION 6</span>確認問題</h2>
+
+<div class="q">
+  <p class="question"><span class="qno">Q1.</span>共通鍵暗号と公開鍵暗号の違いを説明してください。それぞれの代表的なアルゴリズムも挙げてください。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>共通鍵暗号は暗号化と復号に同じ鍵を使う方式で、処理が速い反面、鍵の安全な受け渡しが課題（代表例：AES）。公開鍵暗号は公開鍵と秘密鍵のペアを使い、鍵配布問題を解決できるが処理は遅い（代表例：RSA、ECC）。TLSなどでは両者を組み合わせたハイブリッド方式が使われる。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">Q2.</span>パスワードだけの認証にはどのような弱点がありますか。また、多要素認証（MFA）はその弱点をどう補いますか。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>パスワードは総当たり攻撃で破られたり、使い回しによってパスワードリスト攻撃の被害を受けやすい。MFAは知識情報に加えて所持情報や生体情報など異なる種類の要素を組み合わせることで、パスワードが漏れても不正ログインを防ぎやすくする。ただしAiTM型フィッシングなどMFAを回避する手口も存在するため万能ではない。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">Q3.</span>SQLインジェクションとXSSの主な違いは何ですか。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>SQLインジェクションはWebアプリケーションを経由してデータベース（サーバー側）を狙い、不正な操作やデータ漏えいを引き起こす。XSSは悪意のあるスクリプトをページに埋め込み、それを閲覧したユーザーのブラウザ（クライアント側）で実行させる攻撃である。標的と実行場所が異なる。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">Q4.</span>ウイルス・ワーム・トロイの木馬の違いを、自己増殖の観点から説明してください。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>ウイルスは他の正規ファイルに寄生して感染を広げる。ワームは寄生せず単独で自己複製し、ネットワークを通じて自力で拡散する。トロイの木馬は正規のソフトを装って侵入するが、自己増殖能力を持たない点が両者と異なる。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">Q5.</span>パケットフィルタ型ファイアウォールとWAFは、それぞれ何を見て、どの層の攻撃を防ぐのに適していますか。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>パケットフィルタ型は送信元/宛先IPアドレスやポート番号などのヘッダ情報を見てネットワーク層・トランスポート層の不正通信を防ぐ。WAFはアプリケーション層で通信データの中身（HTTPリクエストの内容など）まで解析し、SQLインジェクションやXSSのようなWebアプリケーションを狙う攻撃を防ぐのに適している。</p>
+  </details>
+</div>
+
+<h2 id="links"><span class="num">SECTION 7</span>参考リンク</h2>
+<ul class="refs">
+  <li><a href="https://it-trend.jp/encryption/article/64-0089" target="_blank" rel="noopener">公開鍵・秘密鍵とは？暗号化の仕組みをわかりやすく解説 | ITトレンド</a></li>
+  <li><a href="https://cybersecurity-jp.com/column/53774" target="_blank" rel="noopener">公開鍵・秘密鍵とは？仕組みをイラストと例え話で初心者に分かりやすく解説</a></li>
+  <li><a href="https://www.infraexpert.com/study/security4.html" target="_blank" rel="noopener">共通鍵暗号と公開鍵暗号とは | infraexpert</a></li>
+  <li><a href="https://blog.serverworks.co.jp/understanding-ssl-tls" target="_blank" rel="noopener">SSL/TLSで利用されている技術とその仕組みを整理してみた | サーバーワークスエンジニアブログ</a></li>
+  <li><a href="https://www.kagoya.jp/howto/it-glossary/security/ssl/" target="_blank" rel="noopener">【図解】SSLとは？SSL/TLSの仕組みについてわかりやすく解説します | カゴヤのサーバー研究室</a></li>
+  <li><a href="https://cybersecurity-jp.com/column/100532" target="_blank" rel="noopener">SHA-256とは？仕組み・ハッシュ関数との違い・用途を徹底解説</a></li>
+  <li><a href="https://www.dos-osaka.co.jp/ss1/ss1lab/2026/06/trend-mfa.html" target="_blank" rel="noopener">MFA（多要素認証）とは？仕組みや2段階認証との違い、導入メリットを解説 | SS1LAB</a></li>
+  <li><a href="https://www.ntt.com/bizon/sec/safe-nw05.html" target="_blank" rel="noopener">多要素認証（MFA）とは？二要素認証との違いや最新の推奨方式を解説 | NTTドコモビジネス</a></li>
+  <li><a href="https://note.com/tetiko/n/n4c4ac2437d29" target="_blank" rel="noopener">シングルサインオン（SSO）とは？SAML・OAuth 2.0・OpenID Connectの違いを初心者向けに整理</a></li>
+  <li><a href="https://www.josys.com/jp/blog/what-is-sso-mechanisms-4-authentication-methods-and-13-tool-comparison" target="_blank" rel="noopener">SSO（シングルサインオン）とは？仕組みと製品比較 | ジョーシス</a></li>
+  <li><a href="https://guardian.jpn.com/security/web-api/sql-injection/column/xss-difference/" target="_blank" rel="noopener">SQLインジェクションとXSSの違い｜攻撃手法と対策の比較解説</a></li>
+  <li><a href="https://exosp.net/blog/what-is-xss" target="_blank" rel="noopener">XSS（クロスサイトスクリプティング）とは？仕組み・被害・対策</a></li>
+  <li><a href="https://www.nri-secure.co.jp/glossary/mtm-attack" target="_blank" rel="noopener">中間者攻撃（MITM攻撃）とは | NRIセキュア用語解説</a></li>
+  <li><a href="https://group.gmo/security/cybersecurity/cyberattack/blog/mitm/" target="_blank" rel="noopener">中間者攻撃（MitM攻撃）とは？代表的な種類や被害事例、対策方法を紹介 | GMOセキュリティ24</a></li>
+  <li><a href="https://hackson.jp/malware-classification/" target="_blank" rel="noopener">マルウェアの種類と違い｜12種の分類・見分け方をわかりやすく解説</a></li>
+  <li><a href="https://rocket-boys.co.jp/security-measures-lab/what-worm/" target="_blank" rel="noopener">ワームとは トロイの木馬との違いを解説</a></li>
+  <li><a href="https://group.gmo/security/cybersecurity/cyberattack/blog/ransomware-malware/" target="_blank" rel="noopener">ランサムウェアとマルウェアの違い｜被害リスクと対策方法を詳しく解説 | GMOセキュリティ24</a></li>
+  <li><a href="https://news.mynavi.jp/siryou_hikaku/20210225-1750191/" target="_blank" rel="noopener">ステートフルインスペクションとは？ファイアウォールの種類を整理</a></li>
+  <li><a href="https://www.equ.co.jp/blog/archives/227" target="_blank" rel="noopener">ファイアウォールとWAFの違いについて</a></li>
+  <li><a href="https://www.ipa.go.jp/security/10threats/10threats2026.html" target="_blank" rel="noopener">情報セキュリティ10大脅威 2026 | IPA 独立行政法人 情報処理推進機構</a></li>
+</ul>
+
+<footer>
+  <p>本レポートは学習用にWeb上の一般公開情報を要約・整理したものです。攻撃の実行手順やエクスプロイトコードは含めておらず、あくまで防御・理解のための解説にとどめています。</p>
+  <p>作成日: 2026-09-18 ／ テーマ: セキュリティ基礎（暗号方式・認証・攻撃手法・マルウェア・ファイアウォール）</p>
+</footer>
+
+</div>
+</body>
+</html>
