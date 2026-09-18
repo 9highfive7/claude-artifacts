@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AIエージェントとワークフローの違い | 学習レポート</title>
+<style>
+  :root{
+    /* ---- 余白スケール: 8pxベース、使うのは5段階だけ ---- */
+    --sp-1:8px; --sp-2:16px; --sp-3:24px; --sp-4:40px; --sp-5:64px;
+
+    /* ---- 行長: 日本語は40字が上限（WCAG 1.4.8）。
+           ch は半角基準のため、全角40字を超えないよう em でも上限をかける ---- */
+    --measure:min(72ch, 38em);
+
+    /* ---- 文字サイズ: 本文 / 見出し / 補助 の3系統 ---- */
+    --fs-body:17px;
+    --fs-h2:clamp(21px, 3.6vw, 25px);
+    --fs-h1:clamp(24px, 5vw, 32px);
+    --fs-sm:15px;
+
+    /* ---- 配色（本文コントラスト4.5:1以上） ---- */
+    --ink:#1b2027; --sub:#5a6675; --line:#dfe5ec;
+    --bg:#f7f9fb; --card:#ffffff; --accent:#0b6fbf; --accent-soft:#e8f2fb;
+    --code-inline:#e7ecf2;
+    --warn-bg:#fdf6e7; --warn-line:#e0bd85; --warn-ink:#8a5a00;
+    --tip-bg:#eef6ec; --tip-line:#a9c9a4; --tip-ink:#3f6b45;
+    --note-bg:#eef4fa; --note-line:#a8c4dd; --note-ink:#125c96;
+    --alert-bg:#fdecea; --alert-line:#e0a49b; --alert-ink:#9a2f22;
+    --hero-a:#10263a; --hero-b:#0b3d63; --hero-ink:#f6fafd; --hero-sub:#c8dae8;
+    --fig-bg:#fcfdfe; --fig-line:#c6d0da; --fig-ink:#232a32; --fig-sub:#5d6a78;
+    --panel-soft:#f2f6fa;
+    /* 図で使う役割別の色（本文の分類と対応） */
+    --c-wf:#2b6fc4;  --c-wf-soft:#e6f0fa;    /* ワークフロー（固定の経路） */
+    --c-ag:#7a54b5;  --c-ag-soft:#efe9f8;    /* エージェント（動的な判断） */
+    --c-tl:#4f8a5b;  --c-tl-soft:#eaf3ec;    /* ツール・環境 */
+    --c-neu:#6b7787; --c-neu-soft:#eef1f5;   /* 中立 */
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#e4eaf1; --sub:#9daaba; --line:#2f3841;
+      --bg:#11151a; --card:#1a1f26; --accent:#68b6f0; --accent-soft:#16283a;
+      --code-inline:#242c35;
+      --warn-bg:#2b2416; --warn-line:#755a31; --warn-ink:#e7bd79;
+      --tip-bg:#19241a; --tip-line:#466b47; --tip-ink:#a6cfa4;
+      --note-bg:#17232f; --note-line:#35536e; --note-ink:#8cc2ee;
+      --alert-bg:#2c1b19; --alert-line:#7a4239; --alert-ink:#f0a89c;
+      --hero-a:#16212b; --hero-b:#0a1a26; --hero-ink:#f2f7fb; --hero-sub:#b4c3d1;
+      --fig-bg:#161b21; --fig-line:#3d4854; --fig-ink:#e2e8ef; --fig-sub:#9aa7b5;
+      --panel-soft:#171d24;
+      --c-wf:#6cb4e8; --c-wf-soft:#16283a;
+      --c-ag:#b49ae0; --c-ag-soft:#241d33;
+      --c-tl:#93c79c; --c-tl-soft:#1c2a1e;
+      --c-neu:#9aa8b8; --c-neu-soft:#222a33;
+    }
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    font-size:var(--fs-body);
+    line-height:1.7;              /* 本文は1.5が最低、1.7で心理的負荷を下げる */
+    text-align:left;              /* justify は使わない（WCAG F88） */
+    letter-spacing:.012em;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* ---- レイアウト: 本文は40字以内、図表だけ外側へはみ出す ---- */
+  .wrap{
+    max-width:920px; margin:0 auto; padding:0 var(--sp-2) var(--sp-5);
+    display:grid;
+    grid-template-columns:1fr min(var(--measure), 100%) 1fr;
+  }
+  .wrap > *{grid-column:2}
+  .wrap > .wide{grid-column:1 / -1}
+
+  /* ---- hero ---- */
+  header.hero{
+    background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
+    color:var(--hero-ink); padding:var(--sp-5) var(--sp-2) var(--sp-4);
+    margin-bottom:var(--sp-4); border-bottom:1px solid var(--line);
+  }
+  header.hero .inner{max-width:920px;margin:0 auto}
+  header.hero .tag{
+    display:inline-block; font-size:var(--fs-sm); letter-spacing:.14em;
+    border:1px solid rgba(255,255,255,.45); border-radius:20px;
+    padding:var(--sp-1) var(--sp-2); margin-bottom:var(--sp-2);
+  }
+  header.hero h1{font-size:var(--fs-h1); line-height:1.3; margin:0 0 var(--sp-2); letter-spacing:.01em}
+  header.hero p{margin:0; color:var(--hero-sub); font-size:var(--fs-sm); line-height:1.7; letter-spacing:.06em}
+
+  /* ---- 見出し: 前から離し、次の本文に近づける ---- */
+  h2{
+    font-size:var(--fs-h2); line-height:1.4;
+    margin:var(--sp-5) 0 var(--sp-2); padding-bottom:var(--sp-1);
+    border-bottom:2px solid var(--ink); scroll-margin-top:var(--sp-2);
+  }
+  h2 .num{display:block; color:var(--accent); font-size:var(--fs-sm);
+    letter-spacing:.14em; line-height:1.4; margin-bottom:var(--sp-1)}
+  h3{
+    font-size:var(--fs-body); font-weight:700; line-height:1.5; color:var(--accent);
+    margin:var(--sp-4) 0 var(--sp-1); padding-left:var(--sp-1);
+    border-left:4px solid var(--accent); scroll-margin-top:var(--sp-2);
+  }
+  p{margin:0}
+  p + p, ul + p, ol + p, p + ul, p + ol, .box + p, figure + p{margin-top:var(--sp-3)}
+  ul,ol{margin:var(--sp-2) 0; padding-left:1.4em}
+  li{margin:0}
+  li + li{margin-top:var(--sp-1)}
+  li > ul, li > ol{margin:var(--sp-1) 0}
+  strong{font-weight:700}
+  em{font-style:normal; font-weight:700}   /* 日本語にイタリックを使わない */
+  a{color:var(--accent); text-decoration:underline; text-underline-offset:3px}
+
+  /* ---- 目次 ---- */
+  nav.toc{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:var(--sp-3); margin-bottom:var(--sp-3);
+  }
+  nav.toc .toc-ttl{
+    display:block; font-size:var(--fs-sm); letter-spacing:.14em;
+    color:var(--accent); font-weight:700; margin-bottom:var(--sp-1);
+  }
+  nav.toc ol{margin:0; padding-left:1.3em}
+  nav.toc li + li{margin-top:var(--sp-1)}
+  nav.toc a{color:var(--ink); text-decoration:none; border-bottom:1px solid transparent}
+  nav.toc a:hover,nav.toc a:focus{color:var(--accent); border-bottom-color:var(--accent)}
+  nav.toc ul.sub{margin:var(--sp-1) 0 0; padding-left:1.1em; list-style:none}
+  nav.toc ul.sub a{color:var(--sub); font-size:var(--fs-sm)}
+
+  /* ---- 表 ---- */
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:var(--sp-3) 0}
+  table{
+    border-collapse:collapse; width:100%; background:var(--card);
+    min-width:520px; line-height:1.7;
+  }
+  th,td{border:1px solid var(--line); padding:var(--sp-1) var(--sp-2);
+    text-align:left; vertical-align:top}
+  th{background:var(--accent-soft); color:var(--accent); font-weight:700}
+  table.terms td:first-child{white-space:nowrap; font-weight:700}
+  table.cmp th:first-child{white-space:nowrap}
+  table.cmp td:first-child{font-weight:700; white-space:nowrap}
+  caption{caption-side:top; text-align:left; font-size:var(--fs-sm);
+    color:var(--sub); line-height:1.7; margin-bottom:var(--sp-1)}
+
+  /* ---- コード ---- */
+  code{background:var(--code-inline); padding:2px 8px; border-radius:4px;
+    font-size:.9em; font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+
+  /* ---- 図: キャプションは本文の段落間より近づける ---- */
+  figure.fig{
+    margin:var(--sp-4) 0; background:var(--fig-bg);
+    border:1px solid var(--line); border-radius:12px; padding:var(--sp-2);
+  }
+  .fig-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+  figure.fig svg{display:block; width:100%; min-width:680px; height:auto}
+  figcaption{margin-top:var(--sp-1); font-size:var(--fs-sm);
+    line-height:1.7; color:var(--sub)}
+  figcaption b{color:var(--accent); font-weight:700}
+  .fig .ttl{fill:var(--fig-ink); font-weight:700; font-size:14px}
+  .fig .lbl{fill:var(--fig-ink); font-size:13px}
+  .fig .lbl-b{fill:var(--fig-ink); font-size:13px; font-weight:700}
+  .fig .sub{fill:var(--fig-sub); font-size:13px}
+  .fig .edge{stroke:var(--fig-line); stroke-width:2; fill:none}
+  .fig .edge-thin{stroke:var(--fig-line); stroke-width:1.4; fill:none}
+  .fig .dash{stroke:var(--fig-line); stroke-width:1.6; fill:none; stroke-dasharray:6 5}
+  .fig .ahead{fill:var(--fig-line)}
+  .fig .panel{fill:var(--panel-soft); stroke:var(--fig-line); stroke-width:1.2}
+  .fig .cardbox{fill:var(--card); stroke:var(--fig-line); stroke-width:1.5}
+  .fig .wf{fill:var(--c-wf-soft); stroke:var(--c-wf); stroke-width:1.5}
+  .fig .ag{fill:var(--c-ag-soft); stroke:var(--c-ag); stroke-width:1.5}
+  .fig .tl{fill:var(--c-tl-soft); stroke:var(--c-tl); stroke-width:1.5}
+  .fig .neu{fill:var(--c-neu-soft); stroke:var(--c-neu); stroke-width:1.5}
+  .fig text{font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+
+  /* ---- ボックス: 少量の関連コンテンツを枠でまとめる ---- */
+  .box{
+    border:1px solid var(--line); border-left:4px solid var(--sub);
+    background:var(--card); border-radius:12px;
+    padding:var(--sp-2) var(--sp-3); margin:var(--sp-3) 0;
+  }
+  .box .mark{display:block; font-size:var(--fs-sm); letter-spacing:.14em;
+    line-height:1.7; color:var(--sub); margin-bottom:var(--sp-1)}
+  .box .ttl{display:block; font-weight:700; margin-bottom:var(--sp-1)}
+  .box.tip{border-color:var(--tip-line); border-left-color:var(--tip-ink); background:var(--tip-bg)}
+  .box.tip .mark{color:var(--tip-ink)}
+  .box.note{border-color:var(--note-line); border-left-color:var(--note-ink); background:var(--note-bg)}
+  .box.note .mark{color:var(--note-ink)}
+  .box.warn{border-color:var(--warn-line); border-left-color:var(--warn-ink); background:var(--warn-bg)}
+  .box.warn .mark{color:var(--warn-ink)}
+  .box.alert{border-color:var(--alert-line); border-left-color:var(--alert-ink); background:var(--alert-bg)}
+  .box.alert .mark{color:var(--alert-ink)}
+  .box p + p{margin-top:var(--sp-2)}
+  .box ul{margin:0}
+  .box ul li + li{margin-top:var(--sp-2)}
+
+  /* ---- 確認問題 ---- */
+  .q{background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:var(--sp-2) var(--sp-3); margin:var(--sp-3) 0}
+  .q .question{font-weight:700; line-height:1.7}
+  .q .qno{color:var(--accent); margin-right:.4em}
+  .q .choices{margin:var(--sp-1) 0 0; padding-left:1.4em; font-weight:400}
+  details{border-top:1px dashed var(--line); padding-top:var(--sp-1); margin-top:var(--sp-2)}
+  details p{margin-top:var(--sp-1)}
+  summary{cursor:pointer; font-weight:700; color:var(--accent); list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ "}
+  details[open] summary::before{content:"▾ "}
+
+  .refs li + li{margin-top:var(--sp-2)}
+  footer{
+    max-width:920px; margin:var(--sp-5) auto 0; padding:var(--sp-3) var(--sp-2) var(--sp-5);
+    border-top:1px solid var(--line); color:var(--sub);
+    font-size:var(--fs-sm); line-height:1.7;
+  }
+  .scroll-hint{display:none; font-size:var(--fs-sm); color:var(--sub); margin-top:var(--sp-1)}
+
+  /* ---- 200%拡大・スマホでも横スクロールを起こさない ---- */
+  img,svg,video{max-width:100%; height:auto}
+  pre{overflow-x:auto}
+
+  @media (max-width:620px){
+    header.hero{padding:var(--sp-4) var(--sp-2) var(--sp-3); margin-bottom:var(--sp-3)}
+    h2{margin-top:var(--sp-4)}
+    .box,.q,nav.toc{padding:var(--sp-2)}
+    figure.fig{padding:var(--sp-1)}
+    .scroll-hint{display:block}
+  }
+  @media print{
+    header.hero{background:none; color:#000; border-bottom:2px solid #000}
+    nav.toc,.scroll-hint{display:none}
+    details{display:block}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <span class="tag">AI設計 入門レポート</span>
+    <h1>AIエージェントとワークフローの違い</h1>
+    <p>作成日 2026-09-19 ／ テーマ: 制御フローを誰が決めるかで分かれる2つの設計</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc" aria-label="目次">
+  <span class="toc-ttl">目次</span>
+  <ol>
+    <li><a href="#overview">概要</a></li>
+    <li><a href="#terms">基本用語</a></li>
+    <li><a href="#how">仕組み・全体像</a>
+      <ul class="sub">
+        <li><a href="#how-1">3-1. 意思決定の仕方の違い</a></li>
+        <li><a href="#how-2">3-2. 代表的なワークフローパターン</a></li>
+        <li><a href="#how-3">3-3. 使い分けの判断基準</a></li>
+      </ul>
+    </li>
+    <li><a href="#examples">具体例・使いどころ</a>
+      <ul class="sub">
+        <li><a href="#ex-1">4-1. ワークフローが向く例</a></li>
+        <li><a href="#ex-2">4-2. エージェントが向く例</a></li>
+        <li><a href="#ex-3">4-3. 実務での判断の実例</a></li>
+      </ul>
+    </li>
+    <li><a href="#pitfalls">注意点・よくある誤解</a></li>
+    <li><a href="#quiz">確認問題</a></li>
+    <li><a href="#references">参考リンク</a></li>
+  </ol>
+</nav>
+
+<h2 id="overview"><span class="num">SECTION 1</span>概要</h2>
+<div class="box tip">
+  <span class="mark">SUMMARY</span>
+  <ul>
+    <li><strong>ワークフロー</strong>は事前に決められた手順（コードパス）に沿ってLLMやツールを動かす仕組みで、入力が同じなら毎回ほぼ同じ道筋をたどる。</li>
+    <li><strong>AIエージェント</strong>はLLM自身が次に何をするか（どのツールを使うか、いつ終了するか）をループの中で動的に判断する仕組みで、道筋が実行ごとに変わりうる。</li>
+    <li>どちらが優れているという話ではなく、タスクの性質（手順が明確か／曖昧で探索が必要か）に応じて使い分けるべきものであり、実務では「まずワークフローで十分か」を検討し、必要な場合のみエージェント化するのが定石とされている。</li>
+  </ul>
+</div>
+
+<h2 id="terms"><span class="num">SECTION 2</span>基本用語</h2>
+<div class="table-scroll wide">
+<table class="terms">
+  <caption>この記事を読むときに前提となる6つの用語</caption>
+  <thead>
+    <tr><th scope="col">用語</th><th scope="col">意味</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ワークフロー<br>（Workflow）</td>
+      <td>あらかじめ人間が設計した固定のステップ（グラフ・パイプライン）にLLMとツールを組み込んだシステム。処理の順序や分岐条件は事前にコードで決まっている。</td>
+    </tr>
+    <tr>
+      <td>AIエージェント<br>（AI Agent）</td>
+      <td>LLMが自分自身のプロセス（次のアクション、使うツール、終了判断）を動的に制御するシステム。あらかじめ決めた手順ではなく、その場の状況に応じてLLMが判断する。</td>
+    </tr>
+    <tr>
+      <td>制御フロー<br>（control flow）</td>
+      <td>プログラムがどの順序で処理を実行するかの流れ。ワークフローでは人間が制御フローを書き、エージェントではLLMが実質的に制御フローを決める。</td>
+    </tr>
+    <tr>
+      <td>ツール使用<br>（tool use / function calling）</td>
+      <td>LLMが検索・DB照会・コード実行などの外部機能を呼び出す仕組み。エージェントの自律性の土台になる。</td>
+    </tr>
+    <tr>
+      <td>環境フィードバック<br>ループ</td>
+      <td>エージェントがツールを実行して得た結果（「地に足のついた」情報）を見て、次の一手を再評価する繰り返し処理。</td>
+    </tr>
+    <tr>
+      <td>オーケストレーター<br>-ワーカー</td>
+      <td>中心となるLLM（オーケストレーター）がタスクを分解し、複数のワーカー（LLMやツール）に割り振る代表的なワークフローパターンの一つ。</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<h2 id="how"><span class="num">SECTION 3</span>仕組み・全体像</h2>
+
+<h3 id="how-1">3-1. 意思決定の仕方の違い</h3>
+<p>
+ワークフローは、開発者が「Aが終わったらBへ、条件XならCへ」という分岐やループを事前にコードとして書いておき、LLMはその中の「ある1ステップの処理」を担当するだけである。したがって実行経路は基本的に固定で、同じ入力なら毎回似た経路をたどりやすく、結果の予測がしやすい。
+</p>
+<p>
+一方エージェントは、あらかじめ経路を決めずに「目標」と「使えるツールの一覧」だけを与え、LLM自身に「次に何をすべきか」を都度判断させる。LLMはツールを呼び出し、その結果（環境からのフィードバック）を見て状況を評価し、次のアクションを選び、目標達成またはあらかじめ決めた停止条件（試行回数の上限など）に達するまでこれを繰り返す。この繰り返し処理は「LLMをループの中で走らせる」構造だと表現されることが多い。
+</p>
+
+<!-- FIGURE: ワークフロー（固定の矢印でつながったステップの図）と、エージェント（LLM→ツール呼び出し→結果評価→次の判断、という円環のループ図）を並べて対比する図 -->
+<figure class="fig wide">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 720 476" role="img" aria-labelledby="fig1-title">
+    <title id="fig1-title">ワークフローは人間が書いた固定の経路を上から下へ流れるのに対し、エージェントは判断・ツール実行・評価のループを繰り返して経路を実行時に決めることを対比した図</title>
+    <defs>
+      <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path class="ahead" d="M0,0 L10,5 L0,10 z"/>
+      </marker>
+    </defs>
+    <g class="fig">
+      <!-- ===== 左: ワークフロー ===== -->
+      <rect class="panel" x="8" y="8" width="344" height="456" rx="12"/>
+      <text class="ttl" x="180" y="40" text-anchor="middle">ワークフロー：経路は固定</text>
+      <text class="sub" x="180" y="62" text-anchor="middle">人間が事前に順序と分岐を決める</text>
+
+      <rect class="neu" x="65" y="84" width="230" height="38" rx="6"/>
+      <text class="lbl" x="180" y="108" text-anchor="middle">入力</text>
+      <line class="edge" x1="180" y1="122" x2="180" y2="162" marker-end="url(#ah1)"/>
+
+      <rect x="42" y="152" width="276" height="210" rx="10" fill="none"
+            stroke="var(--c-wf)" stroke-width="2"/>
+      <text class="sub" x="180" y="176" text-anchor="middle">固定の経路（コードで記述）</text>
+
+      <rect class="wf" x="65" y="188" width="230" height="38" rx="4"/>
+      <text class="lbl" x="180" y="212" text-anchor="middle">ステップ1：LLMが処理</text>
+      <line class="edge" x1="180" y1="226" x2="180" y2="238" marker-end="url(#ah1)"/>
+      <rect class="wf" x="65" y="240" width="230" height="38" rx="4"/>
+      <text class="lbl" x="180" y="264" text-anchor="middle">ステップ2：ツール実行</text>
+      <line class="edge" x1="180" y1="278" x2="180" y2="290" marker-end="url(#ah1)"/>
+      <rect class="wf" x="65" y="292" width="230" height="38" rx="4"/>
+      <text class="lbl" x="180" y="316" text-anchor="middle">ステップ3：結果を整形</text>
+
+      <line class="edge" x1="180" y1="362" x2="180" y2="390" marker-end="url(#ah1)"/>
+      <rect class="neu" x="65" y="392" width="230" height="38" rx="6"/>
+      <text class="lbl" x="180" y="416" text-anchor="middle">出力</text>
+      <text class="sub" x="180" y="450" text-anchor="middle">同じ入力なら毎回ほぼ同じ経路</text>
+
+      <!-- ===== 右: エージェント ===== -->
+      <rect class="panel" x="368" y="8" width="344" height="456" rx="12"/>
+      <text class="ttl" x="540" y="40" text-anchor="middle">エージェント：経路は都度決定</text>
+      <text class="sub" x="540" y="62" text-anchor="middle">LLMが次の一手を判断して反復</text>
+
+      <rect class="neu" x="425" y="84" width="230" height="38" rx="6"/>
+      <text class="lbl" x="540" y="108" text-anchor="middle">目標＋使えるツール一覧</text>
+      <line class="edge" x1="540" y1="122" x2="540" y2="162" marker-end="url(#ah1)"/>
+
+      <rect x="402" y="152" width="276" height="210" rx="10" fill="none"
+            stroke="var(--c-ag)" stroke-width="2" stroke-dasharray="7 5"/>
+      <text class="sub" x="540" y="176" text-anchor="middle">ループ（LLMが制御）</text>
+
+      <rect class="ag" x="440" y="188" width="200" height="38" rx="19"/>
+      <text class="lbl" x="540" y="212" text-anchor="middle">次の一手を判断</text>
+      <line class="edge" x1="540" y1="226" x2="540" y2="238" marker-end="url(#ah1)"/>
+      <rect class="tl" x="440" y="240" width="200" height="38" rx="19"/>
+      <text class="lbl" x="540" y="264" text-anchor="middle">ツールを実行</text>
+      <line class="edge" x1="540" y1="278" x2="540" y2="290" marker-end="url(#ah1)"/>
+      <rect class="ag" x="440" y="292" width="200" height="38" rx="19"/>
+      <text class="lbl" x="540" y="316" text-anchor="middle">結果を見て評価</text>
+
+      <!-- 戻り矢印 -->
+      <path class="edge" d="M440,311 L418,311 L418,207 L436,207" marker-end="url(#ah1)"/>
+
+      <line class="edge" x1="540" y1="362" x2="540" y2="390" marker-end="url(#ah1)"/>
+      <text class="sub" x="528" y="382" text-anchor="end">達成 or 停止条件</text>
+      <rect class="neu" x="425" y="392" width="230" height="38" rx="6"/>
+      <text class="lbl" x="540" y="416" text-anchor="middle">出力</text>
+      <text class="sub" x="540" y="450" text-anchor="middle">実行ごとに経路が変わりうる</text>
+    </g>
+  </svg>
+  </div>
+  <figcaption>
+    左は<b>ワークフロー</b>。実線の枠が「人間が書いた固定の経路」で、上から下へ一度だけ流れる。
+    右は<b>エージェント</b>。破線の枠が「LLMが制御するループ」で、判断→ツール実行→評価を繰り返し、
+    目標達成または停止条件に達したときだけ外へ出る。
+  </figcaption>
+</figure>
+<p class="scroll-hint">※ 図は横にスクロールできます。</p>
+
+<h3 id="how-2">3-2. 代表的なワークフローパターン</h3>
+<p>Anthropicのエンジニアリングブログでは、よく使われるワークフローの型として次のようなパターンが紹介されている。</p>
+<ul>
+  <li><strong>プロンプトチェイニング</strong>：タスクを固定の複数ステップに分解し、前の出力を次の入力に渡す（例：文章生成→翻訳）。</li>
+  <li><strong>ルーティング</strong>：入力の種類を分類し、専用の処理経路に振り分ける（例：問い合わせ内容ごとにサポート窓口を振り分ける）。</li>
+  <li><strong>並列化</strong>：独立したサブタスクを同時に処理する「セクショニング」や、同じタスクを複数回実行して多数決を取る「投票」。</li>
+  <li><strong>オーケストレーター-ワーカー</strong>：中心のLLMがタスクを動的に分解し、複数のワーカーに割り振る（例：複数ファイルにまたがるコード修正）。</li>
+  <li><strong>評価者-最適化</strong>：生成結果を別のLLM（評価者）がチェックし、フィードバックを反映して改善を繰り返す（例：翻訳文の精緻化）。</li>
+</ul>
+
+<!-- FIGURE: 上記5パターンそれぞれの簡易フローチャート（矢印と箱で表現） -->
+<figure class="fig wide">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 720 570" role="img" aria-labelledby="fig2-title">
+    <title id="fig2-title">プロンプトチェイニング、ルーティング、並列化、オーケストレーター-ワーカー、評価者-最適化の5つのワークフローパターンの流れを、それぞれ箱と矢印で示した図</title>
+    <defs>
+      <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path class="ahead" d="M0,0 L10,5 L0,10 z"/>
+      </marker>
+    </defs>
+    <g class="fig">
+      <!-- 区切り線 -->
+      <line class="edge-thin" x1="8" y1="136" x2="712" y2="136"/>
+      <line class="edge-thin" x1="8" y1="240" x2="712" y2="240"/>
+      <line class="edge-thin" x1="8" y1="344" x2="712" y2="344"/>
+      <line class="edge-thin" x1="8" y1="448" x2="712" y2="448"/>
+
+      <!-- ===== 1. プロンプトチェイニング ===== -->
+      <text class="lbl-b" x="14" y="78">1. プロンプト</text>
+      <text class="lbl-b" x="14" y="96">チェイニング</text>
+      <rect class="neu" x="150" y="67" width="62" height="34" rx="6"/>
+      <text class="lbl" x="181" y="89" text-anchor="middle">入力</text>
+      <line class="edge" x1="212" y1="84" x2="236" y2="84" marker-end="url(#ah2)"/>
+      <rect class="wf" x="238" y="67" width="100" height="34" rx="4"/>
+      <text class="lbl" x="288" y="89" text-anchor="middle">ステップ1</text>
+      <line class="edge" x1="338" y1="84" x2="362" y2="84" marker-end="url(#ah2)"/>
+      <rect class="wf" x="364" y="67" width="100" height="34" rx="4"/>
+      <text class="lbl" x="414" y="89" text-anchor="middle">ステップ2</text>
+      <line class="edge" x1="464" y1="84" x2="488" y2="84" marker-end="url(#ah2)"/>
+      <rect class="wf" x="490" y="67" width="100" height="34" rx="4"/>
+      <text class="lbl" x="540" y="89" text-anchor="middle">ステップ3</text>
+      <line class="edge" x1="590" y1="84" x2="614" y2="84" marker-end="url(#ah2)"/>
+      <rect class="neu" x="616" y="67" width="62" height="34" rx="6"/>
+      <text class="lbl" x="647" y="89" text-anchor="middle">出力</text>
+
+      <!-- ===== 2. ルーティング ===== -->
+      <text class="lbl-b" x="14" y="193">2. ルーティング</text>
+      <rect class="neu" x="150" y="171" width="62" height="34" rx="6"/>
+      <text class="lbl" x="181" y="193" text-anchor="middle">入力</text>
+      <line class="edge" x1="212" y1="188" x2="236" y2="188" marker-end="url(#ah2)"/>
+      <rect class="wf" x="238" y="171" width="90" height="34" rx="4"/>
+      <text class="lbl" x="283" y="193" text-anchor="middle">入力を分類</text>
+      <line class="edge-thin" x1="328" y1="188" x2="378" y2="160" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="328" y1="188" x2="378" y2="190" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="328" y1="188" x2="378" y2="220" marker-end="url(#ah2)"/>
+      <rect class="tl" x="380" y="146" width="175" height="28" rx="4"/>
+      <text class="lbl" x="467" y="165" text-anchor="middle">経路A：請求の窓口</text>
+      <rect class="tl" x="380" y="176" width="175" height="28" rx="4"/>
+      <text class="lbl" x="467" y="195" text-anchor="middle">経路B：技術の窓口</text>
+      <rect class="tl" x="380" y="206" width="175" height="28" rx="4"/>
+      <text class="lbl" x="467" y="225" text-anchor="middle">経路C：その他</text>
+
+      <!-- ===== 3. 並列化 ===== -->
+      <text class="lbl-b" x="14" y="297">3. 並列化</text>
+      <rect class="neu" x="150" y="275" width="62" height="34" rx="6"/>
+      <text class="lbl" x="181" y="297" text-anchor="middle">入力</text>
+      <line class="edge-thin" x1="212" y1="292" x2="248" y2="264" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="212" y1="292" x2="248" y2="294" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="212" y1="292" x2="248" y2="324" marker-end="url(#ah2)"/>
+      <rect class="wf" x="250" y="250" width="120" height="28" rx="4"/>
+      <text class="lbl" x="310" y="269" text-anchor="middle">サブタスク1</text>
+      <rect class="wf" x="250" y="280" width="120" height="28" rx="4"/>
+      <text class="lbl" x="310" y="299" text-anchor="middle">サブタスク2</text>
+      <rect class="wf" x="250" y="310" width="120" height="28" rx="4"/>
+      <text class="lbl" x="310" y="329" text-anchor="middle">サブタスク3</text>
+      <line class="edge-thin" x1="370" y1="264" x2="428" y2="292" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="370" y1="294" x2="428" y2="292" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="370" y1="324" x2="428" y2="292" marker-end="url(#ah2)"/>
+      <rect class="wf" x="430" y="275" width="110" height="34" rx="4"/>
+      <text class="lbl" x="485" y="297" text-anchor="middle">集約・多数決</text>
+      <line class="edge" x1="540" y1="292" x2="598" y2="292" marker-end="url(#ah2)"/>
+      <rect class="neu" x="600" y="275" width="62" height="34" rx="6"/>
+      <text class="lbl" x="631" y="297" text-anchor="middle">出力</text>
+
+      <!-- ===== 4. オーケストレーター-ワーカー ===== -->
+      <text class="lbl-b" x="14" y="388">4. オーケスト</text>
+      <text class="lbl-b" x="14" y="406">レーター-ワーカー</text>
+      <rect class="neu" x="150" y="379" width="62" height="34" rx="6"/>
+      <text class="lbl" x="181" y="401" text-anchor="middle">入力</text>
+      <line class="edge" x1="212" y1="396" x2="236" y2="396" marker-end="url(#ah2)"/>
+      <rect class="ag" x="238" y="379" width="150" height="34" rx="17"/>
+      <text class="lbl" x="313" y="401" text-anchor="middle">オーケストレーター</text>
+      <line class="edge-thin" x1="388" y1="396" x2="438" y2="368" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="388" y1="396" x2="438" y2="398" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="388" y1="396" x2="438" y2="424" marker-end="url(#ah2)"/>
+      <rect class="tl" x="440" y="354" width="110" height="28" rx="4"/>
+      <text class="lbl" x="495" y="373" text-anchor="middle">ワーカー1</text>
+      <rect class="tl" x="440" y="384" width="110" height="28" rx="4"/>
+      <text class="lbl" x="495" y="403" text-anchor="middle">ワーカー2</text>
+      <rect class="tl" x="440" y="414" width="110" height="28" rx="4"/>
+      <text class="lbl" x="495" y="433" text-anchor="middle">ワーカー3</text>
+      <line class="edge-thin" x1="550" y1="368" x2="598" y2="396" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="550" y1="398" x2="598" y2="396" marker-end="url(#ah2)"/>
+      <line class="edge-thin" x1="550" y1="424" x2="598" y2="396" marker-end="url(#ah2)"/>
+      <rect class="wf" x="600" y="379" width="100" height="34" rx="4"/>
+      <text class="lbl" x="650" y="401" text-anchor="middle">結果を統合</text>
+
+      <!-- ===== 5. 評価者-最適化 ===== -->
+      <text class="lbl-b" x="14" y="495">5. 評価者-最適化</text>
+      <rect class="neu" x="150" y="473" width="62" height="34" rx="6"/>
+      <text class="lbl" x="181" y="495" text-anchor="middle">入力</text>
+      <line class="edge" x1="212" y1="490" x2="236" y2="490" marker-end="url(#ah2)"/>
+      <rect class="wf" x="238" y="473" width="120" height="34" rx="4"/>
+      <text class="lbl" x="298" y="495" text-anchor="middle">生成するLLM</text>
+      <line class="edge" x1="358" y1="490" x2="398" y2="490" marker-end="url(#ah2)"/>
+      <rect class="wf" x="400" y="473" width="130" height="34" rx="4"/>
+      <text class="lbl" x="465" y="495" text-anchor="middle">評価するLLM</text>
+      <line class="edge" x1="530" y1="490" x2="598" y2="490" marker-end="url(#ah2)"/>
+      <text class="sub" x="564" y="482" text-anchor="middle">合格</text>
+      <rect class="neu" x="600" y="473" width="62" height="34" rx="6"/>
+      <text class="lbl" x="631" y="495" text-anchor="middle">出力</text>
+      <path class="edge" d="M465,507 L465,532 L298,532 L298,511" marker-end="url(#ah2)"/>
+      <text class="sub" x="381" y="552" text-anchor="middle">不合格ならフィードバックして再生成</text>
+    </g>
+  </svg>
+  </div>
+  <figcaption>
+    5パターンの流れ。<b>1〜3</b>は経路があらかじめ決まっている。
+    <b>4</b>のオーケストレーターだけは分解のしかたを実行時に決めるため丸みのある箱で示した。
+    <b>5</b>は評価結果によって生成へ戻るループを持つ。
+  </figcaption>
+</figure>
+<p class="scroll-hint">※ 図は横にスクロールできます。</p>
+
+<h3 id="how-3">3-3. 使い分けの判断基準</h3>
+<p>
+Anthropicは「まずできるだけシンプルな構成を試し、それでは不十分な場合にのみ複雑さ（エージェント化）を追加する」という方針を明確に推奨している。判断の目安は次の通り。
+</p>
+<div class="table-scroll wide">
+<table class="cmp">
+  <caption>4つの観点で見た、ワークフローとエージェントの向き不向き</caption>
+  <thead>
+    <tr>
+      <th scope="col">観点</th>
+      <th scope="col">ワークフローが向く</th>
+      <th scope="col">エージェントが向く</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>タスクの性質</td>
+      <td>手順が明確で毎回ほぼ同じ流れになる</td>
+      <td>状況によって必要な手順やツールが変わる、探索的なタスク</td>
+    </tr>
+    <tr>
+      <td>予測可能性</td>
+      <td>常に同じ結果・同じ経路が求められる</td>
+      <td>柔軟な判断・臨機応変な対応が価値になる</td>
+    </tr>
+    <tr>
+      <td>ステップ数・<br>複雑さ</td>
+      <td>少ない/固定的</td>
+      <td>ステップ数や必要なツールが実行時にしか分からない</td>
+    </tr>
+    <tr>
+      <td>コスト・<br>レイテンシ要件</td>
+      <td>低コスト・低遅延が重要</td>
+      <td>多少のコスト増・時間増を許容できる</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<h2 id="examples"><span class="num">SECTION 4</span>具体例・使いどころ</h2>
+
+<h3 id="ex-1">4-1. ワークフローが向く例</h3>
+<ul>
+  <li>カスタマーサポートの問い合わせを「請求」「技術」「その他」に分類して定型の窓口に振り分ける（ルーティング）。</li>
+  <li>ブログ記事の「本文生成→要約生成→SNS用短文生成」のように、決まった順で複数のLLM呼び出しをつなぐ（プロンプトチェイニング）。</li>
+  <li>複数の候補文章を同時に生成して多数決で最終案を選ぶ（並列化・投票）。</li>
+  <li>定型レポート作成のように、毎回同じ手順・同じデータソースを使う定期バッチ処理。</li>
+</ul>
+
+<h3 id="ex-2">4-2. エージェントが向く例</h3>
+<ul>
+  <li>ソフトウェア開発の自律的なコーディング支援（コードを読み、テストを実行し、失敗結果を見て修正方針を変える、といった探索的な反復作業）。</li>
+  <li>オープンエンドな調査タスク（何を検索すべきか、追加でどんな情報が必要かがその場で変わるWeb調査など）。</li>
+  <li>複数のツール（検索、DB照会、計算、外部API）をどの順で・何回使うかが事前に決めきれない業務支援タスク。</li>
+</ul>
+
+<h3 id="ex-3">4-3. 実務での判断の実例</h3>
+<p>
+ある社内向けAI分析アシスタントの開発事例では、当初は自律型エージェントとして「どのデータを見るか」までLLMに任せていたが、カラム名の類似性に引っ張られて無関係なテーブルを参照するなど、判断の不確実性や回答の詳細度のばらつきが問題になった。
+</p>
+<p>
+そこで「対象特定→内訳確認→コンテキスト取得→詳細確認」という手順そのものを固定のワークフローとして組み、LLMの役割を「取得済みデータを自然な日本語にまとめる」ことに限定したところ、検証可能性と信頼性が向上したと報告されている。
+</p>
+<p>
+これは「エージェントの自律性を上げるほど良い」わけではなく、業務によっては手順を固定した方が結果的に信頼できるAIシステムになる、という実例である。
+</p>
+
+<!-- FIGURE: 「自律性（エージェント的）」と「予測可能性・信頼性（ワークフロー的）」を両端に置いたスケール（トレードオフの軸）の図 -->
+<figure class="fig wide">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 720 312" role="img" aria-labelledby="fig3-title">
+    <title id="fig3-title">左端にワークフロー寄り（予測可能性・信頼性が高い）、右端にエージェント寄り（自律性・柔軟性が高い）を置き、その間を固定のワークフロー、分岐つきワークフロー、ツールを絞ったエージェント、自律型エージェントの4段階で示したトレードオフの軸</title>
+    <defs>
+      <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path class="ahead" d="M0,0 L10,5 L0,10 z"/>
+      </marker>
+    </defs>
+    <g class="fig">
+      <text class="ttl" x="360" y="32" text-anchor="middle">自律性と予測可能性はトレードオフの関係にある</text>
+
+      <rect class="wf" x="30" y="56" width="284" height="92" rx="10"/>
+      <text class="lbl-b" x="172" y="84" text-anchor="middle">ワークフロー寄り</text>
+      <text class="lbl" x="172" y="107" text-anchor="middle">予測可能性・信頼性が高い</text>
+      <text class="lbl" x="172" y="130" text-anchor="middle">経路が固定でデバッグしやすい</text>
+
+      <rect class="ag" x="406" y="56" width="284" height="92" rx="10"/>
+      <text class="lbl-b" x="548" y="84" text-anchor="middle">エージェント寄り</text>
+      <text class="lbl" x="548" y="107" text-anchor="middle">自律性・柔軟性が高い</text>
+      <text class="lbl" x="548" y="130" text-anchor="middle">想定外の状況にも対応しうる</text>
+
+      <line class="edge" x1="60" y1="196" x2="660" y2="196"
+            marker-start="url(#ah3)" marker-end="url(#ah3)"/>
+      <circle cx="120" cy="196" r="6" fill="var(--c-wf)"/>
+      <circle cx="280" cy="196" r="6" fill="var(--c-wf)"/>
+      <circle cx="440" cy="196" r="6" fill="var(--c-ag)"/>
+      <circle cx="600" cy="196" r="6" fill="var(--c-ag)"/>
+
+      <text class="lbl" x="120" y="226" text-anchor="middle">固定の</text>
+      <text class="lbl" x="120" y="244" text-anchor="middle">ワークフロー</text>
+      <text class="lbl" x="280" y="226" text-anchor="middle">分岐つき</text>
+      <text class="lbl" x="280" y="244" text-anchor="middle">ワークフロー</text>
+      <text class="lbl" x="440" y="226" text-anchor="middle">ツールを絞った</text>
+      <text class="lbl" x="440" y="244" text-anchor="middle">エージェント</text>
+      <text class="lbl" x="600" y="226" text-anchor="middle">自律型</text>
+      <text class="lbl" x="600" y="244" text-anchor="middle">エージェント</text>
+
+      <text class="sub" x="360" y="288" text-anchor="middle">右へ行くほど自由度は上がり、経路の追跡・検証は難しくなる</text>
+    </g>
+  </svg>
+  </div>
+  <figcaption>
+    <b>自律性</b>と<b>予測可能性</b>は一本の軸の両端にある。
+    上の事例は、右寄りの設計から左寄りの設計へ意図的に移した例にあたる。
+  </figcaption>
+</figure>
+<p class="scroll-hint">※ 図は横にスクロールできます。</p>
+
+<h2 id="pitfalls"><span class="num">SECTION 5</span>注意点・よくある誤解</h2>
+
+<div class="box warn">
+  <span class="mark">誤解 1</span>
+  <span class="ttl">エージェントは常にワークフローより高性能</span>
+  <p>実際はツール数や判断ポイントが増えるほどエラーが複合化しやすく、単純なタスクではワークフローの方が速く安く安定する場合が多い。</p>
+</div>
+
+<div class="box warn">
+  <span class="mark">誤解 2</span>
+  <span class="ttl">チャットボット＝エージェント</span>
+  <p>単にLLMと対話するだけの仕組みは、ツールを使って自律的に行動を選んでいなければ「エージェント」ではなく単なる会話インターフェースである。</p>
+</div>
+
+<div class="box warn">
+  <span class="mark">誤解 3</span>
+  <span class="ttl">エージェント的な自動化は従来の業務自動化（RPA等）の延長にすぎない</span>
+  <p>事前に決めたルールをなぞる従来型自動化と異なり、エージェントは実行時に判断そのものを行う点が本質的に異なる。</p>
+</div>
+
+<div class="box warn">
+  <span class="mark">誤解 4</span>
+  <span class="ttl">エージェントは何でもできる万能な存在</span>
+  <p>エージェントの判断は学習データ・プロンプト・与えられたツールの成熟度に依存し、想定外の入力には弱い。過信は禁物。</p>
+</div>
+
+<div class="box alert">
+  <span class="mark">よくある失敗</span>
+  <span class="ttl">最初から1つの巨大な万能エージェントを作ろうとする</span>
+  <p>ツールや責務を増やすほど誤ったツール選択の確率が上がる。まずは1つの問題を解く小さな範囲から始め、必要に応じて分割・追加するのが安全。</p>
+</div>
+
+<div class="box note">
+  <span class="mark">設計上の違い</span>
+  <span class="ttl">デバッグ容易性の違い</span>
+  <p>ワークフローは経路が固定なので、どのステップで問題が起きたかを特定しやすい。</p>
+  <p>エージェントは判断ポイントが多く、なぜその行動を選んだかを事後的に追跡しにくいため、十分なテスト環境とガードレール（実行回数上限、権限制限など）が必要になる。</p>
+</div>
+
+<h2 id="quiz"><span class="num">SECTION 6</span>確認問題</h2>
+
+<div class="q">
+  <p class="question"><span class="qno">問1.</span>「ワークフロー」と「AIエージェント」の最も本質的な違いを一言で説明すると、どのような違いか。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>制御フロー（次にどう動くか）を誰が決めるかの違い。ワークフローは人間が事前にコードで決め、エージェントはLLM自身が実行時に動的に決める。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問2.</span>次のうち、ワークフローとして実装するのが適しているタスクを1つ選べ。</p>
+  <ol class="choices" type="a">
+    <li>毎回同じ3ステップで問い合わせを分類・返信する処理</li>
+    <li>未知のバグの原因を探るためにコードとログを自由に調べ回るタスク</li>
+  </ol>
+  <details>
+    <summary>答えを見る</summary>
+    <p>a）が適している。手順が固定で予測可能なタスクはワークフローに向く。b）のような探索的なタスクはエージェントに向く。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問3.</span>エージェントが「環境フィードバックループ」の中で動くとは、具体的にどういう動作を指すか。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>LLMがツールを呼び出して結果（実行結果やデータなど）を取得し、その結果を見て状況を評価し、次に取るべきアクションを再判断する、という繰り返し処理のこと。あらかじめ決めた手順を淡々と実行するのではなく、毎ステップで方針を見直す点が特徴。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問4.</span>エージェントを採用する際にワークフローに比べて増えるコストやリスクを2つ以上挙げよ。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>例：（1）ツール呼び出しやループの繰り返しによるトークン消費・レイテンシの増加、（2）判断ポイントが多いことによるエラーの複合化（信頼性低下）、（3）実行経路が毎回変わるためデバッグや原因特定が難しくなる、（4）想定外の行動を防ぐガードレール設計の負担が増える。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問5.</span>「最初から巨大な万能エージェントを作る」ことがよくある失敗とされる理由を説明せよ。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>ツールや責務を増やすほど、LLMが誤ったツールを選んでしまう確率が上がり、全体のエラー率が上昇するため。小さく焦点を絞ったエージェント（またはワークフロー）から始め、必要になった時点で分割・拡張する方が安全とされる。</p>
+  </details>
+</div>
+
+<h2 id="references"><span class="num">SECTION 7</span>参考リンク</h2>
+<ul class="refs">
+  <li><a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building Effective Agents（Anthropic 公式エンジニアリングブログ）</a> — ワークフローとエージェントの定義、代表的なワークフローパターン、設計原則の一次情報。</li>
+  <li><a href="https://www.promptingguide.ai/agents/ai-workflows-vs-ai-agents" target="_blank" rel="noopener">AI Workflows vs. AI Agents（Prompt Engineering Guide）</a> — 両者の制御フローの違いを整理した解説。</li>
+  <li><a href="https://retool.com/resources/ai-workflows-vs-agents" target="_blank" rel="noopener">AI agents vs AI workflows: key differences（Retool）</a> — 実務目線での使い分けの基準。</li>
+  <li><a href="https://orkes.io/blog/agentic-ai-explained-agents-vs-workflows" target="_blank" rel="noopener">Agentic AI Explained: Workflows vs Agents（Orkes）</a> — オーケストレーション観点からの比較。</li>
+  <li><a href="https://zenn.dev/loglass/articles/08a238976938a9" target="_blank" rel="noopener">万能なエージェントより、確実なワークフローを（Zenn / loglass）</a> — 自律型エージェントからワークフロー型への切り替え事例と、その理由。</li>
+  <li><a href="https://zenn.dev/headwaters/articles/07eaa3cd1da745" target="_blank" rel="noopener">AIエージェント - ワークフロー型とエージェント型（Zenn）</a> — 日本語での整理・分類の解説。</li>
+</ul>
+
+</div>
+
+<footer>
+  <p>作成日: 2026-09-19／このレポートはWeb調査に基づく学習用初稿です。変化の速い分野のため、最新情報は必ず一次情報（公式ドキュメント・公式ブログ）で確認してください。</p>
+</footer>
+
+</body>
+</html>
