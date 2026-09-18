@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コンピュータ構成要素：CPU・キャッシュ・メモリ・RAID・入出力装置 | 学習ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f2;
+    --paper-2: #e9ede8;
+    --ink: #14202b;
+    --ink-2: #55636f;
+    --rule: #d3dad6;
+    --marker: #ffe56b;
+    --marker-ink: #14202b;
+    --link: #1f4b99;
+    --note: #dfe9f7;
+    --caution: #ffe3dc;
+    --code-bg: #e9ede8;
+    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+      --note: #1e2f45; --caution: #4a2620; --code-bg: #1b242c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.7;
+    text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 0.15em; }
+  a:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
+  em { font-style: normal; font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
+
+  .cover { padding: var(--sp-4) 0 var(--sp-3); border-bottom: 2px solid var(--ink); margin-bottom: var(--sp-4); }
+  .cover .back { font-size: 0.9rem; color: var(--ink-2); text-decoration: none; }
+  .cover .back:hover { color: var(--ink); }
+  .cover h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 5.5vw, 2.6rem); line-height: 1.3;
+    margin: var(--sp-2) 0 var(--sp-2);
+  }
+  .cover h1 span {
+    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
+  }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.9rem; color: var(--ink-2); }
+
+  .toc { margin: 0 0 var(--sp-5); padding: var(--sp-2) var(--sp-3); background: var(--paper-2); border-radius: 4px; }
+  .toc h2 { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--ink-2); margin: 0 0 var(--sp-1); }
+  .toc ol { margin: 0; padding-left: 1.6em; }
+  .toc li { margin: 4px 0; }
+  .toc a { text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul.sub { margin: 4px 0 4px; padding-left: 1.3em; list-style: none; }
+  .toc ul.sub a { color: var(--ink-2); font-size: 0.85rem; }
+
+  .prose h2 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 1.5rem; line-height: 1.4;
+    margin: var(--sp-5) 0 var(--sp-2); padding-bottom: var(--sp-1);
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: var(--sp-3);
+  }
+  .prose h3 { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin: var(--sp-4) 0 var(--sp-1); scroll-margin-top: var(--sp-3); }
+  .prose p { max-width: var(--measure); margin: 0; }
+  .prose p + p { margin-top: var(--sp-3); }
+  .prose ul, .prose ol { max-width: var(--measure); margin: var(--sp-2) 0; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: var(--sp-1); }
+  .prose strong { font-weight: 700; }
+
+  .callout { max-width: var(--measure); margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border-left: 4px solid var(--ink); background: var(--paper-2); border-radius: 0 4px 4px 0; }
+  .callout.summary { border-left-color: var(--marker); }
+  .callout.note { background: var(--note); border-left-color: var(--link); }
+  .callout.caution { background: var(--caution); border-left-color: #b8432b; }
+  .callout > :first-child { margin-top: 0; }
+  .callout p + p { margin-top: var(--sp-2); }
+  .callout .label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+
+  .table-wrap { overflow-x: auto; margin: var(--sp-3) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+  th, td { padding: var(--sp-1) var(--sp-2); line-height: 1.5; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  thead th { border-bottom: 2px solid var(--ink-2); font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  figure { margin: var(--sp-4) 0; }
+  figure > svg { display: block; max-width: 100%; height: auto; color: var(--ink); }
+  figure svg text { font-family: var(--font-body); font-size: 12px; fill: currentColor; }
+  figcaption { margin-top: var(--sp-1); font-size: 0.875rem; color: var(--ink-2); }
+
+  pre { margin: var(--sp-3) 0; padding: var(--sp-2); background: var(--code-bg); border-radius: 4px; overflow-x: auto; line-height: 1.6; }
+  code { font-family: var(--font-mono); font-size: 0.875em; }
+  :not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+
+  .quiz { max-width: var(--measure); margin: var(--sp-2) 0; border: 1px solid var(--rule); border-radius: 4px; }
+  .quiz summary { padding: var(--sp-2); cursor: pointer; font-weight: 700; }
+  .quiz summary::marker { color: var(--ink-2); }
+  .quiz .answer { padding: 0 var(--sp-2) var(--sp-2); border-top: 1px solid var(--rule); }
+  .quiz .answer > :first-child { margin-top: var(--sp-2); }
+
+  .refs { max-width: var(--measure); }
+  .refs li { word-break: break-all; }
+
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
+
+  @media (max-width: 600px) {
+    .page { padding: 0 var(--sp-2) var(--sp-4); }
+    .prose h2 { font-size: 1.3rem; }
+    /* 図は縮小しすぎると文字が 12px を下回るため、図の中だけ横スクロールさせる */
+    figure { overflow-x: auto; }
+    figure > svg { min-width: 560px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="cover">
+    <a class="back" href="../index.html">学習ノートに戻る</a>
+    <h1><span>コンピュータ構成要素：CPU・キャッシュ・メモリ・RAID・入出力装置</span></h1>
+    <ul class="meta">
+      <li>作成日 2026-09-19</li>
+      <li>分野 コンピュータサイエンス基礎</li>
+    </ul>
+  </header>
+
+  <nav class="toc" aria-label="目次">
+    <h2>目次</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a>
+        <ul class="sub">
+          <li><a href="#cpu-parts">3-1. CPUの構成要素</a></li>
+          <li><a href="#cpu-cycle">3-2. 命令実行サイクルとパイプライン処理</a></li>
+          <li><a href="#cpu-arch">3-3. クロック周波数・マルチコア・CISC/RISC</a></li>
+          <li><a href="#cache-basic">3-4. キャッシュメモリの目的と階層構造</a></li>
+          <li><a href="#cache-calc">3-5. ヒット率と実効アクセス時間の計算</a></li>
+          <li><a href="#cache-write">3-6. キャッシュの書き込み方式</a></li>
+          <li><a href="#memory">3-7. 主記憶・補助記憶と記憶階層全体</a></li>
+          <li><a href="#raid">3-8. RAIDの仕組み</a></li>
+          <li><a href="#io-if">3-9. 入出力インタフェース</a></li>
+          <li><a href="#io-dma">3-10. 割り込み処理とDMA</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a></li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <main class="prose">
+
+    <h2 id="s1">概要</h2>
+    <div class="callout summary">
+      <span class="label">3行でいうと</span>
+      <ul>
+        <li>コンピュータは、命令を解釈・実行する「CPU」、CPUと記憶装置の速度差を埋める「キャッシュメモリ」、データを保持する「主記憶・補助記憶」が階層的に連携して動いている。</li>
+        <li>「RAID」は複数のディスクを束ねて速度や信頼性を高める技術、「入出力（I/O）」の仕組み（割り込み・DMA）はCPUがなるべく手をかけずに周辺機器とデータをやり取りするための工夫である。</li>
+        <li>これらは基本情報・応用情報技術者試験でも頻出の分野であり、「速いが高価で小容量」から「遅いが安価で大容量」へと段階的に構成される記憶階層の考え方が全体を貫く軸になる。</li>
+      </ul>
+    </div>
+
+    <h2 id="s2">基本用語</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>用語</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>CPU（中央処理装置）</td><td>プログラムの命令を読み取り、解読し、演算・制御を行う装置。制御装置と演算装置（ALU）、レジスタから成る</td></tr>
+          <tr><td>レジスタ</td><td>CPU内部にある超高速・小容量の記憶回路。演算中のデータやアドレスを一時的に保持する</td></tr>
+          <tr><td>プログラムカウンタ（PC）</td><td>次に実行する命令が格納されているメモリ上の番地（アドレス）を保持するレジスタ</td></tr>
+          <tr><td>クロック周波数</td><td>CPUが1秒間に刻む動作のリズムの回数（単位：Hz）。値が大きいほど1秒あたりの処理回数が多くなりやすい</td></tr>
+          <tr><td>パイプライン処理</td><td>命令の実行を複数の段階に分け、各段階を並行して処理することで全体のスループットを高める方式</td></tr>
+          <tr><td>マルチコア</td><td>1つのCPUチップの中に演算処理を行う「コア」を複数搭載し、並列に処理を行わせる構成</td></tr>
+          <tr><td>キャッシュメモリ</td><td>CPUと主記憶の速度差を埋めるために、CPUの近くに置く小容量・高速な記憶装置</td></tr>
+          <tr><td>ヒット率</td><td>CPUが必要とするデータがキャッシュメモリ内に存在した割合</td></tr>
+          <tr><td>主記憶（メインメモリ／RAM）</td><td>CPUが直接読み書きできる記憶装置。電源を切るとデータが消える（揮発性）</td></tr>
+          <tr><td>補助記憶（外部記憶）</td><td>HDDやSSDなど、大容量・不揮発性でデータを長期保存する記憶装置</td></tr>
+          <tr><td>RAID</td><td>複数台のディスクを組み合わせて1台の論理的なディスクとして扱い、速度や信頼性を高める技術</td></tr>
+          <tr><td>ストライピング</td><td>データを分割して複数のディスクに分散して書き込む方式。RAIDの高速化の基本手法</td></tr>
+          <tr><td>パリティ</td><td>誤り検出・訂正のためにデータから計算される冗長な情報。RAID5/6ではディスク故障時の復元に使う</td></tr>
+          <tr><td>割り込み</td><td>実行中の処理を一時中断し、優先度の高い別の処理（周辺機器からの通知など）を先に行う仕組み</td></tr>
+          <tr><td>DMA（Direct Memory Access）</td><td>CPUを介さずに周辺機器と主記憶の間で直接データを転送する仕組み</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="s3">仕組み・全体像</h2>
+
+    <h3 id="cpu-parts">3-1. CPUの構成要素</h3>
+    <p>
+    CPU（Central Processing Unit）は、伝統的な「コンピュータの五大装置」（入力・出力・記憶・演算・制御）のうち、演算装置と制御装置をひとまとめにした部品である。大きく次の3要素から成る。
+    </p>
+    <ul>
+      <li><strong>制御装置</strong>：主記憶から命令を取り出し、その命令を解読して、どの装置にどう動くよう指示するかを決める「司令塔」。デコーダが機械語命令を解読し、他の装置へ制御信号を出す。</li>
+      <li><strong>演算装置（ALU：Arithmetic Logic Unit）</strong>：四則演算や論理演算（AND・OR・比較など）を実際に行う回路。</li>
+      <li><strong>レジスタ群</strong>：CPU内部にある超高速・極小容量の記憶回路。プログラムカウンタ（次に実行する命令のアドレスを保持）や命令レジスタ（取り出した命令そのものを保持）、汎用レジスタ（演算途中の値を保持）などの種類がある。</li>
+    </ul>
+    <p>
+    これらは主記憶よりもはるかに高速だが、非常に高価で容量が小さいため、必要最小限のデータしか置けない。この「速いが小さい」という制約こそが、後述するキャッシュメモリや記憶階層の考え方につながっていく。
+    </p>
+
+    <h3 id="cpu-cycle">3-2. 命令実行サイクルとパイプライン処理</h3>
+    <p>
+    CPUは、プログラムを構成する命令を「フェッチ（取り出し）→デコード（解読）→実行」という一連の流れで1つずつ処理し、これを高速に繰り返すことでプログラムを動かしている。より細かく分けると、次の5ステップとして説明されることが多い。
+    </p>
+    <ol>
+      <li><strong>命令フェッチ</strong>：プログラムカウンタが指すアドレスから、主記憶にある命令を命令レジスタへ読み込む。</li>
+      <li><strong>命令解読（デコード）</strong>：制御装置が命令の種類（加算・比較・分岐など）を解析する。</li>
+      <li><strong>実効アドレス計算</strong>：命令が扱うデータの実際のメモリ番地を計算する。</li>
+      <li><strong>オペランド読み出し</strong>：計算したアドレスから、演算に必要なデータを読み込む。</li>
+      <li><strong>命令実行</strong>：ALUが演算を行い、結果をレジスタや主記憶に書き戻す。</li>
+    </ol>
+    <p>
+    素朴な実装では1つの命令の5ステップがすべて終わってから次の命令のフェッチを始めるため、各回路が遊んでいる時間が多い。そこで、工場の流れ作業のように、複数の命令の異なるステップを同時並行で処理する<strong>パイプライン処理</strong>が使われる。
+    </p>
+    <p>
+    ある命令が「実行」段階にある間に、次の命令はすでに「デコード」段階、さらに次の命令は「フェッチ」段階、というように段階をずらして重ねることで、CPU全体としての処理能力（スループット）を高められる。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 680 300" role="img" aria-label="命令実行サイクルの5ステップと、パイプライン処理によって複数命令のステップが重なって並行処理される様子を示す図">
+        <title>命令実行サイクルの5ステップと、パイプライン処理によって複数命令のステップが重なって並行処理される様子を示す図</title>
+        <defs>
+          <marker id="f1arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <text x="10" y="18" font-size="13" font-weight="700" style="fill:var(--link)">上：1命令の基本サイクル（逐次実行）</text>
+        <g font-size="12.5" text-anchor="middle">
+          <rect x="10" y="30" width="114" height="44" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="67" y="57">①フェッチ</text>
+          <rect x="142" y="30" width="114" height="44" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="199" y="57">②デコード</text>
+          <rect x="274" y="30" width="114" height="44" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="331" y="57">③アドレス計算</text>
+          <rect x="406" y="30" width="114" height="44" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="463" y="57">④読み出し</text>
+          <rect x="538" y="30" width="114" height="44" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="595" y="57">⑤実行</text>
+        </g>
+        <g stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#f1arr)">
+          <path d="M124,52 H138"/>
+          <path d="M256,52 H270"/>
+          <path d="M388,52 H402"/>
+          <path d="M520,52 H534"/>
+        </g>
+
+        <text x="10" y="112" font-size="13" font-weight="700" style="fill:var(--link)">下：パイプライン処理（フェッチ／デコード／実行の3段階に単純化）</text>
+        <g font-size="12" text-anchor="middle" style="fill:var(--ink-2)">
+          <text x="141" y="137">クロック1</text>
+          <text x="259" y="137">クロック2</text>
+          <text x="377" y="137">クロック3</text>
+          <text x="495" y="137">クロック4</text>
+          <text x="613" y="137">クロック5</text>
+        </g>
+        <g stroke="var(--rule)" stroke-width="1">
+          <path d="M82,146 H672 M82,258 H672"/>
+          <path d="M82,146 V258 M200,146 V258 M318,146 V258 M436,146 V258 M554,146 V258 M672,146 V258"/>
+        </g>
+
+        <g font-size="12.5" font-weight="700">
+          <text x="10" y="172">命令A</text>
+          <text x="10" y="208">命令B</text>
+          <text x="10" y="244">命令C</text>
+        </g>
+        <g font-size="12" text-anchor="middle">
+          <rect x="86" y="152" width="110" height="30" rx="4" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="141" y="172">フェッチ</text>
+          <rect x="204" y="152" width="110" height="30" rx="4" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="259" y="172">デコード</text>
+          <rect x="322" y="152" width="110" height="30" rx="4" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="377" y="172" style="fill:var(--marker-ink)">実行</text>
+
+          <rect x="204" y="188" width="110" height="30" rx="4" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="259" y="208">フェッチ</text>
+          <rect x="322" y="188" width="110" height="30" rx="4" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="377" y="208">デコード</text>
+          <rect x="440" y="188" width="110" height="30" rx="4" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="495" y="208" style="fill:var(--marker-ink)">実行</text>
+
+          <rect x="322" y="224" width="110" height="30" rx="4" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="377" y="244">フェッチ</text>
+          <rect x="440" y="224" width="110" height="30" rx="4" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="495" y="244">デコード</text>
+          <rect x="558" y="224" width="110" height="30" rx="4" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="613" y="244" style="fill:var(--marker-ink)">実行</text>
+        </g>
+
+        <text x="10" y="284" font-size="12" style="fill:var(--ink-2)">※ 各命令の段階をずらして重ねることで、クロックごとに1つずつ命令が完了していくようになる</text>
+      </svg>
+      <figcaption><b>図1</b>　上：命令1つあたりの基本サイクル。下：パイプライン処理では複数の命令の異なる段階を同時に走らせることで、見かけ上1クロックに1命令ずつ完了させられる。</figcaption>
+    </figure>
+
+    <div class="callout caution">
+      <span class="label">注意　パイプラインは止まることがある</span>
+      <p>ただし、パイプラインは万能ではない。分岐命令（if文など）の結果が確定するまで次に読み込む命令が決まらない「分岐ハザード」や、あるステップの結果を次のステップがすぐに使いたいのに間に合わない「データハザード」などにより、パイプラインが一時的に止まる（ストールする）ことがある。</p>
+    </div>
+
+    <h3 id="cpu-arch">3-3. クロック周波数・マルチコア・CISC/RISC</h3>
+    <p>
+    <strong>クロック周波数</strong>は、CPU内部の全回路が同期して動くための「リズム」を刻む回数で、単位はHz（ヘルツ）である。
+    </p>
+    <p>
+    同じ設計のCPUであれば周波数が高いほど1秒あたりの処理回数は増えるが、2000年代半ば以降は周波数を上げるほど消費電力・発熱が急増する物理的な壁にぶつかり、単純な高周波数化による性能向上は頭打ちになった。
+    </p>
+    <p>
+    そこで主流になったのが<strong>マルチコア化</strong>である。1つのチップに演算コアを複数搭載し、コアごとの動作周波数は抑えつつ、複数の処理を並列に実行することで、消費電力を抑えながら全体の処理能力を高める設計へとシフトした。ただし、マルチコアの恩恵を受けるには、ソフトウェア側が処理を複数のコアに分けられるように作られている必要がある。
+    </p>
+    <p>
+    CPUの命令セット（設計思想）には大きく2つの系統がある。
+    </p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>項目</th><th>CISC（Complex Instruction Set Computer）</th><th>RISC（Reduced Instruction Set Computer）</th></tr></thead>
+      <tbody>
+        <tr><td>命令の性格</td><td>1つの命令で複雑な処理をまとめて実行できる、種類の多い命令セット</td><td>単純で実行時間がそろった命令だけに絞った命令セット</td></tr>
+        <tr><td>狙い</td><td>少ない命令数でプログラムを書けるようにする</td><td>命令を単純化してパイプライン処理などの高速化技術を活かしやすくする</td></tr>
+        <tr><td>代表例</td><td>Intel/AMDのx86系CPU</td><td>Arm系CPU（スマートフォンや近年のPC・サーバー向けCPUに多い）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+    近年はCISCのx86系にもRISC的な内部設計（複雑な命令を内部で単純な命令に分解して実行するなど）が取り入れられ、RISC系にも機能拡張が進んでおり、両者の違いは以前ほど明確ではなくなってきている。
+    </p>
+
+    <h3 id="cache-basic">3-4. キャッシュメモリの目的と階層構造</h3>
+    <p>
+    CPUの処理速度は年々向上してきたが、主記憶（DRAM）のアクセス速度はそれほど速くなっておらず、CPUと主記憶の間には大きな速度差がある。CPUが命令やデータを取りに行くたびに主記憶へアクセスしていては、せっかくの高速なCPUが待たされてばかりになってしまう。
+    </p>
+    <p>
+    この速度差を埋めるために置かれる、小容量・超高速な記憶装置が<strong>キャッシュメモリ</strong>である。
+    </p>
+    <p>
+    キャッシュメモリはCPUに近いほど高速・小容量、遠いほど低速・大容量という段階（L1・L2・L3）に分けて構成されるのが一般的である。
+    </p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>階層</th><th>位置づけ</th><th>速度・容量の目安</th></tr></thead>
+      <tbody>
+        <tr><td>L1キャッシュ</td><td>各CPUコアの内部に個別に搭載。最も高速で最も小容量</td><td>数十KB程度、アクセスはほぼ1〜数クロック</td></tr>
+        <tr><td>L2キャッシュ</td><td>コアごと、または少数のコアで共有</td><td>数百KB〜数MB程度</td></tr>
+        <tr><td>L3キャッシュ</td><td>CPUチップ内の全コアで共有されることが多い</td><td>数MB〜数十MB程度。L1・L2よりは低速だが主記憶よりずっと高速</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+    CPUはまずL1を探し、なければL2、それでもなければL3、最後に主記憶という順に探しに行く。目的のデータがキャッシュに見つかることを「ヒット」、見つからず主記憶まで探しに行くことを「ミス」と呼ぶ。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 640 500" role="img" aria-label="レジスタを頂点に、L1・L2・L3キャッシュ、主記憶、補助記憶へと下にいくほど広がるピラミッド状の記憶階層図。上ほど高速・小容量・高価、下ほど低速・大容量・安価であることを示す">
+        <title>レジスタを頂点に、L1・L2・L3キャッシュ、主記憶、補助記憶へと下にいくほど広がるピラミッド状の記憶階層図</title>
+        <defs>
+          <marker id="f2arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <polygon points="294,48 346,48 373,104 267,104" fill="var(--marker)" stroke="var(--rule)"/>
+        <text x="320" y="82" font-size="12.5" text-anchor="middle" font-weight="700" style="fill:var(--marker-ink)">レジスタ</text>
+
+        <polygon points="267,104 373,104 400,160 240,160" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text x="320" y="138" font-size="12.5" text-anchor="middle" font-weight="700">L1キャッシュ</text>
+
+        <polygon points="240,160 400,160 427,216 213,216" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text x="320" y="194" font-size="12.5" text-anchor="middle" font-weight="700">L2キャッシュ</text>
+
+        <polygon points="213,216 427,216 455,272 185,272" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text x="320" y="250" font-size="12.5" text-anchor="middle" font-weight="700">L3キャッシュ</text>
+
+        <polygon points="185,272 455,272 493,352 147,352" fill="var(--note)" stroke="var(--rule)"/>
+        <text x="320" y="310" font-size="13" text-anchor="middle" font-weight="700">主記憶（DRAM／RAM）</text>
+        <text x="320" y="332" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">CPUが直接読み書きする</text>
+
+        <polygon points="147,352 493,352 536,440 104,440" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text x="320" y="394" font-size="13" text-anchor="middle" font-weight="700">補助記憶（SSD・HDD）</text>
+        <text x="320" y="416" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">長期保存の置き場所</text>
+
+        <text x="64" y="32" font-size="12" text-anchor="middle" font-weight="700">高速・高価</text>
+        <path d="M64,48 V430" stroke="var(--ink-2)" stroke-width="1.4" marker-end="url(#f2arr)"/>
+        <text x="64" y="464" font-size="12" text-anchor="middle" font-weight="700">低速・安価</text>
+
+        <text x="576" y="32" font-size="12" text-anchor="middle" font-weight="700">小容量</text>
+        <path d="M576,48 V430" stroke="var(--ink-2)" stroke-width="1.4" marker-end="url(#f2arr)"/>
+        <text x="576" y="464" font-size="12" text-anchor="middle" font-weight="700">大容量</text>
+
+        <text x="320" y="488" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">揮発性（電源offで消える）：レジスタ〜主記憶　／　不揮発性（消えない）：補助記憶</text>
+      </svg>
+      <figcaption><b>図2</b>　記憶階層のピラミッド。上に行くほど高速・小容量・高価、下に行くほど低速・大容量・安価になる。CPUはこの階層を上から順に探しに行く。</figcaption>
+    </figure>
+
+    <h3 id="cache-calc">3-5. ヒット率と実効アクセス時間の計算</h3>
+    <p>
+    キャッシュメモリがどれだけ効果を発揮しているかは、「ヒット率」と、それをもとに計算する「実効アクセス時間」で評価する。実効アクセス時間は次の式で求める。
+    </p>
+    <div class="callout note">
+      <span class="label">計算式</span>
+      <p><code>実効アクセス時間 ＝ キャッシュのアクセス時間 × ヒット率 ＋ 主記憶のアクセス時間 × (1 − ヒット率)</code></p>
+    </div>
+    <p>
+    たとえば、キャッシュメモリのアクセス時間が10ナノ秒、主記憶のアクセス時間が100ナノ秒、ヒット率が90%（0.9）だとすると、実効アクセス時間は次のように計算できる。
+    </p>
+    <pre><code>実効アクセス時間 = 10ns × 0.9 + 100ns × (1 − 0.9)
+             = 9ns + 10ns
+             = 19ns</code></pre>
+    <p>
+    キャッシュが無ければ毎回100ナノ秒かかるところ、ヒット率90%のキャッシュがあるおかげで平均19ナノ秒まで短縮されていることが分かる。基本情報・応用情報技術者試験では、この式を使って「ヒット率を求めよ」「実効アクセス時間を比較せよ」という形式で頻出する。
+    </p>
+
+    <h3 id="cache-write">3-6. キャッシュの書き込み方式</h3>
+    <p>
+    CPUがキャッシュ上のデータを書き換えたとき、その変更をいつ主記憶へ反映するかによって、2つの方式がある。
+    </p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>方式</th><th>仕組み</th><th>長所・短所</th></tr></thead>
+      <tbody>
+        <tr><td>ライトスルー方式</td><td>キャッシュへの書き込みと同時に、必ず主記憶にも書き込む</td><td>キャッシュと主記憶の内容が常に一致し単純・安全。ただし書き込みのたびに低速な主記憶へのアクセスが発生し、書き込み性能は向上しない</td></tr>
+        <tr><td>ライトバック方式</td><td>書き込みはまずキャッシュだけに行い、「主記憶に未反映」の印を付けておく。該当データがキャッシュから追い出されるタイミングなどでまとめて主記憶に書き戻す</td><td>読み書きともに高速。ただしキャッシュと主記憶の内容が一時的に食い違うため、制御が複雑になる</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="memory">3-7. 主記憶・補助記憶と記憶階層全体</h3>
+    <p>
+    <strong>主記憶（メインメモリ／RAM）</strong>は、CPUが実行中のプログラムやデータを直接読み書きする記憶装置で、電源を切ると内容が消える「揮発性」の性質を持つ。RAMには主に2種類がある。
+    </p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>種類</th><th>特徴</th><th>主な用途</th></tr></thead>
+      <tbody>
+        <tr><td>DRAM（Dynamic RAM）</td><td>コンデンサに電荷を蓄えてデータを保持するため、放っておくと自然放電で内容が消える。定期的に再書き込み（リフレッシュ）する必要がある。構造が単純で1ビットあたりの回路規模が小さく、大容量・低コストにしやすい</td><td>主記憶（メインメモリ）</td></tr>
+        <tr><td>SRAM（Static RAM）</td><td>フリップフロップ回路でデータを保持するためリフレッシュが不要で、DRAMよりも高速。ただし1ビットあたりの回路規模が大きく高コストになりやすい</td><td>CPU内のキャッシュメモリ（L1〜L3）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+    一方<strong>補助記憶（外部記憶）</strong>は、SSDやHDDのように電源を切ってもデータが消えない「不揮発性」の記憶装置で、主記憶よりも低速だが大容量・低コストであり、OSやアプリケーション、ファイルなどを長期的に保存する役割を担う。プログラムを実行するときは、補助記憶に保存されているデータを一旦主記憶へ読み込んでからCPUが処理する、という流れになる。
+    </p>
+    <div class="callout summary">
+      <span class="label">記憶階層のポイント</span>
+      <p>ここまで見てきたレジスタ・キャッシュ・主記憶・補助記憶は、図2のピラミッドのように「上ほど高速・小容量・高価、下ほど低速・大容量・安価」という一貫した設計思想でつながっている。</p>
+      <p>すべてを高速なSRAMだけで作れれば理想的だが、コストの制約上それは非現実的であるため、段階的に速度とコストのバランスを取っているのが記憶階層の本質である。</p>
+    </div>
+
+    <h3 id="raid">3-8. RAIDの仕組み</h3>
+    <p>
+    RAID（Redundant Arrays of Inexpensive/Independent Disks）は、複数台のディスク（HDD・SSD）を組み合わせて1つの論理的なドライブとして扱う技術で、読み書きの高速化や、一部のディスクが故障してもデータを失わないようにする耐障害性の向上を目的とする。代表的なレベルは次のとおり。
+    </p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>レベル</th><th>仕組み</th><th>耐障害性</th><th>容量効率（n台構成）</th></tr></thead>
+      <tbody>
+        <tr><td>RAID 0（ストライピング）</td><td>データを分割し、複数ディスクに分散して同時に読み書きする</td><td>なし。1台でも故障すると全データが失われる</td><td>100%（冗長データを持たないため最大）</td></tr>
+        <tr><td>RAID 1（ミラーリング）</td><td>同じデータを2台以上のディスクに複製して書き込む</td><td>高い。1台故障してももう1台がそのまま使える</td><td>50%（2台構成の場合。台数を増やしても使える容量は1台分のまま）</td></tr>
+        <tr><td>RAID 5（分散パリティ）</td><td>データとあわせて、誤り訂正用の「パリティ」情報を計算し、全ディスクに分散して書き込む</td><td>ディスク1台までの故障に耐えられる</td><td>(n−1)/n（例：4台構成なら75%）</td></tr>
+        <tr><td>RAID 6（二重分散パリティ）</td><td>RAID5の仕組みに加え、パリティを2系統計算して分散配置する</td><td>ディスク2台までの同時故障に耐えられる</td><td>(n−2)/n（例：4台構成なら50%）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 660 530" role="img" aria-label="RAID0はデータを分散するだけ、RAID1は同じデータを複製、RAID5とRAID6はデータとパリティを各ディスクに分散配置する様子を示す構成図">
+        <title>RAID0・RAID1・RAID5・RAID6のディスクへのデータ配置を示す構成図</title>
+
+        <text x="10" y="18" font-size="13" font-weight="700">RAID 0（ストライピング：冗長性なし）</text>
+        <g text-anchor="middle">
+          <rect x="10" y="28" width="155" height="50" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="87" y="48" font-size="12" style="fill:var(--ink-2)">ディスク1</text>
+          <text x="87" y="68" font-size="12.5" font-weight="700">データ1</text>
+          <rect x="173" y="28" width="155" height="50" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="250" y="48" font-size="12" style="fill:var(--ink-2)">ディスク2</text>
+          <text x="250" y="68" font-size="12.5" font-weight="700">データ2</text>
+        </g>
+        <text x="10" y="100" font-size="12" style="fill:var(--ink-2)">→ 2台に分けて書き込むため高速だが、片方が壊れると全部読めなくなる</text>
+
+        <text x="10" y="132" font-size="13" font-weight="700">RAID 1（ミラーリング：1台の故障まで耐える）</text>
+        <g text-anchor="middle">
+          <rect x="10" y="142" width="155" height="50" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="87" y="162" font-size="12" style="fill:var(--ink-2)">ディスク1</text>
+          <text x="87" y="182" font-size="12.5" font-weight="700">データ</text>
+          <rect x="173" y="142" width="155" height="50" rx="5" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="250" y="162" font-size="12" style="fill:var(--ink-2)">ディスク2</text>
+          <text x="250" y="182" font-size="12.5" font-weight="700">データ（複製）</text>
+        </g>
+        <text x="10" y="214" font-size="12" style="fill:var(--ink-2)">→ 同じ内容を2台に保持。片方が故障してももう片方で継続できる</text>
+
+        <text x="10" y="248" font-size="13" font-weight="700">RAID 5（分散パリティ：1台の故障まで耐える）</text>
+        <g font-size="12" text-anchor="middle" style="fill:var(--ink-2)">
+          <text x="87" y="268">ディスク1</text>
+          <text x="250" y="268">ディスク2</text>
+          <text x="413" y="268">ディスク3</text>
+        </g>
+        <g font-size="12.5" text-anchor="middle" font-weight="700">
+          <rect x="10" y="276" width="155" height="36" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="87" y="299">データ1</text>
+          <rect x="173" y="276" width="155" height="36" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="250" y="299">データ2</text>
+          <rect x="336" y="276" width="155" height="36" rx="5" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="413" y="299" style="fill:var(--marker-ink)">パリティP1</text>
+
+          <rect x="10" y="320" width="155" height="36" rx="5" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="87" y="343" style="fill:var(--marker-ink)">パリティP2</text>
+          <rect x="173" y="320" width="155" height="36" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="250" y="343">データ3</text>
+          <rect x="336" y="320" width="155" height="36" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="413" y="343">データ4</text>
+        </g>
+        <text x="10" y="378" font-size="12" style="fill:var(--ink-2)">→ パリティは1台に固定せず全ディスクに分散配置。1台故障しても残りとパリティから復元できる</text>
+
+        <text x="10" y="412" font-size="13" font-weight="700">RAID 6（二重分散パリティ：2台の同時故障まで耐える）</text>
+        <g font-size="12" text-anchor="middle" style="fill:var(--ink-2)">
+          <text x="87" y="432">ディスク1</text>
+          <text x="250" y="432">ディスク2</text>
+          <text x="413" y="432">ディスク3</text>
+          <text x="576" y="432">ディスク4</text>
+        </g>
+        <g font-size="12.5" text-anchor="middle" font-weight="700">
+          <rect x="10" y="440" width="155" height="36" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="87" y="463">データ1</text>
+          <rect x="173" y="440" width="155" height="36" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="250" y="463">データ2</text>
+          <rect x="336" y="440" width="155" height="36" rx="5" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="413" y="463" style="fill:var(--marker-ink)">パリティP1</text>
+          <rect x="499" y="440" width="155" height="36" rx="5" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="576" y="463">パリティQ1</text>
+        </g>
+        <text x="10" y="498" font-size="12" style="fill:var(--ink-2)">→ パリティを2系統（P・Q）計算し分散配置。ディスク2台が同時に壊れてもデータを復元できる</text>
+        <text x="10" y="520" font-size="12" style="fill:var(--ink-2)">※ 実務ではRAID1とRAID0を組み合わせたRAID10（高速性と冗長性の両立）もよく使われる</text>
+      </svg>
+      <figcaption><b>図3</b>　RAID0はデータを分散するだけで冗長性なし、RAID1は複製、RAID5・6はデータとパリティ（誤り訂正用の情報）を各ディスクに分散配置することで、一定台数までの故障からデータを復元できるようにしている。</figcaption>
+    </figure>
+
+    <h3 id="io-if">3-9. 入出力インタフェース</h3>
+    <p>
+    CPU・メモリと周辺機器（ストレージ、マウス、外部モニタなど）を接続する規格を入出力インタフェースと呼ぶ。データを複数ビット同時に送る「パラレル方式」と、1ビットずつ順番に送る「シリアル方式」があるが、配線の複雑さや信号の干渉（クロストーク）の問題から、現在は高速化しやすいシリアル方式が主流になっている。
+    </p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>規格</th><th>主な用途</th><th>特徴</th></tr></thead>
+      <tbody>
+        <tr><td>USB（Universal Serial Bus）</td><td>マウス・キーボード・外付けストレージなど汎用の周辺機器接続</td><td>ハブ経由で多数の機器を接続可能、電源を入れたまま抜き差しできるホットプラグに対応</td></tr>
+        <tr><td>SATA（Serial ATA）</td><td>HDD・SSDの接続</td><td>従来のパラレル方式だったATA（IDE）をシリアル化した規格。PC内部のストレージ接続で長く主流だった</td></tr>
+        <tr><td>PCIe（PCI Express）</td><td>グラフィックボード、NVMe SSD、拡張カードなどの接続</td><td>「レーン」と呼ぶ伝送路を複数束ねることで高速な転送を実現。世代・レーン数によって帯域が変わる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+    なお、近年主流のNVMe SSDはSATAではなくPCIeに直結する規格で、SATA接続のSSDよりも大幅に高速なため、新しいPCでは補助記憶の接続方式そのものがSATAからPCIe（NVMe）へ置き換わりつつある。
+    </p>
+
+    <h3 id="io-dma">3-10. 割り込み処理とDMA</h3>
+    <p>
+    周辺機器（キーボード、ディスク、ネットワークカードなど）とのデータのやり取りは、CPUの処理速度に比べてずっと低速である。この速度差を効率よく扱うための仕組みが割り込みとDMAである。
+    </p>
+    <p>
+    <strong>割り込み</strong>とは、実行中の処理を一時的に中断し、より優先度の高い処理（周辺機器からの通知への対応など）を先に行う仕組みである。CPU外部からの信号によって発生する「ハードウェア割り込み」（周辺機器やタイマーからの通知など）と、実行中のプログラム自体が引き起こす「ソフトウェア割り込み」（ゼロ除算などのエラー発生時や、OSの機能呼び出しなど）に大別される。
+    </p>
+    <p>
+    割り込みが発生すると、CPUは現在の処理状態を保存し、専用の処理（割り込みハンドラ）を実行したあと、元の処理に戻る。
+    </p>
+    <p>
+    もし周辺機器とのデータ転送を、CPUが1バイトずつ自分で読み書きして行っていたら、CPUはその間ずっと転送作業に拘束されてしまう。そこで使われるのが<strong>DMA（Direct Memory Access）</strong>である。DMAでは、CPUの代わりに「DMAコントローラ（DMAC）」という専用回路が、周辺機器と主記憶の間のデータ転送を代行する。
+    </p>
+    <ol>
+      <li>CPUはDMAコントローラに対して、転送元・転送先のアドレスと転送量を指示するだけで、以降の転送処理からは解放される。</li>
+      <li>DMAコントローラが周辺機器と主記憶の間で直接データをやり取りする（CPUを経由しない）。</li>
+      <li>CPUはその間、別の処理を並行して実行できる。</li>
+      <li>転送が完了すると、DMAコントローラが割り込みを発生させてCPUに完了を通知する。</li>
+    </ol>
+
+    <figure>
+      <svg viewBox="0 0 660 300" role="img" aria-label="CPUがDMAコントローラに転送を指示した後、DMAコントローラが周辺機器と主記憶の間でCPUを介さずデータを直接転送し、完了時に割り込みでCPUへ通知する流れを示す図">
+        <title>DMA転送の仕組みを示す図</title>
+        <defs>
+          <marker id="f4link" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--link)"/>
+          </marker>
+          <marker id="f4ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/>
+          </marker>
+          <marker id="f4muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <rect x="24" y="28" width="150" height="64" rx="8" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text x="99" y="66" font-size="14" text-anchor="middle" font-weight="700">CPU</text>
+
+        <rect x="250" y="28" width="180" height="64" rx="8" fill="var(--note)" stroke="var(--rule)"/>
+        <text x="340" y="56" font-size="13" text-anchor="middle" font-weight="700">DMAコントローラ</text>
+        <text x="340" y="78" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">（DMAC）</text>
+
+        <rect x="500" y="28" width="140" height="64" rx="8" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text x="570" y="66" font-size="14" text-anchor="middle" font-weight="700">主記憶</text>
+
+        <rect x="250" y="210" width="180" height="64" rx="8" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text x="340" y="248" font-size="14" text-anchor="middle" font-weight="700">周辺機器</text>
+
+        <path d="M174,52 H244" stroke="var(--link)" stroke-width="2" marker-end="url(#f4link)"/>
+        <text x="209" y="38" font-size="12" text-anchor="middle" font-weight="700" style="fill:var(--link)">①転送を指示</text>
+
+        <path d="M436,60 H494" stroke="var(--ink)" stroke-width="2.4" marker-start="url(#f4ink)" marker-end="url(#f4ink)"/>
+        <path d="M340,98 V204" stroke="var(--ink)" stroke-width="2.4" marker-start="url(#f4ink)" marker-end="url(#f4ink)"/>
+        <text x="354" y="146" font-size="12" font-weight="700">②CPUを介さず</text>
+        <text x="354" y="166" font-size="12" font-weight="700">直接データ転送</text>
+
+        <path d="M250,80 C214,126 136,132 99,100" stroke="var(--ink-2)" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#f4muted)"/>
+        <text x="168" y="164" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">③転送完了を</text>
+        <text x="168" y="184" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">割り込みで通知</text>
+
+        <text x="24" y="292" font-size="12" style="fill:var(--ink-2)">※ ②の転送中、CPUは別の処理を並行して実行できる</text>
+      </svg>
+      <figcaption><b>図4</b>　CPUは転送の指示だけを行い、実際の周辺機器⇔主記憶間のデータ移動はDMAコントローラが代行する。CPUは転送完了時に割り込みで通知を受けるだけでよく、その間は別の仕事に専念できる。</figcaption>
+    </figure>
+
+    <h2 id="s4">具体例・使いどころ</h2>
+
+    <div class="callout note">
+      <span class="label">具体例1　アプリを起動したときの記憶階層の動き</span>
+      <p>アプリのアイコンをクリックすると、補助記憶（SSD）に保存されていたプログラムが主記憶（RAM）へ読み込まれる。実行中、CPUはよく使う命令やデータをL1〜L3キャッシュに保持し、ヒット率が高いほどサクサク動く体感になる。</p>
+      <p>RAMが少なくアプリを大量に開いていると、主記憶に収まりきらないデータが補助記憶へ一時的に退避（スワップ）され、動作が急に重くなる、というのも記憶階層の速度差が体感できる代表例である。</p>
+    </div>
+
+    <div class="callout note">
+      <span class="label">具体例2　用途に応じたRAIDレベルの選択</span>
+      <p>個人のバックアップ用途で単純に冗長性がほしいならRAID1、動画編集用など読み書き速度を最優先したいがデータ消失のリスクを許容できるならRAID0、ファイルサーバーやNASのように容量効率と一定の耐障害性を両立したいならRAID5、より重要なデータでディスク故障の同時発生にも備えたいならRAID6、というように用途とリスク許容度に応じて使い分ける。</p>
+      <p>企業のデータベースサーバーでは、RAID1とRAID0を組み合わせたRAID10（速度と冗長性の両立）もよく使われる。</p>
+    </div>
+
+    <div class="callout note">
+      <span class="label">具体例3　大容量ファイルのコピーとDMA</span>
+      <p>数GBの動画ファイルをコピーしている間もマウスやキーボードの操作が問題なくできるのは、ストレージと主記憶の間のデータ転送をDMAコントローラが担当し、CPUが転送作業そのものに縛られていないためである。CPUは転送の開始を指示したあと、転送完了の割り込みが来るまで別の作業（画面描画やユーザー操作への応答など）を続けられる。</p>
+    </div>
+
+    <h2 id="s5">注意点・よくある誤解</h2>
+    <div class="callout caution">
+      <span class="label">よくある誤解</span>
+      <ul>
+        <li><strong>「クロック周波数が高い＝CPUが速い」とは限らない。</strong> — 1クロックあたりに処理できる命令数（IPC）やコア数、命令セットの効率によって実際の性能は変わるため、周波数だけで単純比較はできない。</li>
+        <li><strong>「キャッシュを増やせば増やすほど無限に速くなる」わけではない。</strong> — プログラムがアクセスするデータには偏り（局所性）があり、ヒット率の向上には限界がある。またキャッシュを大きくするほど1回あたりのアクセス時間自体は延びる傾向があり、単純な大容量化が常に得とは限らない。</li>
+        <li><strong>SRAMとDRAMの用途を逆に覚えやすい。</strong> — 「高速だが高コストなSRAM＝キャッシュ」「大容量・低コストだがやや低速なDRAM＝主記憶」という対応を混同しないよう注意する。</li>
+        <li><strong>RAIDはバックアップの代わりではない。</strong> — RAIDが守るのは「ディスク故障による可用性の低下」であり、誤削除・ランサムウェア・火災などデータそのものが失われるリスクには対応できない。別途バックアップが必須。</li>
+        <li><strong>RAID0は「RAID」という名前でも冗長性がない。</strong> — 高速化だけが目的で、1台でも故障すると全データを失う点を初学者は見落としやすい。</li>
+        <li><strong>RAID5・6は書き込み時にパリティ計算のオーバーヘッドが発生し、単純なストライピングより書き込みが遅くなる（ライトペナルティ）。</strong> — 「冗長性があるのに速度は落ちない」という誤解に注意。</li>
+        <li><strong>DMAを使っても割り込みが完全になくなるわけではない。</strong> — 転送中はCPUを介さないが、転送完了の通知には結局割り込みを使う。「DMA＝割り込みゼロ」という誤解に注意。</li>
+      </ul>
+    </div>
+
+    <h2 id="s6">確認問題</h2>
+
+    <details class="quiz">
+      <summary>Q1. CPUが命令を実行する基本的な流れを、フェッチ・デコード・実行という言葉を使って説明せよ。</summary>
+      <div class="answer"><p>プログラムカウンタが指すアドレスから命令を取り出す「フェッチ」、取り出した命令の内容を解読する「デコード」、解読結果に基づきALUなどが実際に処理を行う「実行」の順に処理が進み、これを高速に繰り返すことでプログラムが動く。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q2. キャッシュメモリのアクセス時間が10ナノ秒、主記憶のアクセス時間が100ナノ秒、ヒット率が90%のとき、実効アクセス時間は何ナノ秒か。</summary>
+      <div class="answer"><p>実効アクセス時間 = 10ns × 0.9 + 100ns × (1 − 0.9) = 9ns + 10ns = 19ナノ秒。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q3. RAID1とRAID5は、それぞれディスク何台の故障まで耐えられるか。また、容量効率（実際に使える容量の割合）が高いのはどちらか。</summary>
+      <div class="answer"><p>RAID1は1台（ミラーリングしているディスクのうち1台）の故障まで耐えられ、容量効率は2台構成なら50%。RAID5も1台の故障まで耐えられるが、パリティを分散して持つため容量効率は(n−1)/n（例：4台構成で75%）となり、一般にRAID1よりRAID5の方が容量効率が高い。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q4. ライトバック方式のメリットと、それに伴うデメリットを1つずつ挙げよ。</summary>
+      <div class="answer"><p>メリット：書き込みのたびに低速な主記憶へアクセスする必要がなく、書き込み性能が向上する。デメリット：キャッシュと主記憶の内容が一時的に一致しなくなるため、データの整合性を保つための制御が複雑になる。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q5. DMAを使うことで、CPUを介さない場合と比べてどのようなメリットが得られるか、DMAコントローラの役割とあわせて説明せよ。</summary>
+      <div class="answer"><p>周辺機器と主記憶の間のデータ転送をDMAコントローラが代行することで、CPUは転送元・転送先・転送量を指示するだけでよくなり、転送処理自体に時間を取られずに別の処理を並行して実行できる。転送が完了すると、DMAコントローラが割り込みでCPUに完了を通知する。</p></div>
+    </details>
+
+    <h2 id="s7">参考リンク</h2>
+    <ul class="refs">
+      <li><a href="https://www.keyence.co.jp/ss/general/embedded-software/embedded-fundamentals/cpu-instruction-cycle.jsp" target="_blank" rel="noopener">命令サイクルとCPUの実行仕組み｜キーエンス</a></li>
+      <li><a href="https://itmanabi.com/cpu-order/" target="_blank" rel="noopener">CPUの命令実行の流れを理解しよう！｜ITの学び</a></li>
+      <li><a href="https://itmanabi.com/cache-memory-hit-access/" target="_blank" rel="noopener">キャッシュメモリのヒット率とは？計算方法と実効アクセス時間の関係を解説｜ITの学び</a></li>
+      <li><a href="https://www.ap-siken.com/kakomon/02_moshi/q11.html" target="_blank" rel="noopener">キャッシュメモリのヒット率｜応用情報技術者試験.com</a></li>
+      <li><a href="https://itmanabi.com/write-through-back/" target="_blank" rel="noopener">ライトスルーとライトバックの違いを調べよう！｜ITの学び</a></li>
+      <li><a href="https://itmanabi.com/cisc-risc/" target="_blank" rel="noopener">CISC（シスク）とRISC（リスク）の違いは？｜ITの学び</a></li>
+      <li><a href="https://isabou.net/Convenience/Tool/gpu/gpu14.asp" target="_blank" rel="noopener">動作周波数からマルチコアへ｜いさぼうネット</a></li>
+      <li><a href="https://breezegroup.co.jp/202403/dram-sram/" target="_blank" rel="noopener">メモリの種類 DRAMとSRAMの仕組みと違い｜BREEZE</a></li>
+      <li><a href="https://ja.wikipedia.org/wiki/%E4%B8%BB%E8%A8%98%E6%86%B6%E8%A3%85%E7%BD%AE" target="_blank" rel="noopener">主記憶装置 - Wikipedia</a></li>
+      <li><a href="https://www.fs.com/jp/blog/different-raid-levels-explained-raid-01103456-13743.html" target="_blank" rel="noopener">RAIDレベルの違いを解説（RAID 0/1/10/3/4/5/6）｜FS.com</a></li>
+      <li><a href="https://www.issoh.co.jp/tech/details/13465/" target="_blank" rel="noopener">RAIDとは？RAID0/1/5/6/10の違いと構成・企業のディスク冗長化設計を実装目線で解説</a></li>
+      <li><a href="https://buralog.jp/raid-config-pitfalls/" target="_blank" rel="noopener">RAID構成別の落とし穴：RAID1/RAID5/RAID6で起きる誤解</a></li>
+      <li><a href="https://johostudy.com/bus-and-interface/" target="_blank" rel="noopener">バスと入出力インタフェースの基礎まとめ【USB・SATA・Bluetooth】｜情報処理シンプルまとめ</a></li>
+      <li><a href="https://www.ramxeed.com/jp/tech-column/dma-basics-and-embedded-applications/" target="_blank" rel="noopener">DMA（ダイレクトメモリアクセス）とは？基本から組み込み・高速化の課題解決まで｜RAMXEED</a></li>
+      <li><a href="https://e-words.jp/w/%E5%A4%96%E9%83%A8%E5%89%B2%E3%82%8A%E8%BE%BC%E3%81%BF.html" target="_blank" rel="noopener">外部割り込み（ハードウェア割り込み）とは｜IT用語辞典 e-Words</a></li>
+      <li><a href="https://e-words.jp/w/%E5%86%85%E9%83%A8%E5%89%B2%E3%82%8A%E8%BE%BC%E3%81%BF.html" target="_blank" rel="noopener">内部割り込み（ソフトウェア割り込み）とは｜IT用語辞典 e-Words</a></li>
+    </ul>
+
+  </main>
+
+  <footer>
+    <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+  </footer>
+</div>
+</body>
+</html>
