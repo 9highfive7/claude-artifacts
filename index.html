@@ -3,122 +3,304 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>claude-artifacts — レポート置き場</title>
+<title>学習ノート — claude-artifacts</title>
+<meta name="description" content="Claude Code に調べさせて、あとから読み返すための学習ノート。テーマごとに1ページ。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#1c1a17; --sub:#5f5a52; --line:#e3ded6;
-    --bg:#faf8f5; --card:#ffffff; --accent:#c2532c; --accent-soft:#fdf1ec;
+  /* ---- design tokens（各レポートも同じ値を使う） ---- */
+  :root {
+    --paper: #f3f5f2;
+    --paper-2: #e9ede8;
+    --ink: #14202b;
+    --ink-2: #55636f;
+    --rule: #d3dad6;
+    --marker: #ffe56b;          /* 蛍光ペン。目立たせる要素はこれだけ */
+    --marker-ink: #14202b;
+    --link: #1f4b99;
+    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    /* 余白: 8px ベース、5段階 */
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
   }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
-    line-height:1.85;font-size:16px}
-  .wrap{max-width:940px;margin:0 auto;padding:0 22px 90px}
-  header{background:linear-gradient(160deg,#1c1a17,#3b332c);color:#fdfcfa;padding:56px 22px 48px;margin-bottom:40px}
-  header .inner{max-width:940px;margin:0 auto}
-  header .tag{display:inline-block;font-size:12px;letter-spacing:.14em;border:1px solid rgba(255,255,255,.35);
-    padding:4px 12px;border-radius:20px;margin-bottom:18px}
-  header h1{font-size:28px;line-height:1.4;margin:0 0 12px}
-  header p{margin:0;color:#d8d1c7;font-size:15px;max-width:660px}
-  h2{font-size:20px;margin:44px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
-  a{color:var(--accent)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:16px 0;
-    display:block;text-decoration:none;color:var(--ink);transition:border-color .15s}
-  .card:hover{border-color:var(--accent)}
-  .card h3{margin:0 0 6px;font-size:17px;color:var(--accent)}
-  .card p{margin:0;font-size:14.5px;color:#3a352e}
-  .card .date{display:block;font-size:12.5px;color:var(--sub);margin-top:10px;
-    border-top:1px dashed var(--line);padding-top:8px}
-  .sub{font-size:13.5px;color:var(--sub);margin:10px 0 0}
-  .sub a{font-size:13.5px}
-  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
-  @media(max-width:600px){
-    header h1{font-size:23px}
-    .wrap{padding:0 16px 60px}
-    body{font-size:15.5px}
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+    }
   }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
+
+  /* ---- 表紙 ---- */
+  .cover { padding: var(--sp-5) 0 var(--sp-4); border-bottom: 2px solid var(--ink); }
+  .cover h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.6rem, 9vw, 4.4rem);
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    margin: 0 0 var(--sp-2);
+  }
+  .cover .lead { font-size: 1.05rem; max-width: 34em; margin: 0 0 var(--sp-3); }
+  .cover .facts { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.92rem; color: var(--ink-2); margin: 0; padding: 0; list-style: none; }
+  .cover .facts strong { color: var(--ink); font-weight: 500; }
+
+  /* ---- 絞り込み ---- */
+  .filters { display: flex; flex-wrap: wrap; gap: var(--sp-1); padding: var(--sp-3) 0 var(--sp-2); }
+  .filters button {
+    font: inherit; font-size: 0.9rem; font-weight: 500;
+    background: none; color: var(--ink-2);
+    border: 1px solid var(--rule); border-radius: 100px;
+    padding: 5px 14px; cursor: pointer;
+  }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .filters .count { font-size: 0.85rem; color: var(--ink-2); align-self: center; margin-left: auto; }
+
+  /* ---- 索引（月ごと） ---- */
+  .month { margin-top: var(--sp-4); }
+  .month h2 {
+    font-family: var(--font-body); font-weight: 500;
+    font-size: 0.9rem; color: var(--ink-2);
+    margin: 0 0 var(--sp-1); padding-bottom: var(--sp-1);
+    border-bottom: 1px solid var(--rule);
+  }
+  .month[hidden] { display: none; }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 4.5em 1fr;
+    gap: var(--sp-2);
+    padding: var(--sp-3) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .entry[hidden] { display: none; }
+  .entry .day { font-size: 0.85rem; color: var(--ink-2); padding-top: 0.55em; font-variant-numeric: tabular-nums; }
+  .entry h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    line-height: 1.4;
+    margin: 0 0 var(--sp-1);
+  }
+  .entry h3 a { text-decoration: none; }
+  /* 蛍光ペンの下塗り。読みたい行に触れたときだけ光る */
+  .entry h3 a span {
+    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
+    background-size: 0% 100%; background-repeat: no-repeat;
+    transition: background-size .25s ease-out;
+  }
+  .entry h3 a:hover span, .entry h3 a:focus-visible span, .entry.is-new h3 a span { background-size: 100% 100%; }
+  .entry p { margin: 0 0 var(--sp-1); font-size: 0.95rem; max-width: 40em; color: var(--ink); }
+  .entry .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .entry .tags li { font-size: 0.78rem; color: var(--ink-2); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 8px; }
+  .entry .tags li.new { border-color: var(--marker); background: var(--marker); color: var(--marker-ink); font-weight: 500; }
+  .entry .more { font-size: 0.82rem; color: var(--ink-2); margin-top: var(--sp-1); }
+  .entry .more a { color: var(--link); }
+
+  .empty { padding: var(--sp-4) 0; color: var(--ink-2); }
+
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
+  footer a { color: var(--link); }
+
+  @media (max-width: 600px) {
+    .page { padding: 0 var(--sp-2) var(--sp-4); }
+    .cover { padding-top: var(--sp-4); }
+    .entry { grid-template-columns: 1fr; gap: 4px; }
+    .entry .day { padding-top: 0; }
+    .entry h3 { font-size: 1.2rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .entry h3 a span { transition: none; } }
 </style>
 </head>
 <body>
+<div class="page">
 
-<header>
-  <div class="inner">
-    <span class="tag">claude-artifacts</span>
-    <h1>レポート置き場</h1>
-    <p>Claude Code で調査・作成したレポートを公開しています。各レポートは単一のHTMLファイルで完結していて、外部のCSS・JS・画像に依存しません。</p>
-  </div>
-</header>
+  <header class="cover">
+    <h1>学習ノート</h1>
+    <p class="lead">気になったテーマを Claude Code に調べさせ、図解つきの1ページにまとめて、あとから読み返すための場所です。</p>
+    <ul class="facts">
+      <li><strong id="total-count">10</strong> テーマ</li>
+      <li>最終更新 <strong id="last-updated">2026-09-19</strong></li>
+      <li>各ページは1ファイルで完結</li>
+    </ul>
+  </header>
 
-<div class="wrap">
+  <nav class="filters" aria-label="分野で絞り込む">
+    <button type="button" data-topic="all" aria-pressed="true">すべて</button>
+    <button type="button" data-topic="ai" aria-pressed="false">AI</button>
+    <button type="button" data-topic="infra" aria-pressed="false">インフラ</button>
+    <button type="button" data-topic="security" aria-pressed="false">セキュリティ</button>
+    <button type="button" data-topic="dev" aria-pressed="false">開発</button>
+    <span class="count" id="visible-count"></span>
+  </nav>
 
-<h2>レポート</h2>
+  <main id="index">
+<!--
+  ENTRY TEMPLATE（新しいレポートを追加するときは、該当する月の <section class="month"> の先頭にこの形で入れる。
+  月のセクションがなければ <section class="month" data-month="YYYY-MM"><h2>YYYY年M月</h2> … </section> を先頭に作る。
+  data-topic は ai / infra / security / dev のいずれか。複数なら半角スペース区切り。
+  直前の新着エントリから class="is-new" と <li class="new">新着</li> を外し、新しいエントリに付け替える。）
 
-<a class="card" href="reports/2026-09-19-ai-agents-vs-workflows.html">
-  <h3>AIエージェントとワークフローの違い</h3>
-  <p>「AIエージェント」と「ワークフロー」を分ける基準を整理した入門レポート。事前に決めた手順をLLMがなぞるワークフローと、LLM自身がツールの実行結果を見ながらループの中で次の行動を判断するエージェントの違い、代表的な5つのワークフローパターン、使い分けの基準、信頼性・コスト・デバッグ容易性のトレードオフ、よくある誤解まで図解つきで解説。</p>
-  <span class="date">2026-09-19 追加</span>
-</a>
+  <article class="entry is-new" data-topic="ai" data-date="YYYY-MM-DD">
+    <div class="day">M月D日</div>
+    <div>
+      <h3><a href="reports/YYYY-MM-DD-slug.html"><span>タイトル</span></a></h3>
+      <p>2〜3行の要約。</p>
+      <ul class="tags"><li class="new">新着</li><li>AI</li></ul>
+    </div>
+  </article>
+-->
 
-<a class="card" href="reports/2026-09-18-what-is-mcp.html">
-  <h3>MCP（Model Context Protocol）とは何か</h3>
-  <p>AnthropicがLLMと外部データ・ツールを繋ぐために公開したオープンプロトコルMCPの入門レポート。N×M問題を解決する狙い、ホスト／クライアント／サーバーの3層構成、ツール・リソース・プロンプトという3つのプリミティブ、関数呼び出しとの違い、エコシステムの広がりとセキュリティ上の注意点まで図解つきで解説。</p>
-  <span class="date">2026-09-18 追加</span>
-</a>
+    <section class="month" data-month="2026-09">
+      <h2>2026年9月</h2>
 
-<a class="card" href="reports/2026-09-18-security-basics.html">
-  <h3>セキュリティの基礎：暗号方式・認証・攻撃手法・マルウェア・ファイアウォール</h3>
-  <p>守る側の視点で整理するセキュリティ入門レポート。共通鍵／公開鍵暗号とTLSの仕組み、パスワード認証の弱点とMFA・OAuth、フィッシングやSQLインジェクションなど代表的攻撃の概要と対策、マルウェアの分類、ファイアウォール／WAFの役割まで、SVG図解つきで解説。</p>
-  <span class="date">2026-09-18 追加</span>
-</a>
+      <article class="entry is-new" data-topic="ai" data-date="2026-09-19">
+        <div class="day">9月19日</div>
+        <div>
+          <h3><a href="reports/2026-09-19-ai-agents-vs-workflows.html"><span>AIエージェントとワークフローの違い</span></a></h3>
+          <p>事前に決めた手順をLLMがなぞる「ワークフロー」と、LLM自身が実行結果を見て次の行動を決める「エージェント」を分ける基準を整理。代表的な5パターン、使い分け、信頼性・コスト・デバッグ容易性のトレードオフまで。</p>
+          <ul class="tags"><li class="new">新着</li><li>AI</li></ul>
+        </div>
+      </article>
 
-<a class="card" href="reports/2026-09-18-networking-basics.html">
-  <h3>ネットワークの基礎：OSI参照モデル・TCP/IP・IPアドレス・ルーティング・DNS</h3>
-  <p>通信の「層」の考え方からたどるネットワーク入門レポート。OSI参照モデル7階層とTCP/IPモデル4階層の対応、TCPとUDPの違い、IPアドレスとサブネット／CIDR、ルーティングとデフォルトゲートウェイ、DNSの名前解決の流れまで、SVG図解つきで全7セクション。</p>
-  <span class="date">2026-09-18 追加</span>
-</a>
+      <article class="entry" data-topic="ai" data-date="2026-09-18">
+        <div class="day">9月18日</div>
+        <div>
+          <h3><a href="reports/2026-09-18-what-is-mcp.html"><span>MCP（Model Context Protocol）とは何か</span></a></h3>
+          <p>LLMと外部データ・ツールを繋ぐオープンプロトコルの入門。N×M問題を解く狙い、ホスト／クライアント／サーバーの3層、ツール・リソース・プロンプトの3プリミティブ、関数呼び出しとの違い、セキュリティ上の注意点。</p>
+          <ul class="tags"><li>AI</li></ul>
+        </div>
+      </article>
 
-<a class="card" href="reports/2026-09-18-what-is-docker.html">
-  <h3>Dockerとは何か</h3>
-  <p>「コンテナ」という仕組みでアプリと実行環境を丸ごとパッケージ化し、どこでも同じ挙動で動かせるようにするDockerの入門レポート。仮想マシンとの違い、イメージ／コンテナ／Dockerfile／レジストリといった基本用語、Dockerfile→ビルド→実行の流れ、代表的なユースケースとつまずきやすいポイントまで図解つきで解説。</p>
-  <span class="date">2026-09-18 追加</span>
-</a>
+      <article class="entry" data-topic="security" data-date="2026-09-18">
+        <div class="day">9月18日</div>
+        <div>
+          <h3><a href="reports/2026-09-18-security-basics.html"><span>セキュリティの基礎：暗号方式・認証・攻撃手法・マルウェア・ファイアウォール</span></a></h3>
+          <p>守る側の視点で整理する入門。共通鍵／公開鍵暗号とTLS、パスワード認証の弱点とMFA・OAuth、フィッシングやSQLインジェクションの概要と対策、マルウェアの分類、ファイアウォール／WAFの役割。</p>
+          <ul class="tags"><li>セキュリティ</li><li>基本情報</li></ul>
+        </div>
+      </article>
 
-<a class="card" href="reports/2026-09-18-what-is-git-branch.html">
-  <h3>Gitのブランチとは何か</h3>
-  <p>「ブランチ＝コピー」という誤解を解くところから始めるGit入門レポート。ブランチの正体（コミットへのポインタ）、HEADとdetached HEAD、基本コマンド、mergeとrebaseの違い、代表的なブランチ戦略、よくあるつまずきと確認問題まで全7セクション（図解つき）。</p>
-  <span class="date">2026-09-18 追加</span>
-</a>
+      <article class="entry" data-topic="infra" data-date="2026-09-18">
+        <div class="day">9月18日</div>
+        <div>
+          <h3><a href="reports/2026-09-18-networking-basics.html"><span>ネットワークの基礎：OSI参照モデル・TCP/IP・IPアドレス・ルーティング・DNS</span></a></h3>
+          <p>通信の「層」の考え方からたどる入門。OSI 7階層とTCP/IP 4階層の対応、TCPとUDPの違い、サブネット／CIDR、ルーティングとデフォルトゲートウェイ、DNSの名前解決の流れ。</p>
+          <ul class="tags"><li>インフラ</li><li>基本情報</li></ul>
+        </div>
+      </article>
 
-<a class="card" href="reports/what-is-jev.html">
-  <h3>Jev とは何か — 「文章を書かないAI」をやさしく解説</h3>
-  <p>元OpenAI の研究者が立ち上げた TypeSafe AI の新型AI「Jev」の解説。文章ではなく分類・採点・はい/いいえの「判断」だけを返す仕組み、速度と費用が桁違いになる理由、信頼度スコアの使い方、注意点と誤解、実務への活かし方まで全9セクション＋用語集。</p>
-  <span class="date">2026-09-18 追加</span>
-</a>
+      <article class="entry" data-topic="infra" data-date="2026-09-18">
+        <div class="day">9月18日</div>
+        <div>
+          <h3><a href="reports/2026-09-18-what-is-docker.html"><span>Dockerとは何か</span></a></h3>
+          <p>アプリと実行環境を丸ごとパッケージ化して、どこでも同じ挙動で動かす仕組み。仮想マシンとの違い、イメージ／コンテナ／Dockerfile／レジストリ、ビルドから実行までの流れ、つまずきやすい点。</p>
+          <ul class="tags"><li>インフラ</li></ul>
+        </div>
+      </article>
 
-<a class="card" href="reports/claude-cowork-guide.html">
-  <h3>Claude Cowork でできること ― はじめての人のための活用ガイド</h3>
-  <p>Anthropic のエージェント型作業ツール Claude Cowork を、ターミナル不要で使い始めるためのガイド。Claude Code との違い、基本的な使い方、一般業務での活用例カタログ、プラグイン、株取引への応用、コツ、現時点での限界まで全7セクション。</p>
-  <span class="date">2026-09-18 追加</span>
-</a>
+      <article class="entry" data-topic="dev" data-date="2026-09-18">
+        <div class="day">9月18日</div>
+        <div>
+          <h3><a href="reports/2026-09-18-what-is-git-branch.html"><span>Gitのブランチとは何か</span></a></h3>
+          <p>「ブランチ＝コピー」という誤解を解くところから。ブランチの正体（コミットへのポインタ）、HEADとdetached HEAD、mergeとrebaseの違い、代表的なブランチ戦略、よくあるつまずきと確認問題。</p>
+          <ul class="tags"><li>開発</li></ul>
+        </div>
+      </article>
 
-<a class="card" href="reports/ai-security.html">
-  <h3>AIセキュリティ入門 ― 守る側のための教科書</h3>
-  <p>AIを扱う際のセキュリティリスクを、一次資料をたどって整理した個人学習用の教材。プロンプトインジェクション、情報漏えい、AIエージェント／MCP、RAGポイズニング、サプライチェーン、幻覚、国際・国内の各ガイドライン、実務チェックリストまで全14章。</p>
-  <span class="date">2026-09-15 追加</span>
-</a>
-<p class="sub">└ 調査ログ（検索クエリ・参照URL・未確認項目）：<a href="reports/ai-security-sources.md">ai-security-sources.md</a></p>
+      <article class="entry" data-topic="ai" data-date="2026-09-18">
+        <div class="day">9月18日</div>
+        <div>
+          <h3><a href="reports/what-is-jev.html"><span>Jev とは何か — 「文章を書かないAI」をやさしく解説</span></a></h3>
+          <p>TypeSafe AI の新型モデル Jev の解説。文章ではなく分類・採点・はい／いいえの「判断」だけを返す仕組み、速度と費用が桁違いになる理由、信頼度スコアの使い方、注意点と誤解。</p>
+          <ul class="tags"><li>AI</li></ul>
+        </div>
+      </article>
 
-<a class="card" href="reports/dynamic-workflows.html">
-  <h3>Dynamic Workflows 実践ガイド — Claude Code</h3>
-  <p>Claude Code における動的ワークフローの実践的な使い方をまとめたガイド。</p>
-  <span class="date">2026-06-04 追加</span>
-</a>
+      <article class="entry" data-topic="ai" data-date="2026-09-18">
+        <div class="day">9月18日</div>
+        <div>
+          <h3><a href="reports/claude-cowork-guide.html"><span>Claude Cowork でできること — はじめての人のための活用ガイド</span></a></h3>
+          <p>ターミナル不要で使い始めるためのガイド。Claude Code との違い、基本的な使い方、一般業務での活用例、プラグイン、コツ、現時点での限界。</p>
+          <ul class="tags"><li>AI</li></ul>
+        </div>
+      </article>
 
-<footer>
-  <p>リポジトリ：<a href="https://github.com/9highfive7/claude-artifacts">github.com/9highfive7/claude-artifacts</a></p>
-  <p>レポートは <code>reports/</code> 配下にあります（<a href="reports/">reports/ の一覧</a>）。新しいレポートを追加したら、<code>index.html</code> と <code>reports/index.html</code> の両方にカードを1つ足してください。</p>
-</footer>
+      <article class="entry" data-topic="ai security" data-date="2026-09-15">
+        <div class="day">9月15日</div>
+        <div>
+          <h3><a href="reports/ai-security.html"><span>AIセキュリティ入門 — 守る側のための教科書</span></a></h3>
+          <p>プロンプトインジェクション、情報漏えい、エージェント／MCP、RAGポイズニング、サプライチェーン、幻覚、国内外のガイドライン、実務チェックリストまで全14章。</p>
+          <ul class="tags"><li>AI</li><li>セキュリティ</li></ul>
+          <div class="more">出典一覧: <a href="reports/ai-security-sources.md">ai-security-sources.md</a></div>
+        </div>
+      </article>
+    </section>
 
+    <section class="month" data-month="2026-06">
+      <h2>2026年6月</h2>
+
+      <article class="entry" data-topic="ai dev" data-date="2026-06-04">
+        <div class="day">6月4日</div>
+        <div>
+          <h3><a href="reports/dynamic-workflows.html"><span>Dynamic Workflows 実践ガイド — Claude Code</span></a></h3>
+          <p>Claude Code における動的ワークフローの実践的な使い方。</p>
+          <ul class="tags"><li>AI</li><li>開発</li></ul>
+        </div>
+      </article>
+    </section>
+
+    <p class="empty" id="empty" hidden>この分野のノートはまだありません。</p>
+  </main>
+
+  <footer>
+    <p>ソースは <a href="https://github.com/9highfive7/claude-artifacts">github.com/9highfive7/claude-artifacts</a>。生成にかかった費用は <a href="usage-dashboard.html">利用コスト台帳</a> で公開しています。</p>
+  </footer>
 </div>
+
+<script>
+(function () {
+  const buttons = document.querySelectorAll('.filters button');
+  const entries = Array.from(document.querySelectorAll('.entry'));
+  const months  = Array.from(document.querySelectorAll('.month'));
+  const countEl = document.getElementById('visible-count');
+  const emptyEl = document.getElementById('empty');
+
+  // 件数と最終更新日はエントリから自動で数える（手で直さなくてよい）
+  document.getElementById('total-count').textContent = entries.length;
+  const dates = entries.map(e => e.dataset.date).filter(Boolean).sort();
+  if (dates.length) document.getElementById('last-updated').textContent = dates[dates.length - 1];
+
+  function apply(topic) {
+    let shown = 0;
+    entries.forEach(e => {
+      const ok = topic === 'all' || (e.dataset.topic || '').split(/\s+/).includes(topic);
+      e.hidden = !ok; if (ok) shown++;
+    });
+    months.forEach(m => { m.hidden = !m.querySelector('.entry:not([hidden])'); });
+    countEl.textContent = topic === 'all' ? '' : `${shown} 件`;
+    emptyEl.hidden = shown !== 0;
+  }
+  buttons.forEach(b => b.addEventListener('click', () => {
+    buttons.forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    apply(b.dataset.topic);
+  }));
+})();
+</script>
 </body>
 </html>

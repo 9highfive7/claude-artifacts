@@ -3,485 +3,436 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<title>Dockerとは何か | 学習レポート</title>
+<title>Dockerとは何か | 学習ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#1b2027; --sub:#5a6675; --line:#dfe5ec;
-    --bg:#f7f9fb; --card:#ffffff; --accent:#0b6fbf; --accent-soft:#e8f2fb;
-    --code-bg:#1f2730; --code-fg:#eef3f8; --code-inline:#e7ecf2;
-    --warn-bg:#fdf6e7; --warn-line:#e0bd85; --warn-ink:#8a5a00;
-    --tip-bg:#eef6ec; --tip-line:#a9c9a4; --tip-ink:#3f6b45;
-    --hero-a:#10263a; --hero-b:#0b3d63; --hero-ink:#f6fafd; --hero-sub:#c6d8e6;
-    --fig-bg:#fcfdfe; --fig-line:#c6d0da; --fig-ink:#232a32; --fig-sub:#63707e;
-    --c-doc:#2b7fc4; --c-doc-soft:#e6f1fa;
-    --c-vm:#c2532c;  --c-vm-soft:#fbeae2;
-    --c-ok:#4f8a5b;  --c-ok-soft:#eaf3ec;
-    --c-host:#6b7787; --c-host-soft:#eef1f5;
+  /* =====================================================================
+     学習ノート 共通スタイル（index.html と同じ design tokens）
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文は 16px・行間 1.7・1行 40字（max-width: 40em）
+     - 見出しは行間 1.3〜1.4、上余白 > 下余白
+     - 余白は 8px ベースの 5 段階のみ
+     - 本文コントラスト 4.5:1 以上、日本語に italic は使わない
+     - 表・図・コードは 40 字制限から外し、自身の中で横スクロール
+     ===================================================================== */
+  :root {
+    --paper: #f3f5f2;
+    --paper-2: #e9ede8;
+    --ink: #14202b;
+    --ink-2: #55636f;
+    --rule: #d3dad6;
+    --marker: #ffe56b;
+    --marker-ink: #14202b;
+    --link: #1f4b99;
+    --note: #dfe9f7;
+    --caution: #ffe3dc;
+    --code-bg: #e9ede8;
+    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --ink:#e4eaf1; --sub:#98a5b4; --line:#2f3841;
-      --bg:#11151a; --card:#1a1f26; --accent:#68b6f0; --accent-soft:#16283a;
-      --code-bg:#0c1014; --code-fg:#e7edf4; --code-inline:#242c35;
-      --warn-bg:#2b2416; --warn-line:#755a31; --warn-ink:#e7bd79;
-      --tip-bg:#19241a; --tip-line:#466b47; --tip-ink:#a6cfa4;
-      --hero-a:#16212b; --hero-b:#0a1a26; --hero-ink:#f2f7fb; --hero-sub:#aebdcb;
-      --fig-bg:#161b21; --fig-line:#3d4854; --fig-ink:#e2e8ef; --fig-sub:#95a2b0;
-      --c-doc:#6cb4e8; --c-doc-soft:#16283a;
-      --c-vm:#e9906a;  --c-vm-soft:#33231c;
-      --c-ok:#93c79c;  --c-ok-soft:#1c2a1e;
-      --c-host:#9aa8b8; --c-host-soft:#222a33;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+      --note: #1e2f45; --caution: #4a2620; --code-bg: #1b242c;
     }
   }
-  *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
-    line-height:1.9;font-size:16.5px;letter-spacing:.012em;
-    text-rendering:optimizeLegibility}
-  .wrap{max-width:880px;margin:0 auto;padding:0 22px 90px}
-
-  /* ---- hero ---- */
-  header.hero{background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
-    color:var(--hero-ink);padding:56px 22px 48px;margin-bottom:38px;
-    border-bottom:1px solid var(--line)}
-  header.hero .inner{max-width:880px;margin:0 auto}
-  header.hero .tag{display:inline-block;font-size:12px;letter-spacing:.14em;
-    border:1px solid rgba(255,255,255,.35);padding:4px 12px;border-radius:20px;margin-bottom:18px}
-  header.hero h1{font-size:clamp(24px,5.2vw,32px);line-height:1.42;margin:0 0 14px;letter-spacing:.01em}
-  header.hero p{margin:0;color:var(--hero-sub);font-size:14.5px;letter-spacing:.06em}
-
-  /* ---- 見出し・本文 ---- */
-  h2{font-size:clamp(20px,3.6vw,23px);margin:60px 0 8px;padding-bottom:12px;
-    border-bottom:2px solid var(--ink);scroll-margin-top:16px}
-  h2 .num{display:block;color:var(--accent);font-size:12.5px;letter-spacing:.14em;margin-bottom:8px}
-  h3{font-size:17.5px;margin:34px 0 10px;color:var(--accent);line-height:1.6}
-  p{margin:0 0 15px}
-  a{color:var(--accent);text-underline-offset:3px}
-  a:hover{text-decoration:none}
-  ul,ol{margin:0 0 16px;padding-left:1.35em}
-  li{margin-bottom:8px}
-  strong{font-weight:700}
-
-  /* ---- 目次 ---- */
-  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
-    padding:20px 24px;margin:0 0 10px}
-  nav.toc .toc-ttl{display:block;font-size:12.5px;letter-spacing:.14em;color:var(--accent);
-    font-weight:700;margin-bottom:6px}
-  nav.toc ol{margin:6px 0 0;padding-left:1.3em}
-  nav.toc li{margin:5px 0;font-size:15px}
-  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
-  nav.toc a:hover{color:var(--accent);border-bottom-color:var(--accent)}
-
-  /* ---- 表 ---- */
-  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0 20px}
-  table{border-collapse:collapse;width:100%;font-size:14.8px;background:var(--card);
-    min-width:460px;line-height:1.75}
-  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
-  th{background:var(--accent-soft);color:var(--accent);font-weight:700;white-space:nowrap}
-  td:first-child{white-space:nowrap;font-weight:600}
-  table.wide-first td:first-child{white-space:normal;font-weight:400}
-
-  /* ---- コード ---- */
-  code{background:var(--code-inline);padding:1px 6px;border-radius:4px;font-size:.9em;
-    font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
-  pre{background:var(--code-bg);color:var(--code-fg);padding:18px 20px;border-radius:10px;
-    overflow-x:auto;font-size:13.8px;line-height:1.85;margin:0 0 18px;
-    border:1px solid rgba(0,0,0,.25);tab-size:2}
-  pre code{background:none;padding:0;color:inherit;font-size:inherit}
-  pre .cm{color:#9aa79a}
-
-  /* ---- 図 ---- */
-  figure.fig{margin:22px 0 26px;background:var(--fig-bg);border:1px solid var(--line);
-    border-radius:12px;padding:16px 16px 12px}
-  .fig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  figure.fig svg{display:block;width:100%;min-width:480px;height:auto}
-  figcaption{margin-top:10px;font-size:13.2px;line-height:1.75;color:var(--sub)}
-  figcaption b{color:var(--accent);font-weight:700}
-  .fig .lbl{font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
-    fill:var(--fig-ink)}
-  .fig .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
-  .fig .sub{fill:var(--fig-sub)}
-  .fig .ttl{fill:var(--fig-ink);font-weight:700}
-  .fig .step{fill:var(--accent);font-size:11px;letter-spacing:.14em;font-weight:700}
-  .fig .edge{stroke:var(--fig-line);stroke-width:2;fill:none}
-  .fig .panel{fill:var(--card);stroke:var(--fig-line);stroke-width:1.5}
-
-  /* ---- ボックス ---- */
-  .box{border:1px solid var(--line);background:var(--card);border-radius:12px;
-    padding:18px 20px;margin:0 0 18px}
-  .box > :last-child{margin-bottom:0}
-  .box.warn{border-color:var(--warn-line);background:var(--warn-bg)}
-  .box.warn strong{color:var(--warn-ink)}
-  .box.tip{border-color:var(--tip-line);background:var(--tip-bg)}
-  .box .mark{display:block;font-size:11.5px;letter-spacing:.14em;margin-bottom:8px;color:var(--sub)}
-  .box.tip .mark{color:var(--tip-ink)}
-  .box.warn .mark{color:var(--warn-ink)}
-
-  /* ---- 確認問題 ---- */
-  .q{background:var(--card);border:1px solid var(--line);border-radius:12px;
-    padding:16px 20px;margin:0 0 14px}
-  .q p.question{font-weight:700;margin:0 0 8px;line-height:1.7}
-  .q .qno{color:var(--accent);margin-right:.4em}
-  details{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
-  details p{margin:10px 0 2px;font-size:15px}
-  summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14.5px;list-style:none}
-  summary::-webkit-details-marker{display:none}
-  summary::before{content:"▸ ";}
-  details[open] summary::before{content:"▾ ";}
-
-  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--line);
-    font-size:13.2px;color:var(--sub);line-height:1.8}
-  .refs li{margin-bottom:10px;font-size:15px}
-  .scroll-hint{display:none;font-size:12px;color:var(--sub);margin-top:6px}
-
-  @media (max-width:620px){
-    body{font-size:16px;line-height:1.85}
-    .wrap{padding:0 16px 70px}
-    header.hero{padding:40px 16px 36px;margin-bottom:28px}
-    h2{margin-top:46px}
-    figure.fig{padding:12px 12px 10px}
-    .box,.q{padding:14px 16px}
-    pre{padding:14px 14px;font-size:13px}
-    .scroll-hint{display:block}
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.7;
+    text-align: left; -webkit-font-smoothing: antialiased;
   }
-  @media print{
-    header.hero{background:none;color:#000;border-bottom:2px solid #000}
-    nav.toc,.scroll-hint{display:none}
-    details{display:block}
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 0.15em; }
+  a:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
+  em { font-style: normal; font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
+
+  /* ---- 表紙 ---- */
+  .cover { padding: var(--sp-4) 0 var(--sp-3); border-bottom: 2px solid var(--ink); margin-bottom: var(--sp-4); }
+  .cover .back { font-size: 0.9rem; color: var(--ink-2); text-decoration: none; }
+  .cover .back:hover { color: var(--ink); }
+  .cover h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 5.5vw, 2.6rem); line-height: 1.3;
+    margin: var(--sp-2) 0 var(--sp-2);
+  }
+  .cover h1 span {
+    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
+  }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.9rem; color: var(--ink-2); }
+
+  /* ---- 目次（読む順序なので番号を付ける） ---- */
+  .toc { margin: 0 0 var(--sp-5); padding: var(--sp-2) var(--sp-3); background: var(--paper-2); border-radius: 4px; }
+  .toc h2 { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--ink-2); margin: 0 0 var(--sp-1); }
+  .toc ol { margin: 0; padding-left: 1.6em; }
+  .toc li { margin: 4px 0; }
+  .toc a { text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ---- 本文 ---- */
+  .prose h2 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 1.5rem; line-height: 1.4;
+    margin: var(--sp-5) 0 var(--sp-2); padding-bottom: var(--sp-1);
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: var(--sp-3);
+  }
+  .prose h3 { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin: var(--sp-4) 0 var(--sp-1); }
+  .prose p { max-width: var(--measure); margin: 0; }
+  .prose p + p { margin-top: var(--sp-3); }
+  .prose ul, .prose ol { max-width: var(--measure); margin: var(--sp-2) 0; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: var(--sp-1); }
+  .prose strong { font-weight: 700; }
+
+  /* 要点・補足・注意（関連する内容は枠でまとめる） */
+  .callout { max-width: var(--measure); margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border-left: 4px solid var(--ink); background: var(--paper-2); border-radius: 0 4px 4px 0; }
+  .callout.summary { border-left-color: var(--marker); }
+  .callout.note { background: var(--note); border-left-color: var(--link); }
+  .callout.caution { background: var(--caution); border-left-color: #b8432b; }
+  .callout > :first-child { margin-top: 0; }
+  .callout p + p { margin-top: var(--sp-2); }
+  .callout .label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+
+  /* 表（比較・一覧は表で） */
+  .table-wrap { overflow-x: auto; margin: var(--sp-3) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+  th, td { padding: var(--sp-1) var(--sp-2); line-height: 1.5; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  thead th { border-bottom: 2px solid var(--ink-2); font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* 図（インライン SVG。文字は 12px 以上、色は currentColor） */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg { display: block; max-width: 100%; height: auto; color: var(--ink); }
+  figure svg text { font-family: var(--font-body); font-size: 12px; fill: currentColor; }
+  figcaption { margin-top: var(--sp-1); font-size: 0.875rem; color: var(--ink-2); }
+
+  /* コード */
+  pre { margin: var(--sp-3) 0; padding: var(--sp-2); background: var(--code-bg); border-radius: 4px; overflow-x: auto; line-height: 1.6; }
+  code { font-family: var(--font-mono); font-size: 0.875em; }
+  :not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+
+  /* 確認問題（折りたたみ） */
+  .quiz { max-width: var(--measure); margin: var(--sp-2) 0; border: 1px solid var(--rule); border-radius: 4px; }
+  .quiz summary { padding: var(--sp-2); cursor: pointer; font-weight: 700; }
+  .quiz summary::marker { color: var(--ink-2); }
+  .quiz .answer { padding: 0 var(--sp-2) var(--sp-2); border-top: 1px solid var(--rule); }
+  .quiz .answer > :first-child { margin-top: var(--sp-2); }
+
+  /* 参考リンク */
+  .refs { max-width: var(--measure); }
+  .refs li { word-break: break-all; }
+
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
+
+  @media (max-width: 600px) {
+    .page { padding: 0 var(--sp-2) var(--sp-4); }
+    .prose h2 { font-size: 1.3rem; }
   }
 </style>
 </head>
 <body>
+<div class="page">
 
-<header class="hero">
-  <div class="inner">
-    <span class="tag">CONTAINER 入門レポート</span>
-    <h1>Dockerとは何か</h1>
-    <p>作成日 2026-09-18 ／ テーマ: Dockerとは何か</p>
-  </div>
-</header>
+  <header class="cover">
+    <a class="back" href="../index.html">学習ノートに戻る</a>
+    <h1><span>Dockerとは何か</span></h1>
+    <ul class="meta">
+      <li>作成日 2026-09-18</li>
+      <li>分野 インフラ</li>
+    </ul>
+  </header>
 
-<div class="wrap">
+  <nav class="toc" aria-label="目次">
+    <h2>目次</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a></li>
+      <li><a href="#s4">具体例・使いどころ</a></li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
 
-<nav class="toc" aria-label="目次">
-  <span class="toc-ttl">目次</span>
-  <ol>
-    <li><a href="#overview">概要（3行で）</a></li>
-    <li><a href="#terms">基本用語</a></li>
-    <li><a href="#howitworks">仕組み・全体像</a></li>
-    <li><a href="#usage">具体例・使いどころ</a></li>
-    <li><a href="#pitfalls">注意点・よくある誤解</a></li>
-    <li><a href="#quiz">確認問題</a></li>
-    <li><a href="#refs">参考リンク</a></li>
-  </ol>
-</nav>
+  <main class="prose">
 
-<h2 id="overview"><span class="num">SECTION 1</span>概要（3行で）</h2>
-<div class="box tip">
-  <span class="mark">SUMMARY</span>
-  <ul>
-    <li>Dockerは、アプリケーションと実行環境をひとまとめにして「コンテナ」という軽量な箱に入れ、どこでも同じように動かせるようにするツール（プラットフォーム）である。</li>
-    <li>「自分のPCでは動くのに本番環境では動かない」という問題を解消し、開発・テスト・本番の環境差をなくすために広く使われている。</li>
-    <li>仮想マシンより軽量・高速に起動できる点が特徴で、現在はクラウド開発やマイクロサービス、CI/CDの基盤技術として定着している。</li>
-  </ul>
-</div>
+    <h2 id="s1">概要</h2>
+    <div class="callout summary">
+      <span class="label">3行でいうと</span>
+      <ul>
+        <li>Dockerは、アプリケーションと実行環境をひとまとめにして「コンテナ」という軽量な箱に入れ、どこでも同じように動かせるようにするツール（プラットフォーム）である。</li>
+        <li>「自分のPCでは動くのに本番環境では動かない」という問題を解消し、開発・テスト・本番の環境差をなくすために広く使われている。</li>
+        <li>仮想マシンより軽量・高速に起動できる点が特徴で、現在はクラウド開発やマイクロサービス、CI/CDの基盤技術として定着している。</li>
+      </ul>
+    </div>
 
-<h2 id="terms"><span class="num">SECTION 2</span>基本用語</h2>
-<div class="table-scroll">
-<table>
-  <thead>
-    <tr><th>用語</th><th>意味</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>コンテナ（Container）</td><td>アプリケーションとその実行に必要なライブラリ・設定をまとめて隔離した、実行中の軽量な環境。</td></tr>
-    <tr><td>イメージ（Image）</td><td>コンテナを作るための「読み取り専用のひな形」。OSの一部やアプリ、ライブラリなどが層（レイヤー）状に重なって構成される。</td></tr>
-    <tr><td>Dockerfile</td><td>イメージの作り方を記述したテキストファイル。「どのベースイメージを使い、何をインストールし、何を実行するか」を命令として並べる。</td></tr>
-    <tr><td>レジストリ（Registry）</td><td>イメージを保存・配布する場所。公開レジストリの代表例が <strong>Docker Hub</strong>。</td></tr>
-    <tr><td>Docker Engine</td><td>コンテナを実際に動かす本体。ユーザーが使う「クライアント（CLI）」と、裏で動く「デーモン（dockerd）」から成る。</td></tr>
-    <tr><td>Docker Compose</td><td>複数のコンテナをまとめて定義・起動するためのツール。YAMLファイルで構成を書く。</td></tr>
-    <tr><td>ボリューム（Volume）</td><td>コンテナを削除してもデータを残しておくための永続化の仕組み。</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+    <h2 id="s2">基本用語</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>用語</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>コンテナ（Container）</td><td>アプリケーションとその実行に必要なライブラリ・設定をまとめて隔離した、実行中の軽量な環境。</td></tr>
+          <tr><td>イメージ（Image）</td><td>コンテナを作るための「読み取り専用のひな形」。OSの一部やアプリ、ライブラリなどが層（レイヤー）状に重なって構成される。</td></tr>
+          <tr><td>Dockerfile</td><td>イメージの作り方を記述したテキストファイル。「どのベースイメージを使い、何をインストールし、何を実行するか」を命令として並べる。</td></tr>
+          <tr><td>レジストリ（Registry）</td><td>イメージを保存・配布する場所。公開レジストリの代表例が <strong>Docker Hub</strong>。</td></tr>
+          <tr><td>Docker Engine</td><td>コンテナを実際に動かす本体。ユーザーが使う「クライアント（CLI）」と、裏で動く「デーモン（dockerd）」から成る。</td></tr>
+          <tr><td>Docker Compose</td><td>複数のコンテナをまとめて定義・起動するためのツール。YAMLファイルで構成を書く。</td></tr>
+          <tr><td>ボリューム（Volume）</td><td>コンテナを削除してもデータを残しておくための永続化の仕組み。</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-<h2 id="howitworks"><span class="num">SECTION 3</span>仕組み・全体像</h2>
+    <h2 id="s3">仕組み・全体像</h2>
 
-<h3>3-1. 全体の流れ</h3>
-<p>
-Dockerの基本的な流れは次のようになる。
-</p>
-<ol>
-  <li>開発者が <code>Dockerfile</code> を書く（「このOSをベースに、このライブラリを入れて、このコマンドで起動する」という手順書）。</li>
-  <li><code>docker build</code> コマンドで Dockerfile から <strong>イメージ</strong> を作成する。</li>
-  <li>イメージを <code>docker run</code> で実行すると、<strong>コンテナ</strong>（実行中のインスタンス）が起動する。</li>
-  <li>作成したイメージは <strong>レジストリ</strong>（Docker Hubなど）に <code>push</code> して保存・共有でき、他の人や別のサーバーはそこから <code>pull</code> して同じ環境を再現できる。</li>
-</ol>
+    <h3>3-1. 全体の流れ</h3>
+    <p>Dockerの基本的な流れは次のようになる。</p>
+    <ol>
+      <li>開発者が <code>Dockerfile</code> を書く（「このOSをベースに、このライブラリを入れて、このコマンドで起動する」という手順書）。</li>
+      <li><code>docker build</code> コマンドで Dockerfile から <strong>イメージ</strong> を作成する。</li>
+      <li>イメージを <code>docker run</code> で実行すると、<strong>コンテナ</strong>（実行中のインスタンス）が起動する。</li>
+      <li>作成したイメージは <strong>レジストリ</strong>（Docker Hubなど）に <code>push</code> して保存・共有でき、他の人や別のサーバーはそこから <code>pull</code> して同じ環境を再現できる。</li>
+    </ol>
 
-<!-- FIGURE: Dockerfile → docker build → イメージ → docker run → コンテナ、という一連の流れと、レジストリへのpush/pullを示す図 -->
-<figure class="fig">
-  <div class="fig-scroll">
-  <svg viewBox="0 0 700 358" role="img" aria-label="Dockerfileからdocker buildでイメージを作り、docker runでコンテナを起動し、レジストリにpush/pullして共有する流れの図">
-    <defs>
-      <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-doc)"/>
-      </marker>
-      <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
-      </marker>
-    </defs>
+    <figure>
+      <svg viewBox="0 0 700 358" role="img" aria-label="Dockerfileからdocker buildでイメージを作り、docker runでコンテナを起動し、レジストリにpush/pullして共有する流れの図">
+        <title>Dockerfileからdocker buildでイメージを作り、docker runでコンテナを起動し、レジストリにpush/pullして共有する流れの図</title>
+        <defs>
+          <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--link)"/>
+          </marker>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
 
-    <!-- STEP 1: Dockerfile -->
-    <text class="lbl step" x="34" y="28">STEP 1</text>
-    <rect class="panel" x="34" y="46" width="140" height="120" rx="10"/>
-    <text class="lbl ttl" x="104" y="72" font-size="14" text-anchor="middle">Dockerfile</text>
-    <text class="lbl mono sub" x="50" y="98" font-size="12">FROM  ...</text>
-    <text class="lbl mono sub" x="50" y="118" font-size="12">RUN   ...</text>
-    <text class="lbl mono sub" x="50" y="138" font-size="12">CMD   ...</text>
-    <text class="lbl sub" x="104" y="186" font-size="12" text-anchor="middle">手順書を書く</text>
+        <!-- STEP 1: Dockerfile -->
+        <text x="34" y="28" fill="var(--link)" font-weight="700" letter-spacing=".08em">STEP 1</text>
+        <rect x="34" y="46" width="140" height="120" rx="10" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="104" y="72" font-size="14" font-weight="700" text-anchor="middle">Dockerfile</text>
+        <text x="50" y="98" font-size="12" font-family="var(--font-mono)" fill="var(--ink-2)">FROM  ...</text>
+        <text x="50" y="118" font-size="12" font-family="var(--font-mono)" fill="var(--ink-2)">RUN   ...</text>
+        <text x="50" y="138" font-size="12" font-family="var(--font-mono)" fill="var(--ink-2)">CMD   ...</text>
+        <text x="104" y="186" font-size="12" text-anchor="middle" fill="var(--ink-2)">手順書を書く</text>
 
-    <!-- build arrow -->
-    <text class="lbl mono" x="218" y="96" font-size="12" text-anchor="middle" fill="var(--c-doc)">docker build</text>
-    <path d="M180,112 H250" stroke="var(--c-doc)" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
+        <text x="218" y="96" font-size="12" font-family="var(--font-mono)" text-anchor="middle" fill="var(--link)">docker build</text>
+        <path d="M180,112 H250" stroke="var(--link)" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
 
-    <!-- STEP 2: Image -->
-    <text class="lbl step" x="266" y="28">STEP 2</text>
-    <rect class="panel" x="266" y="46" width="150" height="120" rx="10"/>
-    <text class="lbl ttl" x="341" y="70" font-size="14" text-anchor="middle">イメージ</text>
-    <rect x="284" y="82" width="114" height="22" rx="4" fill="var(--c-doc-soft)" stroke="var(--c-doc)" stroke-width="1.5"/>
-    <text class="lbl" x="341" y="98" font-size="11.5" text-anchor="middle">アプリ</text>
-    <rect x="284" y="106" width="114" height="22" rx="4" fill="var(--c-doc-soft)" stroke="var(--c-doc)" stroke-width="1.5"/>
-    <text class="lbl" x="341" y="122" font-size="11.5" text-anchor="middle">ライブラリ</text>
-    <rect x="284" y="130" width="114" height="22" rx="4" fill="var(--c-doc-soft)" stroke="var(--c-doc)" stroke-width="1.5"/>
-    <text class="lbl" x="341" y="146" font-size="11.5" text-anchor="middle">ベースOS</text>
-    <text class="lbl sub" x="341" y="186" font-size="12" text-anchor="middle">読み取り専用のひな形（レイヤー構造）</text>
+        <!-- STEP 2: Image -->
+        <text x="266" y="28" fill="var(--link)" font-weight="700" letter-spacing=".08em">STEP 2</text>
+        <rect x="266" y="46" width="150" height="120" rx="10" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="341" y="70" font-size="14" font-weight="700" text-anchor="middle">イメージ</text>
+        <rect x="284" y="82" width="114" height="22" rx="4" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="341" y="98" font-size="12" text-anchor="middle">アプリ</text>
+        <rect x="284" y="106" width="114" height="22" rx="4" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="341" y="122" font-size="12" text-anchor="middle">ライブラリ</text>
+        <rect x="284" y="130" width="114" height="22" rx="4" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="341" y="146" font-size="12" text-anchor="middle">ベースOS</text>
+        <text x="341" y="186" font-size="12" text-anchor="middle" fill="var(--ink-2)">読み取り専用のひな形（レイヤー構造）</text>
 
-    <!-- run arrow -->
-    <text class="lbl mono" x="464" y="96" font-size="12" text-anchor="middle" fill="var(--c-doc)">docker run</text>
-    <path d="M422,112 H500" stroke="var(--c-doc)" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
+        <text x="464" y="96" font-size="12" font-family="var(--font-mono)" text-anchor="middle" fill="var(--link)">docker run</text>
+        <path d="M422,112 H500" stroke="var(--link)" stroke-width="2" fill="none" marker-end="url(#ar1)"/>
 
-    <!-- STEP 3: Container -->
-    <text class="lbl step" x="512" y="28">STEP 3</text>
-    <rect class="panel" x="512" y="46" width="150" height="120" rx="10" fill="var(--c-ok-soft)" stroke="var(--c-ok)"/>
-    <text class="lbl ttl" x="587" y="70" font-size="14" text-anchor="middle">コンテナ</text>
-    <circle cx="587" cy="106" r="17" fill="none" stroke="var(--c-ok)" stroke-width="2"/>
-    <path d="M582,98 L596,106 L582,114 z" fill="var(--c-ok)"/>
-    <text class="lbl" x="587" y="146" font-size="12" text-anchor="middle">実行中のインスタンス</text>
-    <text class="lbl sub" x="587" y="186" font-size="12" text-anchor="middle">アプリが動いている状態</text>
+        <!-- STEP 3: Container -->
+        <text x="512" y="28" fill="var(--link)" font-weight="700" letter-spacing=".08em">STEP 3</text>
+        <rect x="512" y="46" width="150" height="120" rx="10" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="587" y="70" font-size="14" font-weight="700" text-anchor="middle">コンテナ</text>
+        <circle cx="587" cy="106" r="17" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M582,98 L596,106 L582,114 z" fill="currentColor"/>
+        <text x="587" y="146" font-size="12" text-anchor="middle">実行中のインスタンス</text>
+        <text x="587" y="186" font-size="12" text-anchor="middle" fill="var(--ink-2)">アプリが動いている状態</text>
 
-    <!-- STEP 4 label -->
-    <text class="lbl step" x="34" y="258">STEP 4</text>
-    <text class="lbl sub" x="34" y="282" font-size="12.5">レジストリ経由で</text>
-    <text class="lbl sub" x="34" y="302" font-size="12.5">保存・共有する</text>
+        <text x="34" y="258" fill="var(--link)" font-weight="700" letter-spacing=".08em">STEP 4</text>
+        <text x="34" y="282" font-size="12.5" fill="var(--ink-2)">レジストリ経由で</text>
+        <text x="34" y="302" font-size="12.5" fill="var(--ink-2)">保存・共有する</text>
 
-    <!-- push arrow -->
-    <path d="M341,172 V232" stroke="var(--fig-line)" stroke-width="2" fill="none" marker-end="url(#ar2)"/>
-    <text class="lbl mono" x="360" y="208" font-size="12" fill="var(--c-doc)">push</text>
+        <path d="M341,172 V232" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#ar2)"/>
+        <text x="360" y="208" font-size="12" font-family="var(--font-mono)" fill="var(--link)">push</text>
 
-    <!-- registry cylinder -->
-    <path d="M271,250 V306 A70,14 0 0 0 411,306 V250 Z" fill="var(--accent-soft)" stroke="var(--fig-line)" stroke-width="1.5"/>
-    <ellipse cx="341" cy="250" rx="70" ry="14" fill="var(--card)" stroke="var(--fig-line)" stroke-width="1.5"/>
-    <text class="lbl ttl" x="341" y="288" font-size="13.5" text-anchor="middle">レジストリ</text>
-    <text class="lbl sub" x="341" y="338" font-size="12" text-anchor="middle">Docker Hub など</text>
+        <path d="M271,250 V306 A70,14 0 0 0 411,306 V250 Z" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <ellipse cx="341" cy="250" rx="70" ry="14" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="341" y="288" font-size="13.5" font-weight="700" text-anchor="middle">レジストリ</text>
+        <text x="341" y="338" font-size="12" text-anchor="middle" fill="var(--ink-2)">Docker Hub など</text>
 
-    <!-- pull arrow -->
-    <path d="M416,278 H496" stroke="var(--fig-line)" stroke-width="2" fill="none" marker-end="url(#ar2)"/>
-    <text class="lbl mono" x="456" y="266" font-size="12" text-anchor="middle" fill="var(--c-doc)">pull</text>
+        <path d="M416,278 H496" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#ar2)"/>
+        <text x="456" y="266" font-size="12" font-family="var(--font-mono)" text-anchor="middle" fill="var(--link)">pull</text>
 
-    <!-- other environment -->
-    <rect class="panel" x="502" y="246" width="164" height="64" rx="10"/>
-    <text class="lbl" x="584" y="272" font-size="12.5" text-anchor="middle">別のサーバー /</text>
-    <text class="lbl" x="584" y="294" font-size="12.5" text-anchor="middle">他の開発者のPC</text>
-  </svg>
-  </div>
-  <figcaption><b>図1</b>　<code>Dockerfile</code>（手順書）を <code>docker build</code> すると<strong>イメージ</strong>ができ、それを <code>docker run</code> すると<strong>コンテナ</strong>が起動する。イメージをレジストリに <code>push</code> しておけば、別のサーバーや他の開発者が <code>pull</code> して同じ環境を再現できる。</figcaption>
-</figure>
+        <rect x="502" y="246" width="164" height="64" rx="10" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="584" y="272" font-size="12.5" text-anchor="middle">別のサーバー /</text>
+        <text x="584" y="294" font-size="12.5" text-anchor="middle">他の開発者のPC</text>
+      </svg>
+      <figcaption><b>図1</b>　<code>Dockerfile</code>（手順書）を <code>docker build</code> すると<strong>イメージ</strong>ができ、それを <code>docker run</code> すると<strong>コンテナ</strong>が起動する。イメージをレジストリに <code>push</code> しておけば、別のサーバーや他の開発者が <code>pull</code> して同じ環境を再現できる。</figcaption>
+    </figure>
 
-<h3>3-2. アーキテクチャの主要コンポーネント</h3>
-<div class="table-scroll">
-<table>
-  <thead>
-    <tr><th>コンポーネント</th><th>役割</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Docker クライアント</td><td>ユーザーが <code>docker run</code> などのコマンドを打ち込むインターフェース。</td></tr>
-    <tr><td>Docker デーモン（dockerd）</td><td>クライアントからの指示を受けて、実際にイメージのビルドやコンテナの起動・管理を行う本体プロセス。</td></tr>
-    <tr><td>レジストリ</td><td>イメージの保管・配布を行う。Docker Hubが代表例。</td></tr>
-  </tbody>
-</table>
-</div>
+    <h3>3-2. アーキテクチャの主要コンポーネント</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>コンポーネント</th><th>役割</th></tr></thead>
+        <tbody>
+          <tr><td>Docker クライアント</td><td>ユーザーが <code>docker run</code> などのコマンドを打ち込むインターフェース。</td></tr>
+          <tr><td>Docker デーモン（dockerd）</td><td>クライアントからの指示を受けて、実際にイメージのビルドやコンテナの起動・管理を行う本体プロセス。</td></tr>
+          <tr><td>レジストリ</td><td>イメージの保管・配布を行う。Docker Hubが代表例。</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-<figure class="fig">
-  <div class="fig-scroll">
-  <svg viewBox="0 0 700 250" role="img" aria-label="Dockerクライアント、Dockerデーモン、レジストリの関係を示す図">
-    <defs>
-      <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-doc)"/>
-      </marker>
-    </defs>
+    <figure>
+      <svg viewBox="0 0 700 250" role="img" aria-label="Dockerクライアント、Dockerデーモン、レジストリの関係を示す図">
+        <title>Dockerクライアント、Dockerデーモン、レジストリの関係を示す図</title>
+        <defs>
+          <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--link)"/>
+          </marker>
+        </defs>
 
-    <!-- client -->
-    <rect class="panel" x="24" y="76" width="150" height="96" rx="10"/>
-    <text class="lbl ttl" x="99" y="104" font-size="13.5" text-anchor="middle">Docker クライアント</text>
-    <text class="lbl mono sub" x="99" y="132" font-size="12" text-anchor="middle">$ docker run ...</text>
-    <text class="lbl sub" x="99" y="156" font-size="11.5" text-anchor="middle">コマンドを打つ場所</text>
+        <rect x="24" y="76" width="150" height="96" rx="10" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="99" y="104" font-size="13.5" font-weight="700" text-anchor="middle">Docker クライアント</text>
+        <text x="99" y="132" font-size="12" font-family="var(--font-mono)" text-anchor="middle" fill="var(--ink-2)">$ docker run ...</text>
+        <text x="99" y="156" font-size="12" text-anchor="middle" fill="var(--ink-2)">コマンドを打つ場所</text>
 
-    <!-- arrow client -> daemon -->
-    <path d="M180,118 H244" stroke="var(--c-doc)" stroke-width="2" fill="none" marker-end="url(#ar3)"/>
-    <text class="lbl" x="212" y="104" font-size="11.5" text-anchor="middle" fill="var(--c-doc)">指示</text>
+        <path d="M180,118 H244" stroke="var(--link)" stroke-width="2" fill="none" marker-end="url(#ar3)"/>
+        <text x="212" y="104" font-size="12" text-anchor="middle" fill="var(--link)">指示</text>
 
-    <!-- daemon -->
-    <rect class="panel" x="254" y="42" width="212" height="166" rx="10" fill="var(--accent-soft)"/>
-    <text class="lbl ttl" x="360" y="70" font-size="13.5" text-anchor="middle">Docker デーモン</text>
-    <text class="lbl mono sub" x="360" y="90" font-size="12" text-anchor="middle">dockerd</text>
-    <rect x="274" y="104" width="172" height="38" rx="8" fill="var(--card)" stroke="var(--c-doc)" stroke-width="1.5"/>
-    <text class="lbl" x="360" y="128" font-size="12.5" text-anchor="middle">イメージのビルド・保管</text>
-    <rect x="274" y="152" width="172" height="38" rx="8" fill="var(--card)" stroke="var(--c-ok)" stroke-width="1.5"/>
-    <text class="lbl" x="360" y="176" font-size="12.5" text-anchor="middle">コンテナの起動・管理</text>
+        <rect x="254" y="42" width="212" height="166" rx="10" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="360" y="70" font-size="13.5" font-weight="700" text-anchor="middle">Docker デーモン</text>
+        <text x="360" y="90" font-size="12" font-family="var(--font-mono)" text-anchor="middle" fill="var(--ink-2)">dockerd</text>
+        <rect x="274" y="104" width="172" height="38" rx="8" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="360" y="128" font-size="12.5" text-anchor="middle">イメージのビルド・保管</text>
+        <rect x="274" y="152" width="172" height="38" rx="8" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="360" y="176" font-size="12.5" text-anchor="middle">コンテナの起動・管理</text>
 
-    <!-- arrow daemon <-> registry -->
-    <path d="M472,118 H540" stroke="var(--c-doc)" stroke-width="2" fill="none" marker-end="url(#ar3)" marker-start="url(#ar3)"/>
-    <text class="lbl mono" x="506" y="104" font-size="11.5" text-anchor="middle" fill="var(--c-doc)">pull / push</text>
+        <path d="M472,118 H540" stroke="var(--link)" stroke-width="2" fill="none" marker-end="url(#ar3)" marker-start="url(#ar3)"/>
+        <text x="506" y="104" font-size="12" text-anchor="middle" fill="var(--link)">pull / push</text>
 
-    <!-- registry -->
-    <path d="M556,92 V166 A56,13 0 0 0 668,166 V92 Z" fill="var(--c-doc-soft)" stroke="var(--fig-line)" stroke-width="1.5"/>
-    <ellipse cx="612" cy="92" rx="56" ry="13" fill="var(--card)" stroke="var(--fig-line)" stroke-width="1.5"/>
-    <text class="lbl ttl" x="612" y="134" font-size="13" text-anchor="middle">レジストリ</text>
-    <text class="lbl sub" x="612" y="200" font-size="11.5" text-anchor="middle">Docker Hub など</text>
-  </svg>
-  </div>
-  <figcaption><b>図2</b>　ユーザーが触るのは<strong>クライアント（CLI）</strong>で、実際の処理は裏で動く<strong>デーモン（dockerd）</strong>が担当する。デーモンはレジストリとの間でイメージの <code>pull</code> / <code>push</code> も行う。</figcaption>
-</figure>
+        <path d="M556,92 V166 A56,13 0 0 0 668,166 V92 Z" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <ellipse cx="612" cy="92" rx="56" ry="13" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="612" y="134" font-size="13" font-weight="700" text-anchor="middle">レジストリ</text>
+        <text x="612" y="200" font-size="12" text-anchor="middle" fill="var(--ink-2)">Docker Hub など</text>
+      </svg>
+      <figcaption><b>図2</b>　ユーザーが触るのは<strong>クライアント（CLI）</strong>で、実際の処理は裏で動く<strong>デーモン（dockerd）</strong>が担当する。デーモンはレジストリとの間でイメージの <code>pull</code> / <code>push</code> も行う。</figcaption>
+    </figure>
 
-<h3>3-3. コンテナと仮想マシン（VM）の違い</h3>
-<p>
-両者とも「環境を隔離して動かす」技術だが、仮想化するレイヤーが異なる。
-</p>
-<p>
-仮想マシンはハードウェアレベルから丸ごと仮想化し、それぞれが独立したOSを持つ。一方、コンテナはホストOSのカーネルを共有し、その上でアプリケーションだけを隔離して動かす。
-</p>
-<div class="table-scroll">
-<table class="wide-first">
-  <thead>
-    <tr><th>観点</th><th>仮想マシン（VM）</th><th>コンテナ（Docker）</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>仮想化する範囲</td><td>ハードウェアからOSまるごと</td><td>OSのカーネルは共有し、アプリ層のみ</td></tr>
-    <tr><td>起動時間</td><td>数分程度</td><td>数秒程度</td></tr>
-    <tr><td>サイズ</td><td>数GB〜</td><td>数十〜数百MB程度</td></tr>
-    <tr><td>隔離の強さ</td><td>強い（別OS・別カーネル）</td><td>カーネルを共有するためVMよりやや弱い（namespaceやcgroupで隔離を実現）</td></tr>
-    <tr><td>密度</td><td>1台のホストに置ける数が少ない</td><td>同じホストでより多く同時実行できる</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+    <h3>3-3. コンテナと仮想マシン（VM）の違い</h3>
+    <p>両者とも「環境を隔離して動かす」技術だが、仮想化するレイヤーが異なる。</p>
+    <p>仮想マシンはハードウェアレベルから丸ごと仮想化し、それぞれが独立したOSを持つ。一方、コンテナはホストOSのカーネルを共有し、その上でアプリケーションだけを隔離して動かす。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>観点</th><th>仮想マシン（VM）</th><th>コンテナ（Docker）</th></tr></thead>
+        <tbody>
+          <tr><td>仮想化する範囲</td><td>ハードウェアからOSまるごと</td><td>OSのカーネルは共有し、アプリ層のみ</td></tr>
+          <tr><td>起動時間</td><td>数分程度</td><td>数秒程度</td></tr>
+          <tr><td>サイズ</td><td>数GB〜</td><td>数十〜数百MB程度</td></tr>
+          <tr><td>隔離の強さ</td><td>強い（別OS・別カーネル）</td><td>カーネルを共有するためVMよりやや弱い（namespaceやcgroupで隔離を実現）</td></tr>
+          <tr><td>密度</td><td>1台のホストに置ける数が少ない</td><td>同じホストでより多く同時実行できる</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-<!-- FIGURE: ホストOS上にVMとコンテナを並べて比較する断面図（VMは各々がゲストOSを持つ、コンテナはホストのカーネルを共有する） -->
-<figure class="fig">
-  <div class="fig-scroll">
-  <svg viewBox="0 0 700 424" role="img" aria-label="仮想マシンとコンテナの構造を積み重ね図で比較した図。VMはゲストOSを個別に持ち、コンテナはホストOSのカーネルを共有する">
-    <!-- 左: VM -->
-    <rect x="24" y="40" width="312" height="372" rx="12" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.5"/>
-    <text class="lbl ttl" x="180" y="68" font-size="15" text-anchor="middle" fill="var(--c-vm)">仮想マシン（VM）</text>
-    <text class="lbl sub" x="180" y="98" font-size="12" text-anchor="middle">VMごとにゲストOSを持つ</text>
+    <figure>
+      <svg viewBox="0 0 700 424" role="img" aria-label="仮想マシンとコンテナの構造を積み重ね図で比較した図。VMはゲストOSを個別に持ち、コンテナはホストOSのカーネルを共有する">
+        <title>仮想マシンとコンテナの構造を積み重ね図で比較した図。VMはゲストOSを個別に持ち、コンテナはホストOSのカーネルを共有する</title>
+        <!-- 左: VM -->
+        <rect x="24" y="40" width="312" height="372" rx="12" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <text x="180" y="68" font-size="15" font-weight="700" text-anchor="middle" fill="var(--ink-2)">仮想マシン（VM）</text>
+        <text x="180" y="98" font-size="12" text-anchor="middle" fill="var(--ink-2)">VMごとにゲストOSを持つ</text>
 
-    <g>
-      <rect x="34" y="112" width="96" height="168" rx="8" fill="var(--card)" stroke="var(--c-vm)" stroke-width="1.5"/>
-      <text class="lbl" x="82" y="136" font-size="12" text-anchor="middle" fill="var(--c-vm)">VM 1</text>
-      <rect x="44" y="146" width="76" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="82" y="169" font-size="11.5" text-anchor="middle">アプリ</text>
-      <rect x="44" y="188" width="76" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="82" y="211" font-size="11.5" text-anchor="middle">ライブラリ</text>
-      <rect x="44" y="230" width="76" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="82" y="253" font-size="11.5" text-anchor="middle">ゲストOS</text>
-    </g>
-    <g>
-      <rect x="138" y="112" width="96" height="168" rx="8" fill="var(--card)" stroke="var(--c-vm)" stroke-width="1.5"/>
-      <text class="lbl" x="186" y="136" font-size="12" text-anchor="middle" fill="var(--c-vm)">VM 2</text>
-      <rect x="148" y="146" width="76" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="186" y="169" font-size="11.5" text-anchor="middle">アプリ</text>
-      <rect x="148" y="188" width="76" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="186" y="211" font-size="11.5" text-anchor="middle">ライブラリ</text>
-      <rect x="148" y="230" width="76" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="186" y="253" font-size="11.5" text-anchor="middle">ゲストOS</text>
-    </g>
-    <g>
-      <rect x="242" y="112" width="86" height="168" rx="8" fill="var(--card)" stroke="var(--c-vm)" stroke-width="1.5"/>
-      <text class="lbl" x="285" y="136" font-size="12" text-anchor="middle" fill="var(--c-vm)">VM 3</text>
-      <rect x="250" y="146" width="70" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="285" y="169" font-size="11.5" text-anchor="middle">アプリ</text>
-      <rect x="250" y="188" width="70" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="285" y="211" font-size="11" text-anchor="middle">ライブラリ</text>
-      <rect x="250" y="230" width="70" height="36" rx="5" fill="var(--c-vm-soft)" stroke="var(--c-vm)" stroke-width="1.2"/>
-      <text class="lbl" x="285" y="253" font-size="11" text-anchor="middle">ゲストOS</text>
-    </g>
+        <g>
+          <rect x="34" y="112" width="96" height="168" rx="8" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="82" y="136" font-size="12" text-anchor="middle" fill="var(--ink-2)">VM 1</text>
+          <rect x="44" y="146" width="76" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="82" y="169" font-size="12" text-anchor="middle">アプリ</text>
+          <rect x="44" y="188" width="76" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="82" y="211" font-size="12" text-anchor="middle">ライブラリ</text>
+          <rect x="44" y="230" width="76" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="82" y="253" font-size="12" text-anchor="middle">ゲストOS</text>
+        </g>
+        <g>
+          <rect x="138" y="112" width="96" height="168" rx="8" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="186" y="136" font-size="12" text-anchor="middle" fill="var(--ink-2)">VM 2</text>
+          <rect x="148" y="146" width="76" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="186" y="169" font-size="12" text-anchor="middle">アプリ</text>
+          <rect x="148" y="188" width="76" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="186" y="211" font-size="12" text-anchor="middle">ライブラリ</text>
+          <rect x="148" y="230" width="76" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="186" y="253" font-size="12" text-anchor="middle">ゲストOS</text>
+        </g>
+        <g>
+          <rect x="242" y="112" width="86" height="168" rx="8" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="285" y="136" font-size="12" text-anchor="middle" fill="var(--ink-2)">VM 3</text>
+          <rect x="250" y="146" width="70" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="285" y="169" font-size="12" text-anchor="middle">アプリ</text>
+          <rect x="250" y="188" width="70" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="285" y="211" font-size="12" text-anchor="middle">ライブラリ</text>
+          <rect x="250" y="230" width="70" height="36" rx="5" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="285" y="253" font-size="12" text-anchor="middle">ゲストOS</text>
+        </g>
 
-    <rect x="34" y="288" width="294" height="34" rx="6" fill="var(--c-host-soft)" stroke="var(--c-host)" stroke-width="1.2"/>
-    <text class="lbl" x="181" y="310" font-size="13" text-anchor="middle">ハイパーバイザ</text>
-    <rect x="34" y="326" width="294" height="34" rx="6" fill="var(--c-host-soft)" stroke="var(--c-host)" stroke-width="1.2"/>
-    <text class="lbl" x="181" y="348" font-size="13" text-anchor="middle">ホストOS</text>
-    <rect x="34" y="364" width="294" height="34" rx="6" fill="var(--c-host-soft)" stroke="var(--c-host)" stroke-width="1.2"/>
-    <text class="lbl" x="181" y="386" font-size="13" text-anchor="middle">インフラ（物理ハードウェア）</text>
+        <rect x="34" y="288" width="294" height="34" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+        <text x="181" y="310" font-size="13" text-anchor="middle">ハイパーバイザ</text>
+        <rect x="34" y="326" width="294" height="34" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+        <text x="181" y="348" font-size="13" text-anchor="middle">ホストOS</text>
+        <rect x="34" y="364" width="294" height="34" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+        <text x="181" y="386" font-size="13" text-anchor="middle">インフラ（物理ハードウェア）</text>
 
-    <!-- 右: コンテナ -->
-    <rect x="364" y="40" width="312" height="372" rx="12" fill="var(--c-doc-soft)" stroke="var(--c-doc)" stroke-width="1.5"/>
-    <text class="lbl ttl" x="520" y="68" font-size="15" text-anchor="middle" fill="var(--c-doc)">コンテナ（Docker）</text>
-    <text class="lbl sub" x="520" y="98" font-size="12" text-anchor="middle">ゲストOSを持たず、カーネルを共有する</text>
-    <text class="lbl sub" x="520" y="148" font-size="12" text-anchor="middle">← ゲストOSの層がない分、軽量・高速</text>
+        <!-- 右: コンテナ -->
+        <rect x="364" y="40" width="312" height="372" rx="12" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="520" y="68" font-size="15" font-weight="700" text-anchor="middle" fill="var(--link)">コンテナ（Docker）</text>
+        <text x="520" y="98" font-size="12" text-anchor="middle" fill="var(--ink-2)">ゲストOSを持たず、カーネルを共有する</text>
+        <text x="520" y="148" font-size="12" text-anchor="middle" fill="var(--ink-2)">← ゲストOSの層がない分、軽量・高速</text>
 
-    <g>
-      <rect x="374" y="170" width="96" height="110" rx="8" fill="var(--card)" stroke="var(--c-ok)" stroke-width="1.5"/>
-      <text class="lbl" x="422" y="192" font-size="12" text-anchor="middle" fill="var(--c-ok)">コンテナ 1</text>
-      <rect x="384" y="200" width="76" height="34" rx="5" fill="var(--c-ok-soft)" stroke="var(--c-ok)" stroke-width="1.2"/>
-      <text class="lbl" x="422" y="222" font-size="11.5" text-anchor="middle">アプリ</text>
-      <rect x="384" y="238" width="76" height="34" rx="5" fill="var(--c-ok-soft)" stroke="var(--c-ok)" stroke-width="1.2"/>
-      <text class="lbl" x="422" y="260" font-size="11.5" text-anchor="middle">ライブラリ</text>
-    </g>
-    <g>
-      <rect x="478" y="170" width="96" height="110" rx="8" fill="var(--card)" stroke="var(--c-ok)" stroke-width="1.5"/>
-      <text class="lbl" x="526" y="192" font-size="12" text-anchor="middle" fill="var(--c-ok)">コンテナ 2</text>
-      <rect x="488" y="200" width="76" height="34" rx="5" fill="var(--c-ok-soft)" stroke="var(--c-ok)" stroke-width="1.2"/>
-      <text class="lbl" x="526" y="222" font-size="11.5" text-anchor="middle">アプリ</text>
-      <rect x="488" y="238" width="76" height="34" rx="5" fill="var(--c-ok-soft)" stroke="var(--c-ok)" stroke-width="1.2"/>
-      <text class="lbl" x="526" y="260" font-size="11.5" text-anchor="middle">ライブラリ</text>
-    </g>
-    <g>
-      <rect x="582" y="170" width="86" height="110" rx="8" fill="var(--card)" stroke="var(--c-ok)" stroke-width="1.5"/>
-      <text class="lbl" x="625" y="192" font-size="12" text-anchor="middle" fill="var(--c-ok)">コンテナ 3</text>
-      <rect x="590" y="200" width="70" height="34" rx="5" fill="var(--c-ok-soft)" stroke="var(--c-ok)" stroke-width="1.2"/>
-      <text class="lbl" x="625" y="222" font-size="11.5" text-anchor="middle">アプリ</text>
-      <rect x="590" y="238" width="70" height="34" rx="5" fill="var(--c-ok-soft)" stroke="var(--c-ok)" stroke-width="1.2"/>
-      <text class="lbl" x="625" y="260" font-size="11" text-anchor="middle">ライブラリ</text>
-    </g>
+        <g>
+          <rect x="374" y="170" width="96" height="110" rx="8" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="422" y="192" font-size="12" text-anchor="middle" fill="var(--link)">コンテナ 1</text>
+          <rect x="384" y="200" width="76" height="34" rx="5" fill="none" stroke="var(--link)" stroke-width="1.2"/>
+          <text x="422" y="222" font-size="12" text-anchor="middle">アプリ</text>
+          <rect x="384" y="238" width="76" height="34" rx="5" fill="none" stroke="var(--link)" stroke-width="1.2"/>
+          <text x="422" y="260" font-size="12" text-anchor="middle">ライブラリ</text>
+        </g>
+        <g>
+          <rect x="478" y="170" width="96" height="110" rx="8" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="526" y="192" font-size="12" text-anchor="middle" fill="var(--link)">コンテナ 2</text>
+          <rect x="488" y="200" width="76" height="34" rx="5" fill="none" stroke="var(--link)" stroke-width="1.2"/>
+          <text x="526" y="222" font-size="12" text-anchor="middle">アプリ</text>
+          <rect x="488" y="238" width="76" height="34" rx="5" fill="none" stroke="var(--link)" stroke-width="1.2"/>
+          <text x="526" y="260" font-size="12" text-anchor="middle">ライブラリ</text>
+        </g>
+        <g>
+          <rect x="582" y="170" width="86" height="110" rx="8" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="625" y="192" font-size="12" text-anchor="middle" fill="var(--link)">コンテナ 3</text>
+          <rect x="590" y="200" width="70" height="34" rx="5" fill="none" stroke="var(--link)" stroke-width="1.2"/>
+          <text x="625" y="222" font-size="12" text-anchor="middle">アプリ</text>
+          <rect x="590" y="238" width="70" height="34" rx="5" fill="none" stroke="var(--link)" stroke-width="1.2"/>
+          <text x="625" y="260" font-size="12" text-anchor="middle">ライブラリ</text>
+        </g>
 
-    <rect x="374" y="288" width="294" height="34" rx="6" fill="var(--c-doc-soft)" stroke="var(--c-doc)" stroke-width="1.5"/>
-    <text class="lbl" x="521" y="310" font-size="13" text-anchor="middle" fill="var(--c-doc)">Docker Engine</text>
-    <rect x="374" y="326" width="294" height="34" rx="6" fill="var(--c-host-soft)" stroke="var(--c-host)" stroke-width="1.2"/>
-    <text class="lbl" x="521" y="348" font-size="13" text-anchor="middle">ホストOS（カーネルを共有）</text>
-    <rect x="374" y="364" width="294" height="34" rx="6" fill="var(--c-host-soft)" stroke="var(--c-host)" stroke-width="1.2"/>
-    <text class="lbl" x="521" y="386" font-size="13" text-anchor="middle">インフラ（物理ハードウェア）</text>
-  </svg>
-  </div>
-  <figcaption><b>図3</b>　左の仮想マシンはハイパーバイザの上でVMごとに<strong>ゲストOS</strong>を起動する。右のコンテナはホストOSのカーネルを共有し、アプリとライブラリだけを隔離するため、その分だけ軽量で起動も速い。</figcaption>
-</figure>
+        <rect x="374" y="288" width="294" height="34" rx="6" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+        <text x="521" y="310" font-size="13" text-anchor="middle" fill="var(--link)">Docker Engine</text>
+        <rect x="374" y="326" width="294" height="34" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+        <text x="521" y="348" font-size="13" text-anchor="middle">ホストOS（カーネルを共有）</text>
+        <rect x="374" y="364" width="294" height="34" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+        <text x="521" y="386" font-size="13" text-anchor="middle">インフラ（物理ハードウェア）</text>
+      </svg>
+      <figcaption><b>図3</b>　左の仮想マシンはハイパーバイザの上でVMごとに<strong>ゲストOS</strong>を起動する。右のコンテナはホストOSのカーネルを共有し、アプリとライブラリだけを隔離するため、その分だけ軽量で起動も速い。</figcaption>
+    </figure>
 
-<h2 id="usage"><span class="num">SECTION 4</span>具体例・使いどころ</h2>
+    <h2 id="s4">具体例・使いどころ</h2>
 
-<h3>4-1. 開発環境の統一</h3>
-<p>
-「自分のPCでは動くのに、他の人のPCやサーバーでは動かない」という問題を防ぐため、Dockerfileに環境構築手順をコード化しておき、チーム全員・本番環境で同じイメージを使う、という使い方が代表的。
-</p>
+    <h3>4-1. 開発環境の統一</h3>
+    <p>「自分のPCでは動くのに、他の人のPCやサーバーでは動かない」という問題を防ぐため、Dockerfileに環境構築手順をコード化しておき、チーム全員・本番環境で同じイメージを使う、という使い方が代表的。</p>
 
-<h3>4-2. マイクロサービス・複数コンテナの管理</h3>
-<p>
-Webサーバー、アプリケーションサーバー、データベースなど役割ごとにコンテナを分け、<strong>Docker Compose</strong> でまとめて起動・停止する構成がよく使われる。
-</p>
-<p>
-各サービスを独立して開発・デプロイできるマイクロサービス的な設計と相性がよい。
-</p>
-<pre><code><span class="cm"># docker-compose.yml のイメージ例（簡略化）</span>
+    <h3>4-2. マイクロサービス・複数コンテナの管理</h3>
+    <p>Webサーバー、アプリケーションサーバー、データベースなど役割ごとにコンテナを分け、<strong>Docker Compose</strong> でまとめて起動・停止する構成がよく使われる。</p>
+    <p>各サービスを独立して開発・デプロイできるマイクロサービス的な設計と相性がよい。</p>
+    <pre><code># docker-compose.yml のイメージ例（簡略化）
 services:
   web:
     build: ./web
@@ -495,87 +446,64 @@ volumes:
   db_data:
 </code></pre>
 
-<h3>4-3. CI/CDでの活用</h3>
-<p>
-テストのたびに毎回同じクリーンな環境をコンテナとして立ち上げ、終わったら破棄する、という使い方でCI/CDパイプラインの再現性を高められる。
-</p>
+    <h3>4-3. CI/CDでの活用</h3>
+    <p>テストのたびに毎回同じクリーンな環境をコンテナとして立ち上げ、終わったら破棄する、という使い方でCI/CDパイプラインの再現性を高められる。</p>
 
-<h3>4-4. Kubernetesなどオーケストレーション基盤との連携</h3>
-<p>
-本番で多数のコンテナを運用する場合は、Kubernetesのようなオーケストレーションツールと組み合わせて、コンテナの自動配置・スケーリング・自己修復などを行うのが一般的。
-</p>
+    <h3>4-4. Kubernetesなどオーケストレーション基盤との連携</h3>
+    <p>本番で多数のコンテナを運用する場合は、Kubernetesのようなオーケストレーションツールと組み合わせて、コンテナの自動配置・スケーリング・自己修復などを行うのが一般的。</p>
 
-<h2 id="pitfalls"><span class="num">SECTION 5</span>注意点・よくある誤解</h2>
-<div class="box warn">
-  <span class="mark">CAUTION</span>
-  <ul>
-    <li><strong>「コンテナ＝軽量な仮想マシン」ではない。</strong> ホストOSのカーネルを共有する仕組みであり、独立したOSを持つVMとは隔離のレベルが異なる。用途に応じて使い分けが必要。</li>
-    <li><strong>コンテナを削除するとデータも消える。</strong> コンテナ内に保存したファイルはコンテナと一緒に消えるため、データベースなど残したいデータは<strong>ボリューム</strong>を使って永続化する必要がある。</li>
-    <li><strong>「Docker」＝「Docker Desktopの起動」ではない。</strong> Windows/Macでは裏でDocker Desktop（もしくはWSL2など）が動いている必要があり、これが起動していないだけの「動かない」トラブルが非常に多い。</li>
-    <li><strong>ポート衝突・権限エラーに注意。</strong> 指定したポートが既に使われている、LinuxでDockerグループに属していないためpermission deniedになる、といった初心者がつまずきやすいエラーがある。</li>
-    <li><strong>DockerだけがコンテナランタイムではないというWKの変化。</strong> Kubernetesは v1.24 でDockerを直接のランタイムとして使うのをやめており、OCI（Open Container Initiative）標準に準拠したPodmanなど別のツールも普及しつつある。「コンテナ＝Docker」と決め打ちしない方がよい。</li>
-  </ul>
-</div>
+    <h2 id="s5">注意点・よくある誤解</h2>
+    <div class="callout caution">
+      <span class="label">よくある誤解・注意点</span>
+      <ul>
+        <li><strong>「コンテナ＝軽量な仮想マシン」ではない。</strong> ホストOSのカーネルを共有する仕組みであり、独立したOSを持つVMとは隔離のレベルが異なる。用途に応じて使い分けが必要。</li>
+        <li><strong>コンテナを削除するとデータも消える。</strong> コンテナ内に保存したファイルはコンテナと一緒に消えるため、データベースなど残したいデータは<strong>ボリューム</strong>を使って永続化する必要がある。</li>
+        <li><strong>「Docker」＝「Docker Desktopの起動」ではない。</strong> Windows/Macでは裏でDocker Desktop（もしくはWSL2など）が動いている必要があり、これが起動していないだけの「動かない」トラブルが非常に多い。</li>
+        <li><strong>ポート衝突・権限エラーに注意。</strong> 指定したポートが既に使われている、LinuxでDockerグループに属していないためpermission deniedになる、といった初心者がつまずきやすいエラーがある。</li>
+        <li><strong>DockerだけがコンテナランタイムではないというWKの変化。</strong> Kubernetesは v1.24 でDockerを直接のランタイムとして使うのをやめており、OCI（Open Container Initiative）標準に準拠したPodmanなど別のツールも普及しつつある。「コンテナ＝Docker」と決め打ちしない方がよい。</li>
+      </ul>
+    </div>
 
-<h2 id="quiz"><span class="num">SECTION 6</span>確認問題</h2>
+    <h2 id="s6">確認問題</h2>
+    <details class="quiz">
+      <summary>Q1. Dockerの「イメージ」と「コンテナ」の違いを一言で説明してください。</summary>
+      <div class="answer"><p>イメージは実行環境の「読み取り専用のひな形（設計図）」であり、コンテナはそのイメージを実際に実行している「動いているインスタンス」である。</p></div>
+    </details>
+    <details class="quiz">
+      <summary>Q2. コンテナが仮想マシン（VM）より起動が速く、軽量な理由を説明してください。</summary>
+      <div class="answer"><p>VMはハードウェアからOSまで丸ごと仮想化し、各VMが独自のOSを持つのに対し、コンテナはホストOSのカーネルを共有し、アプリケーション層のみを隔離するため。ゲストOSの起動が不要な分、コンテナは数秒で立ち上がり、サイズも小さくて済む。</p></div>
+    </details>
+    <details class="quiz">
+      <summary>Q3. Dockerfile、イメージ、レジストリの関係を、処理の流れの順に説明してください。</summary>
+      <div class="answer"><p>Dockerfileに環境構築の手順を書き、それを <code>docker build</code> することでイメージが作られる。作成したイメージは <code>docker run</code> でコンテナとして実行できるほか、レジストリ（Docker Hubなど）に push しておくことで、他の環境から pull して同じイメージを再利用できる。</p></div>
+    </details>
+    <details class="quiz">
+      <summary>Q4. コンテナ内で作成したデータをコンテナ削除後も残したい場合、どうすればよいですか。</summary>
+      <div class="answer"><p>Dockerの「ボリューム（Volume）」を使ってデータを永続化する。ボリュームはコンテナのライフサイクルとは独立して存在するため、コンテナを削除してもデータは残る。</p></div>
+    </details>
+    <details class="quiz">
+      <summary>Q5. Docker Composeはどのような場面で使われますか。</summary>
+      <div class="answer"><p>Webサーバー、アプリケーションサーバー、データベースなど複数のコンテナを組み合わせて一つのシステムを構成する場合に、YAMLファイルで構成をまとめて記述し、1つのコマンドでまとめて起動・停止するために使われる。マイクロサービス開発や、開発環境の自動化、CI/CDでのテスト環境構築などによく利用される。</p></div>
+    </details>
 
-<div class="q">
-  <p class="question"><span class="qno">Q1.</span>Dockerの「イメージ」と「コンテナ」の違いを一言で説明してください。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>イメージは実行環境の「読み取り専用のひな形（設計図）」であり、コンテナはそのイメージを実際に実行している「動いているインスタンス」である。</p>
-  </details>
-</div>
+    <h2 id="s7">参考リンク</h2>
+    <ul class="refs">
+      <li><a href="https://docs.docker.jp/get-started/overview.html" target="_blank" rel="noopener">Docker 概要 — Docker-docs-ja</a></li>
+      <li><a href="https://docs.docker.jp/registry/introduction.html" target="_blank" rel="noopener">Docker レジストリ の理解 — Docker-docs-ja</a></li>
+      <li><a href="https://docs.docker.jp/engine/userguide/storagedriver/imagesandcontainers.html" target="_blank" rel="noopener">イメージ、コンテナ、ストレージ・ドライバについて — Docker-docs-ja</a></li>
+      <li><a href="https://docs.docker.jp/compose/index.html" target="_blank" rel="noopener">Docker Compose 概要 — Docker-docs-ja</a></li>
+      <li><a href="https://learn.microsoft.com/ja-jp/dotnet/architecture/microservices/container-docker-introduction/docker-containers-images-registries" target="_blank" rel="noopener">Docker コンテナー、イメージ、レジストリ - .NET | Microsoft Learn</a></li>
+      <li><a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/containers-vs-vm" target="_blank" rel="noopener">Containers vs. virtual machines | Microsoft Learn</a></li>
+      <li><a href="https://www.atlassian.com/microservices/cloud-computing/containers-vs-vms" target="_blank" rel="noopener">Containers vs Virtual Machines | Atlassian</a></li>
+      <li><a href="https://www.kagoya.jp/howto/cloud/container/docker/" target="_blank" rel="noopener">【入門】Dockerとは？概要やメリット、インストール方法をわかりやすく解説 - カゴヤのサーバー研究室</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/Podman" target="_blank" rel="noopener">Podman - Wikipedia</a></li>
+    </ul>
 
-<div class="q">
-  <p class="question"><span class="qno">Q2.</span>コンテナが仮想マシン（VM）より起動が速く、軽量な理由を説明してください。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>VMはハードウェアからOSまで丸ごと仮想化し、各VMが独自のOSを持つのに対し、コンテナはホストOSのカーネルを共有し、アプリケーション層のみを隔離するため。ゲストOSの起動が不要な分、コンテナは数秒で立ち上がり、サイズも小さくて済む。</p>
-  </details>
-</div>
+  </main>
 
-<div class="q">
-  <p class="question"><span class="qno">Q3.</span>Dockerfile、イメージ、レジストリの関係を、処理の流れの順に説明してください。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>Dockerfileに環境構築の手順を書き、それを <code>docker build</code> することでイメージが作られる。作成したイメージは <code>docker run</code> でコンテナとして実行できるほか、レジストリ（Docker Hubなど）に push しておくことで、他の環境から pull して同じイメージを再利用できる。</p>
-  </details>
-</div>
-
-<div class="q">
-  <p class="question"><span class="qno">Q4.</span>コンテナ内で作成したデータをコンテナ削除後も残したい場合、どうすればよいですか。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>Dockerの「ボリューム（Volume）」を使ってデータを永続化する。ボリュームはコンテナのライフサイクルとは独立して存在するため、コンテナを削除してもデータは残る。</p>
-  </details>
-</div>
-
-<div class="q">
-  <p class="question"><span class="qno">Q5.</span>Docker Composeはどのような場面で使われますか。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>Webサーバー、アプリケーションサーバー、データベースなど複数のコンテナを組み合わせて一つのシステムを構成する場合に、YAMLファイルで構成をまとめて記述し、1つのコマンドでまとめて起動・停止するために使われる。マイクロサービス開発や、開発環境の自動化、CI/CDでのテスト環境構築などによく利用される。</p>
-  </details>
-</div>
-
-<h2 id="refs"><span class="num">SECTION 7</span>参考リンク</h2>
-<ul class="refs">
-  <li><a href="https://docs.docker.jp/get-started/overview.html" target="_blank" rel="noopener">Docker 概要 — Docker-docs-ja</a></li>
-  <li><a href="https://docs.docker.jp/registry/introduction.html" target="_blank" rel="noopener">Docker レジストリ の理解 — Docker-docs-ja</a></li>
-  <li><a href="https://docs.docker.jp/engine/userguide/storagedriver/imagesandcontainers.html" target="_blank" rel="noopener">イメージ、コンテナ、ストレージ・ドライバについて — Docker-docs-ja</a></li>
-  <li><a href="https://docs.docker.jp/compose/index.html" target="_blank" rel="noopener">Docker Compose 概要 — Docker-docs-ja</a></li>
-  <li><a href="https://learn.microsoft.com/ja-jp/dotnet/architecture/microservices/container-docker-introduction/docker-containers-images-registries" target="_blank" rel="noopener">Docker コンテナー、イメージ、レジストリ - .NET | Microsoft Learn</a></li>
-  <li><a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/containers-vs-vm" target="_blank" rel="noopener">Containers vs. virtual machines | Microsoft Learn</a></li>
-  <li><a href="https://www.atlassian.com/microservices/cloud-computing/containers-vs-vms" target="_blank" rel="noopener">Containers vs Virtual Machines | Atlassian</a></li>
-  <li><a href="https://www.kagoya.jp/howto/cloud/container/docker/" target="_blank" rel="noopener">【入門】Dockerとは？概要やメリット、インストール方法をわかりやすく解説 - カゴヤのサーバー研究室</a></li>
-  <li><a href="https://en.wikipedia.org/wiki/Podman" target="_blank" rel="noopener">Podman - Wikipedia</a></li>
-</ul>
-
-<footer>
-  <p>作成日: 2026-09-18 ／ テーマ: Dockerとは何か</p>
-</footer>
-
+  <footer>
+    <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+  </footer>
 </div>
 </body>
 </html>

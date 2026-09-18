@@ -3,731 +3,610 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<title>MCP（Model Context Protocol）とは何か | 学習レポート</title>
+<title>MCP（Model Context Protocol）とは何か | 学習ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    /* ---- 余白スケール: 8pxベース、使うのは5段階だけ ---- */
-    --sp-1:8px; --sp-2:16px; --sp-3:24px; --sp-4:40px; --sp-5:64px;
-
-    /* ---- 行長: 日本語は40字が上限（WCAG 1.4.8）。
-           ch は半角基準のため、全角40字を超えないよう em でも上限をかける ---- */
-    --measure:min(72ch, 38em);
-
-    /* ---- 文字サイズ: 本文 / 見出し / 補助 の3系統 ---- */
-    --fs-body:17px;
-    --fs-h2:clamp(21px, 3.6vw, 25px);
-    --fs-h1:clamp(24px, 5vw, 32px);
-    --fs-sm:15px;
-
-    /* ---- 配色（本文コントラスト4.5:1以上） ---- */
-    --ink:#1b2027; --sub:#5a6675; --line:#dfe5ec;
-    --bg:#f7f9fb; --card:#ffffff; --accent:#0b6fbf; --accent-soft:#e8f2fb;
-    --code-inline:#e7ecf2;
-    --warn-bg:#fdf6e7; --warn-line:#e0bd85; --warn-ink:#8a5a00;
-    --tip-bg:#eef6ec; --tip-line:#a9c9a4; --tip-ink:#3f6b45;
-    --note-bg:#eef4fa; --note-line:#a8c4dd; --note-ink:#125c96;
-    --alert-bg:#fdecea; --alert-line:#e0a49b; --alert-ink:#9a2f22;
-    --hero-a:#10263a; --hero-b:#0b3d63; --hero-ink:#f6fafd; --hero-sub:#c8dae8;
-    --fig-bg:#fcfdfe; --fig-line:#c6d0da; --fig-ink:#232a32; --fig-sub:#5d6a78;
-    --panel-soft:#f2f6fa;
-    /* 図で使う役割別の色（本文の分類と対応） */
-    --c-app:#2b6fc4; --c-app-soft:#e6f0fa;   /* AIアプリ / ホスト */
-    --c-src:#4f8a5b; --c-src-soft:#eaf3ec;   /* データソース / サーバー */
-    --c-mcp:#7a54b5; --c-mcp-soft:#efe9f8;   /* MCP そのもの */
-    --c-neu:#6b7787; --c-neu-soft:#eef1f5;   /* 中立 */
+  /* =====================================================================
+     学習ノート 共通スタイル（index.html と同じ design tokens）
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文は 16px・行間 1.7・1行 40字（max-width: 40em）
+     - 見出しは行間 1.3〜1.4、上余白 > 下余白
+     - 余白は 8px ベースの 5 段階のみ
+     - 本文コントラスト 4.5:1 以上、日本語に italic は使わない
+     - 表・図・コードは 40 字制限から外し、自身の中で横スクロール
+     ===================================================================== */
+  :root {
+    --paper: #f3f5f2;
+    --paper-2: #e9ede8;
+    --ink: #14202b;
+    --ink-2: #55636f;
+    --rule: #d3dad6;
+    --marker: #ffe56b;
+    --marker-ink: #14202b;
+    --link: #1f4b99;
+    --note: #dfe9f7;
+    --caution: #ffe3dc;
+    --code-bg: #e9ede8;
+    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --ink:#e4eaf1; --sub:#9daaba; --line:#2f3841;
-      --bg:#11151a; --card:#1a1f26; --accent:#68b6f0; --accent-soft:#16283a;
-      --code-inline:#242c35;
-      --warn-bg:#2b2416; --warn-line:#755a31; --warn-ink:#e7bd79;
-      --tip-bg:#19241a; --tip-line:#466b47; --tip-ink:#a6cfa4;
-      --note-bg:#17232f; --note-line:#35536e; --note-ink:#8cc2ee;
-      --alert-bg:#2c1b19; --alert-line:#7a4239; --alert-ink:#f0a89c;
-      --hero-a:#16212b; --hero-b:#0a1a26; --hero-ink:#f2f7fb; --hero-sub:#b4c3d1;
-      --fig-bg:#161b21; --fig-line:#3d4854; --fig-ink:#e2e8ef; --fig-sub:#9aa7b5;
-      --panel-soft:#171d24;
-      --c-app:#6cb4e8; --c-app-soft:#16283a;
-      --c-src:#93c79c; --c-src-soft:#1c2a1e;
-      --c-mcp:#b49ae0; --c-mcp-soft:#241d33;
-      --c-neu:#9aa8b8; --c-neu-soft:#222a33;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+      --note: #1e2f45; --caution: #4a2620; --code-bg: #1b242c;
     }
   }
-
-  *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
-    font-size:var(--fs-body);
-    line-height:1.7;              /* 本文は1.5が最低、1.7で心理的負荷を下げる */
-    text-align:left;              /* justify は使わない（WCAG F88） */
-    letter-spacing:.012em;
-    text-rendering:optimizeLegibility;
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.7;
+    text-align: left; -webkit-font-smoothing: antialiased;
   }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 0.15em; }
+  a:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
+  em { font-style: normal; font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
 
-  /* ---- レイアウト: 本文は40字以内、図表だけ外側へはみ出す ---- */
-  .wrap{
-    max-width:920px; margin:0 auto; padding:0 var(--sp-2) var(--sp-5);
-    display:grid;
-    grid-template-columns:1fr min(var(--measure), 100%) 1fr;
-  }
-  .wrap > *{grid-column:2}
-  .wrap > .wide{grid-column:1 / -1}
+  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
 
-  /* ---- hero ---- */
-  header.hero{
-    background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
-    color:var(--hero-ink); padding:var(--sp-5) var(--sp-2) var(--sp-4);
-    margin-bottom:var(--sp-4); border-bottom:1px solid var(--line);
+  /* ---- 表紙 ---- */
+  .cover { padding: var(--sp-4) 0 var(--sp-3); border-bottom: 2px solid var(--ink); margin-bottom: var(--sp-4); }
+  .cover .back { font-size: 0.9rem; color: var(--ink-2); text-decoration: none; }
+  .cover .back:hover { color: var(--ink); }
+  .cover h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 5.5vw, 2.6rem); line-height: 1.3;
+    margin: var(--sp-2) 0 var(--sp-2);
   }
-  header.hero .inner{max-width:920px;margin:0 auto}
-  header.hero .tag{
-    display:inline-block; font-size:var(--fs-sm); letter-spacing:.14em;
-    border:1px solid rgba(255,255,255,.45); border-radius:20px;
-    padding:var(--sp-1) var(--sp-2); margin-bottom:var(--sp-2);
+  .cover h1 span {
+    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
   }
-  header.hero h1{font-size:var(--fs-h1); line-height:1.3; margin:0 0 var(--sp-2); letter-spacing:.01em}
-  header.hero p{margin:0; color:var(--hero-sub); font-size:var(--fs-sm); line-height:1.7; letter-spacing:.06em}
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.9rem; color: var(--ink-2); }
 
-  /* ---- 見出し: 前から離し、次の本文に近づける ---- */
-  h2{
-    font-size:var(--fs-h2); line-height:1.4;
-    margin:var(--sp-5) 0 var(--sp-2); padding-bottom:var(--sp-1);
-    border-bottom:2px solid var(--ink); scroll-margin-top:var(--sp-2);
-  }
-  h2 .num{display:block; color:var(--accent); font-size:var(--fs-sm);
-    letter-spacing:.14em; line-height:1.4; margin-bottom:var(--sp-1)}
-  h3{
-    font-size:var(--fs-body); font-weight:700; line-height:1.5; color:var(--accent);
-    margin:var(--sp-4) 0 var(--sp-1); padding-left:var(--sp-1);
-    border-left:4px solid var(--accent); scroll-margin-top:var(--sp-2);
-  }
-  p{margin:0}
-  p + p, ul + p, ol + p, p + ul, p + ol, .box + p, figure + p{margin-top:var(--sp-3)}
-  ul,ol{margin:var(--sp-2) 0; padding-left:1.4em}
-  li{margin:0}
-  li + li{margin-top:var(--sp-1)}
-  li > ul, li > ol{margin:var(--sp-1) 0}
-  strong{font-weight:700}
-  em{font-style:normal; font-weight:700}   /* 日本語にイタリックを使わない */
-  a{color:var(--accent); text-decoration:underline; text-underline-offset:3px}
+  /* ---- 目次（読む順序なので番号を付ける） ---- */
+  .toc { margin: 0 0 var(--sp-5); padding: var(--sp-2) var(--sp-3); background: var(--paper-2); border-radius: 4px; }
+  .toc h2 { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--ink-2); margin: 0 0 var(--sp-1); }
+  .toc ol { margin: 0; padding-left: 1.6em; }
+  .toc li { margin: 4px 0; }
+  .toc a { text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul.sub { margin: 4px 0 4px; padding-left: 1.3em; list-style: none; }
+  .toc ul.sub a { color: var(--ink-2); font-size: 0.85rem; }
 
-  /* ---- 目次 ---- */
-  nav.toc{
-    background:var(--card); border:1px solid var(--line); border-radius:12px;
-    padding:var(--sp-3); margin-bottom:var(--sp-3);
+  /* ---- 本文 ---- */
+  .prose h2 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 1.5rem; line-height: 1.4;
+    margin: var(--sp-5) 0 var(--sp-2); padding-bottom: var(--sp-1);
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: var(--sp-3);
   }
-  nav.toc .toc-ttl{
-    display:block; font-size:var(--fs-sm); letter-spacing:.14em;
-    color:var(--accent); font-weight:700; margin-bottom:var(--sp-1);
-  }
-  nav.toc ol{margin:0; padding-left:1.3em}
-  nav.toc li + li{margin-top:var(--sp-1)}
-  nav.toc a{color:var(--ink); text-decoration:none; border-bottom:1px solid transparent}
-  nav.toc a:hover,nav.toc a:focus{color:var(--accent); border-bottom-color:var(--accent)}
-  nav.toc ul.sub{margin:var(--sp-1) 0 0; padding-left:1.1em; list-style:none}
-  nav.toc ul.sub a{color:var(--sub); font-size:var(--fs-sm)}
+  .prose h3 { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin: var(--sp-4) 0 var(--sp-1); }
+  .prose p { max-width: var(--measure); margin: 0; }
+  .prose p + p { margin-top: var(--sp-3); }
+  .prose ul, .prose ol { max-width: var(--measure); margin: var(--sp-2) 0; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: var(--sp-1); }
+  .prose strong { font-weight: 700; }
 
-  /* ---- 表 ---- */
-  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:var(--sp-3) 0}
-  table{
-    border-collapse:collapse; width:100%; background:var(--card);
-    min-width:520px; line-height:1.7;
-  }
-  th,td{border:1px solid var(--line); padding:var(--sp-1) var(--sp-2);
-    text-align:left; vertical-align:top}
-  th{background:var(--accent-soft); color:var(--accent); font-weight:700}
-  table.terms td:first-child{white-space:nowrap; font-weight:700}
-  caption{caption-side:top; text-align:left; font-size:var(--fs-sm);
-    color:var(--sub); line-height:1.7; margin-bottom:var(--sp-1)}
+  /* 要点・補足・注意（関連する内容は枠でまとめる） */
+  .callout { max-width: var(--measure); margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border-left: 4px solid var(--ink); background: var(--paper-2); border-radius: 0 4px 4px 0; }
+  .callout.summary { border-left-color: var(--marker); }
+  .callout.note { background: var(--note); border-left-color: var(--link); }
+  .callout.caution { background: var(--caution); border-left-color: #b8432b; }
+  .callout > :first-child { margin-top: 0; }
+  .callout p + p { margin-top: var(--sp-2); }
+  .callout .label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
 
-  /* ---- コード ---- */
-  code{background:var(--code-inline); padding:2px 8px; border-radius:4px;
-    font-size:.9em; font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+  /* 表（比較・一覧は表で） */
+  .table-wrap { overflow-x: auto; margin: var(--sp-3) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+  th, td { padding: var(--sp-1) var(--sp-2); line-height: 1.5; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  thead th { border-bottom: 2px solid var(--ink-2); font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  caption { caption-side: top; text-align: left; font-size: 0.875rem; color: var(--ink-2); margin-bottom: var(--sp-1); }
 
-  /* ---- 図: キャプションは本文の段落間より近づける ---- */
-  figure.fig{
-    margin:var(--sp-4) 0; background:var(--fig-bg);
-    border:1px solid var(--line); border-radius:12px; padding:var(--sp-2);
-  }
-  .fig-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
-  figure.fig svg{display:block; width:100%; min-width:480px; height:auto}
-  figcaption{margin-top:var(--sp-1); font-size:var(--fs-sm);
-    line-height:1.7; color:var(--sub)}
-  figcaption b{color:var(--accent); font-weight:700}
-  .fig .lbl{fill:var(--fig-ink); font-size:14px}
-  .fig .lbl-sm{fill:var(--fig-ink); font-size:12.5px}
-  .fig .sub{fill:var(--fig-sub); font-size:12.5px}
-  .fig .ttl{fill:var(--fig-ink); font-weight:700; font-size:15px}
-  .fig .step{fill:var(--accent); font-size:12px; letter-spacing:.1em; font-weight:700}
-  .fig .edge{stroke:var(--fig-line); stroke-width:2; fill:none}
-  .fig .edge-thin{stroke:var(--fig-line); stroke-width:1.4; fill:none}
-  .fig .dash{stroke:var(--fig-line); stroke-width:1.4; fill:none; stroke-dasharray:5 5}
-  .fig .panel{fill:var(--panel-soft); stroke:var(--fig-line); stroke-width:1.2}
-  .fig .cardbox{fill:var(--card); stroke:var(--fig-line); stroke-width:1.5}
-  .fig .app{fill:var(--c-app-soft); stroke:var(--c-app); stroke-width:1.5}
-  .fig .src{fill:var(--c-src-soft); stroke:var(--c-src); stroke-width:1.5}
-  .fig .mcp{fill:var(--c-mcp-soft); stroke:var(--c-mcp); stroke-width:2}
-  .fig .neu{fill:var(--c-neu-soft); stroke:var(--c-neu); stroke-width:1.5}
-  .fig text{font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+  /* 図（インライン SVG。文字は 12px 以上、色は currentColor） */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg { display: block; max-width: 100%; height: auto; color: var(--ink); }
+  figure svg text { font-family: var(--font-body); font-size: 12px; fill: currentColor; }
+  figcaption { margin-top: var(--sp-1); font-size: 0.875rem; color: var(--ink-2); }
 
-  /* ---- ボックス: 少量の関連コンテンツを枠でまとめる ---- */
-  .box{
-    border:1px solid var(--line); border-left:4px solid var(--sub);
-    background:var(--card); border-radius:12px;
-    padding:var(--sp-2) var(--sp-3); margin:var(--sp-3) 0;
-  }
-  .box .mark{display:block; font-size:var(--fs-sm); letter-spacing:.14em;
-    line-height:1.7; color:var(--sub); margin-bottom:var(--sp-1)}
-  .box .ttl{display:block; font-weight:700; margin-bottom:var(--sp-1)}
-  .box.tip{border-color:var(--tip-line); border-left-color:var(--tip-ink); background:var(--tip-bg)}
-  .box.tip .mark{color:var(--tip-ink)}
-  .box.note{border-color:var(--note-line); border-left-color:var(--note-ink); background:var(--note-bg)}
-  .box.note .mark{color:var(--note-ink)}
-  .box.warn{border-color:var(--warn-line); border-left-color:var(--warn-ink); background:var(--warn-bg)}
-  .box.warn .mark{color:var(--warn-ink)}
-  .box.alert{border-color:var(--alert-line); border-left-color:var(--alert-ink); background:var(--alert-bg)}
-  .box.alert .mark{color:var(--alert-ink)}
-  .box ul{margin:0}
-  .box ul li + li{margin-top:var(--sp-2)}
+  /* コード */
+  pre { margin: var(--sp-3) 0; padding: var(--sp-2); background: var(--code-bg); border-radius: 4px; overflow-x: auto; line-height: 1.6; }
+  code { font-family: var(--font-mono); font-size: 0.875em; }
+  :not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
 
-  /* ---- 確認問題 ---- */
-  .q{background:var(--card); border:1px solid var(--line); border-radius:12px;
-    padding:var(--sp-2) var(--sp-3); margin:var(--sp-3) 0}
-  .q .question{font-weight:700; line-height:1.7}
-  .q .qno{color:var(--accent); margin-right:.4em}
-  details{border-top:1px dashed var(--line); padding-top:var(--sp-1); margin-top:var(--sp-2)}
-  details p{margin-top:var(--sp-1)}
-  summary{cursor:pointer; font-weight:700; color:var(--accent); list-style:none}
-  summary::-webkit-details-marker{display:none}
-  summary::before{content:"▸ "}
-  details[open] summary::before{content:"▾ "}
+  /* 確認問題（折りたたみ） */
+  .quiz { max-width: var(--measure); margin: var(--sp-2) 0; border: 1px solid var(--rule); border-radius: 4px; }
+  .quiz summary { padding: var(--sp-2); cursor: pointer; font-weight: 700; }
+  .quiz summary::marker { color: var(--ink-2); }
+  .quiz .answer { padding: 0 var(--sp-2) var(--sp-2); border-top: 1px solid var(--rule); }
+  .quiz .answer > :first-child { margin-top: var(--sp-2); }
 
-  .refs li + li{margin-top:var(--sp-2)}
-  footer{
-    max-width:920px; margin:var(--sp-5) auto 0; padding:var(--sp-3) var(--sp-2) var(--sp-5);
-    border-top:1px solid var(--line); color:var(--sub);
-    font-size:var(--fs-sm); line-height:1.7;
-  }
-  .scroll-hint{display:none; font-size:var(--fs-sm); color:var(--sub); margin-top:var(--sp-1)}
+  /* 参考リンク */
+  .refs { max-width: var(--measure); }
+  .refs li { word-break: break-all; }
 
-  /* ---- 200%拡大・スマホでも横スクロールを起こさない ---- */
-  img,svg,video{max-width:100%; height:auto}
-  pre{overflow-x:auto}
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
 
-  @media (max-width:620px){
-    header.hero{padding:var(--sp-4) var(--sp-2) var(--sp-3); margin-bottom:var(--sp-3)}
-    h2{margin-top:var(--sp-4)}
-    .box,.q,nav.toc{padding:var(--sp-2)}
-    figure.fig{padding:var(--sp-1)}
-    .scroll-hint{display:block}
-  }
-  @media print{
-    header.hero{background:none; color:#000; border-bottom:2px solid #000}
-    nav.toc,.scroll-hint{display:none}
-    details{display:block}
+  @media (max-width: 600px) {
+    .page { padding: 0 var(--sp-2) var(--sp-4); }
+    .prose h2 { font-size: 1.3rem; }
   }
 </style>
 </head>
 <body>
+<div class="page">
 
-<header class="hero">
-  <div class="inner">
-    <span class="tag">MCP 入門レポート</span>
-    <h1>MCP（Model Context Protocol）とは何か</h1>
-    <p>作成日 2026-09-18 ／ テーマ: AIと外部ツールをつなぐ共通規格</p>
-  </div>
-</header>
+  <header class="cover">
+    <a class="back" href="../index.html">学習ノートに戻る</a>
+    <h1><span>MCP（Model Context Protocol）とは何か</span></h1>
+    <ul class="meta">
+      <li>作成日 2026-09-18</li>
+      <li>分野 AI</li>
+    </ul>
+  </header>
 
-<div class="wrap">
+  <nav class="toc" aria-label="目次">
+    <h2>目次</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a>
+        <ul class="sub">
+          <li><a href="#s3-1">なぜMCPが作られたのか</a></li>
+          <li><a href="#s3-2">ホスト・クライアント・サーバーの3層構成</a></li>
+          <li><a href="#s3-3">データ層とトランスポート層</a></li>
+          <li><a href="#s3-4">三大プリミティブ：ツール・リソース・プロンプト</a></li>
+          <li><a href="#s3-5">基本的なやり取りの流れ</a></li>
+          <li><a href="#s3-6">2026年時点の補足</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a>
+        <ul class="sub">
+          <li><a href="#s4-1">代表的な利用シーン</a></li>
+          <li><a href="#s4-2">エコシステムの広がり</a></li>
+          <li><a href="#s4-3">関数呼び出しとの比較</a></li>
+        </ul>
+      </li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
 
-<nav class="toc" aria-label="目次">
-  <span class="toc-ttl">目次</span>
-  <ol>
-    <li><a href="#overview">概要（3行で）</a></li>
-    <li><a href="#terms">基本用語</a></li>
-    <li><a href="#why">なぜMCPが作られたのか</a></li>
-    <li><a href="#architecture">仕組み・全体像</a>
-      <ul class="sub">
-        <li><a href="#arch-1">4-1. ホスト・クライアント・サーバーの3層構成</a></li>
-        <li><a href="#arch-2">4-2. データ層とトランスポート層</a></li>
-        <li><a href="#arch-3">4-3. 三大プリミティブ</a></li>
-        <li><a href="#arch-4">4-4. 基本的なやり取りの流れ</a></li>
-        <li><a href="#arch-5">4-5. 2026年時点の補足</a></li>
+  <main class="prose">
+
+    <h2 id="s1">概要</h2>
+    <div class="callout summary">
+      <span class="label">3行でいうと</span>
+      <ul>
+        <li>MCPは、AIアプリケーション（LLM）と外部のデータ・ツール・アプリを繋ぐための「共通の接続規格」であり、Anthropicが2024年11月にオープンソースとして公開した。</li>
+        <li>従来はAIとデータソースを繋ぐたびに個別実装が必要だったが、MCPにより「一度作れば、どのAIアプリからも使える」統合が可能になる（よく「AI版のUSB-C」と例えられる）。</li>
+        <li>ホスト（AIアプリ）・クライアント・サーバーという3者構成を取り、サーバーが「ツール」「リソース」「プロンプト」という形で機能やデータを提供する。2025年末にはLinux Foundation傘下のAgentic AI Foundationに移管され、業界横断のオープン標準になりつつある。</li>
       </ul>
-    </li>
-    <li><a href="#examples">具体例・使いどころ</a></li>
-    <li><a href="#comparison">関数呼び出しとの比較</a></li>
-    <li><a href="#pitfalls">注意点・よくある誤解</a></li>
-    <li><a href="#quiz">確認問題</a></li>
-    <li><a href="#references">参考リンク</a></li>
-  </ol>
-</nav>
+    </div>
 
-<h2 id="overview"><span class="num">SECTION 1</span>概要（3行で）</h2>
-<div class="box tip">
-  <span class="mark">SUMMARY</span>
-  <ul>
-    <li>MCPは、AIアプリケーション（LLM）と外部のデータ・ツール・アプリを繋ぐための「共通の接続規格」であり、Anthropicが2024年11月にオープンソースとして公開した。</li>
-    <li>従来はAIとデータソースを繋ぐたびに個別実装が必要だったが、MCPにより「一度作れば、どのAIアプリからも使える」統合が可能になる（よく「AI版のUSB-C」と例えられる）。</li>
-    <li>ホスト（AIアプリ）・クライアント・サーバーという3者構成を取り、サーバーが「ツール」「リソース」「プロンプト」という形で機能やデータを提供する。2025年末にはLinux Foundation傘下のAgentic AI Foundationに移管され、業界横断のオープン標準になりつつある。</li>
-  </ul>
+    <h2 id="s2">基本用語</h2>
+    <div class="table-wrap">
+      <table>
+        <caption>MCPを読むときに前提となる8つの用語</caption>
+        <thead>
+          <tr><th scope="col">用語</th><th scope="col">意味</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>MCPホスト<br>（Host）</td><td>ユーザーが直接使うAIアプリケーション本体。例：Claude Desktop、Claude Code、VS Code、Cursorなど。1つ以上のMCPクライアントを内部に持つ。</td></tr>
+          <tr><td>MCPクライアント<br>（Client）</td><td>ホストの内部で、1つのMCPサーバーとの接続を1対1で管理するコンポーネント。サーバーが増えるとクライアントも増える。</td></tr>
+          <tr><td>MCPサーバー<br>（Server）</td><td>ツール・リソース・プロンプトなどの「コンテキスト」を提供するプログラム。ローカル（自分のPC上）でも、リモート（インターネット越し）でも動く。</td></tr>
+          <tr><td>ツール<br>（Tools）</td><td>AIが呼び出せる実行可能な機能（例：ファイル操作、API呼び出し、DB検索）。いわゆる「関数呼び出し」に近い。</td></tr>
+          <tr><td>リソース<br>（Resources）</td><td>AIに読み込ませるデータそのもの（例：ファイルの中身、DBのレコード、APIレスポンス）。実行はせず、文脈として渡す情報。</td></tr>
+          <tr><td>プロンプト<br>（Prompts）</td><td>やり取りの型を定義した再利用可能なテンプレート（例：定型の指示文、少数事例つきのお手本）。</td></tr>
+          <tr><td>トランスポート層</td><td>クライアントとサーバーの通信手段。ローカル用の Stdio（標準入出力）と、リモート用の Streamable HTTP がある。</td></tr>
+          <tr><td>JSON-RPC 2.0</td><td>MCPの通信メッセージ形式の土台となっている、軽量なリモート手続き呼び出しの規格。</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="s3">仕組み・全体像</h2>
+
+    <h3 id="s3-1">なぜMCPが作られたのか</h3>
+    <p>どれほど賢いLLMでも、学習データに含まれない「自分専用の情報」（社内Wiki、DB、最新のファイルなど）にはアクセスできない。これを解決するため、開発者はこれまで「このAIとこのデータソースを繋ぐ専用コード」をサービスの組み合わせごとに書く必要があった。</p>
+    <p>Anthropicはこの状態を「N個のAIアプリ × M個のデータソース」で発生する<strong>N×M個の個別統合</strong>と表現し、スケールしない問題だとした。</p>
+    <p>MCPは、この個別統合を「共通の1つのプロトコル」に置き換えることを狙った。</p>
+    <p>サーバー側は一度MCP対応のサーバーを作れば、Claude・ChatGPT・VS Code・Cursorなど、MCP対応のどのクライアントからも呼び出せるようになる。逆にクライアント（AIアプリ）側も、MCP対応の膨大なサーバー資産をそのまま利用できる。</p>
+    <div class="callout note">
+      <span class="label">ポイント</span>
+      <p>「1回作れば、どこでも繋がる」というのが最大の狙いである。</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 760 400" role="img" aria-label="MCPがない場合はAIアプリ3つとデータソース3つを結ぶのに9本の個別統合が必要だが、MCPを介すると3プラス3の6本で済むことを対比した図">
+        <title>MCPがない場合はAIアプリ3つとデータソース3つを結ぶのに9本の個別統合が必要だが、MCPを介すると3プラス3の6本で済むことを対比した図</title>
+        <g>
+          <!-- 左: N×M -->
+          <rect x="8" y="8" width="360" height="384" rx="12" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="188" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">MCPなし：個別統合</text>
+          <text x="188" y="58" text-anchor="middle" font-size="12" fill="var(--ink-2)">組み合わせの数だけ専用コードを書く</text>
+
+          <line x1="128" y1="110" x2="240" y2="110" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="110" x2="240" y2="170" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="110" x2="240" y2="230" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="170" x2="240" y2="110" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="170" x2="240" y2="170" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="170" x2="240" y2="230" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="230" x2="240" y2="110" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="230" x2="240" y2="170" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="128" y1="230" x2="240" y2="230" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+
+          <rect x="32" y="90" width="96" height="40" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="80" y="115" text-anchor="middle" font-size="12" fill="var(--ink)">AIアプリ1</text>
+          <rect x="32" y="150" width="96" height="40" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="80" y="175" text-anchor="middle" font-size="12" fill="var(--ink)">AIアプリ2</text>
+          <rect x="32" y="210" width="96" height="40" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="80" y="235" text-anchor="middle" font-size="12" fill="var(--ink)">AIアプリ3</text>
+
+          <rect x="240" y="90" width="96" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="288" y="115" text-anchor="middle" font-size="12" fill="var(--ink)">データ源1</text>
+          <rect x="240" y="150" width="96" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="288" y="175" text-anchor="middle" font-size="12" fill="var(--ink)">データ源2</text>
+          <rect x="240" y="210" width="96" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="288" y="235" text-anchor="middle" font-size="12" fill="var(--ink)">データ源3</text>
+
+          <text x="188" y="300" text-anchor="middle" font-size="12" font-weight="700" fill="var(--link)" letter-spacing="0.1em">N × M ＝ 3 × 3 ＝ 9本</text>
+          <text x="188" y="326" text-anchor="middle" font-size="12" fill="var(--ink-2)">アプリやデータ源が増えるほど</text>
+          <text x="188" y="348" text-anchor="middle" font-size="12" fill="var(--ink-2)">接続が急増してスケールしない</text>
+
+          <!-- 右: N+M -->
+          <rect x="392" y="8" width="360" height="384" rx="12" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="572" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">MCPあり：共通プロトコル</text>
+          <text x="572" y="58" text-anchor="middle" font-size="12" fill="var(--ink-2)">両側がMCPにだけ対応すればよい</text>
+
+          <line x1="512" y1="110" x2="556" y2="170" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="512" y1="170" x2="556" y2="170" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="512" y1="230" x2="556" y2="170" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="644" y1="170" x2="688" y2="110" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="644" y1="170" x2="688" y2="170" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+          <line x1="644" y1="170" x2="688" y2="230" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+
+          <rect x="416" y="90" width="96" height="40" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="464" y="115" text-anchor="middle" font-size="12" fill="var(--ink)">AIアプリ1</text>
+          <rect x="416" y="150" width="96" height="40" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="464" y="175" text-anchor="middle" font-size="12" fill="var(--ink)">AIアプリ2</text>
+          <rect x="416" y="210" width="96" height="40" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="464" y="235" text-anchor="middle" font-size="12" fill="var(--ink)">AIアプリ3</text>
+
+          <rect x="556" y="120" width="88" height="100" rx="10" fill="var(--ink)" fill-opacity="0.12" stroke="var(--ink)" stroke-width="2"/>
+          <text x="600" y="162" text-anchor="middle" font-size="13" fill="var(--ink)">MCP</text>
+          <text x="600" y="184" text-anchor="middle" font-size="12" fill="var(--ink-2)">共通の</text>
+          <text x="600" y="202" text-anchor="middle" font-size="12" fill="var(--ink-2)">接続規格</text>
+
+          <rect x="688" y="90" width="56" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="716" y="115" text-anchor="middle" font-size="12" fill="var(--ink)">源1</text>
+          <rect x="688" y="150" width="56" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="716" y="175" text-anchor="middle" font-size="12" fill="var(--ink)">源2</text>
+          <rect x="688" y="210" width="56" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="716" y="235" text-anchor="middle" font-size="12" fill="var(--ink)">源3</text>
+
+          <text x="572" y="300" text-anchor="middle" font-size="12" font-weight="700" fill="var(--link)" letter-spacing="0.1em">N ＋ M ＝ 3 ＋ 3 ＝ 6本</text>
+          <text x="572" y="326" text-anchor="middle" font-size="12" fill="var(--ink-2)">一度MCP対応で作れば</text>
+          <text x="572" y="348" text-anchor="middle" font-size="12" fill="var(--ink-2)">どのAIアプリからも使える</text>
+        </g>
+      </svg>
+      <figcaption><strong>図1：N×M問題とMCPによる解決。</strong>左はAIアプリごと・データソースごとに専用コードを書く個別統合（3×3で9本）。右はMCPという共通規格を挟んだ統合（3＋3で6本）。接続線の本数の差が、そのまま実装・保守コストの差になる。</figcaption>
+    </figure>
+
+    <h3 id="s3-2">ホスト・クライアント・サーバーの3層構成</h3>
+    <p>MCPはクライアント・サーバー型のアーキテクチャを取る。ユーザーが操作するAIアプリ（例：Claude Desktop）が「ホスト」であり、ホストは接続したいMCPサーバーの数だけ「クライアント」インスタンスを内部で生成する。</p>
+    <p>各クライアントは対応する1つのサーバーと専用の接続を維持する。</p>
+    <ul>
+      <li><strong>ローカルサーバー（Stdioトランスポート）</strong>：同じPC上でプロセスとして起動し、標準入出力で通信。ファイルシステムサーバーなどが代表例で、通常1クライアントのみに対応。</li>
+      <li><strong>リモートサーバー（Streamable HTTPトランスポート）</strong>：インターネット越しにHTTP経由で通信し、多数のクライアントから同時に接続できる。OAuthなどの認証を利用することが推奨されている。</li>
+    </ul>
+
+    <figure>
+      <svg viewBox="0 0 760 400" role="img" aria-label="MCPホストの中に3つのMCPクライアントがあり、それぞれがローカルのファイルシステムサーバー、ローカルのデータベースサーバー、リモートのサーバーと1対1で接続している構成図">
+        <title>MCPホストの中に3つのMCPクライアントがあり、それぞれがローカルのファイルシステムサーバー、ローカルのデータベースサーバー、リモートのサーバーと1対1で接続している構成図</title>
+        <defs>
+          <marker id="f2arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+        <g>
+          <!-- ホスト -->
+          <rect x="16" y="48" width="300" height="300" rx="12" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="32" y="76" font-size="14" font-weight="700" fill="var(--ink)">MCPホスト（AIアプリ本体）</text>
+          <text x="32" y="96" font-size="12" fill="var(--ink-2)">例：Claude Desktop / VS Code</text>
+
+          <rect x="40" y="110" width="252" height="44" rx="8" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="166" y="138" text-anchor="middle" font-size="13" fill="var(--ink)">LLM ＋ ユーザーのチャット画面</text>
+
+          <rect x="104" y="176" width="188" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.04" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="198" y="201" text-anchor="middle" font-size="12" fill="var(--ink)">MCPクライアントA</text>
+          <rect x="104" y="236" width="188" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.04" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="198" y="261" text-anchor="middle" font-size="12" fill="var(--ink)">MCPクライアントB</text>
+          <rect x="104" y="296" width="188" height="40" rx="8" fill="var(--ink-2)" fill-opacity="0.04" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="198" y="321" text-anchor="middle" font-size="12" fill="var(--ink)">MCPクライアントC</text>
+
+          <text x="32" y="200" font-size="12" fill="var(--ink-2)">1対1</text>
+          <text x="32" y="222" font-size="12" fill="var(--ink-2)">接続を</text>
+          <text x="32" y="244" font-size="12" fill="var(--ink-2)">維持</text>
+
+          <!-- 接続線 -->
+          <line x1="292" y1="196" x2="452" y2="196" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f2arrow)" marker-start="url(#f2arrow)"/>
+          <line x1="292" y1="256" x2="452" y2="256" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f2arrow)" marker-start="url(#f2arrow)"/>
+          <line x1="292" y1="316" x2="452" y2="316" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f2arrow)" marker-start="url(#f2arrow)"/>
+          <text x="372" y="188" text-anchor="middle" font-size="12" fill="var(--ink-2)">Stdio</text>
+          <text x="372" y="248" text-anchor="middle" font-size="12" fill="var(--ink-2)">Stdio</text>
+          <text x="372" y="300" text-anchor="middle" font-size="12" fill="var(--ink-2)">Streamable</text>
+          <text x="372" y="318" text-anchor="middle" font-size="12" fill="var(--ink-2)">HTTP</text>
+
+          <!-- ローカル群 -->
+          <rect x="452" y="150" width="292" height="126" rx="10" fill="none" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="5 5"/>
+          <text x="468" y="172" font-size="12" font-weight="700" fill="var(--link)" letter-spacing="0.1em">LOCAL ／ 同じPC上のプロセス</text>
+          <rect x="468" y="182" width="260" height="34" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="598" y="204" text-anchor="middle" font-size="12" fill="var(--ink)">MCPサーバー：ファイルシステム</text>
+          <rect x="468" y="228" width="260" height="34" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="598" y="250" text-anchor="middle" font-size="12" fill="var(--ink)">MCPサーバー：社内DB</text>
+
+          <!-- リモート群 -->
+          <rect x="452" y="292" width="292" height="92" rx="10" fill="none" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="5 5"/>
+          <text x="468" y="314" font-size="12" font-weight="700" fill="var(--link)" letter-spacing="0.1em">REMOTE ／ インターネット越し</text>
+          <rect x="468" y="324" width="260" height="34" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="598" y="346" text-anchor="middle" font-size="12" fill="var(--ink)">MCPサーバー：Sentry など</text>
+          <text x="468" y="376" font-size="12" fill="var(--ink-2)">OAuthなどの認証の利用が推奨される</text>
+
+          <text x="16" y="30" font-size="14" font-weight="700" fill="var(--ink)">ホストの中にサーバーの数だけクライアントがある</text>
+        </g>
+      </svg>
+      <figcaption><strong>図2：ホスト・クライアント・サーバーの関係。</strong>ホストは接続先のサーバーごとにクライアントを1つずつ生成し、各クライアントは1つのサーバーと1対1の接続を維持する。ローカルサーバーはStdio、リモートサーバーはStreamable HTTPで通信する。</figcaption>
+    </figure>
+
+    <h3 id="s3-3">データ層とトランスポート層</h3>
+    <p>MCPは概念的に2つの層に分かれる。内側の「データ層」はJSON-RPC 2.0を使ったメッセージの意味・構造（どんなリクエスト・レスポンスをやり取りするか）を定義し、外側の「トランスポート層」は実際の通信経路（Stdioか、Streamable HTTPか）や認証を担当する。</p>
+    <p>この分離により、同じメッセージ形式のままローカルでもリモートでも動作できる。</p>
+
+    <h3 id="s3-4">三大プリミティブ：ツール・リソース・プロンプト</h3>
+    <p>サーバーが公開できる主要な要素は次の3つ。</p>
+    <ul>
+      <li><strong>ツール</strong>：AIが能動的に呼び出す実行可能な機能。例：DB検索、計算、外部APIへのリクエスト。</li>
+      <li><strong>リソース</strong>：AIに読ませる静的・準静的なデータ。例：ファイルの中身、DBのスキーマ情報。</li>
+      <li><strong>プロンプト</strong>：あらかじめ用意された会話・指示のテンプレート。例：特定業務向けの定型プロンプトや少数事例。</li>
+    </ul>
+    <p>クライアントは <code>tools/list</code> のような「一覧取得」メソッドで利用可能な項目を動的に発見し、必要に応じて <code>tools/call</code> のような実行メソッドを呼び出す。</p>
+    <p>これにより、サーバー側で機能を追加・変更しても、クライアント側は都度最新の一覧を取得するだけで対応できる。</p>
+
+    <figure>
+      <svg viewBox="0 0 760 330" role="img" aria-label="外側のトランスポート層がStdioやStreamable HTTPと認証を担当し、内側のデータ層がJSON-RPC 2.0でクライアントとサーバーのやり取りを定義し、サーバーがツール・リソース・プロンプトの3つを公開することを示した層構造の図">
+        <title>外側のトランスポート層がStdioやStreamable HTTPと認証を担当し、内側のデータ層がJSON-RPC 2.0でクライアントとサーバーのやり取りを定義し、サーバーがツール・リソース・プロンプトの3つを公開することを示した層構造の図</title>
+        <defs>
+          <marker id="f3arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+        <g>
+          <rect x="12" y="12" width="736" height="306" rx="14" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
+          <text x="32" y="40" font-size="14" font-weight="700" fill="var(--ink)">トランスポート層：Stdio / Streamable HTTP・認証（通信経路を担当）</text>
+
+          <rect x="32" y="56" width="696" height="244" rx="12" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="52" y="84" font-size="14" font-weight="700" fill="var(--ink)">データ層：JSON-RPC 2.0（メッセージの意味・構造を担当）</text>
+
+          <rect x="56" y="108" width="150" height="64" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="131" y="138" text-anchor="middle" font-size="12" fill="var(--ink)">MCP</text>
+          <text x="131" y="158" text-anchor="middle" font-size="12" fill="var(--ink)">クライアント</text>
+
+          <line x1="212" y1="128" x2="292" y2="128" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f3arrow)"/>
+          <line x1="292" y1="156" x2="212" y2="156" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f3arrow)"/>
+          <text x="252" y="120" text-anchor="middle" font-size="12" fill="var(--ink-2)">tools/list</text>
+          <text x="252" y="180" text-anchor="middle" font-size="12" fill="var(--ink-2)">結果・通知</text>
+
+          <rect x="292" y="108" width="150" height="64" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="367" y="138" text-anchor="middle" font-size="12" fill="var(--ink)">MCP</text>
+          <text x="367" y="158" text-anchor="middle" font-size="12" fill="var(--ink)">サーバー</text>
+
+          <line x1="448" y1="140" x2="492" y2="140" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f3arrow)"/>
+          <text x="367" y="208" text-anchor="middle" font-size="12" font-weight="700" fill="var(--link)" letter-spacing="0.1em">tools/call で実行</text>
+          <text x="367" y="232" text-anchor="middle" font-size="12" fill="var(--ink-2)">一覧は実行時に動的に発見できる</text>
+          <text x="367" y="254" text-anchor="middle" font-size="12" fill="var(--ink-2)">ので、機能追加にも追従しやすい</text>
+
+          <rect x="492" y="100" width="212" height="52" rx="8" fill="var(--ink)" fill-opacity="0.12" stroke="var(--ink)" stroke-width="2"/>
+          <text x="598" y="122" text-anchor="middle" font-size="12" fill="var(--ink)">ツール（Tools）</text>
+          <text x="598" y="142" text-anchor="middle" font-size="12" fill="var(--ink-2)">AIが呼ぶ実行可能な機能</text>
+
+          <rect x="492" y="164" width="212" height="52" rx="8" fill="var(--ink)" fill-opacity="0.12" stroke="var(--ink)" stroke-width="2"/>
+          <text x="598" y="186" text-anchor="middle" font-size="12" fill="var(--ink)">リソース（Resources）</text>
+          <text x="598" y="206" text-anchor="middle" font-size="12" fill="var(--ink-2)">AIに読ませるデータ</text>
+
+          <rect x="492" y="228" width="212" height="52" rx="8" fill="var(--ink)" fill-opacity="0.12" stroke="var(--ink)" stroke-width="2"/>
+          <text x="598" y="250" text-anchor="middle" font-size="12" fill="var(--ink)">プロンプト（Prompts）</text>
+          <text x="598" y="270" text-anchor="middle" font-size="12" fill="var(--ink-2)">やり取りの型のテンプレート</text>
+        </g>
+      </svg>
+      <figcaption><strong>図3：2つの層と3つのプリミティブ。</strong>外側のトランスポート層が通信経路と認証を、内側のデータ層がJSON-RPC 2.0によるメッセージの意味・構造を担当する。サーバーはツール・リソース・プロンプトの3種類を公開し、クライアントはそれを実行時に発見して呼び出す。</figcaption>
+    </figure>
+
+    <h3 id="s3-5">基本的なやり取りの流れ</h3>
+    <ol>
+      <li>クライアントとサーバーが接続し、互いの対応バージョンや機能（ツール対応・リソース対応など）を確認する（ディスカバリー）。</li>
+      <li>クライアントが利用可能なツール一覧を取得する（<code>tools/list</code>）。</li>
+      <li>LLMが会話の中で「このツールを使いたい」と判断すると、ホストがクライアント経由でサーバーにツール実行を依頼する（<code>tools/call</code>）。</li>
+      <li>サーバーは実行結果をテキストや構造化データとして返し、LLMがそれを会話の文脈として利用する。</li>
+      <li>サーバー側の状態が変化した場合（ツールが増えた等）、通知（notification）でクライアントに知らせることもできる。</li>
+    </ol>
+
+    <figure>
+      <svg viewBox="0 0 760 420" role="img" aria-label="ホストとクライアントとサーバーの間で、ディスカバリー、ツール一覧の取得、ツールの実行、結果の返却、変更通知の順にメッセージがやり取りされるシーケンス図">
+        <title>ホストとクライアントとサーバーの間で、ディスカバリー、ツール一覧の取得、ツールの実行、結果の返却、変更通知の順にメッセージがやり取りされるシーケンス図</title>
+        <defs>
+          <marker id="f4arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+        <g>
+          <rect x="40" y="16" width="180" height="44" rx="8" fill="var(--link)" fill-opacity="0.08" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="130" y="43" text-anchor="middle" font-size="12" fill="var(--ink)">ホスト（LLM）</text>
+          <rect x="290" y="16" width="180" height="44" rx="8" fill="var(--ink-2)" fill-opacity="0.04" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="380" y="43" text-anchor="middle" font-size="12" fill="var(--ink)">MCPクライアント</text>
+          <rect x="540" y="16" width="180" height="44" rx="8" fill="var(--ink-2)" fill-opacity="0.08" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <text x="630" y="43" text-anchor="middle" font-size="12" fill="var(--ink)">MCPサーバー</text>
+
+          <line x1="130" y1="60" x2="130" y2="400" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="5 5"/>
+          <line x1="380" y1="60" x2="380" y2="400" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="5 5"/>
+          <line x1="630" y1="60" x2="630" y2="400" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="5 5"/>
+
+          <text x="16" y="100" font-size="12" font-weight="700" fill="var(--link)">1</text>
+          <line x1="380" y1="108" x2="628" y2="108" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f4arrow)"/>
+          <text x="504" y="100" text-anchor="middle" font-size="12" fill="var(--ink-2)">接続・対応バージョンと機能の確認（ディスカバリー）</text>
+
+          <text x="16" y="152" font-size="12" font-weight="700" fill="var(--link)">2</text>
+          <line x1="380" y1="160" x2="628" y2="160" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f4arrow)"/>
+          <text x="504" y="152" text-anchor="middle" font-size="12" fill="var(--ink-2)">tools/list でツール一覧を取得</text>
+          <line x1="630" y1="188" x2="382" y2="188" stroke="var(--ink-2)" stroke-width="1.4" fill="none" marker-end="url(#f4arrow)"/>
+          <text x="504" y="208" text-anchor="middle" font-size="12" fill="var(--ink-2)">利用できるツールの一覧を返す</text>
+
+          <text x="16" y="248" font-size="12" font-weight="700" fill="var(--link)">3</text>
+          <line x1="130" y1="256" x2="378" y2="256" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f4arrow)"/>
+          <line x1="380" y1="256" x2="628" y2="256" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f4arrow)"/>
+          <text x="254" y="248" text-anchor="middle" font-size="12" fill="var(--ink-2)">「このツールを使う」と判断</text>
+          <text x="504" y="248" text-anchor="middle" font-size="12" fill="var(--ink-2)">tools/call で実行を依頼</text>
+
+          <text x="16" y="308" font-size="12" font-weight="700" fill="var(--link)">4</text>
+          <line x1="630" y1="316" x2="382" y2="316" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f4arrow)"/>
+          <line x1="380" y1="316" x2="132" y2="316" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#f4arrow)"/>
+          <text x="504" y="308" text-anchor="middle" font-size="12" fill="var(--ink-2)">実行結果（テキスト・構造化データ）</text>
+          <text x="254" y="308" text-anchor="middle" font-size="12" fill="var(--ink-2)">会話の文脈として利用</text>
+
+          <text x="16" y="368" font-size="12" font-weight="700" fill="var(--link)">5</text>
+          <line x1="630" y1="376" x2="382" y2="376" stroke="var(--ink-2)" stroke-width="1.4" fill="none" marker-end="url(#f4arrow)"/>
+          <text x="504" y="368" text-anchor="middle" font-size="12" fill="var(--ink-2)">notification：ツールが増えた等の変更を通知</text>
+        </g>
+      </svg>
+      <figcaption><strong>図4：接続から実行までのやり取り。</strong>丸数字は本文の1〜5に対応する。ツールを使うかどうかを決めるのはあくまでホスト側のLLMで、クライアントとサーバーはその依頼と結果を運ぶ役割を担う。</figcaption>
+    </figure>
+
+    <h3 id="s3-6">2026年時点の補足：クライアント側プリミティブと仕様の進化</h3>
+    <p>MCPはサーバー→クライアント方向の機能だけでなく、サーバーがクライアントに情報を要求する仕組み（エリシテーション：ユーザーへの追加入力の依頼）も持つ。</p>
+    <div class="callout caution">
+      <span class="label">仕様は改定中</span>
+      <p>かつて存在した「サンプリング」（サーバーがクライアント経由でLLM推論を依頼する機能）や「ロギング」は、2026年7月時点の最新仕様で非推奨となり、今後1年程度の移行期間を経て整理される方向にある。</p>
+      <p>仕様は現在も活発に改訂が続いており、最新の挙動は都度公式ドキュメントで確認するのが安全である。</p>
+    </div>
+
+    <h2 id="s4">具体例・使いどころ</h2>
+
+    <h3 id="s4-1">代表的な利用シーン</h3>
+    <ul>
+      <li><strong>開発ツール</strong>：VS CodeやCursorがGitHub・Sentry・ファイルシステムのMCPサーバーに繋ぎ、コード修正やIssue作成、エラー調査をAIが代行する。</li>
+      <li><strong>業務効率化</strong>：Slack・Google Drive・Notionなどのサーバーに繋ぎ、社内情報を踏まえた回答や作業をAIアシスタントに行わせる。</li>
+      <li><strong>データ分析</strong>：社内の複数DB（Postgresなど）にMCP経由で接続し、チャット形式でデータ集計・分析を行う。</li>
+      <li><strong>創作・ものづくり</strong>：Blenderの3DモデリングをAIに指示し、3Dプリンタで出力するといった応用例も紹介されている。</li>
+    </ul>
+
+    <h3 id="s4-2">エコシステムの広がり</h3>
+    <p>2024年11月の公開から約1年で、公式・コミュニティ合わせて1万件を超えるMCPサーバーが公開され、SDKの月間ダウンロード数は9,700万件を超えるまでに拡大した。</p>
+    <p>当初はAnthropicのClaudeを中心にスタートしたが、その後OpenAI（ChatGPT）、Google、Microsoft、AWSなど主要プレイヤーもMCPを採用し、事実上の業界標準になりつつある。</p>
+    <div class="callout note">
+      <span class="label">2025-12</span>
+      <p>2025年12月には、Anthropic・OpenAI・Block・Google・Microsoft・AWSなどが参加する形で、Linux Foundation傘下の新団体「Agentic AI Foundation」にMCPが移管され、特定企業に依存しない中立的な運営体制へ移行した。</p>
+    </div>
+
+    <h3 id="s4-3">関数呼び出しとの比較：関数呼び出し（Function Calling / Tool Use）との違い</h3>
+    <div class="table-wrap">
+      <table>
+        <caption>関数呼び出しとMCPは、対立ではなく役割分担の関係にある</caption>
+        <thead>
+          <tr><th scope="col">観点</th><th scope="col">関数呼び出し（Function Calling / Tool Use）</th><th scope="col">MCP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>位置づけ</td><td>LLM自体が持つ機能。モデルが「この関数をこの引数で呼びたい」というJSONを出力する能力</td><td>アプリ間の通信規約（プロトコル）。ツールの定義・発見・実行の橋渡しを標準化する</td></tr>
+          <tr><td>ツール定義の管理</td><td>開発者がアプリのコード内にハードコードして毎回LLMに渡す</td><td>MCPサーバーが一覧を保持し、クライアントが実行時に動的に取得できる</td></tr>
+          <tr><td>再利用性</td><td>モデルやアプリごとに定義・実装をやり直す必要が生じやすい</td><td>1つのMCPサーバーを作れば、対応する複数のAIアプリ・複数モデルから使い回せる</td></tr>
+          <tr><td>ベンダー差異</td><td>OpenAIは「Function Calling」、Anthropicは「Tool Use」など提供者ごとにAPI仕様が異なる</td><td>モデル・提供者に依存しないオープンな共通仕様を目指す</td></tr>
+          <tr><td>関係性</td><td colspan="2">対立概念ではなく補完関係。LLMが関数呼び出しの形で「ツールを使う」と判断する部分は変わらず、MCPはその呼び出し先（ツールの定義・発見・実行）を標準化するインフラ層にあたる</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>簡単な言い方をすると、「関数呼び出し＝モデルが意思決定してJSONを吐く仕組み」「MCP＝そのJSONの実行先や呼び出し方を統一する配線規格」という役割分担になる。</p>
+    <p>小規模で単一モデル・単一ツールなら素の関数呼び出しで十分だが、複数のツール・複数のAIアプリ・複数のモデルにまたがる場合はMCPの恩恵が大きくなる。</p>
+
+    <h2 id="s5">注意点・よくある誤解</h2>
+
+    <div class="callout caution">
+      <span class="label">よくある誤解</span>
+      <ul>
+        <li><strong>MCPサーバーは必ずインターネット上の「サーバー」である。</strong> — 実際には、自分のPC上でプロセスとして起動する「ローカルサーバー」（Stdio通信）も広く使われており、必ずしもリモートである必要はない。</li>
+        <li><strong>MCPを導入するだけでAIが自動的に賢くなる。</strong> — MCPはあくまで「データやツールへの接続経路」を提供するだけで、LLM自身の推論能力を上げるものではない。何を・いつ呼び出すかの判断は引き続きモデル側に委ねられる。</li>
+        <li><strong>MCPは関数呼び出し（Function Calling）の代替品である。</strong> — 前述の通り両者は競合ではなく補完関係。MCPは関数呼び出しという仕組み自体を置き換えるのではなく、その「配線」を標準化するもの。</li>
+      </ul>
+    </div>
+
+    <div class="callout caution">
+      <span class="label">注意点1：セキュリティリスクを軽視しない</span>
+      <p>MCPサーバーに接続するということは、AIエージェントに実際のツール実行権限（ファイル削除、メール送信、DB更新など）を与えることに等しい。</p>
+      <p>特に、外部データ（Webページやドキュメントなど）の中に紛れ込んだ悪意ある指示文をAIがそのまま実行してしまう「間接的プロンプトインジェクション」は、単なる設定ミスではなく構造的リスクとして知られている。</p>
+      <p>実際、本レポート作成中の調査でも、公式ドキュメントページの取得結果に「別のURLを追加で取得せよ」という指示文が紛れ込んでいる例が見つかっており、外部コンテンツを鵜呑みにせず出所不明な指示には従わない姿勢が重要である。</p>
+    </div>
+
+    <div class="callout caution">
+      <span class="label">注意点2：仕様は現在も活発に更新中</span>
+      <p>2026年7月には大規模な仕様改訂（ステートレス化、サンプリング/ロギングの非推奨化など）が行われており、情報が古い記事だと現行仕様と食い違う場合がある。</p>
+      <p>学習の際は公式ドキュメントの日付・バージョンを確認する習慣が大切。</p>
+    </div>
+
+    <h2 id="s6">確認問題</h2>
+
+    <details class="quiz">
+      <summary>Q1. MCPを提唱した企業と、その目的を一言で説明してください。</summary>
+      <div class="answer"><p>Anthropicが2024年11月に提唱。AIアプリケーションと外部データ・ツールを繋ぐための、共通のオープンな接続規格を提供することが目的（「AI版のUSB-C」）。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q2. MCPの「ホスト」「クライアント」「サーバー」の関係を説明してください。</summary>
+      <div class="answer"><p>ホストはユーザーが使うAIアプリ本体（例：Claude Desktop）。ホストは接続するMCPサーバーごとに専用のクライアントを1つずつ内部に生成し、各クライアントは対応するサーバーと1対1の接続を維持する。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q3. MCPサーバーが提供できる3つの主要な要素（プリミティブ）は何ですか。それぞれ簡単に説明してください。</summary>
+      <div class="answer"><p>ツール（AIが呼び出す実行可能な機能）、リソース（AIに読ませるデータ）、プロンプト（やり取りの型を定義したテンプレート）の3つ。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q4. MCPと関数呼び出し（Function Calling / Tool Use）はどう違いますか。両者は対立する概念ですか。</summary>
+      <div class="answer"><p>関数呼び出しはLLM自体がツール実行の意思決定をしてJSONを出力する機能であり、モデルやベンダーごとに仕様が異なる。MCPはその呼び出し先（ツールの発見・定義・実行）を標準化するプロトコルであり、両者は対立するものではなく補完関係にある。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q5. MCP利用時に注意すべきセキュリティ上のリスクを1つ挙げ、なぜ危険か説明してください。</summary>
+      <div class="answer"><p>例：間接的プロンプトインジェクション。外部データ（Webページやファイルなど）に紛れ込んだ悪意ある指示をAIがそのまま実行してしまう危険があり、MCP経由でAIが実際のツール実行権限（ファイル削除やメール送信など）を持つ場合、被害が実際のシステム操作にまで及ぶ可能性があるため。</p></div>
+    </details>
+
+    <h2 id="s7">参考リンク</h2>
+    <ul class="refs">
+      <li><a href="https://www.anthropic.com/news/model-context-protocol" target="_blank" rel="noopener">Introducing the Model Context Protocol（Anthropic公式発表）</a></li>
+      <li><a href="https://modelcontextprotocol.io/docs/getting-started/intro" target="_blank" rel="noopener">What is the Model Context Protocol (MCP)?（公式ドキュメント）</a></li>
+      <li><a href="https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture" target="_blank" rel="noopener">Architecture overview（公式ドキュメント：アーキテクチャ解説）</a></li>
+      <li><a href="https://github.com/modelcontextprotocol" target="_blank" rel="noopener">Model Context Protocol GitHub organization</a></li>
+      <li><a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener">Model Context Protocol Servers（公式リファレンスサーバー集）</a></li>
+      <li><a href="https://blog.modelcontextprotocol.io/posts/2026-07-28/" target="_blank" rel="noopener">The 2026-07-28 Specification（公式ブログ：最新仕様改訂の解説）</a></li>
+      <li><a href="https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/" target="_blank" rel="noopener">MCP joins the Agentic AI Foundation（公式ブログ）</a></li>
+      <li><a href="https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation" target="_blank" rel="noopener">Linux Foundation：Agentic AI Foundation設立発表</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/Model_Context_Protocol" target="_blank" rel="noopener">Model Context Protocol（Wikipedia）</a></li>
+      <li><a href="https://www.descope.com/blog/post/mcp-vs-function-calling" target="_blank" rel="noopener">MCP vs. Function Calling: How They Differ and Which to Use（Descope）</a></li>
+      <li><a href="https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/" target="_blank" rel="noopener">Model Context Protocol has prompt injection security problems（Simon Willison）</a></li>
+      <li><a href="https://developer.microsoft.com/blog/protecting-against-indirect-injection-attacks-mcp/" target="_blank" rel="noopener">Protecting against indirect prompt injection attacks in MCP（Microsoft）</a></li>
+    </ul>
+
+  </main>
+
+  <footer>
+    <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+  </footer>
 </div>
-
-<h2 id="terms"><span class="num">SECTION 2</span>基本用語</h2>
-<div class="table-scroll wide">
-<table class="terms">
-  <caption>MCPを読むときに前提となる8つの用語</caption>
-  <thead>
-    <tr><th scope="col">用語</th><th scope="col">意味</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>MCPホスト<br>（Host）</td><td>ユーザーが直接使うAIアプリケーション本体。例：Claude Desktop、Claude Code、VS Code、Cursorなど。1つ以上のMCPクライアントを内部に持つ。</td></tr>
-    <tr><td>MCPクライアント<br>（Client）</td><td>ホストの内部で、1つのMCPサーバーとの接続を1対1で管理するコンポーネント。サーバーが増えるとクライアントも増える。</td></tr>
-    <tr><td>MCPサーバー<br>（Server）</td><td>ツール・リソース・プロンプトなどの「コンテキスト」を提供するプログラム。ローカル（自分のPC上）でも、リモート（インターネット越し）でも動く。</td></tr>
-    <tr><td>ツール<br>（Tools）</td><td>AIが呼び出せる実行可能な機能（例：ファイル操作、API呼び出し、DB検索）。いわゆる「関数呼び出し」に近い。</td></tr>
-    <tr><td>リソース<br>（Resources）</td><td>AIに読み込ませるデータそのもの（例：ファイルの中身、DBのレコード、APIレスポンス）。実行はせず、文脈として渡す情報。</td></tr>
-    <tr><td>プロンプト<br>（Prompts）</td><td>やり取りの型を定義した再利用可能なテンプレート（例：定型の指示文、少数事例つきのお手本）。</td></tr>
-    <tr><td>トランスポート層</td><td>クライアントとサーバーの通信手段。ローカル用の Stdio（標準入出力）と、リモート用の Streamable HTTP がある。</td></tr>
-    <tr><td>JSON-RPC 2.0</td><td>MCPの通信メッセージ形式の土台となっている、軽量なリモート手続き呼び出しの規格。</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="scroll-hint">※ 表は横にスクロールできます。</p>
-
-<h2 id="why"><span class="num">SECTION 3</span>なぜMCPが作られたのか</h2>
-
-<h3 id="why-1">3-1. 解決したい課題</h3>
-<p>どれほど賢いLLMでも、学習データに含まれない「自分専用の情報」（社内Wiki、DB、最新のファイルなど）にはアクセスできない。これを解決するため、開発者はこれまで「このAIとこのデータソースを繋ぐ専用コード」をサービスの組み合わせごとに書く必要があった。</p>
-<p>Anthropicはこの状態を「N個のAIアプリ × M個のデータソース」で発生する<strong>N×M個の個別統合</strong>と表現し、スケールしない問題だとした。</p>
-
-<h3 id="why-2">3-2. MCPが目指すもの</h3>
-<p>MCPは、この個別統合を「共通の1つのプロトコル」に置き換えることを狙った。</p>
-<p>サーバー側は一度MCP対応のサーバーを作れば、Claude・ChatGPT・VS Code・Cursorなど、MCP対応のどのクライアントからも呼び出せるようになる。逆にクライアント（AIアプリ）側も、MCP対応の膨大なサーバー資産をそのまま利用できる。</p>
-<div class="box tip">
-  <span class="mark">KEY POINT</span>
-  <p>「1回作れば、どこでも繋がる」というのが最大の狙いである。</p>
-</div>
-
-<!-- FIGURE: N×M問題（個別統合）とMCP導入後（共通プロトコル経由のM+N統合）を対比する図 -->
-<figure class="fig wide">
-  <div class="fig-scroll">
-  <svg viewBox="0 0 760 400" role="img" aria-label="MCPがない場合はAIアプリ3つとデータソース3つを結ぶのに9本の個別統合が必要だが、MCPを介すると3プラス3の6本で済むことを対比した図">
-    <g class="fig">
-      <!-- 左: N×M -->
-      <rect class="panel" x="8" y="8" width="360" height="384" rx="12"/>
-      <text class="ttl" x="188" y="38" text-anchor="middle">MCPなし：個別統合</text>
-      <text class="sub" x="188" y="58" text-anchor="middle">組み合わせの数だけ専用コードを書く</text>
-
-      <line class="edge-thin" x1="128" y1="110" x2="240" y2="110"/>
-      <line class="edge-thin" x1="128" y1="110" x2="240" y2="170"/>
-      <line class="edge-thin" x1="128" y1="110" x2="240" y2="230"/>
-      <line class="edge-thin" x1="128" y1="170" x2="240" y2="110"/>
-      <line class="edge-thin" x1="128" y1="170" x2="240" y2="170"/>
-      <line class="edge-thin" x1="128" y1="170" x2="240" y2="230"/>
-      <line class="edge-thin" x1="128" y1="230" x2="240" y2="110"/>
-      <line class="edge-thin" x1="128" y1="230" x2="240" y2="170"/>
-      <line class="edge-thin" x1="128" y1="230" x2="240" y2="230"/>
-
-      <rect class="app" x="32" y="90" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="80" y="115" text-anchor="middle">AIアプリ1</text>
-      <rect class="app" x="32" y="150" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="80" y="175" text-anchor="middle">AIアプリ2</text>
-      <rect class="app" x="32" y="210" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="80" y="235" text-anchor="middle">AIアプリ3</text>
-
-      <rect class="src" x="240" y="90" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="288" y="115" text-anchor="middle">データ源1</text>
-      <rect class="src" x="240" y="150" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="288" y="175" text-anchor="middle">データ源2</text>
-      <rect class="src" x="240" y="210" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="288" y="235" text-anchor="middle">データ源3</text>
-
-      <text class="step" x="188" y="300" text-anchor="middle">N × M ＝ 3 × 3 ＝ 9本</text>
-      <text class="sub" x="188" y="326" text-anchor="middle">アプリやデータ源が増えるほど</text>
-      <text class="sub" x="188" y="348" text-anchor="middle">接続が急増してスケールしない</text>
-
-      <!-- 右: N+M -->
-      <rect class="panel" x="392" y="8" width="360" height="384" rx="12"/>
-      <text class="ttl" x="572" y="38" text-anchor="middle">MCPあり：共通プロトコル</text>
-      <text class="sub" x="572" y="58" text-anchor="middle">両側がMCPにだけ対応すればよい</text>
-
-      <line class="edge-thin" x1="512" y1="110" x2="556" y2="170"/>
-      <line class="edge-thin" x1="512" y1="170" x2="556" y2="170"/>
-      <line class="edge-thin" x1="512" y1="230" x2="556" y2="170"/>
-      <line class="edge-thin" x1="644" y1="170" x2="688" y2="110"/>
-      <line class="edge-thin" x1="644" y1="170" x2="688" y2="170"/>
-      <line class="edge-thin" x1="644" y1="170" x2="688" y2="230"/>
-
-      <rect class="app" x="416" y="90" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="464" y="115" text-anchor="middle">AIアプリ1</text>
-      <rect class="app" x="416" y="150" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="464" y="175" text-anchor="middle">AIアプリ2</text>
-      <rect class="app" x="416" y="210" width="96" height="40" rx="8"/>
-      <text class="lbl-sm" x="464" y="235" text-anchor="middle">AIアプリ3</text>
-
-      <rect class="mcp" x="556" y="120" width="88" height="100" rx="10"/>
-      <text class="lbl" x="600" y="162" text-anchor="middle">MCP</text>
-      <text class="sub" x="600" y="184" text-anchor="middle">共通の</text>
-      <text class="sub" x="600" y="202" text-anchor="middle">接続規格</text>
-
-      <rect class="src" x="688" y="90" width="56" height="40" rx="8"/>
-      <text class="lbl-sm" x="716" y="115" text-anchor="middle">源1</text>
-      <rect class="src" x="688" y="150" width="56" height="40" rx="8"/>
-      <text class="lbl-sm" x="716" y="175" text-anchor="middle">源2</text>
-      <rect class="src" x="688" y="210" width="56" height="40" rx="8"/>
-      <text class="lbl-sm" x="716" y="235" text-anchor="middle">源3</text>
-
-      <text class="step" x="572" y="300" text-anchor="middle">N ＋ M ＝ 3 ＋ 3 ＝ 6本</text>
-      <text class="sub" x="572" y="326" text-anchor="middle">一度MCP対応で作れば</text>
-      <text class="sub" x="572" y="348" text-anchor="middle">どのAIアプリからも使える</text>
-    </g>
-  </svg>
-  </div>
-  <figcaption><b>図1：N×M問題とMCPによる解決。</b>左はAIアプリごと・データソースごとに専用コードを書く個別統合（3×3で9本）。右はMCPという共通規格を挟んだ統合（3＋3で6本）。接続線の本数の差が、そのまま実装・保守コストの差になる。</figcaption>
-</figure>
-
-<h2 id="architecture"><span class="num">SECTION 4</span>仕組み・全体像</h2>
-
-<h3 id="arch-1">4-1. ホスト・クライアント・サーバーの3層構成</h3>
-<p>MCPはクライアント・サーバー型のアーキテクチャを取る。ユーザーが操作するAIアプリ（例：Claude Desktop）が「ホスト」であり、ホストは接続したいMCPサーバーの数だけ「クライアント」インスタンスを内部で生成する。</p>
-<p>各クライアントは対応する1つのサーバーと専用の接続を維持する。</p>
-<ul>
-  <li><strong>ローカルサーバー（Stdioトランスポート）</strong>：同じPC上でプロセスとして起動し、標準入出力で通信。ファイルシステムサーバーなどが代表例で、通常1クライアントのみに対応。</li>
-  <li><strong>リモートサーバー（Streamable HTTPトランスポート）</strong>：インターネット越しにHTTP経由で通信し、多数のクライアントから同時に接続できる。OAuthなどの認証を利用することが推奨されている。</li>
-</ul>
-
-<!-- FIGURE: ホスト内に複数のMCPクライアントがあり、それぞれがローカル/リモートのMCPサーバーと1対1で繋がっている構成図 -->
-<figure class="fig wide">
-  <div class="fig-scroll">
-  <svg viewBox="0 0 760 400" role="img" aria-label="MCPホストの中に3つのMCPクライアントがあり、それぞれがローカルのファイルシステムサーバー、ローカルのデータベースサーバー、リモートのサーバーと1対1で接続している構成図">
-    <defs>
-      <marker id="f2arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
-      </marker>
-    </defs>
-    <g class="fig">
-      <!-- ホスト -->
-      <rect class="app" x="16" y="48" width="300" height="300" rx="12"/>
-      <text class="ttl" x="32" y="76">MCPホスト（AIアプリ本体）</text>
-      <text class="sub" x="32" y="96">例：Claude Desktop / VS Code</text>
-
-      <rect class="cardbox" x="40" y="110" width="252" height="44" rx="8"/>
-      <text class="lbl" x="166" y="138" text-anchor="middle">LLM ＋ ユーザーのチャット画面</text>
-
-      <rect class="neu" x="104" y="176" width="188" height="40" rx="8"/>
-      <text class="lbl-sm" x="198" y="201" text-anchor="middle">MCPクライアントA</text>
-      <rect class="neu" x="104" y="236" width="188" height="40" rx="8"/>
-      <text class="lbl-sm" x="198" y="261" text-anchor="middle">MCPクライアントB</text>
-      <rect class="neu" x="104" y="296" width="188" height="40" rx="8"/>
-      <text class="lbl-sm" x="198" y="321" text-anchor="middle">MCPクライアントC</text>
-
-      <text class="sub" x="32" y="200">1対1</text>
-      <text class="sub" x="32" y="222">接続を</text>
-      <text class="sub" x="32" y="244">維持</text>
-
-      <!-- 接続線 -->
-      <line class="edge" x1="292" y1="196" x2="452" y2="196" marker-end="url(#f2arrow)" marker-start="url(#f2arrow)"/>
-      <line class="edge" x1="292" y1="256" x2="452" y2="256" marker-end="url(#f2arrow)" marker-start="url(#f2arrow)"/>
-      <line class="edge" x1="292" y1="316" x2="452" y2="316" marker-end="url(#f2arrow)" marker-start="url(#f2arrow)"/>
-      <text class="sub" x="372" y="188" text-anchor="middle">Stdio</text>
-      <text class="sub" x="372" y="248" text-anchor="middle">Stdio</text>
-      <text class="sub" x="372" y="300" text-anchor="middle">Streamable</text>
-      <text class="sub" x="372" y="318" text-anchor="middle">HTTP</text>
-
-      <!-- ローカル群 -->
-      <rect class="dash" x="452" y="150" width="292" height="126" rx="10" fill="none"/>
-      <text class="step" x="468" y="172">LOCAL ／ 同じPC上のプロセス</text>
-      <rect class="src" x="468" y="182" width="260" height="34" rx="8"/>
-      <text class="lbl-sm" x="598" y="204" text-anchor="middle">MCPサーバー：ファイルシステム</text>
-      <rect class="src" x="468" y="228" width="260" height="34" rx="8"/>
-      <text class="lbl-sm" x="598" y="250" text-anchor="middle">MCPサーバー：社内DB</text>
-
-      <!-- リモート群 -->
-      <rect class="dash" x="452" y="292" width="292" height="92" rx="10" fill="none"/>
-      <text class="step" x="468" y="314">REMOTE ／ インターネット越し</text>
-      <rect class="src" x="468" y="324" width="260" height="34" rx="8"/>
-      <text class="lbl-sm" x="598" y="346" text-anchor="middle">MCPサーバー：Sentry など</text>
-      <text class="sub" x="468" y="376">OAuthなどの認証の利用が推奨される</text>
-
-      <text class="ttl" x="16" y="30">ホストの中にサーバーの数だけクライアントがある</text>
-    </g>
-  </svg>
-  </div>
-  <figcaption><b>図2：ホスト・クライアント・サーバーの関係。</b>ホストは接続先のサーバーごとにクライアントを1つずつ生成し、各クライアントは1つのサーバーと1対1の接続を維持する。ローカルサーバーはStdio、リモートサーバーはStreamable HTTPで通信する。</figcaption>
-</figure>
-
-<h3 id="arch-2">4-2. データ層とトランスポート層</h3>
-<p>MCPは概念的に2つの層に分かれる。内側の「データ層」はJSON-RPC 2.0を使ったメッセージの意味・構造（どんなリクエスト・レスポンスをやり取りするか）を定義し、外側の「トランスポート層」は実際の通信経路（Stdioか、Streamable HTTPか）や認証を担当する。</p>
-<p>この分離により、同じメッセージ形式のままローカルでもリモートでも動作できる。</p>
-
-<h3 id="arch-3">4-3. 三大プリミティブ：ツール・リソース・プロンプト</h3>
-<p>サーバーが公開できる主要な要素は次の3つ。</p>
-<ul>
-  <li><strong>ツール</strong>：AIが能動的に呼び出す実行可能な機能。例：DB検索、計算、外部APIへのリクエスト。</li>
-  <li><strong>リソース</strong>：AIに読ませる静的・準静的なデータ。例：ファイルの中身、DBのスキーマ情報。</li>
-  <li><strong>プロンプト</strong>：あらかじめ用意された会話・指示のテンプレート。例：特定業務向けの定型プロンプトや少数事例。</li>
-</ul>
-<p>クライアントは <code>tools/list</code> のような「一覧取得」メソッドで利用可能な項目を動的に発見し、必要に応じて <code>tools/call</code> のような実行メソッドを呼び出す。</p>
-<p>これにより、サーバー側で機能を追加・変更しても、クライアント側は都度最新の一覧を取得するだけで対応できる。</p>
-
-<figure class="fig wide">
-  <div class="fig-scroll">
-  <svg viewBox="0 0 760 330" role="img" aria-label="外側のトランスポート層がStdioやStreamable HTTPと認証を担当し、内側のデータ層がJSON-RPC 2.0でクライアントとサーバーのやり取りを定義し、サーバーがツール・リソース・プロンプトの3つを公開することを示した層構造の図">
-    <defs>
-      <marker id="f3arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
-      </marker>
-    </defs>
-    <g class="fig">
-      <rect class="panel" x="12" y="12" width="736" height="306" rx="14"/>
-      <text class="ttl" x="32" y="40">トランスポート層：Stdio / Streamable HTTP・認証（通信経路を担当）</text>
-
-      <rect class="cardbox" x="32" y="56" width="696" height="244" rx="12"/>
-      <text class="ttl" x="52" y="84">データ層：JSON-RPC 2.0（メッセージの意味・構造を担当）</text>
-
-      <rect class="app" x="56" y="108" width="150" height="64" rx="8"/>
-      <text class="lbl-sm" x="131" y="138" text-anchor="middle">MCP</text>
-      <text class="lbl-sm" x="131" y="158" text-anchor="middle">クライアント</text>
-
-      <line class="edge" x1="212" y1="128" x2="292" y2="128" marker-end="url(#f3arrow)"/>
-      <line class="edge" x1="292" y1="156" x2="212" y2="156" marker-end="url(#f3arrow)"/>
-      <text class="sub" x="252" y="120" text-anchor="middle">tools/list</text>
-      <text class="sub" x="252" y="180" text-anchor="middle">結果・通知</text>
-
-      <rect class="src" x="292" y="108" width="150" height="64" rx="8"/>
-      <text class="lbl-sm" x="367" y="138" text-anchor="middle">MCP</text>
-      <text class="lbl-sm" x="367" y="158" text-anchor="middle">サーバー</text>
-
-      <line class="edge" x1="448" y1="140" x2="492" y2="140" marker-end="url(#f3arrow)"/>
-      <text class="step" x="367" y="208" text-anchor="middle">tools/call で実行</text>
-      <text class="sub" x="367" y="232" text-anchor="middle">一覧は実行時に動的に発見できる</text>
-      <text class="sub" x="367" y="254" text-anchor="middle">ので、機能追加にも追従しやすい</text>
-
-      <rect class="mcp" x="492" y="100" width="212" height="52" rx="8"/>
-      <text class="lbl-sm" x="598" y="122" text-anchor="middle">ツール（Tools）</text>
-      <text class="sub" x="598" y="142" text-anchor="middle">AIが呼ぶ実行可能な機能</text>
-
-      <rect class="mcp" x="492" y="164" width="212" height="52" rx="8"/>
-      <text class="lbl-sm" x="598" y="186" text-anchor="middle">リソース（Resources）</text>
-      <text class="sub" x="598" y="206" text-anchor="middle">AIに読ませるデータ</text>
-
-      <rect class="mcp" x="492" y="228" width="212" height="52" rx="8"/>
-      <text class="lbl-sm" x="598" y="250" text-anchor="middle">プロンプト（Prompts）</text>
-      <text class="sub" x="598" y="270" text-anchor="middle">やり取りの型のテンプレート</text>
-    </g>
-  </svg>
-  </div>
-  <figcaption><b>図3：2つの層と3つのプリミティブ。</b>外側のトランスポート層が通信経路と認証を、内側のデータ層がJSON-RPC 2.0によるメッセージの意味・構造を担当する。サーバーはツール・リソース・プロンプトの3種類を公開し、クライアントはそれを実行時に発見して呼び出す。</figcaption>
-</figure>
-
-<h3 id="arch-4">4-4. 基本的なやり取りの流れ</h3>
-<ol>
-  <li>クライアントとサーバーが接続し、互いの対応バージョンや機能（ツール対応・リソース対応など）を確認する（ディスカバリー）。</li>
-  <li>クライアントが利用可能なツール一覧を取得する（<code>tools/list</code>）。</li>
-  <li>LLMが会話の中で「このツールを使いたい」と判断すると、ホストがクライアント経由でサーバーにツール実行を依頼する（<code>tools/call</code>）。</li>
-  <li>サーバーは実行結果をテキストや構造化データとして返し、LLMがそれを会話の文脈として利用する。</li>
-  <li>サーバー側の状態が変化した場合（ツールが増えた等）、通知（notification）でクライアントに知らせることもできる。</li>
-</ol>
-
-<figure class="fig wide">
-  <div class="fig-scroll">
-  <svg viewBox="0 0 760 420" role="img" aria-label="ホストとクライアントとサーバーの間で、ディスカバリー、ツール一覧の取得、ツールの実行、結果の返却、変更通知の順にメッセージがやり取りされるシーケンス図">
-    <defs>
-      <marker id="f4arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--fig-line)"/>
-      </marker>
-    </defs>
-    <g class="fig">
-      <rect class="app" x="40" y="16" width="180" height="44" rx="8"/>
-      <text class="lbl-sm" x="130" y="43" text-anchor="middle">ホスト（LLM）</text>
-      <rect class="neu" x="290" y="16" width="180" height="44" rx="8"/>
-      <text class="lbl-sm" x="380" y="43" text-anchor="middle">MCPクライアント</text>
-      <rect class="src" x="540" y="16" width="180" height="44" rx="8"/>
-      <text class="lbl-sm" x="630" y="43" text-anchor="middle">MCPサーバー</text>
-
-      <line class="dash" x1="130" y1="60" x2="130" y2="400"/>
-      <line class="dash" x1="380" y1="60" x2="380" y2="400"/>
-      <line class="dash" x1="630" y1="60" x2="630" y2="400"/>
-
-      <text class="step" x="16" y="100">1</text>
-      <line class="edge" x1="380" y1="108" x2="628" y2="108" marker-end="url(#f4arrow)"/>
-      <text class="sub" x="504" y="100" text-anchor="middle">接続・対応バージョンと機能の確認（ディスカバリー）</text>
-
-      <text class="step" x="16" y="152">2</text>
-      <line class="edge" x1="380" y1="160" x2="628" y2="160" marker-end="url(#f4arrow)"/>
-      <text class="sub" x="504" y="152" text-anchor="middle">tools/list でツール一覧を取得</text>
-      <line class="edge-thin" x1="630" y1="188" x2="382" y2="188" marker-end="url(#f4arrow)"/>
-      <text class="sub" x="504" y="208" text-anchor="middle">利用できるツールの一覧を返す</text>
-
-      <text class="step" x="16" y="248">3</text>
-      <line class="edge" x1="130" y1="256" x2="378" y2="256" marker-end="url(#f4arrow)"/>
-      <line class="edge" x1="380" y1="256" x2="628" y2="256" marker-end="url(#f4arrow)"/>
-      <text class="sub" x="254" y="248" text-anchor="middle">「このツールを使う」と判断</text>
-      <text class="sub" x="504" y="248" text-anchor="middle">tools/call で実行を依頼</text>
-
-      <text class="step" x="16" y="308">4</text>
-      <line class="edge" x1="630" y1="316" x2="382" y2="316" marker-end="url(#f4arrow)"/>
-      <line class="edge" x1="380" y1="316" x2="132" y2="316" marker-end="url(#f4arrow)"/>
-      <text class="sub" x="504" y="308" text-anchor="middle">実行結果（テキスト・構造化データ）</text>
-      <text class="sub" x="254" y="308" text-anchor="middle">会話の文脈として利用</text>
-
-      <text class="step" x="16" y="368">5</text>
-      <line class="edge-thin" x1="630" y1="376" x2="382" y2="376" marker-end="url(#f4arrow)"/>
-      <text class="sub" x="504" y="368" text-anchor="middle">notification：ツールが増えた等の変更を通知</text>
-    </g>
-  </svg>
-  </div>
-  <figcaption><b>図4：接続から実行までのやり取り。</b>丸数字は本文の1〜5に対応する。ツールを使うかどうかを決めるのはあくまでホスト側のLLMで、クライアントとサーバーはその依頼と結果を運ぶ役割を担う。</figcaption>
-</figure>
-
-<h3 id="arch-5">4-5. 2026年時点の補足：クライアント側プリミティブと仕様の進化</h3>
-<p>MCPはサーバー→クライアント方向の機能だけでなく、サーバーがクライアントに情報を要求する仕組み（エリシテーション：ユーザーへの追加入力の依頼）も持つ。</p>
-<div class="box warn">
-  <span class="mark">CHANGING SPEC</span>
-  <p>かつて存在した「サンプリング」（サーバーがクライアント経由でLLM推論を依頼する機能）や「ロギング」は、2026年7月時点の最新仕様で非推奨となり、今後1年程度の移行期間を経て整理される方向にある。</p>
-  <p>仕様は現在も活発に改訂が続いており、最新の挙動は都度公式ドキュメントで確認するのが安全である。</p>
-</div>
-
-<h2 id="examples"><span class="num">SECTION 5</span>具体例・使いどころ</h2>
-
-<h3 id="examples-1">5-1. 代表的な利用シーン</h3>
-<ul>
-  <li><strong>開発ツール</strong>：VS CodeやCursorがGitHub・Sentry・ファイルシステムのMCPサーバーに繋ぎ、コード修正やIssue作成、エラー調査をAIが代行する。</li>
-  <li><strong>業務効率化</strong>：Slack・Google Drive・Notionなどのサーバーに繋ぎ、社内情報を踏まえた回答や作業をAIアシスタントに行わせる。</li>
-  <li><strong>データ分析</strong>：社内の複数DB（Postgresなど）にMCP経由で接続し、チャット形式でデータ集計・分析を行う。</li>
-  <li><strong>創作・ものづくり</strong>：Blenderの3DモデリングをAIに指示し、3Dプリンタで出力するといった応用例も紹介されている。</li>
-</ul>
-
-<h3 id="examples-2">5-2. エコシステムの広がり</h3>
-<p>2024年11月の公開から約1年で、公式・コミュニティ合わせて1万件を超えるMCPサーバーが公開され、SDKの月間ダウンロード数は9,700万件を超えるまでに拡大した。</p>
-<p>当初はAnthropicのClaudeを中心にスタートしたが、その後OpenAI（ChatGPT）、Google、Microsoft、AWSなど主要プレイヤーもMCPを採用し、事実上の業界標準になりつつある。</p>
-<div class="box note">
-  <span class="mark">2025-12</span>
-  <p>2025年12月には、Anthropic・OpenAI・Block・Google・Microsoft・AWSなどが参加する形で、Linux Foundation傘下の新団体「Agentic AI Foundation」にMCPが移管され、特定企業に依存しない中立的な運営体制へ移行した。</p>
-</div>
-
-<h2 id="comparison"><span class="num">SECTION 6</span>既存の概念との違い：関数呼び出し（Function Calling / Tool Use）との比較</h2>
-<div class="table-scroll wide">
-<table>
-  <caption>関数呼び出しとMCPは、対立ではなく役割分担の関係にある</caption>
-  <thead>
-    <tr><th scope="col">観点</th><th scope="col">関数呼び出し（Function Calling / Tool Use）</th><th scope="col">MCP</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>位置づけ</td><td>LLM自体が持つ機能。モデルが「この関数をこの引数で呼びたい」というJSONを出力する能力</td><td>アプリ間の通信規約（プロトコル）。ツールの定義・発見・実行の橋渡しを標準化する</td></tr>
-    <tr><td>ツール定義の管理</td><td>開発者がアプリのコード内にハードコードして毎回LLMに渡す</td><td>MCPサーバーが一覧を保持し、クライアントが実行時に動的に取得できる</td></tr>
-    <tr><td>再利用性</td><td>モデルやアプリごとに定義・実装をやり直す必要が生じやすい</td><td>1つのMCPサーバーを作れば、対応する複数のAIアプリ・複数モデルから使い回せる</td></tr>
-    <tr><td>ベンダー差異</td><td>OpenAIは「Function Calling」、Anthropicは「Tool Use」など提供者ごとにAPI仕様が異なる</td><td>モデル・提供者に依存しないオープンな共通仕様を目指す</td></tr>
-    <tr><td>関係性</td><td colspan="2">対立概念ではなく補完関係。LLMが関数呼び出しの形で「ツールを使う」と判断する部分は変わらず、MCPはその呼び出し先（ツールの定義・発見・実行）を標準化するインフラ層にあたる</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="scroll-hint">※ 表は横にスクロールできます。</p>
-<p>簡単な言い方をすると、「関数呼び出し＝モデルが意思決定してJSONを吐く仕組み」「MCP＝そのJSONの実行先や呼び出し方を統一する配線規格」という役割分担になる。</p>
-<p>小規模で単一モデル・単一ツールなら素の関数呼び出しで十分だが、複数のツール・複数のAIアプリ・複数のモデルにまたがる場合はMCPの恩恵が大きくなる。</p>
-
-<h2 id="pitfalls"><span class="num">SECTION 7</span>注意点・よくある誤解</h2>
-
-<div class="box warn">
-  <span class="mark">誤解 1</span>
-  <span class="ttl">MCPサーバーは必ずインターネット上の「サーバー」である。</span>
-  <p>実際には、自分のPC上でプロセスとして起動する「ローカルサーバー」（Stdio通信）も広く使われており、必ずしもリモートである必要はない。</p>
-</div>
-
-<div class="box warn">
-  <span class="mark">誤解 2</span>
-  <span class="ttl">MCPを導入するだけでAIが自動的に賢くなる。</span>
-  <p>MCPはあくまで「データやツールへの接続経路」を提供するだけで、LLM自身の推論能力を上げるものではない。何を・いつ呼び出すかの判断は引き続きモデル側に委ねられる。</p>
-</div>
-
-<div class="box warn">
-  <span class="mark">誤解 3</span>
-  <span class="ttl">MCPは関数呼び出し（Function Calling）の代替品である。</span>
-  <p>前述の通り両者は競合ではなく補完関係。MCPは関数呼び出しという仕組み自体を置き換えるのではなく、その「配線」を標準化するもの。</p>
-</div>
-
-<div class="box alert">
-  <span class="mark">注意点 1</span>
-  <span class="ttl">セキュリティリスクを軽視しない。</span>
-  <p>MCPサーバーに接続するということは、AIエージェントに実際のツール実行権限（ファイル削除、メール送信、DB更新など）を与えることに等しい。</p>
-  <p>特に、外部データ（Webページやドキュメントなど）の中に紛れ込んだ悪意ある指示文をAIがそのまま実行してしまう「間接的プロンプトインジェクション」は、単なる設定ミスではなく構造的リスクとして知られている。</p>
-  <p>実際、本レポート作成中の調査でも、公式ドキュメントページの取得結果に「別のURLを追加で取得せよ」という指示文が紛れ込んでいる例が見つかっており、外部コンテンツを鵜呑みにせず出所不明な指示には従わない姿勢が重要である。</p>
-</div>
-
-<div class="box alert">
-  <span class="mark">注意点 2</span>
-  <span class="ttl">仕様は現在も活発に更新中。</span>
-  <p>2026年7月には大規模な仕様改訂（ステートレス化、サンプリング/ロギングの非推奨化など）が行われており、情報が古い記事だと現行仕様と食い違う場合がある。</p>
-  <p>学習の際は公式ドキュメントの日付・バージョンを確認する習慣が大切。</p>
-</div>
-
-<h2 id="quiz"><span class="num">SECTION 8</span>確認問題</h2>
-
-<div class="q">
-  <p class="question"><span class="qno">問1.</span>MCPを提唱した企業と、その目的を一言で説明してください。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>Anthropicが2024年11月に提唱。AIアプリケーションと外部データ・ツールを繋ぐための、共通のオープンな接続規格を提供することが目的（「AI版のUSB-C」）。</p>
-  </details>
-</div>
-
-<div class="q">
-  <p class="question"><span class="qno">問2.</span>MCPの「ホスト」「クライアント」「サーバー」の関係を説明してください。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>ホストはユーザーが使うAIアプリ本体（例：Claude Desktop）。ホストは接続するMCPサーバーごとに専用のクライアントを1つずつ内部に生成し、各クライアントは対応するサーバーと1対1の接続を維持する。</p>
-  </details>
-</div>
-
-<div class="q">
-  <p class="question"><span class="qno">問3.</span>MCPサーバーが提供できる3つの主要な要素（プリミティブ）は何ですか。それぞれ簡単に説明してください。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>ツール（AIが呼び出す実行可能な機能）、リソース（AIに読ませるデータ）、プロンプト（やり取りの型を定義したテンプレート）の3つ。</p>
-  </details>
-</div>
-
-<div class="q">
-  <p class="question"><span class="qno">問4.</span>MCPと関数呼び出し（Function Calling / Tool Use）はどう違いますか。両者は対立する概念ですか。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>関数呼び出しはLLM自体がツール実行の意思決定をしてJSONを出力する機能であり、モデルやベンダーごとに仕様が異なる。MCPはその呼び出し先（ツールの発見・定義・実行）を標準化するプロトコルであり、両者は対立するものではなく補完関係にある。</p>
-  </details>
-</div>
-
-<div class="q">
-  <p class="question"><span class="qno">問5.</span>MCP利用時に注意すべきセキュリティ上のリスクを1つ挙げ、なぜ危険か説明してください。</p>
-  <details>
-    <summary>答えを見る</summary>
-    <p>例：間接的プロンプトインジェクション。外部データ（Webページやファイルなど）に紛れ込んだ悪意ある指示をAIがそのまま実行してしまう危険があり、MCP経由でAIが実際のツール実行権限（ファイル削除やメール送信など）を持つ場合、被害が実際のシステム操作にまで及ぶ可能性があるため。</p>
-  </details>
-</div>
-
-<h2 id="references"><span class="num">SECTION 9</span>参考リンク</h2>
-<ul class="refs">
-  <li><a href="https://www.anthropic.com/news/model-context-protocol" target="_blank" rel="noopener">Introducing the Model Context Protocol（Anthropic公式発表）</a></li>
-  <li><a href="https://modelcontextprotocol.io/docs/getting-started/intro" target="_blank" rel="noopener">What is the Model Context Protocol (MCP)?（公式ドキュメント）</a></li>
-  <li><a href="https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture" target="_blank" rel="noopener">Architecture overview（公式ドキュメント：アーキテクチャ解説）</a></li>
-  <li><a href="https://github.com/modelcontextprotocol" target="_blank" rel="noopener">Model Context Protocol GitHub organization</a></li>
-  <li><a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener">Model Context Protocol Servers（公式リファレンスサーバー集）</a></li>
-  <li><a href="https://blog.modelcontextprotocol.io/posts/2026-07-28/" target="_blank" rel="noopener">The 2026-07-28 Specification（公式ブログ：最新仕様改訂の解説）</a></li>
-  <li><a href="https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/" target="_blank" rel="noopener">MCP joins the Agentic AI Foundation（公式ブログ）</a></li>
-  <li><a href="https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation" target="_blank" rel="noopener">Linux Foundation：Agentic AI Foundation設立発表</a></li>
-  <li><a href="https://en.wikipedia.org/wiki/Model_Context_Protocol" target="_blank" rel="noopener">Model Context Protocol（Wikipedia）</a></li>
-  <li><a href="https://www.descope.com/blog/post/mcp-vs-function-calling" target="_blank" rel="noopener">MCP vs. Function Calling: How They Differ and Which to Use（Descope）</a></li>
-  <li><a href="https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/" target="_blank" rel="noopener">Model Context Protocol has prompt injection security problems（Simon Willison）</a></li>
-  <li><a href="https://developer.microsoft.com/blog/protecting-against-indirect-injection-attacks-mcp/" target="_blank" rel="noopener">Protecting against indirect prompt injection attacks in MCP（Microsoft）</a></li>
-</ul>
-
-</div>
-
-<footer>
-  <p>作成日: 2026-09-18／このレポートはWeb調査に基づく学習用初稿です。仕様は変化が速い分野のため、最新情報は必ず公式ドキュメントで確認してください。</p>
-</footer>
-
 </body>
 </html>

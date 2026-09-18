@@ -2,379 +2,504 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jev とは何か — 「文章を書かないAI」をやさしく解説</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev とは何か — 「文章を書かないAI」をやさしく解説 | 学習ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#1c2128; --sub:#5d6772; --line:#dde3e9; --bg:#f6f8fa; --paper:#ffffff;
-    --accent:#1a5fd0; --accent-bg:#edf3ff; --accent-line:#c6d8f7;
-    --warn:#a34a05; --warn-bg:#fff5ea; --warn-line:#f0d2af;
-    --ok:#0c6b45; --ok-bg:#eaf7f0; --ok-line:#bfe4d0;
-    --bad:#b42323; --bad-bg:#fdecec;
-    --code-bg:#1b1f24;
+  /* =====================================================================
+     学習ノート 共通スタイル（index.html と同じ design tokens）
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文は 16px・行間 1.7・1行 40字（max-width: 40em）
+     - 見出しは行間 1.3〜1.4、上余白 > 下余白
+     - 余白は 8px ベースの 5 段階のみ
+     - 本文コントラスト 4.5:1 以上、日本語に italic は使わない
+     - 表・図・コードは 40 字制限から外し、自身の中で横スクロール
+     ===================================================================== */
+  :root {
+    --paper: #f3f5f2;
+    --paper-2: #e9ede8;
+    --ink: #14202b;
+    --ink-2: #55636f;
+    --rule: #d3dad6;
+    --marker: #ffe56b;
+    --marker-ink: #14202b;
+    --link: #1f4b99;
+    --note: #dfe9f7;
+    --caution: #ffe3dc;
+    --code-bg: #e9ede8;
+    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
   }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth;scroll-padding-top:64px}
-  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-  body{
-    margin:0;padding:0 18px 80px;
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
-    font-size:17px;line-height:1.95;letter-spacing:.015em;
-    color:var(--ink);background:var(--bg);
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+      --note: #1e2f45; --caution: #4a2620; --code-bg: #1b242c;
+    }
   }
-  .wrap{max-width:800px;margin:0 auto}
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.7;
+    text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 0.15em; }
+  a:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
+  em { font-style: normal; font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
 
-  /* ---------- ヘッダー ---------- */
-  header{padding:44px 0 26px;border-bottom:3px solid var(--ink)}
-  .kicker{font-size:.86rem;color:var(--sub);margin:0 0 12px}
-  h1{font-size:2rem;line-height:1.3;margin:0 0 6px}
-  .subtitle{font-size:1.15rem;font-weight:600;color:var(--accent);margin:0 0 18px;line-height:1.5}
-  .lede{font-size:1.02rem;color:var(--sub);margin:0}
-  .lede strong{color:var(--ink)}
+  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
 
-  .guide{margin:24px 0 0;padding:14px 18px;background:var(--paper);border:1px solid var(--line);border-radius:6px;font-size:.92rem;line-height:1.8}
-  .guide b{display:block;margin-bottom:2px}
+  /* ---- 表紙 ---- */
+  .cover { padding: var(--sp-4) 0 var(--sp-3); border-bottom: 2px solid var(--ink); margin-bottom: var(--sp-4); }
+  .cover .back { font-size: 0.9rem; color: var(--ink-2); text-decoration: none; }
+  .cover .back:hover { color: var(--ink); }
+  .cover h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 5.5vw, 2.6rem); line-height: 1.3;
+    margin: var(--sp-2) 0 var(--sp-2);
+  }
+  .cover h1 span {
+    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
+  }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.9rem; color: var(--ink-2); }
 
-  nav.toc{margin:20px 0 0;padding:18px 22px;background:var(--paper);border:1px solid var(--line);border-radius:6px}
-  nav.toc h2{font-size:.95rem;margin:0 0 8px;padding:0;border:0}
-  nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:28px;font-size:.93rem}
-  nav.toc li .n{display:inline-block;min-width:1.6em;color:var(--sub);font-variant-numeric:tabular-nums}
-  nav.toc li{margin:4px 0;break-inside:avoid}
-  nav.toc a{text-decoration:none}
-  nav.toc a:hover{text-decoration:underline}
-  @media (max-width:640px){nav.toc ol{columns:1}}
+  /* ---- 目次（読む順序なので番号を付ける） ---- */
+  .toc { margin: 0 0 var(--sp-5); padding: var(--sp-2) var(--sp-3); background: var(--paper-2); border-radius: 4px; }
+  .toc h2 { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--ink-2); margin: 0 0 var(--sp-1); }
+  .toc ol { margin: 0; padding-left: 1.6em; }
+  .toc li { margin: 4px 0; }
+  .toc a { text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul.sub { margin: 4px 0 4px; padding-left: 1.3em; list-style: none; }
+  .toc ul.sub a { color: var(--ink-2); font-size: 0.85rem; }
 
-  .legend{margin-top:16px;font-size:.84rem;color:var(--sub)}
+  /* ---- 本文 ---- */
+  .prose h2 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 1.5rem; line-height: 1.4;
+    margin: var(--sp-5) 0 var(--sp-2); padding-bottom: var(--sp-1);
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: var(--sp-3);
+  }
+  .prose h3 { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin: var(--sp-4) 0 var(--sp-1); scroll-margin-top: var(--sp-3); }
+  .prose p { max-width: var(--measure); margin: 0; }
+  .prose p + p { margin-top: var(--sp-3); }
+  .prose ul, .prose ol { max-width: var(--measure); margin: var(--sp-2) 0; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: var(--sp-1); }
+  .prose strong { font-weight: 700; }
 
-  /* ---------- 追従ナビ ---------- */
-  .bar{position:sticky;top:0;z-index:10;background:rgba(246,248,250,.94);backdrop-filter:blur(6px);
-       border-bottom:1px solid var(--line);margin:0 -18px;padding:0 18px}
-  .bar ul{list-style:none;margin:0 auto;padding:0;max-width:800px;display:flex;gap:2px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
-  .bar ul::-webkit-scrollbar{display:none}
-  .bar li a{display:block;padding:9px 10px;font-size:.8rem;color:var(--sub);text-decoration:none;border-bottom:2px solid transparent}
-  .bar li a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  /* 要点・補足・注意（関連する内容は枠でまとめる） */
+  .callout { max-width: var(--measure); margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border-left: 4px solid var(--ink); background: var(--paper-2); border-radius: 0 4px 4px 0; }
+  .callout.summary { border-left-color: var(--marker); }
+  .callout.note { background: var(--note); border-left-color: var(--link); }
+  .callout.caution { background: var(--caution); border-left-color: #b8432b; }
+  .callout > :first-child { margin-top: 0; }
+  .callout p + p { margin-top: var(--sp-2); }
+  .callout .label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
 
-  /* ---------- 見出し・本文 ---------- */
-  h2{font-size:1.45rem;line-height:1.4;margin:64px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--line)}
-  h2 .num{display:inline-block;min-width:1.7em;color:var(--accent);font-variant-numeric:tabular-nums}
-  h3{font-size:1.1rem;margin:36px 0 10px;line-height:1.5}
-  p{margin:14px 0}
-  a{color:var(--accent)}
-  a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .keypoint{margin:14px 0 22px;padding:12px 18px;background:var(--accent-bg);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;font-size:.97rem}
-  .keypoint b{color:var(--accent);margin-right:.5em}
-  .term{border-bottom:2px dotted var(--accent-line);cursor:help}
+  /* 表（比較・一覧は表で） */
+  .table-wrap { overflow-x: auto; margin: var(--sp-3) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+  th, td { padding: var(--sp-1) var(--sp-2); line-height: 1.5; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  thead th { border-bottom: 2px solid var(--ink-2); font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  caption { caption-side: top; text-align: left; font-size: 0.875rem; color: var(--ink-2); margin-bottom: var(--sp-1); }
 
-  ul.clean,ol.clean{padding-left:1.4em;margin:12px 0}
-  ul.clean li,ol.clean li{margin:10px 0}
-  ol.points{padding-left:1.4em;margin:14px 0}
-  ol.points li{margin:12px 0}
-  ol.points li b.t{display:block;margin-bottom:2px}
-
-  /* 例え話 */
-  .analogy{margin:22px 0;padding:16px 20px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--ok);border-radius:0 6px 6px 0;font-size:.96rem}
-  .analogy .title{display:block;font-weight:700;color:var(--ok);margin-bottom:4px}
-  .analogy p{margin:6px 0}
-
-  /* 図 */
-  .fig{margin:24px 0;padding:14px 14px 10px;background:var(--paper);border:1px solid var(--line);border-radius:6px}
-  .fig svg{width:100%;height:auto;display:block;font-family:inherit}
-  .fig .cap{margin:8px 4px 0;font-size:.84rem;color:var(--sub);line-height:1.7}
-  .fig .cap b{color:var(--ink)}
-  @media (max-width:640px){.fig{overflow-x:auto;-webkit-overflow-scrolling:touch}.fig svg{min-width:600px}}
-
-  /* サマリー */
-  .tldr{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:6px;padding:22px 26px;margin:34px 0 0}
-  .tldr h2{font-size:1.15rem;margin:0 0 12px;padding:0;border:0}
-  .tldr ol{margin:0;padding-left:1.4em}
-  .tldr li{margin:12px 0}
-  .tldr li b.q{display:block;color:var(--accent)}
-
-  /* 表 */
-  .scroll{overflow-x:auto;margin:20px 0;-webkit-overflow-scrolling:touch}
-  table{width:100%;border-collapse:collapse;font-size:.92rem;background:var(--paper);min-width:520px}
-  caption{caption-side:top;text-align:left;font-size:.82rem;color:var(--sub);padding-bottom:8px}
-  th,td{border:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:top;line-height:1.7}
-  thead th{background:#f0f3f7;font-size:.86rem;white-space:nowrap}
-  tbody th{background:#f8fafc;font-weight:600;width:22%}
-  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-  tr.hl td{background:var(--accent-bg);font-weight:600}
-
-  /* 囲み */
-  .box{border-radius:6px;padding:18px 22px;margin:24px 0;font-size:.95rem}
-  .box p:first-child{margin-top:0}.box p:last-child{margin-bottom:0}
-  .box ul{margin:8px 0 0;padding-left:1.3em}
-  .box.warn{background:var(--warn-bg);border:1px solid var(--warn-line)}
-  .box.warn strong{color:var(--warn)}
-  .box.ok{background:var(--ok-bg);border:1px solid var(--ok-line)}
-  .box.ok strong{color:var(--ok)}
-  .box.note{background:var(--paper);border:1px solid var(--line)}
-  .box .title{display:block;font-weight:700;margin-bottom:6px;font-size:1rem}
-
-  /* 詳しく知りたい人向け */
-  details{margin:22px 0;background:var(--paper);border:1px solid var(--line);border-radius:6px}
-  details summary{cursor:pointer;padding:12px 18px;font-weight:700;font-size:.95rem;color:var(--accent);list-style:none}
-  details summary::-webkit-details-marker{display:none}
-  details summary::before{content:"＋";display:inline-block;width:1.4em;color:var(--sub)}
-  details[open] summary::before{content:"－"}
-  details .inner{padding:0 18px 16px;font-size:.95rem;border-top:1px solid var(--line)}
-  details .inner p:first-child{margin-top:12px}
+  /* 図（インライン SVG。文字は 12px 以上、色は currentColor） */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg { display: block; max-width: 100%; height: auto; color: var(--ink); }
+  figure svg text { font-family: var(--font-body); font-size: 12px; fill: currentColor; }
+  figcaption { margin-top: var(--sp-1); font-size: 0.875rem; color: var(--ink-2); }
+  figcaption b { color: var(--ink); }
 
   /* コード */
-  pre{background:var(--code-bg);color:#e6edf3;padding:18px 20px;border-radius:6px;overflow-x:auto;font-size:.8rem;line-height:1.65;margin:16px 0}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-  p code,li code,td code{background:#e9edf2;padding:.12em .4em;border-radius:3px;font-size:.88em}
+  pre { margin: var(--sp-3) 0; padding: var(--sp-2); background: var(--code-bg); border-radius: 4px; overflow-x: auto; line-height: 1.6; }
+  code { font-family: var(--font-mono); font-size: 0.875em; }
+  :not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
 
-  /* 用語集 */
-  dl.gloss{margin:16px 0}
-  dl.gloss dt{font-weight:700;margin-top:16px}
-  dl.gloss dd{margin:2px 0 0 1em;font-size:.95rem;color:#333c46}
+  /* 確認問題（折りたたみ） */
+  .quiz { max-width: var(--measure); margin: var(--sp-2) 0; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--rule); border-radius: 4px; }
+  .quiz summary { padding: var(--sp-2); cursor: pointer; font-weight: 700; }
+  .quiz summary::marker { color: var(--ink-2); }
+  .quiz .answer { padding: 0 var(--sp-2) var(--sp-2); border-top: 1px solid var(--rule); }
+  .quiz .answer > :first-child { margin-top: var(--sp-2); }
+  .quiz .question { font-weight: 700; margin: 0 0 var(--sp-1); }
+  .quiz .choices { margin: 0 0 var(--sp-1); }
+  .quiz details { border-top: 1px dashed var(--rule); margin-top: var(--sp-1); }
+  .quiz details summary { padding: var(--sp-1) 0; }
+  .quiz details .answer { border-top: none; padding: 0 0 var(--sp-1); }
 
-  /* バッジ */
-  .badge{display:inline-block;font-size:.72rem;line-height:1.5;padding:.15em .6em;border-radius:99px;background:#e9edf2;color:var(--sub);margin-left:6px;vertical-align:middle;white-space:nowrap}
-  .badge.vendor{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
-  .badge.third{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
+  /* 補足の折りたたみ（もっと詳しく） */
+  .more { max-width: var(--measure); margin: var(--sp-3) 0; border: 1px solid var(--rule); border-radius: 4px; }
+  .more summary { padding: var(--sp-2); cursor: pointer; font-weight: 700; color: var(--link); }
+  .more .inner { padding: 0 var(--sp-3) var(--sp-2); border-top: 1px solid var(--rule); }
+  .more .inner > :first-child { margin-top: var(--sp-2); }
 
-  /* 出典 */
-  .srcs{font-size:.88rem;color:var(--sub);margin-top:56px;border-top:1px solid var(--line);padding-top:22px}
-  .srcs h2{font-size:1.05rem;margin:0 0 10px;padding:0;border:0;color:var(--ink)}
-  .srcs ul{padding-left:1.3em;margin:0}
-  .srcs li{margin:7px 0}
-  .srcs a{word-break:break-all}
-  .srcs .disclaimer{margin-top:18px;padding:12px 16px;background:var(--paper);border:1px solid var(--line);border-radius:6px;font-size:.84rem}
-  footer{margin-top:48px;font-size:.8rem;color:var(--sub);text-align:center}
-  .top{display:block;text-align:right;font-size:.8rem;margin-top:8px}
+  /* 参考リンク */
+  .refs { max-width: var(--measure); }
+  .refs li { word-break: break-all; }
 
-  @media print{
-    body{background:#fff;padding:0;font-size:11pt;line-height:1.7}
-    .bar,.top{display:none}
-    .wrap{max-width:none}
-    h2{page-break-after:avoid;margin-top:28pt}
-    h3{page-break-after:avoid}
-    table,.box,.tldr,.fig,.analogy,details{page-break-inside:avoid}
-    details{border:0}details summary{display:none}details .inner{border:0;padding:0}
-    pre{white-space:pre-wrap;word-break:break-all}
-    a{color:inherit;text-decoration:none}
-    .srcs a{text-decoration:underline}
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
+  footer p + p { margin-top: var(--sp-2); }
+
+  @media (max-width: 600px) {
+    .page { padding: 0 var(--sp-2) var(--sp-4); }
+    .prose h2 { font-size: 1.3rem; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page">
 
-<!-- ================= ヘッダー ================= -->
-<header id="top">
-  <p class="kicker">AIニュース解説　作成日：2026年9月17日</p>
-  <h1>Jev とは何か</h1>
-  <p class="subtitle">「文章を書かないAI」をやさしく解説</p>
-  <p class="lede">2026年9月15日、TypeSafe AI という会社が <strong>Jev（ジェブ）</strong> という新しいAIを発表しました。ChatGPT のように文章で答えるのではなく、<strong>「AかBか」「何点か」「はい/いいえ」といった判断だけを、とても速く・安く返す</strong>のが特徴です。この資料では、AIに詳しくない人でも「何が新しいのか」「どう使うのか」「何に注意すべきか」が分かるように説明します。</p>
-
-  <div class="guide">
-    <b>この資料の読み方</b>
-    上から順に読めば分かるように書いています。時間がなければ <a href="#tldr">30秒サマリー</a> だけでもOK。分からない言葉が出てきたら <a href="#gloss">用語集</a> を見てください。「＋ もっと詳しく」の欄は、技術的に踏み込みたい人向けなので飛ばして構いません。
-  </div>
+  <header class="cover">
+    <a class="back" href="../index.html">学習ノートに戻る</a>
+    <h1><span>Jev とは何か — 「文章を書かないAI」をやさしく解説</span></h1>
+    <ul class="meta">
+      <li>作成日 2026-09-17</li>
+      <li>分野 AI</li>
+      <li>種別 AIニュース解説</li>
+    </ul>
+  </header>
 
   <nav class="toc" aria-label="目次">
     <h2>目次</h2>
     <ol>
-      <li><span class="n">◎</span><a href="#tldr">30秒サマリー</a></li>
-      <li><span class="n">1.</span><a href="#s1">前提：今のAIは「文章を書く」道具</a></li>
-      <li><span class="n">2.</span><a href="#s2">Jev は何が違うのか</a></li>
-      <li><span class="n">3.</span><a href="#s3">使い方を具体例で見る</a></li>
-      <li><span class="n">4.</span><a href="#s4">なぜ速くて安いのか</a></li>
-      <li><span class="n">5.</span><a href="#s5">「信頼度」という便利な数字</a></li>
-      <li><span class="n">6.</span><a href="#s6">数字で見る実力（と読み方）</a></li>
-      <li><span class="n">7.</span><a href="#s7">注意点とよくある誤解</a></li>
-      <li><span class="n">8.</span><a href="#s8">私たちの仕事にどう関係するか</a></li>
-      <li><span class="n">9.</span><a href="#s9">基本情報まとめ</a></li>
-      <li><span class="n">▪</span><a href="#gloss">用語集</a></li>
-      <li><span class="n">▪</span><a href="#srcs">参照した情報</a></li>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a>
+        <ul class="sub">
+          <li><a href="#s3-1">3-1. 前提：今のAIは「文章を書く」道具</a></li>
+          <li><a href="#s3-2">3-2. Jev は何が違うのか</a></li>
+          <li><a href="#s3-3">3-3. なぜ速くて安いのか</a></li>
+          <li><a href="#s3-4">3-4. 「信頼度」という便利な数字</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a>
+        <ul class="sub">
+          <li><a href="#s4-1">4-1. 使い方を具体例で見る</a></li>
+          <li><a href="#s4-2">4-2. 数字で見る実力（と読み方）</a></li>
+          <li><a href="#s4-3">4-3. 私たちの仕事にどう関係するか</a></li>
+          <li><a href="#s4-4">4-4. 基本情報まとめ</a></li>
+        </ul>
+      </li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s7">参考リンク</a></li>
     </ol>
   </nav>
 
-  <p class="legend">情報の確度を <span class="badge vendor">開発元の主張</span>（TypeSafe 自身の計測・発表）と <span class="badge third">第三者の検証</span>（外部メディア・レビュアー）で区別しています。</p>
-</header>
+  <main class="prose">
 
-<div class="bar" aria-label="セクション移動">
-  <ul>
-    <li><a href="#tldr">サマリー</a></li>
-    <li><a href="#s1">1 前提</a></li>
-    <li><a href="#s2">2 何が違う</a></li>
-    <li><a href="#s3">3 具体例</a></li>
-    <li><a href="#s4">4 なぜ速い</a></li>
-    <li><a href="#s5">5 信頼度</a></li>
-    <li><a href="#s6">6 実力</a></li>
-    <li><a href="#s7">7 注意点</a></li>
-    <li><a href="#s8">8 関係</a></li>
-    <li><a href="#gloss">用語集</a></li>
-  </ul>
-</div>
+    <h2 id="s1">概要</h2>
+    <div class="callout summary">
+      <span class="label">30秒サマリー</span>
+      <ul>
+        <li><strong>何が出た？</strong>　元OpenAI（ChatGPTを作った会社）の研究者が立ち上げた TypeSafe AI という会社が、<strong>Jev</strong> という新しいAIを発表。開発資金として4,000万ドル（約60億円規模）を調達しています。</li>
+        <li><strong>何が違う？</strong>　ChatGPT は「文章」で答えますが、Jev は<strong>文章を一切書きません</strong>。あらかじめ決めた選択肢から選ぶ、点数をつける、はい/いいえで答える——この3種類の「判断」だけを返します。</li>
+        <li><strong>何がうれしい？</strong>　プログラムから使いやすく、<strong>ChatGPT系のAIより桁違いに速くて安い</strong>（開発元の計測で、同程度の賢さのAIと比べて速度25倍・費用は約1/76）。<span style="color:var(--ink-2);font-size:0.85em;">（開発元の主張）</span></li>
+        <li><strong>弱点は？</strong>　「間違えない」わけではありません。返事の<strong>形</strong>は崩れませんが、<strong>中身</strong>が間違うことはあります。最上位のAIと比べると賢さは少し劣ります。</li>
+        <li><strong>私たちにとっての意味は？</strong>　「AIを乗り換える」話ではなく、<strong>「AIに文章で丸投げしていた仕事のうち、実は"分類・判定"だけで済むものを切り分ける」</strong>という考え方の話。これは Jev を使わなくても今日から役立ちます。</li>
+      </ul>
+    </div>
+    <p>2026年9月15日、TypeSafe AI という会社が <strong>Jev（ジェブ）</strong> という新しいAIを発表しました。ChatGPT のように文章で答えるのではなく、<strong>「AかBか」「何点か」「はい/いいえ」といった判断だけを、とても速く・安く返す</strong>のが特徴です。この資料では、AIに詳しくない人でも「何が新しいのか」「どう使うのか」「何に注意すべきか」が分かるように説明します。</p>
+    <div class="callout note">
+      <span class="label">この資料の読み方</span>
+      <p>上から順に読めば分かるように書いています。時間がなければ<a href="#s1">30秒サマリー</a>だけでもOKです。分からない言葉が出てきたら<a href="#s2">基本用語</a>を見てください。「もっと詳しく」の欄は、技術的に踏み込みたい人向けなので飛ばして構いません。</p>
+      <p>情報の確度は、「開発元の主張」（TypeSafe 自身の計測・発表）と「第三者の検証」（外部メディア・レビュアー）を区別して記載しています。</p>
+    </div>
 
-<!-- ================= 30秒サマリー ================= -->
-<section class="tldr" id="tldr">
-  <h2>30秒サマリー</h2>
-  <ol>
-    <li><b class="q">何が出た？</b>元OpenAI（ChatGPTを作った会社）の研究者が立ち上げた TypeSafe AI という会社が、<strong>Jev</strong> という新しいAIを発表。開発資金として4,000万ドル（約60億円規模）を調達しています。</li>
-    <li><b class="q">何が違う？</b>ChatGPT は「文章」で答えますが、Jev は<strong>文章を一切書きません</strong>。あらかじめ決めた選択肢から選ぶ、点数をつける、はい/いいえで答える——この3種類の「判断」だけを返します。</li>
-    <li><b class="q">何がうれしい？</b>プログラムから使いやすく、<strong>ChatGPT系のAIより桁違いに速くて安い</strong>（開発元の計測で、同程度の賢さのAIと比べて速度25倍・費用は約1/76）。<span class="badge vendor">開発元の主張</span></li>
-    <li><b class="q">弱点は？</b>「間違えない」わけではありません。返事の<strong>形</strong>は崩れませんが、<strong>中身</strong>が間違うことはあります。最上位のAIと比べると賢さは少し劣ります。</li>
-    <li><b class="q">私たちにとっての意味は？</b>「AIを乗り換える」話ではなく、<strong>「AIに文章で丸投げしていた仕事のうち、実は“分類・判定”だけで済むものを切り分ける」</strong>という考え方の話。これは Jev を使わなくても今日から役立ちます。</li>
-  </ol>
-</section>
+    <h2 id="s2">基本用語</h2>
+    <div class="table-wrap">
+      <table>
+        <caption>本文中に出てくる基本用語のまとめ</caption>
+        <thead><tr><th scope="col">用語</th><th scope="col">意味</th></tr></thead>
+        <tbody>
+          <tr><td>LLM<br>（大規模言語モデル）</td><td>ChatGPT や Claude のように、大量の文章を学習して文章で答えるAIの総称。この資料では「文章を書くAI」と呼んでいます。</td></tr>
+          <tr><td>トークン</td><td>AIが文章を数えるときの単位。おおよそ「単語や文字のかたまり」。AIの料金は「トークン何個分」で計算されるのが一般的です。</td></tr>
+          <tr><td>ハルシネーション</td><td>AIがもっともらしい嘘や、存在しない情報を作り出してしまうこと。「幻覚」の意味。</td></tr>
+          <tr><td>構造化データ／型</td><td>「請求／技術／営業のどれか」「0〜1の数値」のように、取りうる値の形があらかじめ決まっているデータのこと。プログラムはこういうデータを扱うのが得意です。逆に自由な文章は「非構造データ」。</td></tr>
+          <tr><td>API</td><td>プログラムから別のサービスを呼び出すための窓口。Jev は API を通じてプログラムから使います。</td></tr>
+          <tr><td>確率と信頼度</td><td>確率は「各選択肢がどれくらいありそうか」の分布。信頼度はそれを「どれくらい自信があるか」の1つの数字（0〜1）にまとめたもの。</td></tr>
+          <tr><td>校正<br>（キャリブレーション）</td><td>「80%と言ったときに実際に約80%当たる」のように、確率の数字と実際の的中率がそろっている状態。</td></tr>
+          <tr><td>しきい値</td><td>「信頼度 0.9 以上なら自動処理」のように、処理を切り替える境界の数字。</td></tr>
+          <tr><td>RLHF / RLCD</td><td>AIの追加訓練の方法の名前。RLHF は「人間の好みに合わせる」訓練で ChatGPT を生んだもの。RLCD は Jev 独自の「正しい確率で判断する」訓練。</td></tr>
+          <tr><td>早期アクセス</td><td>正式公開前に、申し込んだ一部の利用者だけが試せる段階。仕様や価格が変わる可能性があります。</td></tr>
+          <tr><td>System One Model</td><td>TypeSafe が名付けた Jev の分類名。心理学の「速くて直感的な思考（システム1）」と「遅くて熟考する思考（システム2）」の区別が元になっています。標準的な業界用語ではなく、開発元の呼び方です。</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-<!-- ================= 1. 前提 ================= -->
-<h2 id="s1"><span class="num">1.</span>前提：今のAIは「文章を書く」道具</h2>
-<p class="keypoint"><b>要点</b>ChatGPT などのAI（LLM）は人間が読む文章を作るのが仕事。だからプログラムから使うと「文章を読み取って形を整える」手間が発生する。</p>
+    <h2 id="s3">仕組み・全体像</h2>
 
-<p>ChatGPT や Claude のようなAIは、まとめて <span class="term" title="Large Language Model：大規模言語モデル">LLM</span>（大規模言語モデル）と呼ばれます。文章で質問すると文章で答えてくれる、とても便利な道具です。</p>
-<p>ところが、この「文章で答える」という性質は、<strong>人間ではなくプログラムが答えを使いたいとき</strong>には不便になります。たとえば「この問い合わせは請求の話か、技術の話か、営業の話か」をAIに判定させて、その結果で担当部署を自動で振り分けたいとします。AIは「この問い合わせは請求に関する内容と思われます。ただし…」のような文章で返してくるので、プログラム側で次の作業が必要になります。</p>
-<ul class="clean">
-  <li>文章の中から「請求」という答えを<strong>読み取る</strong>（解析する）</li>
-  <li>期待した形（3つのどれか）になっているか<strong>確認する</strong></li>
-  <li>「分かりません」「両方かもしれません」のような想定外の返事に<strong>備える</strong></li>
-</ul>
+    <h3 id="s3-1">3-1. 前提：今のAIは「文章を書く」道具</h3>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>ChatGPT などのAI（LLM）は人間が読む文章を作るのが仕事。だからプログラムから使うと「文章を読み取って形を整える」手間が発生する。</p>
+    </div>
+    <p>ChatGPT や Claude のようなAIは、まとめて <abbr title="Large Language Model：大規模言語モデル">LLM</abbr>（大規模言語モデル）と呼ばれます。文章で質問すると文章で答えてくれる、とても便利な道具です。</p>
+    <p>ところが、この「文章で答える」という性質は、<strong>人間ではなくプログラムが答えを使いたいとき</strong>には不便になります。たとえば「この問い合わせは請求の話か、技術の話か、営業の話か」をAIに判定させて、その結果で担当部署を自動で振り分けたいとします。AIは「この問い合わせは請求に関する内容と思われます。ただし…」のような文章で返してくるので、プログラム側で次の作業が必要になります。</p>
+    <ul>
+      <li>文章の中から「請求」という答えを<strong>読み取る</strong>（解析する）</li>
+      <li>期待した形（3つのどれか）になっているか<strong>確認する</strong></li>
+      <li>「分かりません」「両方かもしれません」のような想定外の返事に<strong>備える</strong></li>
+    </ul>
 
-<div class="fig">
-<svg viewBox="0 0 720 150" role="img" aria-label="今のAIをプログラムから使う流れ">
-  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5d6772"/></marker></defs>
-  <g font-size="13" fill="#1c2128" text-anchor="middle">
-    <rect x="10" y="40" width="100" height="60" rx="6" fill="#fff" stroke="#dde3e9"/>
-    <text x="60" y="75" font-weight="700">プログラム</text>
-    <line x1="112" y1="70" x2="188" y2="70" stroke="#5d6772" stroke-width="1.5" marker-end="url(#ar)"/>
-    <text x="150" y="58" font-size="11" fill="#5d6772">文章で質問</text>
-    <rect x="190" y="40" width="100" height="60" rx="6" fill="#fff" stroke="#dde3e9"/>
-    <text x="240" y="68" font-weight="700">AI（LLM）</text>
-    <text x="240" y="88" font-size="11" fill="#5d6772">文章を書く</text>
-    <line x1="292" y1="70" x2="368" y2="70" stroke="#5d6772" stroke-width="1.5" marker-end="url(#ar)"/>
-    <text x="330" y="58" font-size="11" fill="#5d6772">文章で回答</text>
-    <rect x="370" y="30" width="160" height="80" rx="6" fill="#fff" stroke="#dde3e9"/>
-    <text x="450" y="58" font-size="12">「この問い合わせは</text>
-    <text x="450" y="76" font-size="12">請求に関する内容と</text>
-    <text x="450" y="94" font-size="12">思われます。ただし…」</text>
-    <line x1="532" y1="70" x2="568" y2="70" stroke="#5d6772" stroke-width="1.5" marker-end="url(#ar)"/>
-    <rect x="570" y="30" width="140" height="80" rx="6" fill="#fdecec" stroke="#e8b4b4"/>
-    <text x="640" y="58" font-weight="700" fill="#b42323">読み取り・確認</text>
-    <text x="640" y="78" font-size="11" fill="#b42323">手間がかかる</text>
-    <text x="640" y="94" font-size="11" fill="#b42323">失敗の元にもなる</text>
-  </g>
-</svg>
-<p class="cap"><b>図1</b>　今のAI（LLM）をプログラムから使うときの流れ。AIの答えが「文章」なので、プログラムが使える形に直す工程（赤）が必ず挟まる。</p>
-</div>
+    <figure>
+      <svg viewBox="0 0 720 150" role="img" aria-label="今のAIをプログラムから使う流れ">
+        <title>今のAIをプログラムから使う流れ</title>
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/></marker></defs>
+        <g font-size="13" text-anchor="middle">
+          <rect x="10" y="40" width="100" height="60" rx="6" fill="none" stroke="var(--ink-2)"/>
+          <text x="60" y="75" font-weight="700">プログラム</text>
+          <line x1="112" y1="70" x2="188" y2="70" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="150" y="58" font-size="12" style="fill:var(--ink-2)">文章で質問</text>
+          <rect x="190" y="40" width="100" height="60" rx="6" fill="none" stroke="var(--ink-2)"/>
+          <text x="240" y="68" font-weight="700">AI（LLM）</text>
+          <text x="240" y="88" font-size="12" style="fill:var(--ink-2)">文章を書く</text>
+          <line x1="292" y1="70" x2="368" y2="70" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="330" y="58" font-size="12" style="fill:var(--ink-2)">文章で回答</text>
+          <rect x="370" y="30" width="160" height="80" rx="6" fill="none" stroke="var(--ink-2)"/>
+          <text x="450" y="58" font-size="12">「この問い合わせは</text>
+          <text x="450" y="76" font-size="12">請求に関する内容と</text>
+          <text x="450" y="94" font-size="12">思われます。ただし…」</text>
+          <line x1="532" y1="70" x2="568" y2="70" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <rect x="570" y="30" width="140" height="80" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="640" y="58" font-weight="700">読み取り・確認</text>
+          <text x="640" y="78" font-size="12" style="fill:var(--ink-2)">手間がかかる</text>
+          <text x="640" y="94" font-size="12" style="fill:var(--ink-2)">失敗の元にもなる</text>
+        </g>
+      </svg>
+      <figcaption><b>図1</b>　今のAI（LLM）をプログラムから使うときの流れ。AIの答えが「文章」なので、プログラムが使える形に直す工程（強調枠）が必ず挟まる。</figcaption>
+    </figure>
 
-<p>この「文章をプログラム用に直す」工程は、地味ですが手間がかかり、AIの返事が少し変わるだけで壊れることもあります。<strong>Jev はここを丸ごとなくそう</strong>という発想で作られています。</p>
+    <p>この「文章をプログラム用に直す」工程は、地味ですが手間がかかり、AIの返事が少し変わるだけで壊れることもあります。<strong>Jev はここを丸ごとなくそう</strong>という発想で作られています。</p>
 
-<!-- ================= 2. 何が違う ================= -->
-<h2 id="s2"><span class="num">2.</span>Jev は何が違うのか</h2>
-<p class="keypoint"><b>要点</b>Jev には「状況」と「型の決まった質問」を渡す。返ってくるのは文章ではなく「選択肢・点数・確率」なので、プログラムがそのまま使える。</p>
+    <h3 id="s3-2">3-2. Jev は何が違うのか</h3>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>Jev には「状況」と「型の決まった質問」を渡す。返ってくるのは文章ではなく「選択肢・点数・確率」なので、プログラムがそのまま使える。</p>
+    </div>
 
-<div class="analogy">
-  <span class="title">例え話：記述式テストとマークシート</span>
-  <p>ChatGPT は<strong>記述式の答案</strong>を書く生徒です。内容は豊かですが、採点する側が読んで判断しなければなりません。</p>
-  <p>Jev は<strong>マークシート専門</strong>の生徒です。「AかBかCか」「5段階で何点か」「○か×か」にしか答えませんが、答えは機械で即座に読み取れます。しかも各回答に「自信あり／なし」の印まで付けてくれます。</p>
-</div>
+    <div class="callout note">
+      <span class="label">例え話：記述式テストとマークシート</span>
+      <p>ChatGPT は<strong>記述式の答案</strong>を書く生徒です。内容は豊かですが、採点する側が読んで判断しなければなりません。</p>
+      <p>Jev は<strong>マークシート専門</strong>の生徒です。「AかBかCか」「5段階で何点か」「○か×か」にしか答えませんが、答えは機械で即座に読み取れます。しかも各回答に「自信あり／なし」の印まで付けてくれます。</p>
+    </div>
 
-<p>Jev に渡すものは2つだけです。</p>
-<ol class="points">
-  <li><b class="t">状況（state）</b>判断の材料になるデータ。「顧客からの問い合わせ文」でも、注文履歴のようなデータでもOK。</li>
-  <li><b class="t">質問（questions）</b>「型」を決めた質問。答え方が3種類に限定されています（次の表）。何問でもまとめて聞けます。</li>
-</ol>
+    <p>Jev に渡すものは2つだけです。</p>
+    <ol>
+      <li><strong>状況（state）</strong>　判断の材料になるデータ。「顧客からの問い合わせ文」でも、注文履歴のようなデータでもOK。</li>
+      <li><strong>質問（questions）</strong>　「型」を決めた質問。答え方が3種類に限定されています（次の表）。何問でもまとめて聞けます。</li>
+    </ol>
 
-<div class="fig">
-<svg viewBox="0 0 720 150" role="img" aria-label="Jevをプログラムから使う流れ">
-  <g font-size="13" fill="#1c2128" text-anchor="middle">
-    <rect x="10" y="40" width="100" height="60" rx="6" fill="#fff" stroke="#dde3e9"/>
-    <text x="60" y="75" font-weight="700">プログラム</text>
-    <line x1="112" y1="70" x2="188" y2="70" stroke="#5d6772" stroke-width="1.5" marker-end="url(#ar)"/>
-    <text x="150" y="46" font-size="11" fill="#5d6772">状況＋</text>
-    <text x="150" y="60" font-size="11" fill="#5d6772">型付き質問</text>
-    <rect x="190" y="40" width="100" height="60" rx="6" fill="#edf3ff" stroke="#c6d8f7"/>
-    <text x="240" y="68" font-weight="700" fill="#1a5fd0">Jev</text>
-    <text x="240" y="88" font-size="11" fill="#1a5fd0">判断だけ返す</text>
-    <line x1="292" y1="70" x2="368" y2="70" stroke="#5d6772" stroke-width="1.5" marker-end="url(#ar)"/>
-    <text x="330" y="58" font-size="11" fill="#5d6772">型付きの答え</text>
-    <rect x="370" y="30" width="160" height="80" rx="6" fill="#fff" stroke="#dde3e9"/>
-    <text x="450" y="55" font-size="12">担当：<tspan font-weight="700">技術</tspan>（確率0.9）</text>
-    <text x="450" y="75" font-size="12">怒り度：<tspan font-weight="700">2</tspan> / 3</text>
-    <text x="450" y="95" font-size="12">緊急？：<tspan font-weight="700">はい</tspan>（0.99）</text>
-    <line x1="532" y1="70" x2="568" y2="70" stroke="#5d6772" stroke-width="1.5" marker-end="url(#ar)"/>
-    <rect x="570" y="30" width="140" height="80" rx="6" fill="#eaf7f0" stroke="#bfe4d0"/>
-    <text x="640" y="58" font-weight="700" fill="#0c6b45">そのまま分岐</text>
-    <text x="640" y="78" font-size="11" fill="#0c6b45">読み取り不要</text>
-    <text x="640" y="94" font-size="11" fill="#0c6b45">形が崩れない</text>
-  </g>
-</svg>
-<p class="cap"><b>図2</b>　Jev をプログラムから使うときの流れ。答えは最初から「プログラムが使える形」で返ってくるので、図1の赤い工程が消える。</p>
-</div>
+    <figure>
+      <svg viewBox="0 0 720 150" role="img" aria-label="Jevをプログラムから使う流れ">
+        <title>Jevをプログラムから使う流れ</title>
+        <g font-size="13" text-anchor="middle">
+          <rect x="10" y="40" width="100" height="60" rx="6" fill="none" stroke="var(--ink-2)"/>
+          <text x="60" y="75" font-weight="700">プログラム</text>
+          <line x1="112" y1="70" x2="188" y2="70" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="150" y="46" font-size="12" style="fill:var(--ink-2)">状況＋</text>
+          <text x="150" y="60" font-size="12" style="fill:var(--ink-2)">型付き質問</text>
+          <rect x="190" y="40" width="100" height="60" rx="6" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="240" y="68" font-weight="700" style="fill:var(--link)">Jev</text>
+          <text x="240" y="88" font-size="12" style="fill:var(--link)">判断だけ返す</text>
+          <line x1="292" y1="70" x2="368" y2="70" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="330" y="58" font-size="12" style="fill:var(--ink-2)">型付きの答え</text>
+          <rect x="370" y="30" width="160" height="80" rx="6" fill="none" stroke="var(--ink-2)"/>
+          <text x="450" y="55" font-size="12">担当：<tspan font-weight="700">技術</tspan>（確率0.9）</text>
+          <text x="450" y="75" font-size="12">怒り度：<tspan font-weight="700">2</tspan> / 3</text>
+          <text x="450" y="95" font-size="12">緊急？：<tspan font-weight="700">はい</tspan>（0.99）</text>
+          <line x1="532" y1="70" x2="568" y2="70" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <rect x="570" y="30" width="140" height="80" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="640" y="58" font-weight="700">そのまま分岐</text>
+          <text x="640" y="78" font-size="12" style="fill:var(--ink-2)">読み取り不要</text>
+          <text x="640" y="94" font-size="12" style="fill:var(--ink-2)">形が崩れない</text>
+        </g>
+      </svg>
+      <figcaption><b>図2</b>　Jev をプログラムから使うときの流れ。答えは最初から「プログラムが使える形」で返ってくるので、図1で強調した工程が消える。</figcaption>
+    </figure>
 
-<h3>質問の3つの型</h3>
-<div class="scroll">
-<table>
-  <caption>出典：TypeSafe 公式ドキュメント（Primitives）。日常的な例で言い換えています。</caption>
-  <thead>
-    <tr><th>型</th><th>どんな質問？</th><th>返ってくるもの</th><th>使う場面の例</th></tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>Choice</strong><br><span style="font-size:.85em;color:var(--sub)">選択</span></td>
-      <td>この選択肢のうちどれ？</td>
-      <td>選ばれた選択肢＋各選択肢の確率＋信頼度</td>
-      <td>問い合わせを「請求／技術／営業」のどれかに振り分ける。書類の種類を判定する。</td>
-    </tr>
-    <tr>
-      <td><strong>Score</strong><br><span style="font-size:.85em;color:var(--sub)">点数</span></td>
-      <td>どのレベル？</td>
-      <td>自分で決めた尺度上の点数（レベルの間の小数も返る）＋確率＋信頼度</td>
-      <td>顧客の怒り度を3段階で。障害の重大さを5段階で。文章の品質を採点する。</td>
-    </tr>
-    <tr>
-      <td><strong>Noul</strong><br><span style="font-size:.85em;color:var(--sub)">はい/いいえ</span></td>
-      <td>これは本当？</td>
-      <td>「はい」である確率（0〜1）</td>
-      <td>返金の要求か？　バグ報告か？　個人情報が含まれているか？</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+    <p><strong>質問の3つの型</strong></p>
+    <div class="table-wrap">
+      <table>
+        <caption>出典：TypeSafe 公式ドキュメント（Primitives）。日常的な例で言い換えています。</caption>
+        <thead>
+          <tr><th scope="col">型</th><th scope="col">どんな質問？</th><th scope="col">返ってくるもの</th><th scope="col">使う場面の例</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Choice</strong><br><span style="font-size:.85em;color:var(--ink-2)">選択</span></td>
+            <td>この選択肢のうちどれ？</td>
+            <td>選ばれた選択肢＋各選択肢の確率＋信頼度</td>
+            <td>問い合わせを「請求／技術／営業」のどれかに振り分ける。書類の種類を判定する。</td>
+          </tr>
+          <tr>
+            <td><strong>Score</strong><br><span style="font-size:.85em;color:var(--ink-2)">点数</span></td>
+            <td>どのレベル？</td>
+            <td>自分で決めた尺度上の点数（レベルの間の小数も返る）＋確率＋信頼度</td>
+            <td>顧客の怒り度を3段階で。障害の重大さを5段階で。文章の品質を採点する。</td>
+          </tr>
+          <tr>
+            <td><strong>Noul</strong><br><span style="font-size:.85em;color:var(--ink-2)">はい/いいえ</span></td>
+            <td>これは本当？</td>
+            <td>「はい」である確率（0〜1）</td>
+            <td>返金の要求か？　バグ報告か？　個人情報が含まれているか？</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-<div class="box ok">
-  <span class="title">いちばん大事な考え方：「AIが答え、プログラムが決める」</span>
-  <p>Jev の公式ドキュメントが繰り返し言っているのは、<strong>大きな判断を小さな質問に分けなさい</strong>ということです。</p>
-  <ul>
-    <li>×「この経費申請を承認していい？」と丸ごと聞く</li>
-    <li>○「領収書は読める？」「費目は何？」「申請内容は領収書と一致する？」と<strong>分けて</strong>聞く</li>
-    <li>そのうえで「食事代が$75超で内容が不一致なら上司承認、それ以外は承認」という<strong>ルールはプログラム側に書く</strong></li>
-  </ul>
-  <p>こうしておくと、社内ルールが変わったときも AI への質問はそのままで、プログラムのルールを書き換えるだけで済みます。</p>
-</div>
+    <div class="callout note">
+      <span class="label">いちばん大事な考え方：「AIが答え、プログラムが決める」</span>
+      <p>Jev の公式ドキュメントが繰り返し言っているのは、<strong>大きな判断を小さな質問に分けなさい</strong>ということです。</p>
+      <ul>
+        <li>×「この経費申請を承認していい？」と丸ごと聞く</li>
+        <li>○「領収書は読める？」「費目は何？」「申請内容は領収書と一致する？」と<strong>分けて</strong>聞く</li>
+        <li>そのうえで「食事代が$75超で内容が不一致なら上司承認、それ以外は承認」という<strong>ルールはプログラム側に書く</strong></li>
+      </ul>
+      <p>こうしておくと、社内ルールが変わったときも AI への質問はそのままで、プログラムのルールを書き換えるだけで済みます。</p>
+    </div>
 
-<!-- ================= 3. 具体例 ================= -->
-<h2 id="s3"><span class="num">3.</span>使い方を具体例で見る</h2>
-<p class="keypoint"><b>要点</b>「サポート問い合わせを1通渡して、3つの質問に同時に答えさせる」だけで、振り分け・優先度付けの材料がそろう。</p>
+    <h3 id="s3-3">3-3. なぜ速くて安いのか</h3>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>文章を書くAIは「1文字ずつ順番に」作るので時間がかかる。Jev は答えの形が決まっているので「全部いっぺんに」出せる。</p>
+    </div>
+    <p>ChatGPT のようなAIは、実は文章を<strong>1単語（正確には1トークン）ずつ順番に</strong>作っています。前の単語を見て次の単語を決める、を何百回も繰り返すので、長い答えほど時間と計算コストがかかります。</p>
+    <p>Jev は「選択肢のどれか」「何点か」のように答えの形が最初から決まっているため、順番に組み立てる必要がありません。<strong>複数の質問への答えを同時に一発で</strong>出せるので、応答は 0.07〜0.5 秒程度、費用も文章を書くAIの数十分の一以下になります。</p>
 
-<p>公式のサンプルをもとに、日本語で流れを追ってみます。お客様からこんな問い合わせが来たとします。</p>
-<div class="box note">
-  <p>「Stripe（決済サービス）のアカウント連携を3日間試しているのにずっと失敗します。売上が減っていて困っています。至急助けてください。」</p>
-</div>
-<p>この文章を「状況」として渡し、3つの質問を同時に投げます。</p>
+    <figure>
+      <svg viewBox="0 0 720 210" role="img" aria-label="逐次生成と並列判断の違い">
+        <title>逐次生成と並列判断の違い</title>
+        <g font-size="13">
+          <text x="10" y="24" font-weight="700">文章を書くAI：1つずつ順番に</text>
+          <g font-size="14" text-anchor="middle">
+            <rect x="10" y="40" width="40" height="36" rx="4" fill="none" stroke="var(--ink-2)"/><text x="30" y="64">こ</text>
+            <rect x="62" y="40" width="40" height="36" rx="4" fill="none" stroke="var(--ink-2)"/><text x="82" y="64">の</text>
+            <rect x="114" y="40" width="40" height="36" rx="4" fill="none" stroke="var(--ink-2)"/><text x="134" y="64">問</text>
+            <rect x="166" y="40" width="40" height="36" rx="4" fill="none" stroke="var(--ink-2)"/><text x="186" y="64">い</text>
+            <rect x="218" y="40" width="40" height="36" rx="4" fill="none" stroke="var(--ink-2)"/><text x="238" y="64">合</text>
+            <rect x="270" y="40" width="40" height="36" rx="4" fill="none" stroke="var(--ink-2)"/><text x="290" y="64">わ</text>
+            <rect x="322" y="40" width="40" height="36" rx="4" fill="none" stroke="var(--ink-2)"/><text x="342" y="64">せ</text>
+            <text x="440" y="64" text-anchor="start" style="fill:var(--ink-2)">…（数百回続く）</text>
+          </g>
+          <line x1="10" y1="92" x2="470" y2="92" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="480" y="96" font-size="12" style="fill:var(--ink-2)">時間（数秒〜数十秒）</text>
 
-<div class="scroll">
-<table>
-  <thead><tr><th>質問</th><th>型</th><th>選択肢／尺度</th><th>Jev の答え</th></tr></thead>
-  <tbody>
-    <tr><td>どの部署が担当すべき？</td><td>選択</td><td>請求／技術／営業</td><td><strong>技術</strong></td></tr>
-    <tr><td>お客様はどれくらい怒っている？</td><td>点数</td><td>0：冷静／1：不満だが丁寧／2：かなり怒っている</td><td><strong>1.035</strong>（「不満だが丁寧」よりやや上）</td></tr>
-    <tr><td>急ぎの内容？</td><td>はい/いいえ</td><td>—</td><td><strong>0.999</strong>（ほぼ確実に「はい」）</td></tr>
-  </tbody>
-</table>
-</div>
+          <text x="10" y="134" font-weight="700" style="fill:var(--link)">Jev：全部いっぺんに</text>
+          <g font-size="12" text-anchor="middle">
+            <rect x="10" y="150" width="110" height="36" rx="4" fill="none" stroke="var(--link)"/><text x="65" y="173">担当：技術</text>
+            <rect x="132" y="150" width="110" height="36" rx="4" fill="none" stroke="var(--link)"/><text x="187" y="173">怒り度：1</text>
+            <rect x="254" y="150" width="110" height="36" rx="4" fill="none" stroke="var(--link)"/><text x="309" y="173">緊急：はい</text>
+          </g>
+          <line x1="10" y1="200" x2="60" y2="200" stroke="var(--link)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="70" y="204" font-size="12" style="fill:var(--link)">時間（0.1秒前後）</text>
+        </g>
+      </svg>
+      <figcaption><b>図3</b>　上：文章を書くAIは1つずつ順に出力するので、長さに比例して時間がかかる。下：Jev は決まった形の答えを同時に出すので、質問が増えてもほとんど時間が延びない。</figcaption>
+    </figure>
 
-<p>あとはプログラム側で「技術チームのキューに入れる」「急ぎなので優先度を上げる」「怒り度が高ければベテランに回す」といった処理を書くだけです。返信文を書くのは Jev の仕事ではないので、<strong>返信が必要なら ChatGPT のような文章を書くAIに別途頼みます</strong>。役割分担です。</p>
+    <details class="more">
+      <summary>もっと詳しく：学習方法の違い（RLHF・RLVR・RLCD）</summary>
+      <div class="inner">
+        <p>AIは「事前学習」で大量の文章を読んだあと、目的に合わせて追加の訓練を受けます。開発元はこの追加訓練を3系統に整理しています。</p>
+        <ul>
+          <li><strong>RLHF</strong>（人間のフィードバックによる強化学習）：人間が好む返事を出すよう訓練。ChatGPT を生んだ方法。</li>
+          <li><strong>RLVR</strong>（検証可能な報酬による強化学習）：正解が機械的に確かめられる問題（数学など）で訓練。「推論モデル」を生んだが、遅くて高い。</li>
+          <li><strong>RLCD</strong>（校正された判断のための強化学習）：Jev 独自の方法。文章を作らず、「判断」と「その判断がどれくらい当たるかの確率」を正しく出すよう訓練。</li>
+        </ul>
+        <p>開発元は、RLHF には「人間に気に入られようとして迎合する」「自信満々に間違える」といった副作用があり、それが「AIに任せきれず人間が見張り続けなければならない」原因だと主張しています。</p>
+        <p>なお RLCD の中身（報酬の設計、学習手順など）は公開されておらず、論文も出ていません。この点は<a href="#s5">「注意点・よくある誤解」</a>で扱います。</p>
+      </div>
+    </details>
 
-<details>
-  <summary>もっと詳しく：実際のプログラム（公式クイックスタートより）</summary>
-  <div class="inner">
-  <p>上の表を Python で書くと次のようになります。<code>Choice</code>・<code>Score</code>・<code>Noul</code> が3つの型に対応しています。</p>
+    <h3 id="s3-4">3-4. 「信頼度」という便利な数字</h3>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>Jev は答えごとに「どれくらい自信があるか」を数字で返す。自信が高ければ自動で進め、低ければ人に回す、という仕組みが作れる。</p>
+    </div>
+    <p>Jev の答えには、選択肢や点数だけでなく<strong>信頼度（confidence）</strong>という 0〜1 の数字が付いてきます（「はい/いいえ」型は確率そのものが答えなので、信頼度は付きません）。これが実務でとても重要です。</p>
+
+    <div class="callout note">
+      <span class="label">例え話：天気予報の「降水確率」</span>
+      <p>「降水確率 90%」なら傘を持って出かけ、「50%」なら迷って折りたたみ傘にし、「10%」なら持たない——人は確率に応じて行動を変えます。</p>
+      <p>Jev の信頼度も同じです。<strong>「自信 0.95 なら自動で処理、0.6 なら人が確認、0.3 なら人に任せる」</strong>とプログラムに書いておけば、AIに任せる範囲を安全に調整できます。</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 720 230" role="img" aria-label="信頼度による処理の分岐">
+        <title>信頼度による処理の分岐</title>
+        <g font-size="13">
+          <text x="10" y="22" font-weight="700">やり直しがきく操作（例：問い合わせの振り分け）</text>
+          <rect x="10" y="34" width="330" height="34" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <rect x="340" y="34" width="130" height="34" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <rect x="470" y="34" width="240" height="34" fill="none" stroke="var(--link)" stroke-width="2"/>
+          <text x="175" y="56" text-anchor="middle" font-weight="700" style="fill:var(--ink-2)">人に回す</text>
+          <text x="405" y="56" text-anchor="middle" font-weight="700" style="fill:var(--ink-2)">確認してから</text>
+          <text x="590" y="56" text-anchor="middle" font-weight="700" style="fill:var(--link)">自動で進める</text>
+          <g font-size="12" style="fill:var(--ink-2)"><text x="10" y="84">0</text><text x="336" y="84">0.5</text><text x="466" y="84">0.7</text><text x="700" y="84">1</text></g>
+
+          <text x="10" y="128" font-weight="700">取り消せない操作（例：返金や送金の承認）</text>
+          <rect x="10" y="140" width="560" height="34" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <rect x="570" y="140" width="100" height="34" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>
+          <rect x="670" y="140" width="40" height="34" fill="none" stroke="var(--link)" stroke-width="2"/>
+          <text x="290" y="162" text-anchor="middle" font-weight="700" style="fill:var(--ink-2)">人に回す</text>
+          <text x="620" y="162" text-anchor="middle" font-weight="700" font-size="12" style="fill:var(--ink-2)">確認</text>
+          <text x="690" y="162" text-anchor="middle" font-weight="700" font-size="12" style="fill:var(--link)">自動</text>
+          <g font-size="12" style="fill:var(--ink-2)"><text x="10" y="190">0</text><text x="558" y="190">0.8</text><text x="660" y="190">0.95</text><text x="700" y="190">1</text></g>
+          <text x="10" y="220" font-size="12" style="fill:var(--ink-2)">信頼度 →　※境界の数値は説明用の例です。公式は「0.5 未満は明確に不確か」としています。</text>
+        </g>
+      </svg>
+      <figcaption><b>図4</b>　信頼度に応じて「自動／確認／人に回す」を切り替える。<b>操作の重さによって境界を変える</b>のがポイントで、取り消せない操作ほど自動化の範囲を狭くする。</figcaption>
+    </figure>
+
+    <p>公式ドキュメントが強調しているのは、<strong>境界（しきい値）は1つではない</strong>ということです。「問い合わせの振り分け」と「取り消せない送金の承認」が同じ基準で自動化されてはいけません。<strong>「どこまでAIに任せるか」というリスク判断を、プログラムの中に数字として書き込む</strong>——これが Jev の想定する使い方です。</p>
+
+    <details class="more">
+      <summary>もっと詳しく：「校正（キャリブレーション）」とは</summary>
+      <div class="inner">
+        <p>Jev の信頼度が役に立つのは、その数字が「校正」されている——つまり<strong>「0.8 と答えたケースを集めると実際に約80%が正解」</strong>という性質を目指して訓練されているからです。天気予報でいえば「降水確率70%と言った日の7割で実際に雨が降る」のが校正された予報です。</p>
+        <p>ただし公式ドキュメントも「個々の答えが正しいことの保証ではない」と明記しています。レビュアーの Anthony Maio 氏は「常に平均的な確率を答えるだけのAIでも校正はできてしまう。校正されていることと役に立つことは別」と指摘しています。</p>
+      </div>
+    </details>
+
+    <h2 id="s4">具体例・使いどころ</h2>
+
+    <h3 id="s4-1">4-1. 使い方を具体例で見る</h3>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>「サポート問い合わせを1通渡して、3つの質問に同時に答えさせる」だけで、振り分け・優先度付けの材料がそろう。</p>
+    </div>
+    <p>公式のサンプルをもとに、日本語で流れを追ってみます。お客様からこんな問い合わせが来たとします。</p>
+    <div class="callout note">
+      <p>「Stripe（決済サービス）のアカウント連携を3日間試しているのにずっと失敗します。売上が減っていて困っています。至急助けてください。」</p>
+    </div>
+    <p>この文章を「状況」として渡し、3つの質問を同時に投げます。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">質問</th><th scope="col">型</th><th scope="col">選択肢／尺度</th><th scope="col">Jev の答え</th></tr></thead>
+        <tbody>
+          <tr><td>どの部署が担当すべき？</td><td>選択</td><td>請求／技術／営業</td><td><strong>技術</strong></td></tr>
+          <tr><td>お客様はどれくらい怒っている？</td><td>点数</td><td>0：冷静／1：不満だが丁寧／2：かなり怒っている</td><td><strong>1.035</strong>（「不満だが丁寧」よりやや上）</td></tr>
+          <tr><td>急ぎの内容？</td><td>はい/いいえ</td><td>—</td><td><strong>0.999</strong>（ほぼ確実に「はい」）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>あとはプログラム側で「技術チームのキューに入れる」「急ぎなので優先度を上げる」「怒り度が高ければベテランに回す」といった処理を書くだけです。返信文を書くのは Jev の仕事ではないので、<strong>返信が必要なら ChatGPT のような文章を書くAIに別途頼みます</strong>。役割分担です。</p>
+
+    <details class="more">
+      <summary>もっと詳しく：実際のプログラム（公式クイックスタートより）</summary>
+      <div class="inner">
+        <p>上の表を Python で書くと次のようになります。<code>Choice</code>・<code>Score</code>・<code>Noul</code> が3つの型に対応しています。</p>
 <pre><code>from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
 
 client = TypeSafeClient()
@@ -409,348 +534,225 @@ response = client.system_one(
 print(response.answers["department"].choice)  # "technical"
 print(response.answers["frustration"].score)  # 1.035
 print(response.answers["is_urgent"].noul)     # 0.999</code></pre>
-  <p>質問はいくつ足しても1回の呼び出しにまとめられます。公式資料では、13問を1回にまとめると、13回に分けて聞くより <strong>11.5倍安く、9.6倍速く</strong>、答えは変わらなかったと報告されています。「使うか分からない質問も先に全部聞いて、要らない答えはプログラム側で捨てる」使い方が推奨されています。</p>
-  </div>
-</details>
+        <p>質問はいくつ足しても1回の呼び出しにまとめられます。公式資料では、13問を1回にまとめると、13回に分けて聞くより <strong>11.5倍安く、9.6倍速く</strong>、答えは変わらなかったと報告されています。「使うか分からない質問も先に全部聞いて、要らない答えはプログラム側で捨てる」使い方が推奨されています。</p>
+      </div>
+    </details>
 
-<!-- ================= 4. なぜ速い ================= -->
-<h2 id="s4"><span class="num">4.</span>なぜ速くて安いのか</h2>
-<p class="keypoint"><b>要点</b>文章を書くAIは「1文字ずつ順番に」作るので時間がかかる。Jev は答えの形が決まっているので「全部いっぺんに」出せる。</p>
+    <h3 id="s4-2">4-2. 数字で見る実力（と読み方）</h3>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>賢さは「中堅クラスのAIと同程度」。速さと安さは桁違い。ただし最上位のAIには少し劣り、数字はすべて開発元自身の計測。</p>
+    </div>
+    <p>開発元は、4種類の業務（セキュリティ対応・AIエージェントの動作チェック・請求書処理・カスタマーサポート）で、Jev と主要なAIを同じ条件で比べた結果を公開しています。「正解」は最上位クラスのAI2つ（GPT-6 Astra と Claude Fable 5.1）の答えの平均を使い、それとどれだけ一致するかを見ています。</p>
 
-<p>ChatGPT のようなAIは、実は文章を<strong>1単語（正確には1トークン）ずつ順番に</strong>作っています。前の単語を見て次の単語を決める、を何百回も繰り返すので、長い答えほど時間と計算コストがかかります。</p>
-<p>Jev は「選択肢のどれか」「何点か」のように答えの形が最初から決まっているため、順番に組み立てる必要がありません。<strong>複数の質問への答えを同時に一発で</strong>出せるので、応答は 0.07〜0.5 秒程度、費用も文章を書くAIの数十分の一以下になります。</p>
+    <div class="table-wrap">
+      <table>
+        <caption>出典：TypeSafe のワークフロー評価（evals.typesafe.ai）を Anthony Maio 氏・DataCamp が集計　<span style="color:var(--ink-2);font-size:0.85em;">（開発元の主張）</span></caption>
+        <thead>
+          <tr><th scope="col">AI</th><th scope="col" class="num">正解との一致率</th><th scope="col" class="num">1件の費用</th><th scope="col" class="num">1件の時間</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Jev</td><td class="num">67.8%</td><td class="num">$0.0004</td><td class="num">0.4秒</td></tr>
+          <tr><td>GPT-5.6 Terra（中堅クラス）</td><td class="num">67.9%</td><td class="num">$0.0304</td><td class="num">10.1秒</td></tr>
+          <tr><td>Claude Sonnet 5（中堅クラス）</td><td class="num">67.8%</td><td class="num">（大幅に高い）</td><td class="num">（大幅に遅い）</td></tr>
+          <tr><td>Claude Opus 5（上位クラス）</td><td class="num">73.1%</td><td class="num">$0.1761</td><td class="num">37.8秒</td></tr>
+          <tr><td>GPT-5.6 Sol（上位クラス）</td><td class="num"><strong>74.1%</strong></td><td class="num">$0.0836</td><td class="num">23.3秒</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-<div class="fig">
-<svg viewBox="0 0 720 210" role="img" aria-label="逐次生成と並列判断の違い">
-  <g font-size="13" fill="#1c2128">
-    <text x="10" y="24" font-weight="700">文章を書くAI：1つずつ順番に</text>
-    <g font-size="14" text-anchor="middle">
-      <rect x="10" y="40" width="40" height="36" rx="4" fill="#fff" stroke="#dde3e9"/><text x="30" y="64">こ</text>
-      <rect x="62" y="40" width="40" height="36" rx="4" fill="#fff" stroke="#dde3e9"/><text x="82" y="64">の</text>
-      <rect x="114" y="40" width="40" height="36" rx="4" fill="#fff" stroke="#dde3e9"/><text x="134" y="64">問</text>
-      <rect x="166" y="40" width="40" height="36" rx="4" fill="#fff" stroke="#dde3e9"/><text x="186" y="64">い</text>
-      <rect x="218" y="40" width="40" height="36" rx="4" fill="#fff" stroke="#dde3e9"/><text x="238" y="64">合</text>
-      <rect x="270" y="40" width="40" height="36" rx="4" fill="#fff" stroke="#dde3e9"/><text x="290" y="64">わ</text>
-      <rect x="322" y="40" width="40" height="36" rx="4" fill="#fff" stroke="#dde3e9"/><text x="342" y="64">せ</text>
-      <text x="440" y="64" fill="#5d6772" text-anchor="start">…（数百回続く）</text>
-    </g>
-    <line x1="10" y1="92" x2="470" y2="92" stroke="#5d6772" stroke-width="1.5" marker-end="url(#ar)"/>
-    <text x="480" y="96" font-size="11" fill="#5d6772">時間（数秒〜数十秒）</text>
+    <figure>
+      <svg viewBox="0 0 720 250" role="img" aria-label="1件あたりの時間と費用の比較">
+        <title>1件あたりの時間と費用の比較</title>
+        <g font-size="12">
+          <text x="10" y="20" font-weight="700" font-size="13">1件あたりの時間（秒）</text>
+          <text x="10" y="48" text-anchor="start">Jev</text><rect x="110" y="36" width="3" height="18" fill="var(--link)"/><text x="120" y="50" font-weight="700" style="fill:var(--link)">0.4</text>
+          <text x="10" y="80">GPT-5.6 Terra</text><rect x="110" y="68" width="59" height="18" fill="var(--ink-2)"/><text x="176" y="82">10.1</text>
+          <text x="10" y="112">GPT-5.6 Sol</text><rect x="110" y="100" width="136" height="18" fill="var(--ink-2)"/><text x="253" y="114">23.3</text>
+          <text x="10" y="144">Claude Opus 5</text><rect x="110" y="132" width="220" height="18" fill="var(--ink-2)"/><text x="337" y="146">37.8</text>
 
-    <text x="10" y="134" font-weight="700" fill="#1a5fd0">Jev：全部いっぺんに</text>
-    <g font-size="12" text-anchor="middle">
-      <rect x="10" y="150" width="110" height="36" rx="4" fill="#edf3ff" stroke="#c6d8f7"/><text x="65" y="173">担当：技術</text>
-      <rect x="132" y="150" width="110" height="36" rx="4" fill="#edf3ff" stroke="#c6d8f7"/><text x="187" y="173">怒り度：1</text>
-      <rect x="254" y="150" width="110" height="36" rx="4" fill="#edf3ff" stroke="#c6d8f7"/><text x="309" y="173">緊急：はい</text>
-    </g>
-    <line x1="10" y1="200" x2="60" y2="200" stroke="#1a5fd0" stroke-width="1.5" marker-end="url(#ar)"/>
-    <text x="70" y="204" font-size="11" fill="#1a5fd0">時間（0.1秒前後）</text>
-  </g>
-</svg>
-<p class="cap"><b>図3</b>　上：文章を書くAIは1つずつ順に出力するので、長さに比例して時間がかかる。下：Jev は決まった形の答えを同時に出すので、質問が増えてもほとんど時間が延びない。</p>
-</div>
+          <text x="380" y="20" font-weight="700" font-size="13">1件あたりの費用（ドル）</text>
+          <text x="380" y="48">Jev</text><rect x="480" y="36" width="3" height="18" fill="var(--link)"/><text x="490" y="50" font-weight="700" style="fill:var(--link)">0.0004</text>
+          <text x="380" y="80">GPT-5.6 Terra</text><rect x="480" y="68" width="33" height="18" fill="var(--ink-2)"/><text x="520" y="82">0.0304</text>
+          <text x="380" y="112">GPT-5.6 Sol</text><rect x="480" y="100" width="90" height="18" fill="var(--ink-2)"/><text x="577" y="114">0.0836</text>
+          <text x="380" y="144">Claude Opus 5</text><rect x="480" y="132" width="190" height="18" fill="var(--ink-2)"/><text x="677" y="146">0.1761</text>
 
-<details>
-  <summary>もっと詳しく：学習方法の違い（RLHF・RLVR・RLCD）</summary>
-  <div class="inner">
-  <p>AIは「事前学習」で大量の文章を読んだあと、目的に合わせて追加の訓練を受けます。開発元はこの追加訓練を3系統に整理しています。</p>
-  <ul class="clean">
-    <li><strong>RLHF</strong>（人間のフィードバックによる強化学習）：人間が好む返事を出すよう訓練。ChatGPT を生んだ方法。</li>
-    <li><strong>RLVR</strong>（検証可能な報酬による強化学習）：正解が機械的に確かめられる問題（数学など）で訓練。「推論モデル」を生んだが、遅くて高い。</li>
-    <li><strong>RLCD</strong>（校正された判断のための強化学習）：Jev 独自の方法。文章を作らず、「判断」と「その判断がどれくらい当たるかの確率」を正しく出すよう訓練。</li>
-  </ul>
-  <p>開発元は、RLHF には「人間に気に入られようとして迎合する」「自信満々に間違える」といった副作用があり、それが「AIに任せきれず人間が見張り続けなければならない」原因だと主張しています。</p>
-  <p>なお RLCD の中身（報酬の設計、学習手順など）は公開されておらず、論文も出ていません。この点は <a href="#s7">7. 注意点</a> で扱います。</p>
-  </div>
-</details>
+          <text x="10" y="190" font-size="12" style="fill:var(--ink-2)">同じ「正解との一致率」約68%の Terra と比べると：</text>
+          <text x="10" y="212" font-size="13" font-weight="700" style="fill:var(--link)">時間は約25分の1、費用は約76分の1</text>
+          <text x="10" y="236" font-size="12" style="fill:var(--ink-2)">※ 開発元の計測。棒は Jev がほぼ見えない太さになる点に注目。</text>
+        </g>
+      </svg>
+      <figcaption><b>図5</b>　1件の判断にかかる時間と費用。Jev の棒（青）はほとんど見えないほど小さい。</figcaption>
+    </figure>
 
-<!-- ================= 5. 信頼度 ================= -->
-<h2 id="s5"><span class="num">5.</span>「信頼度」という便利な数字</h2>
-<p class="keypoint"><b>要点</b>Jev は答えごとに「どれくらい自信があるか」を数字で返す。自信が高ければ自動で進め、低ければ人に回す、という仕組みが作れる。</p>
+    <p><strong>この数字の読み方（3点）</strong></p>
+    <ol>
+      <li><strong>賢さは中堅クラスと互角</strong>　GPT-5.6 Terra や Claude Sonnet 5 とほぼ同じ一致率で、費用と時間は桁違いに小さい。</li>
+      <li><strong>上位クラスには5〜6ポイント負ける</strong>　特に請求書処理では Jev 61.8% に対し Sol 79.1% と差が大きい。<strong>間違いの代償が大きい業務では、安さより賢さを優先すべき</strong>場面もあります。</li>
+      <li><strong>「分けて聞く」こと自体に効果があった</strong>　この評価では、どのAIでも「1回の指示で丸ごと任せる」より「小さな判断に分けて順番に処理する」ほうが精度・速度・費用すべて改善しました。<strong>これは Jev を使わなくても取り入れられる知見です。</strong></li>
+    </ol>
 
-<p>Jev の答えには、選択肢や点数だけでなく<strong>信頼度（confidence）</strong>という 0〜1 の数字が付いてきます（「はい/いいえ」型は確率そのものが答えなので、信頼度は付きません）。これが実務でとても重要です。</p>
+    <div class="callout caution">
+      <span class="label">数字はすべて「開発元の自己採点」です</span>
+      <p>評価に使った業務も、正解の作り方も、すべて TypeSafe 自身が決めています。開発元は「自社に有利に働く条件がある」ことを自ら認めており、その姿勢は誠実ですが、<strong>第三者による大規模な検証はまだありません</strong>。「有望そう」までで止めておくのが妥当です。</p>
+    </div>
 
-<div class="analogy">
-  <span class="title">例え話：天気予報の「降水確率」</span>
-  <p>「降水確率 90%」なら傘を持って出かけ、「50%」なら迷って折りたたみ傘にし、「10%」なら持たない——人は確率に応じて行動を変えます。</p>
-  <p>Jev の信頼度も同じです。<strong>「自信 0.95 なら自動で処理、0.6 なら人が確認、0.3 なら人に任せる」</strong>とプログラムに書いておけば、AIに任せる範囲を安全に調整できます。</p>
-</div>
+    <details class="more">
+      <summary>もっと詳しく：デモ（Doom・Wikiracing）とエラー率の話</summary>
+      <div class="inner">
+        <p><strong>公式サイトのデモ</strong>：同じ判断を Jev は 0.114秒／$0.000081、中堅クラスのLLMは 8.566秒／$0.013880 で処理。ただし開発元自身が「このデモは意図的に単純化しており、自社に有利」と注記しています。</p>
+        <p><strong>Doom</strong>：ゲームの状態（画像ではなくデータ）を毎秒10回 Jev に送って操作させるデモ。費用は約$7/時。開発元は「AIでない普通のボットのほうが上手いが、いろいろな状態表現に反応するボットを作りたかった」と正直に書いています。</p>
+        <p><strong>Wikiracing</strong>：Wikipedia のリンクだけをたどって目的のページに着く遊び。1手ごとに数百〜数千のリンクから選ぶため、「存在しない選択肢を答えない」Jev の性質が活きます。ただし一度に選べる選択肢は最大255個で、それを超えると2段階処理になり遅くなります。</p>
+        <p><strong>構造化出力のエラー率</strong>：Jev は仕組み上 0%。比較として他のAIでは 0.58%〜45.5% のエラー率が示されていますが、開発元自身が「他社の数値は測定条件が違い、バイアスがほぼ確実にある」「自社の0%は実測ではなく仕組み上の保証」と明記しています。単純比較はできません。</p>
+      </div>
+    </details>
 
-<div class="fig">
-<svg viewBox="0 0 720 230" role="img" aria-label="信頼度による処理の分岐">
-  <g font-size="13" fill="#1c2128">
-    <text x="10" y="22" font-weight="700">やり直しがきく操作（例：問い合わせの振り分け）</text>
-    <rect x="10" y="34" width="330" height="34" fill="#fdecec"/>
-    <rect x="340" y="34" width="130" height="34" fill="#fff5ea"/>
-    <rect x="470" y="34" width="240" height="34" fill="#eaf7f0"/>
-    <text x="175" y="56" text-anchor="middle" fill="#b42323" font-weight="700">人に回す</text>
-    <text x="405" y="56" text-anchor="middle" fill="#a34a05" font-weight="700">確認してから</text>
-    <text x="590" y="56" text-anchor="middle" fill="#0c6b45" font-weight="700">自動で進める</text>
-    <g font-size="11" fill="#5d6772"><text x="10" y="84">0</text><text x="336" y="84">0.5</text><text x="466" y="84">0.7</text><text x="700" y="84">1</text></g>
+    <h3 id="s4-3">4-3. 私たちの仕事にどう関係するか</h3>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>「AIに文章で丸投げしていた仕事」を見直し、「実は分類・判定だけ」の部分を切り分ける。この考え方は Jev を使わなくても効く。</p>
+    </div>
+    <p>Jev の登場で見えてくるのは、これからのAI活用は<strong>1つの賢いAIに何でも任せるのではなく、役割ごとに分担させる</strong>形になりそうだ、ということです。</p>
 
-    <text x="10" y="128" font-weight="700">取り消せない操作（例：返金や送金の承認）</text>
-    <rect x="10" y="140" width="560" height="34" fill="#fdecec"/>
-    <rect x="570" y="140" width="100" height="34" fill="#fff5ea"/>
-    <rect x="670" y="140" width="40" height="34" fill="#eaf7f0"/>
-    <text x="290" y="162" text-anchor="middle" fill="#b42323" font-weight="700">人に回す</text>
-    <text x="620" y="162" text-anchor="middle" fill="#a34a05" font-weight="700" font-size="12">確認</text>
-    <text x="690" y="162" text-anchor="middle" fill="#0c6b45" font-weight="700" font-size="11">自動</text>
-    <g font-size="11" fill="#5d6772"><text x="10" y="190">0</text><text x="558" y="190">0.8</text><text x="660" y="190">0.95</text><text x="700" y="190">1</text></g>
-    <text x="10" y="220" font-size="11" fill="#5d6772">信頼度 →　※境界の数値は説明用の例です。公式は「0.5 未満は明確に不確か」としています。</text>
-  </g>
-</svg>
-<p class="cap"><b>図4</b>　信頼度に応じて「自動／確認／人に回す」を切り替える。<b>操作の重さによって境界を変える</b>のがポイントで、取り消せない操作ほど自動化の範囲を狭くする。</p>
-</div>
+    <figure>
+      <svg viewBox="0 0 720 190" role="img" aria-label="AI活用の役割分担">
+        <title>AI活用の役割分担</title>
+        <g font-size="13" text-anchor="middle">
+          <rect x="10" y="30" width="165" height="120" rx="6" fill="none" stroke="var(--ink-2)"/>
+          <text x="92" y="58" font-weight="700">文章を書くAI</text>
+          <text x="92" y="80" font-size="12" style="fill:var(--ink-2)">ChatGPT / Claude など</text>
+          <text x="92" y="106" font-size="12">下書き・計画</text>
+          <text x="92" y="126" font-size="12">理由の説明</text>
 
-<p>公式ドキュメントが強調しているのは、<strong>境界（しきい値）は1つではない</strong>ということです。「問い合わせの振り分け」と「取り消せない送金の承認」が同じ基準で自動化されてはいけません。<strong>「どこまでAIに任せるか」というリスク判断を、プログラムの中に数字として書き込む</strong>——これが Jev の想定する使い方です。</p>
+          <rect x="187" y="30" width="165" height="120" rx="6" fill="none" stroke="var(--link)" stroke-width="1.5"/>
+          <text x="269" y="58" font-weight="700" style="fill:var(--link)">判断するAI</text>
+          <text x="269" y="80" font-size="12" style="fill:var(--link)">Jev など</text>
+          <text x="269" y="106" font-size="12">分類・採点・判定</text>
+          <text x="269" y="126" font-size="12">大量・高速・安価</text>
 
-<details>
-  <summary>もっと詳しく：「校正（キャリブレーション）」とは</summary>
-  <div class="inner">
-  <p>Jev の信頼度が役に立つのは、その数字が「校正」されている——つまり<strong>「0.8 と答えたケースを集めると実際に約80%が正解」</strong>という性質を目指して訓練されているからです。天気予報でいえば「降水確率70%と言った日の7割で実際に雨が降る」のが校正された予報です。</p>
-  <p>ただし公式ドキュメントも「個々の答えが正しいことの保証ではない」と明記しています。レビュアーの Anthony Maio 氏は「常に平均的な確率を答えるだけのAIでも校正はできてしまう。校正されていることと役に立つことは別」と指摘しています。</p>
-  </div>
-</details>
+          <rect x="364" y="30" width="165" height="120" rx="6" fill="none" stroke="var(--ink-2)"/>
+          <text x="446" y="58" font-weight="700">プログラム</text>
+          <text x="446" y="80" font-size="12" style="fill:var(--ink-2)">私たちが書くコード</text>
+          <text x="446" y="106" font-size="12">ルール・権限</text>
+          <text x="446" y="126" font-size="12">実際の処理の実行</text>
 
-<!-- ================= 6. 実力 ================= -->
-<h2 id="s6"><span class="num">6.</span>数字で見る実力（と読み方）</h2>
-<p class="keypoint"><b>要点</b>賢さは「中堅クラスのAIと同程度」。速さと安さは桁違い。ただし最上位のAIには少し劣り、数字はすべて開発元自身の計測。</p>
+          <rect x="541" y="30" width="169" height="120" rx="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="625" y="58" font-weight="700">人</text>
+          <text x="625" y="80" font-size="12" style="fill:var(--ink-2)">担当者・管理者</text>
+          <text x="625" y="106" font-size="12">難しい案件</text>
+          <text x="625" y="126" font-size="12">最終判断・責任</text>
 
-<p>開発元は、4種類の業務（セキュリティ対応・AIエージェントの動作チェック・請求書処理・カスタマーサポート）で、Jev と主要なAIを同じ条件で比べた結果を公開しています。「正解」は最上位クラスのAI2つ（GPT-6 Astra と Claude Fable 5.1）の答えの平均を使い、それとどれだけ一致するかを見ています。</p>
+          <text x="360" y="176" font-size="12" style="fill:var(--ink-2)">得意なことを分担し、自信のない判断は右へ（人へ）エスカレーションする</text>
+        </g>
+      </svg>
+      <figcaption><b>図6</b>　これからのAI活用の役割分担のイメージ。文章を書くAI・判断するAI・プログラム・人が、それぞれ得意なことを担う。</figcaption>
+    </figure>
 
-<div class="scroll">
-<table>
-  <caption>出典：TypeSafe のワークフロー評価（evals.typesafe.ai）を Anthony Maio 氏・DataCamp が集計 <span class="badge vendor">開発元の主張</span></caption>
-  <thead>
-    <tr><th>AI</th><th class="num">正解との一致率</th><th class="num">1件の費用</th><th class="num">1件の時間</th></tr>
-  </thead>
-  <tbody>
-    <tr class="hl"><td>Jev</td><td class="num">67.8%</td><td class="num">$0.0004</td><td class="num">0.4秒</td></tr>
-    <tr><td>GPT-5.6 Terra（中堅クラス）</td><td class="num">67.9%</td><td class="num">$0.0304</td><td class="num">10.1秒</td></tr>
-    <tr><td>Claude Sonnet 5（中堅クラス）</td><td class="num">67.8%</td><td class="num">（大幅に高い）</td><td class="num">（大幅に遅い）</td></tr>
-    <tr><td>Claude Opus 5（上位クラス）</td><td class="num">73.1%</td><td class="num">$0.1761</td><td class="num">37.8秒</td></tr>
-    <tr><td>GPT-5.6 Sol（上位クラス）</td><td class="num"><strong>74.1%</strong></td><td class="num">$0.0836</td><td class="num">23.3秒</td></tr>
-  </tbody>
-</table>
-</div>
+    <p><strong>今日からできること</strong></p>
+    <ol>
+      <li>
+        <strong>AIに任せている仕事を棚卸しする（Jev がなくてもできる）</strong>　今 ChatGPT などに文章で頼んでいる作業のうち、「実は分類・振り分け・採点・はい/いいえの判定に過ぎないもの」を洗い出す。<a href="#s4-2">4-2.</a> の評価が示したとおり、<strong>どのAIでも「小さな判断に分ける」だけで精度・速度・費用が改善</strong>します。
+      </li>
+      <li>
+        <strong>試すなら「失敗しても安い場所」から</strong>　Jev は現在、順番待ちリスト経由の早期アクセスです。最初の実験は、AIの出力の品質チェックや問い合わせの一次振り分けなど、<strong>間違えてもすぐ直せる工程</strong>から。<strong>取り消せない操作（承認・送金など）の自動化から始めない。</strong>
+      </li>
+      <li>
+        <strong>評価は自社データで、全体の費用で</strong>　開発元の数字を鵜呑みにせず、自社のデータで精度を測る。費用は「AIの呼び出し1回いくら」ではなく、<strong>人の確認や別のAIへの回送も含めた業務全体</strong>で比較する。
+      </li>
+      <li>
+        <strong>問うべきは「どこまで任せられるか」</strong>　「安くて速い」は前提として、<strong>その業務で許容できる間違いの割合はどれくらいで、その範囲でどこまで自動化できるか</strong>を考える。説明責任が必要な業務には、最初から「人や文章を書くAIに回す経路」を設計に入れておく。
+      </li>
+    </ol>
 
-<div class="fig">
-<svg viewBox="0 0 720 250" role="img" aria-label="1件あたりの時間と費用の比較">
-  <g font-size="12" fill="#1c2128">
-    <text x="10" y="20" font-weight="700" font-size="13">1件あたりの時間（秒）</text>
-    <text x="10" y="48" text-anchor="start">Jev</text><rect x="110" y="36" width="3" height="18" fill="#1a5fd0"/><text x="120" y="50" fill="#1a5fd0" font-weight="700">0.4</text>
-    <text x="10" y="80">GPT-5.6 Terra</text><rect x="110" y="68" width="59" height="18" fill="#c9d1da"/><text x="176" y="82">10.1</text>
-    <text x="10" y="112">GPT-5.6 Sol</text><rect x="110" y="100" width="136" height="18" fill="#c9d1da"/><text x="253" y="114">23.3</text>
-    <text x="10" y="144">Claude Opus 5</text><rect x="110" y="132" width="220" height="18" fill="#c9d1da"/><text x="337" y="146">37.8</text>
+    <h3 id="s4-4">4-4. 基本情報まとめ</h3>
+    <div class="table-wrap">
+      <table>
+        <caption>出典：TypeSafe AI 公式ブログ／プレスリリース（BUSINESS WIRE, 2026年9月15日）／公式ドキュメント</caption>
+        <tbody>
+          <tr><th scope="row">名前</th><td>Jev（ジェブ）。現行版 <code>jev-1.13.0</code></td></tr>
+          <tr><th scope="row">分類</th><td>「System One Model」＝開発元が名付けた新しい種類のAI。心理学者カーネマンの「速い直感的な思考（システム1）」にちなむ</td></tr>
+          <tr><th scope="row">開発元</th><td>TypeSafe AI（米サンフランシスコ）。2年間の非公開開発を経て 2026年9月15日に発表</td></tr>
+          <tr><th scope="row">創業者</th><td>Diogo Almeida（CEO、元OpenAI研究者。ChatGPT の基礎となった InstructGPT 論文の筆頭著者の一人）ほか2名</td></tr>
+          <tr><th scope="row">資金</th><td>シード（創業初期）で4,000万ドルを調達。投資会社 DCVC が主導</td></tr>
+          <tr><th scope="row">提供状況</th><td>順番待ちリスト経由の早期アクセス。Python / JavaScript 向けの開発キットあり</td></tr>
+          <tr><th scope="row">価格</th><td>入力100万トークンあたり $0.042。<strong>出力は無料</strong>（文章を書かないため）</td></tr>
+          <tr><th scope="row">入力上限</th><td>1回あたり約32,000トークン（英語で約15万文字）</td></tr>
+          <tr><th scope="row">名前の由来</th><td>19世紀の経済学者ジェヴォンズから。「効率が上がるとかえって消費が増える」というジェヴォンズのパラドックスにちなみ、「判断が安くなれば使い道は桁違いに増える」という賭けを込めている</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-    <text x="380" y="20" font-weight="700" font-size="13">1件あたりの費用（ドル）</text>
-    <text x="380" y="48">Jev</text><rect x="480" y="36" width="3" height="18" fill="#1a5fd0"/><text x="490" y="50" fill="#1a5fd0" font-weight="700">0.0004</text>
-    <text x="380" y="80">GPT-5.6 Terra</text><rect x="480" y="68" width="33" height="18" fill="#c9d1da"/><text x="520" y="82">0.0304</text>
-    <text x="380" y="112">GPT-5.6 Sol</text><rect x="480" y="100" width="90" height="18" fill="#c9d1da"/><text x="577" y="114">0.0836</text>
-    <text x="380" y="144">Claude Opus 5</text><rect x="480" y="132" width="190" height="18" fill="#c9d1da"/><text x="677" y="146">0.1761</text>
+    <div class="callout note">
+      <span class="label">創業者の肩書きについて</span>
+      <p>プレスリリースでは「ChatGPT の共同発明者」と表現されています。一方、レビュアーの Anthony Maio 氏は「InstructGPT 論文の筆頭著者の一人で GPT-4 にも貢献」という表現のほうが正確で、多くの人の成果を一人に帰さない言い方だと指摘しています。</p>
+    </div>
 
-    <text x="10" y="190" font-size="11" fill="#5d6772">同じ「正解との一致率」約68%の Terra と比べると：</text>
-    <text x="10" y="212" font-size="13" font-weight="700" fill="#1a5fd0">時間は約25分の1、費用は約76分の1</text>
-    <text x="10" y="236" font-size="11" fill="#5d6772">※ 開発元の計測。棒は Jev がほぼ見えない太さになる点に注目。</text>
-  </g>
-</svg>
-<p class="cap"><b>図5</b>　1件の判断にかかる時間と費用。Jev の棒（青）はほとんど見えないほど小さい。</p>
-</div>
+    <h2 id="s5">注意点・よくある誤解</h2>
+    <div class="callout note">
+      <span class="label">要点</span>
+      <p>「間違えないAI」ではない。形は崩れないが中身は間違える。理由を説明してくれないので、監査が必要な業務には工夫が要る。</p>
+    </div>
 
-<h3>この数字の読み方（3点）</h3>
-<ol class="points">
-  <li><b class="t">賢さは中堅クラスと互角</b>GPT-5.6 Terra や Claude Sonnet 5 とほぼ同じ一致率で、費用と時間は桁違いに小さい。</li>
-  <li><b class="t">上位クラスには5〜6ポイント負ける</b>特に請求書処理では Jev 61.8% に対し Sol 79.1% と差が大きい。<strong>間違いの代償が大きい業務では、安さより賢さを優先すべき</strong>場面もあります。</li>
-  <li><b class="t">「分けて聞く」こと自体に効果があった</b>この評価では、どのAIでも「1回の指示で丸ごと任せる」より「小さな判断に分けて順番に処理する」ほうが精度・速度・費用すべて改善しました。<strong>これは Jev を使わなくても取り入れられる知見です。</strong></li>
-</ol>
+    <div class="callout caution">
+      <span class="label">よくある誤解</span>
+      <ol>
+        <li>
+          <strong>誤解①「ハルシネーション（でたらめ）がない」＝「間違えない」ではない</strong>
+          Jev が保証するのは<strong>答えの形</strong>だけです。「請求／技術／営業」から選べと言われて「経理」と答えることはありませんが、<strong>本当は請求なのに技術と答える</strong>ことはあります。しかも、その間違った答えに高い信頼度を付けることもあります。レビュアーの言葉を借りると「Jev は答えの形を縛るが、判断そのものは縛らない」です。
+        </li>
+        <li>
+          <strong>選択肢の作り方を間違えると、静かに壊れる</strong>
+          正解が選択肢の中にないとき、Jev は<strong>用意された選択肢のどれかを必ず選びます</strong>。「その他」「分からない」「情報不足」という逃げ道を必ず入れておく必要があります（公式も推奨）。
+        </li>
+        <li>
+          <strong>「なぜそう判断したか」を教えてくれない</strong>
+          文章を書かないので、理由の説明がありません。「なぜこの申請がこの点数なのか」と聞かれる業務（審査・監査など）では、信頼度の数字だけでは説明になりません。対策は、<strong>大量処理は Jev、説明が必要なものは文章を書くAIか人に回す</strong>という組み合わせです。
+        </li>
+        <li>
+          <strong>世の中が変わると精度が落ちる</strong>
+          ルール変更、新しい種類の顧客、新しい不正の手口などが出てくると、先月まで信頼できた確率が静かにずれていきます。定期的な見直しが必要です。
+        </li>
+        <li>
+          <strong>まだ検証途中の技術</strong>
+          学習方法（RLCD）の中身は非公開で論文もなく、評価は開発元の自己採点です。価格が今後も維持されるかも「長期で示すしかない」と開発元自身が書いています。現時点では<strong>「有望だが、まだ様子見」</strong>が妥当な評価です。
+        </li>
+      </ol>
+    </div>
 
-<div class="box warn">
-  <span class="title">数字はすべて「開発元の自己採点」です</span>
-  <p>評価に使った業務も、正解の作り方も、すべて TypeSafe 自身が決めています。開発元は「自社に有利に働く条件がある」ことを自ら認めており、その姿勢は誠実ですが、<strong>第三者による大規模な検証はまだありません</strong>。「有望そう」までで止めておくのが妥当です。</p>
-</div>
+    <details class="more">
+      <summary>もっと詳しく：その他の注意点</summary>
+      <div class="inner">
+        <ul>
+          <li><strong>個別に正しい確率でも、組み合わせると保証は消える。</strong>複数の判断をしきい値や分岐で組み合わせたワークフロー全体が、自動的に「校正されている」わけではありません（似た原因の間違いは組み合わせても残る）。</li>
+          <li><strong>しきい値はモデルのバージョンに依存する。</strong>新バージョンが出ると同じ 0.8 でも意味が変わりうるため、しきい値を調整したら <code>jev-1.13.0</code> のようにバージョンを固定し、自分のタイミングで移行することを公式も勧めています。</li>
+          <li><strong>画像は扱えない。</strong>現時点では文字データのみ。Doom のデモもゲームの状態を文字データにして渡しています。</li>
+          <li><strong>「JSONモードと何が違うのか」は決着していない。</strong>既存のAIにも「決まった形式で出力させる」機能はあります。開発元は「並列で速い・形式違反が不可能・確率が校正されている」の3点を違いとして挙げていますが、「既存技術で数週間あれば同等のものが作れる」という反論もあり、議論が続いています。</li>
+          <li><strong>使い道の両面性。</strong>The Register は「これだけ速く安く判断できるなら、ドローンの照準判断に使えという要求が出るのも時間の問題」と皮肉を書いています。速く安い自動判断は、どこまで任せてよいかという倫理の問題も連れてきます。</li>
+        </ul>
+      </div>
+    </details>
 
-<details>
-  <summary>もっと詳しく：デモ（Doom・Wikiracing）とエラー率の話</summary>
-  <div class="inner">
-  <p><strong>公式サイトのデモ</strong>：同じ判断を Jev は 0.114秒／$0.000081、中堅クラスのLLMは 8.566秒／$0.013880 で処理。ただし開発元自身が「このデモは意図的に単純化しており、自社に有利」と注記しています。</p>
-  <p><strong>Doom</strong>：ゲームの状態（画像ではなくデータ）を毎秒10回 Jev に送って操作させるデモ。費用は約$7/時。開発元は「AIでない普通のボットのほうが上手いが、いろいろな状態表現に反応するボットを作りたかった」と正直に書いています。</p>
-  <p><strong>Wikiracing</strong>：Wikipedia のリンクだけをたどって目的のページに着く遊び。1手ごとに数百〜数千のリンクから選ぶため、「存在しない選択肢を答えない」Jev の性質が活きます。ただし一度に選べる選択肢は最大255個で、それを超えると2段階処理になり遅くなります。</p>
-  <p><strong>構造化出力のエラー率</strong>：Jev は仕組み上 0%。比較として他のAIでは 0.58%〜45.5% のエラー率が示されていますが、開発元自身が「他社の数値は測定条件が違い、バイアスがほぼ確実にある」「自社の0%は実測ではなく仕組み上の保証」と明記しています。単純比較はできません。</p>
-  </div>
-</details>
+    <h2 id="s7">参考リンク</h2>
+    <ul class="refs">
+      <li>TypeSafe AI 公式ブログ「Introducing System One Models &amp; Jev」 — <a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev">typesafe.ai/blog/introducing-system-one-models-and-jev</a></li>
+      <li>TypeSafe AI 公式サイト／マニフェスト — <a href="https://typesafe.ai/">typesafe.ai</a> ／ <a href="https://typesafe.ai/manifesto">typesafe.ai/manifesto</a></li>
+      <li>TypeSafe 公式ドキュメント — <a href="https://docs.typesafe.ai/">docs.typesafe.ai</a></li>
+      <li>ワークフロー評価サイト — <a href="https://evals.typesafe.ai/">evals.typesafe.ai</a></li>
+      <li>プレスリリース「TypeSafe AI Emerges From Stealth With $40M in Funding」（BUSINESS WIRE / Yahoo Finance, 2026-09-15）</li>
+      <li>The Register「TypeSafe AI debuts model for machines that plays Doom」（2026-09-16）</li>
+      <li>AI News（TechForge）「ChatGPT pioneer launches Jev model for programmatic logic」</li>
+      <li>Anthony Maio「Jev: The Language Model That Won't Talk」（Substack, 詳細な批判的レビュー）</li>
+      <li>DataCamp「Jev: TypeSafe's System One Model Explained」（ベンチマーク集計）</li>
+      <li>Latent Space / AINews 2026-09-15 号（コミュニティ反応の集約）</li>
+      <li>Hacker News スレッド #49717558／Reddit 初期利用者スレッド</li>
+    </ul>
 
-<!-- ================= 7. 注意点 ================= -->
-<h2 id="s7"><span class="num">7.</span>注意点とよくある誤解</h2>
-<p class="keypoint"><b>要点</b>「間違えないAI」ではない。形は崩れないが中身は間違える。理由を説明してくれないので、監査が必要な業務には工夫が要る。</p>
+  </main>
 
-<ol class="points">
-  <li>
-    <b class="t">誤解①「ハルシネーション（でたらめ）がない」＝「間違えない」ではない</b>
-    Jev が保証するのは<strong>答えの形</strong>だけです。「請求／技術／営業」から選べと言われて「経理」と答えることはありませんが、<strong>本当は請求なのに技術と答える</strong>ことはあります。しかも、その間違った答えに高い信頼度を付けることもあります。レビュアーの言葉を借りると「Jev は答えの形を縛るが、判断そのものは縛らない」です。
-  </li>
-  <li>
-    <b class="t">選択肢の作り方を間違えると、静かに壊れる</b>
-    正解が選択肢の中にないとき、Jev は<strong>用意された選択肢のどれかを必ず選びます</strong>。「その他」「分からない」「情報不足」という逃げ道を必ず入れておく必要があります（公式も推奨）。
-  </li>
-  <li>
-    <b class="t">「なぜそう判断したか」を教えてくれない</b>
-    文章を書かないので、理由の説明がありません。「なぜこの申請がこの点数なのか」と聞かれる業務（審査・監査など）では、信頼度の数字だけでは説明になりません。対策は、<strong>大量処理は Jev、説明が必要なものは文章を書くAIか人に回す</strong>という組み合わせです。
-  </li>
-  <li>
-    <b class="t">世の中が変わると精度が落ちる</b>
-    ルール変更、新しい種類の顧客、新しい不正の手口などが出てくると、先月まで信頼できた確率が静かにずれていきます。定期的な見直しが必要です。
-  </li>
-  <li>
-    <b class="t">まだ検証途中の技術</b>
-    学習方法（RLCD）の中身は非公開で論文もなく、評価は開発元の自己採点です。価格が今後も維持されるかも「長期で示すしかない」と開発元自身が書いています。現時点では<strong>「有望だが、まだ様子見」</strong>が妥当な評価です。
-  </li>
-</ol>
-
-<details>
-  <summary>もっと詳しく：その他の注意点</summary>
-  <div class="inner">
-  <ul class="clean">
-    <li><strong>個別に正しい確率でも、組み合わせると保証は消える。</strong> 複数の判断をしきい値や分岐で組み合わせたワークフロー全体が、自動的に「校正されている」わけではありません（似た原因の間違いは組み合わせても残る）。</li>
-    <li><strong>しきい値はモデルのバージョンに依存する。</strong> 新バージョンが出ると同じ 0.8 でも意味が変わりうるため、しきい値を調整したら <code>jev-1.13.0</code> のようにバージョンを固定し、自分のタイミングで移行することを公式も勧めています。</li>
-    <li><strong>画像は扱えない。</strong> 現時点では文字データのみ。Doom のデモもゲームの状態を文字データにして渡しています。</li>
-    <li><strong>「JSONモードと何が違うのか」は決着していない。</strong> 既存のAIにも「決まった形式で出力させる」機能はあります。開発元は「並列で速い・形式違反が不可能・確率が校正されている」の3点を違いとして挙げていますが、「既存技術で数週間あれば同等のものが作れる」という反論もあり、議論が続いています。</li>
-    <li><strong>使い道の両面性。</strong> The Register は「これだけ速く安く判断できるなら、ドローンの照準判断に使えという要求が出るのも時間の問題」と皮肉を書いています。速く安い自動判断は、どこまで任せてよいかという倫理の問題も連れてきます。</li>
-  </ul>
-  </div>
-</details>
-
-<!-- ================= 8. 関係 ================= -->
-<h2 id="s8"><span class="num">8.</span>私たちの仕事にどう関係するか</h2>
-<p class="keypoint"><b>要点</b>「AIに文章で丸投げしていた仕事」を見直し、「実は分類・判定だけ」の部分を切り分ける。この考え方は Jev を使わなくても効く。</p>
-
-<p>Jev の登場で見えてくるのは、これからのAI活用は<strong>1つの賢いAIに何でも任せるのではなく、役割ごとに分担させる</strong>形になりそうだ、ということです。</p>
-
-<div class="fig">
-<svg viewBox="0 0 720 190" role="img" aria-label="AI活用の役割分担">
-  <g font-size="13" text-anchor="middle" fill="#1c2128">
-    <rect x="10" y="30" width="165" height="120" rx="6" fill="#fff" stroke="#dde3e9"/>
-    <text x="92" y="58" font-weight="700">文章を書くAI</text>
-    <text x="92" y="80" font-size="11" fill="#5d6772">ChatGPT / Claude など</text>
-    <text x="92" y="106" font-size="12">下書き・計画</text>
-    <text x="92" y="126" font-size="12">理由の説明</text>
-
-    <rect x="187" y="30" width="165" height="120" rx="6" fill="#edf3ff" stroke="#c6d8f7"/>
-    <text x="269" y="58" font-weight="700" fill="#1a5fd0">判断するAI</text>
-    <text x="269" y="80" font-size="11" fill="#1a5fd0">Jev など</text>
-    <text x="269" y="106" font-size="12">分類・採点・判定</text>
-    <text x="269" y="126" font-size="12">大量・高速・安価</text>
-
-    <rect x="364" y="30" width="165" height="120" rx="6" fill="#fff" stroke="#dde3e9"/>
-    <text x="446" y="58" font-weight="700">プログラム</text>
-    <text x="446" y="80" font-size="11" fill="#5d6772">私たちが書くコード</text>
-    <text x="446" y="106" font-size="12">ルール・権限</text>
-    <text x="446" y="126" font-size="12">実際の処理の実行</text>
-
-    <rect x="541" y="30" width="169" height="120" rx="6" fill="#eaf7f0" stroke="#bfe4d0"/>
-    <text x="625" y="58" font-weight="700" fill="#0c6b45">人</text>
-    <text x="625" y="80" font-size="11" fill="#0c6b45">担当者・管理者</text>
-    <text x="625" y="106" font-size="12">難しい案件</text>
-    <text x="625" y="126" font-size="12">最終判断・責任</text>
-
-    <text x="360" y="176" font-size="11" fill="#5d6772">得意なことを分担し、自信のない判断は右へ（人へ）エスカレーションする</text>
-  </g>
-</svg>
-<p class="cap"><b>図6</b>　これからのAI活用の役割分担のイメージ。文章を書くAI・判断するAI・プログラム・人が、それぞれ得意なことを担う。</p>
-</div>
-
-<h3>今日からできること</h3>
-<ol class="points">
-  <li>
-    <b class="t">AIに任せている仕事を棚卸しする（Jev がなくてもできる）</b>
-    今 ChatGPT などに文章で頼んでいる作業のうち、「実は分類・振り分け・採点・はい/いいえの判定に過ぎないもの」を洗い出す。<a href="#s6">6.</a> の評価が示したとおり、<strong>どのAIでも「小さな判断に分ける」だけで精度・速度・費用が改善</strong>します。
-  </li>
-  <li>
-    <b class="t">試すなら「失敗しても安い場所」から</b>
-    Jev は現在、順番待ちリスト経由の早期アクセスです。最初の実験は、AIの出力の品質チェックや問い合わせの一次振り分けなど、<strong>間違えてもすぐ直せる工程</strong>から。<strong>取り消せない操作（承認・送金など）の自動化から始めない。</strong>
-  </li>
-  <li>
-    <b class="t">評価は自社データで、全体の費用で</b>
-    開発元の数字を鵜呑みにせず、自社のデータで精度を測る。費用は「AIの呼び出し1回いくら」ではなく、<strong>人の確認や別のAIへの回送も含めた業務全体</strong>で比較する。
-  </li>
-  <li>
-    <b class="t">問うべきは「どこまで任せられるか」</b>
-    「安くて速い」は前提として、<strong>その業務で許容できる間違いの割合はどれくらいで、その範囲でどこまで自動化できるか</strong>を考える。説明責任が必要な業務には、最初から「人や文章を書くAIに回す経路」を設計に入れておく。
-  </li>
-</ol>
-
-<!-- ================= 9. 基本情報 ================= -->
-<h2 id="s9"><span class="num">9.</span>基本情報まとめ</h2>
-<div class="scroll">
-<table>
-  <caption>出典：TypeSafe AI 公式ブログ／プレスリリース（BUSINESS WIRE, 2026年9月15日）／公式ドキュメント</caption>
-  <tbody>
-    <tr><th>名前</th><td>Jev（ジェブ）。現行版 <code>jev-1.13.0</code></td></tr>
-    <tr><th>分類</th><td>「System One Model」＝開発元が名付けた新しい種類のAI。心理学者カーネマンの「速い直感的な思考（システム1）」にちなむ</td></tr>
-    <tr><th>開発元</th><td>TypeSafe AI（米サンフランシスコ）。2年間の非公開開発を経て 2026年9月15日に発表</td></tr>
-    <tr><th>創業者</th><td>Diogo Almeida（CEO、元OpenAI研究者。ChatGPT の基礎となった InstructGPT 論文の筆頭著者の一人）ほか2名</td></tr>
-    <tr><th>資金</th><td>シード（創業初期）で4,000万ドルを調達。投資会社 DCVC が主導</td></tr>
-    <tr><th>提供状況</th><td>順番待ちリスト経由の早期アクセス。Python / JavaScript 向けの開発キットあり</td></tr>
-    <tr><th>価格</th><td>入力100万トークンあたり $0.042。<strong>出力は無料</strong>（文章を書かないため）</td></tr>
-    <tr><th>入力上限</th><td>1回あたり約32,000トークン（英語で約15万文字）</td></tr>
-    <tr><th>名前の由来</th><td>19世紀の経済学者ジェヴォンズから。「効率が上がるとかえって消費が増える」というジェヴォンズのパラドックスにちなみ、「判断が安くなれば使い道は桁違いに増える」という賭けを込めている</td></tr>
-  </tbody>
-</table>
-</div>
-
-<div class="box note">
-  <span class="title">創業者の肩書きについて</span>
-  <p>プレスリリースでは「ChatGPT の共同発明者」と表現されています。一方、レビュアーの Anthony Maio 氏は「InstructGPT 論文の筆頭著者の一人で GPT-4 にも貢献」という表現のほうが正確で、多くの人の成果を一人に帰さない言い方だと指摘しています。</p>
-</div>
-
-<!-- ================= 用語集 ================= -->
-<h2 id="gloss">用語集</h2>
-<dl class="gloss">
-  <dt>LLM（大規模言語モデル）</dt>
-  <dd>ChatGPT や Claude のように、大量の文章を学習して文章で答えるAIの総称。この資料では「文章を書くAI」と呼んでいます。</dd>
-  <dt>トークン</dt>
-  <dd>AIが文章を数えるときの単位。おおよそ「単語や文字のかたまり」。AIの料金は「トークン何個分」で計算されるのが一般的です。</dd>
-  <dt>ハルシネーション</dt>
-  <dd>AIがもっともらしい嘘や、存在しない情報を作り出してしまうこと。「幻覚」の意味。</dd>
-  <dt>構造化データ／型</dt>
-  <dd>「請求／技術／営業のどれか」「0〜1の数値」のように、取りうる値の形があらかじめ決まっているデータのこと。プログラムはこういうデータを扱うのが得意です。逆に自由な文章は「非構造データ」。</dd>
-  <dt>API</dt>
-  <dd>プログラムから別のサービスを呼び出すための窓口。Jev は API を通じてプログラムから使います。</dd>
-  <dt>確率と信頼度</dt>
-  <dd>確率は「各選択肢がどれくらいありそうか」の分布。信頼度はそれを「どれくらい自信があるか」の1つの数字（0〜1）にまとめたもの。</dd>
-  <dt>校正（キャリブレーション）</dt>
-  <dd>「80%と言ったときに実際に約80%当たる」のように、確率の数字と実際の的中率がそろっている状態。</dd>
-  <dt>しきい値</dt>
-  <dd>「信頼度 0.9 以上なら自動処理」のように、処理を切り替える境界の数字。</dd>
-  <dt>RLHF / RLCD</dt>
-  <dd>AIの追加訓練の方法の名前。RLHF は「人間の好みに合わせる」訓練で ChatGPT を生んだもの。RLCD は Jev 独自の「正しい確率で判断する」訓練。</dd>
-  <dt>早期アクセス</dt>
-  <dd>正式公開前に、申し込んだ一部の利用者だけが試せる段階。仕様や価格が変わる可能性があります。</dd>
-  <dt>System One Model</dt>
-  <dd>TypeSafe が名付けた Jev の分類名。心理学の「速くて直感的な思考（システム1）」と「遅くて熟考する思考（システム2）」の区別が元になっています。標準的な業界用語ではなく、開発元の呼び方です。</dd>
-</dl>
-
-<!-- ================= 出典 ================= -->
-<section class="srcs" id="srcs">
-  <h2>参照した情報</h2>
-  <ul>
-    <li>TypeSafe AI 公式ブログ「Introducing System One Models &amp; Jev」 — <a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev">typesafe.ai/blog/introducing-system-one-models-and-jev</a></li>
-    <li>TypeSafe AI 公式サイト／マニフェスト — <a href="https://typesafe.ai/">typesafe.ai</a> ／ <a href="https://typesafe.ai/manifesto">typesafe.ai/manifesto</a></li>
-    <li>TypeSafe 公式ドキュメント — <a href="https://docs.typesafe.ai/">docs.typesafe.ai</a></li>
-    <li>ワークフロー評価サイト — <a href="https://evals.typesafe.ai/">evals.typesafe.ai</a></li>
-    <li>プレスリリース「TypeSafe AI Emerges From Stealth With $40M in Funding」（BUSINESS WIRE / Yahoo Finance, 2026-09-15）</li>
-    <li>The Register「TypeSafe AI debuts model for machines that plays Doom」（2026-09-16）</li>
-    <li>AI News（TechForge）「ChatGPT pioneer launches Jev model for programmatic logic」</li>
-    <li>Anthony Maio「Jev: The Language Model That Won't Talk」（Substack, 詳細な批判的レビュー）</li>
-    <li>DataCamp「Jev: TypeSafe's System One Model Explained」（ベンチマーク集計）</li>
-    <li>Latent Space / AINews 2026-09-15 号（コミュニティ反応の集約）</li>
-    <li>Hacker News スレッド #49717558／Reddit 初期利用者スレッド</li>
-  </ul>
-  <p class="disclaimer">※ 本資料は 2026年9月17日 時点の公開情報に基づきます。性能・価格・提供状況は早期アクセス中のため変動しえます。精度・速度・費用の数値は、明記のあるものを除きすべて開発元（TypeSafe）の自己申告で、第三者による大規模な再現はまだ確認されていません。図中の数値のうち「説明用の例」と記したものは実測値ではありません。</p>
-  <a class="top" href="#top">↑ 先頭へ戻る</a>
-</section>
-
-<footer>— 以上 —</footer>
-
+  <footer>
+    <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+    <p>※ 本資料は 2026年9月17日 時点の公開情報に基づきます。性能・価格・提供状況は早期アクセス中のため変動しえます。精度・速度・費用の数値は、明記のあるものを除きすべて開発元（TypeSafe）の自己申告で、第三者による大規模な再現はまだ確認されていません。図中の数値のうち「説明用の例」と記したものは実測値ではありません。</p>
+  </footer>
 </div>
 </body>
 </html>
