@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>アルゴリズムとデータ構造：配列・リスト・スタック・キュー・木構造・探索/整列アルゴリズムと計算量 | 学習ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f2;
+    --paper-2: #e9ede8;
+    --ink: #14202b;
+    --ink-2: #55636f;
+    --rule: #d3dad6;
+    --marker: #ffe56b;
+    --marker-ink: #14202b;
+    --link: #1f4b99;
+    --note: #dfe9f7;
+    --caution: #ffe3dc;
+    --code-bg: #e9ede8;
+    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+      --note: #1e2f45; --caution: #4a2620; --code-bg: #1b242c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.7;
+    text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 0.15em; }
+  a:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
+  em { font-style: normal; font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
+
+  .cover { padding: var(--sp-4) 0 var(--sp-3); border-bottom: 2px solid var(--ink); margin-bottom: var(--sp-4); }
+  .cover .back { font-size: 0.9rem; color: var(--ink-2); text-decoration: none; }
+  .cover .back:hover { color: var(--ink); }
+  .cover h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 5.5vw, 2.6rem); line-height: 1.3;
+    margin: var(--sp-2) 0 var(--sp-2);
+  }
+  .cover h1 span {
+    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
+  }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.9rem; color: var(--ink-2); }
+
+  .toc { margin: 0 0 var(--sp-5); padding: var(--sp-2) var(--sp-3); background: var(--paper-2); border-radius: 4px; }
+  .toc h2 { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--ink-2); margin: 0 0 var(--sp-1); }
+  .toc ol { margin: 0; padding-left: 1.6em; }
+  .toc li { margin: 4px 0; }
+  .toc a { text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul.sub { margin: 4px 0 4px; padding-left: 1.3em; list-style: none; }
+  .toc ul.sub a { color: var(--ink-2); font-size: 0.85rem; }
+
+  .prose h2 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 1.5rem; line-height: 1.4;
+    margin: var(--sp-5) 0 var(--sp-2); padding-bottom: var(--sp-1);
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: var(--sp-3);
+  }
+  .prose h3 { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin: var(--sp-4) 0 var(--sp-1); scroll-margin-top: var(--sp-3); }
+  .prose p { max-width: var(--measure); margin: 0; }
+  .prose p + p { margin-top: var(--sp-3); }
+  .prose ul, .prose ol { max-width: var(--measure); margin: var(--sp-2) 0; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: var(--sp-1); }
+  .prose strong { font-weight: 700; }
+
+  .callout { max-width: var(--measure); margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border-left: 4px solid var(--ink); background: var(--paper-2); border-radius: 0 4px 4px 0; }
+  .callout.summary { border-left-color: var(--marker); }
+  .callout.note { background: var(--note); border-left-color: var(--link); }
+  .callout.caution { background: var(--caution); border-left-color: #b8432b; }
+  .callout > :first-child { margin-top: 0; }
+  .callout p + p { margin-top: var(--sp-2); }
+  .callout .label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+
+  .table-wrap { overflow-x: auto; margin: var(--sp-3) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+  th, td { padding: var(--sp-1) var(--sp-2); line-height: 1.5; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  thead th { border-bottom: 2px solid var(--ink-2); font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  figure { margin: var(--sp-4) 0; }
+  figure > svg { display: block; max-width: 100%; height: auto; color: var(--ink); }
+  figure svg text { font-family: var(--font-body); font-size: 12px; fill: currentColor; }
+  figcaption { margin-top: var(--sp-1); font-size: 0.875rem; color: var(--ink-2); }
+
+  pre { margin: var(--sp-3) 0; padding: var(--sp-2); background: var(--code-bg); border-radius: 4px; overflow-x: auto; line-height: 1.6; }
+  code { font-family: var(--font-mono); font-size: 0.875em; }
+  :not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+
+  .quiz { max-width: var(--measure); margin: var(--sp-2) 0; border: 1px solid var(--rule); border-radius: 4px; }
+  .quiz summary { padding: var(--sp-2); cursor: pointer; font-weight: 700; }
+  .quiz summary::marker { color: var(--ink-2); }
+  .quiz .answer { padding: 0 var(--sp-2) var(--sp-2); border-top: 1px solid var(--rule); }
+  .quiz .answer > :first-child { margin-top: var(--sp-2); }
+
+  .refs { max-width: var(--measure); }
+  .refs li { word-break: break-all; }
+
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
+
+  @media (max-width: 600px) {
+    .page { padding: 0 var(--sp-2) var(--sp-4); }
+    .prose h2 { font-size: 1.3rem; }
+    /* 図は縮小しすぎると文字が 12px を下回るため、図の中だけ横スクロールさせる
+       （図の viewBox 幅は最大 680 なので、等倍を保てる 680px を下限にする） */
+    figure { overflow-x: auto; }
+    figure > svg { min-width: 680px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="cover">
+    <a class="back" href="../index.html">学習ノートに戻る</a>
+    <h1><span>アルゴリズムとデータ構造：配列・リスト・スタック・キュー・木構造・探索/整列アルゴリズムと計算量</span></h1>
+    <ul class="meta">
+      <li>作成日 2026-09-19</li>
+      <li>分野 コンピュータサイエンス基礎</li>
+    </ul>
+  </header>
+
+  <nav class="toc" aria-label="目次">
+    <h2>目次</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a>
+        <ul class="sub">
+          <li><a href="#array-list">3-1. 配列とリスト（連結リスト）</a></li>
+          <li><a href="#stack-queue">3-2. スタックとキュー</a></li>
+          <li><a href="#tree">3-3. 木構造：二分木・二分探索木・走査</a></li>
+          <li><a href="#search">3-4. 探索アルゴリズム</a></li>
+          <li><a href="#sort">3-5. 整列アルゴリズム</a></li>
+          <li><a href="#complexity">3-6. 計算量（オーダー記法）</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a></li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <main class="prose">
+
+    <h2 id="s1">概要</h2>
+    <div class="callout summary">
+      <span class="label">3行でいうと</span>
+      <ul>
+        <li>データ構造（配列・リスト・スタック・キュー・木構造）は「データをどう並べて持つか」の設計であり、アルゴリズム（探索・整列など）は「そのデータに対して何をするか」の手順である。両者はセットで考える。</li>
+        <li>それぞれのデータ構造には「速い操作」と「遅い操作」があり、どれか一つが万能ではない。配列は参照が速く、連結リストは挿入・削除が速い、というようにトレードオフを理解して使い分けることが重要になる。</li>
+        <li>アルゴリズムの良し悪しは、入力の大きさ n に対して処理量がどう増えるかを表す「計算量（オーダー記法 O）」で比較する。基本情報・応用情報技術者試験でも、データ構造と計算量の組み合わせが頻出のテーマになっている。</li>
+      </ul>
+    </div>
+
+    <h2 id="s2">基本用語</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>用語</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>データ構造</td><td>プログラムがデータを効率よく扱うための、データの並べ方・持ち方の型（配列、リスト、木構造など）</td></tr>
+          <tr><td>配列（Array）</td><td>同じ種類のデータをメモリ上の連続した領域に並べて格納するデータ構造。添字（インデックス）で位置を指定してアクセスする</td></tr>
+          <tr><td>連結リスト（Linked List）</td><td>データ（値）と、次の要素の場所を示す「ポインタ」をセットにした「ノード」を鎖のようにつなげたデータ構造</td></tr>
+          <tr><td>スタック（Stack）</td><td>最後に入れたデータを最初に取り出す（LIFO：Last In First Out）性質を持つデータ構造</td></tr>
+          <tr><td>キュー（Queue）</td><td>最初に入れたデータを最初に取り出す（FIFO：First In First Out）性質を持つデータ構造</td></tr>
+          <tr><td>木構造（Tree）</td><td>1つの根（root）から枝分かれして葉（leaf）に至る、階層的なつながりを持つデータ構造</td></tr>
+          <tr><td>二分木（Binary Tree）</td><td>各ノードが持つ子ノードの数が最大2つ（左の子・右の子）に制限された木構造</td></tr>
+          <tr><td>二分探索木（Binary Search Tree, BST）</td><td>「左の子＜親＜右の子」という大小関係を常に満たすように構成された二分木。探索・挿入・削除を効率よく行える</td></tr>
+          <tr><td>探索（Search）</td><td>データの集合の中から、目的の値を見つけ出す処理</td></tr>
+          <tr><td>整列（Sort）</td><td>データの集合を、ある基準（昇順・降順など）に従って並べ替える処理</td></tr>
+          <tr><td>計算量（オーダー記法・O記法）</td><td>入力サイズ n が大きくなったとき、処理時間や使用メモリがどのような割合で増加するかを表す指標。O(n) のように表記する</td></tr>
+          <tr><td>時間計算量</td><td>アルゴリズムの実行にかかる処理ステップ数のオーダー</td></tr>
+          <tr><td>空間計算量</td><td>アルゴリズムの実行に追加で必要となるメモリ量のオーダー</td></tr>
+          <tr><td>安定ソート</td><td>整列の基準となる値が等しい要素同士について、元の並び順が整列後も保たれる整列アルゴリズムの性質</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="s3">仕組み・全体像</h2>
+
+    <h3 id="array-list">3-1. 配列とリスト（連結リスト）</h3>
+    <p>
+    「複数のデータをまとめて持つ」という目的は同じでも、配列と連結リストではメモリ上での持ち方がまったく異なり、それが得意・不得意の違いを生む。
+    </p>
+    <p>
+    <strong>配列</strong>は、同じ大きさのデータをメモリ上の連続した領域に隙間なく並べて格納する。先頭アドレスと「1要素あたりのサイズ×添字」の計算だけで目的の要素のアドレスを直接求められるため、添字を指定した読み書きは常に一定の速さ（O(1)）で行える。
+    </p>
+    <p>
+    一方、多くの言語では確保時にサイズを固定する必要があり、途中への要素の挿入・削除では、後ろの要素を1つずつずらす必要があるためO(n)の時間がかかる。
+    </p>
+    <p>
+    <strong>連結リスト（連結リスト構造）</strong>は、データ本体と「次の要素がどこにあるか」を示すポインタ（参照）をセットにした「ノード」を鎖状につなげたものである。各ノードはメモリ上のバラバラな場所に置かれてよく、実行時に自由にノードを追加できるため事前にサイズを決める必要がない。
+    </p>
+    <p>
+    挿入・削除は、該当箇所さえ分かっていればポインタの繋ぎ替えだけで完了するためO(1)だが、n番目の要素を参照するには先頭から順にポインタをたどるしかなくO(n)かかる。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 680 350" role="img" aria-label="上段は配列がメモリ上に連続して並び添字からアドレスを直接計算できる様子、下段は連結リストの各ノードがメモリ上のばらばらな場所にありポインタで次のノードをたどる様子を示す図">
+        <title>配列と連結リストのメモリ構造の違いを示す図</title>
+        <defs>
+          <marker id="alarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <text x="10" y="20" font-size="13" font-weight="700" style="fill:var(--link)">配列：連続したメモリ領域に並ぶ（添字からアドレスを直接計算できる）</text>
+        <g text-anchor="middle">
+          <rect x="40" y="34" width="90" height="50" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="85" y="64" font-size="14" font-weight="700">"A"</text>
+          <rect x="130" y="34" width="90" height="50" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="175" y="64" font-size="14" font-weight="700">"B"</text>
+          <rect x="220" y="34" width="90" height="50" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="265" y="64" font-size="14" font-weight="700">"C"</text>
+          <rect x="310" y="34" width="90" height="50" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="355" y="64" font-size="14" font-weight="700">"D"</text>
+        </g>
+        <g font-size="12" text-anchor="middle" style="fill:var(--ink-2)">
+          <text x="85" y="18">添字0</text>
+          <text x="175" y="18">添字1</text>
+          <text x="265" y="18">添字2</text>
+          <text x="355" y="18">添字3</text>
+          <text x="85" y="102">1000番地</text>
+          <text x="175" y="102">1004番地</text>
+          <text x="265" y="102">1008番地</text>
+          <text x="355" y="102">1012番地</text>
+        </g>
+        <text x="20" y="126" font-size="12" style="fill:var(--ink-2)">→ 添字2が欲しければ「1000 + 2×4」で1008番地に直接ジャンプできる（O(1)）</text>
+
+        <line x1="0" y1="150" x2="680" y2="150" stroke="var(--rule)" stroke-dasharray="4 4"/>
+
+        <text x="10" y="176" font-size="13" font-weight="700" style="fill:var(--link)">連結リスト：ノードはメモリ上のばらばらな場所にあり、ポインタでたどる</text>
+
+        <g text-anchor="middle">
+          <rect x="30" y="196" width="120" height="56" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <line x1="90" y1="196" x2="90" y2="252" stroke="var(--rule)"/>
+          <text x="60" y="228" font-size="13" font-weight="700">"A"</text>
+          <text x="118" y="228" font-size="12" style="fill:var(--ink-2)">次へ</text>
+          <text x="90" y="270" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">2050番地</text>
+
+          <rect x="470" y="150" width="120" height="56" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <line x1="530" y1="150" x2="530" y2="206" stroke="var(--rule)"/>
+          <text x="500" y="182" font-size="13" font-weight="700">"B"</text>
+          <text x="558" y="182" font-size="12" style="fill:var(--ink-2)">次へ</text>
+          <text x="530" y="128" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">1200番地</text>
+
+          <rect x="250" y="260" width="120" height="56" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <line x1="310" y1="260" x2="310" y2="316" stroke="var(--rule)"/>
+          <text x="280" y="292" font-size="13" font-weight="700">"C"</text>
+          <text x="338" y="292" font-size="12" style="fill:var(--ink-2)">次へ</text>
+          <text x="310" y="340" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">3400番地</text>
+
+          <rect x="590" y="260" width="80" height="56" rx="6" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="630" y="284" font-size="12" font-weight="700">"D"</text>
+          <text x="630" y="302" font-size="12" style="fill:var(--ink-2)">次=NULL</text>
+        </g>
+
+        <path d="M150,220 C240,220 300,200 460,178" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#alarr)"/>
+        <path d="M530,206 C480,240 400,268 378,282" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#alarr)"/>
+        <path d="M378,282 C480,282 540,282 586,286" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#alarr)"/>
+      </svg>
+      <figcaption><b>図1</b>　配列は連続領域に並ぶため添字からアドレスを直接計算できるが、連結リストは各ノードが飛び飛びの場所にあり、ポインタを順にたどらないと目的の要素にたどり着けない。</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>操作</th><th>配列</th><th>連結リスト</th></tr></thead>
+      <tbody>
+        <tr><td>添字を指定した参照</td><td>O(1)</td><td>O(n)（先頭からたどる）</td></tr>
+        <tr><td>先頭・末尾への追加</td><td>末尾はO(1)（余裕がある場合）、先頭はO(n)</td><td>ポインタを持っていればO(1)</td></tr>
+        <tr><td>途中への挿入・削除</td><td>O(n)（後続要素のシフトが必要）</td><td>挿入位置が分かっていればO(1)</td></tr>
+        <tr><td>メモリ確保</td><td>多くの場合サイズが固定（動的配列は再確保のコストあり）</td><td>実行時に必要な分だけノードを追加できる</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+    まとめると、<strong>ランダムアクセス（添字による参照）が多い用途には配列</strong>、<strong>先頭・途中への挿入や削除が頻繁に発生する用途には連結リスト</strong>が向いている、という使い分けが基本になる。
+    </p>
+
+    <h3 id="stack-queue">3-2. スタックとキュー</h3>
+    <p>
+    スタックとキューは、どちらも「データを一時的に入れておき、後で取り出す」ための単純なデータ構造だが、取り出す順序が正反対になる。
+    </p>
+    <p>
+    <strong>スタック</strong>は、最後に入れたデータを最初に取り出す<strong>LIFO（Last In First Out：後入れ先出し）</strong>の構造で、データを積む操作を<code>push</code>、取り出す操作を<code>pop</code>と呼ぶ。
+    </p>
+    <p>
+    <strong>キュー</strong>は、最初に入れたデータを最初に取り出す<strong>FIFO（First In First Out：先入れ先出し）</strong>の構造で、データを追加する操作を<code>enqueue</code>、取り出す操作を<code>dequeue</code>と呼ぶ。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 680 320" role="img" aria-label="上段はスタックにデータを積むpushと取り出すpopの様子、下段はキューの後尾にデータを追加するenqueueと先頭から取り出すdequeueの様子を示す図">
+        <title>スタックとキューの動作を示す図</title>
+        <defs>
+          <marker id="sqarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <text x="10" y="18" font-size="13" font-weight="700" style="fill:var(--link)">スタック（LIFO：後入れ先出し）</text>
+        <g text-anchor="middle">
+          <rect x="80" y="150" width="130" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="145" y="172" font-size="12.5">1番目に入れた</text>
+          <rect x="80" y="116" width="130" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="145" y="138" font-size="12.5">2番目に入れた</text>
+          <rect x="80" y="82" width="130" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="145" y="104" font-size="12.5" style="fill:var(--marker-ink)" font-weight="700">3番目＝先頭(top)</text>
+        </g>
+        <path d="M145,50 V78" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#sqarr)"/>
+        <text x="145" y="42" font-size="12" text-anchor="middle" font-weight="700">push（積む）</text>
+        <path d="M240,99 H290" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#sqarr)"/>
+        <text x="300" y="103" font-size="12" font-weight="700">pop：直近に積んだ「3番目」から取り出す</text>
+
+        <line x1="0" y1="210" x2="680" y2="210" stroke="var(--rule)" stroke-dasharray="4 4"/>
+
+        <text x="10" y="234" font-size="13" font-weight="700" style="fill:var(--link)">キュー（FIFO：先入れ先出し）</text>
+        <g text-anchor="middle">
+          <rect x="80" y="252" width="90" height="46" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="125" y="279" font-size="12" style="fill:var(--marker-ink)" font-weight="700">1番目(先頭)</text>
+          <rect x="176" y="252" width="90" height="46" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="221" y="279" font-size="12">2番目</text>
+          <rect x="272" y="252" width="90" height="46" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="317" y="279" font-size="12">3番目(後尾)</text>
+        </g>
+        <path d="M50,275 H74" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#sqarr)"/>
+        <text x="12" y="258" font-size="12" font-weight="700">dequeue</text>
+        <text x="12" y="272" font-size="12" style="fill:var(--ink-2)">先頭から取出</text>
+        <path d="M368,275 H400" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#sqarr)"/>
+        <text x="410" y="266" font-size="12" font-weight="700">enqueue</text>
+        <text x="410" y="280" font-size="12" style="fill:var(--ink-2)">後尾に追加</text>
+      </svg>
+      <figcaption><b>図2</b>　スタックは最後に積んだ要素から取り出す（LIFO）。キューは列に並ぶのと同じ感覚で、先に入れた要素から取り出す（FIFO）。</figcaption>
+    </figure>
+
+    <p>代表的な用途は次のとおり。</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>代表的な用途</th></tr></thead>
+      <tbody>
+        <tr><td>スタック</td><td>プログラムの関数呼び出し管理（コールスタック）、数式の評価、ブラウザの「戻る」機能、深さ優先探索（DFS）、括弧の対応チェックなど</td></tr>
+        <tr><td>キュー</td><td>幅優先探索（BFS）、印刷ジョブやタスクの順番待ち行列、Webサーバーへのリクエスト処理、データをためて順に処理するバッファなど</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="tree">3-3. 木構造：二分木・二分探索木・走査</h3>
+    <p>
+    木構造は、1つの<strong>根（root）</strong>から枝分かれし、末端の<strong>葉（leaf）</strong>に至る階層的なデータ構造である。あるノードから見て一つ上のノードを親、一つ下のノードを子と呼ぶ。各ノードが持てる子の数を最大2つに制限したものを<strong>二分木</strong>と呼ぶ。
+    </p>
+    <p>
+    二分木のうち、すべてのノードについて「左の部分木の値＜自分の値＜右の部分木の値」という大小関係を常に満たすように構成したものを<strong>二分探索木（BST）</strong>と呼ぶ。
+    </p>
+    <p>
+    この規則のおかげで、目的の値を探すときは、根と比較して左右どちらの部分木に進むべきかを1回の比較で絞り込めるため、木の形がバランスしていれば探索・挿入・削除を平均O(log n)で行える。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 640 320" role="img" aria-label="8を根とし、左部分木に3・1・6・4・7、右部分木に10・14・13を配置した二分探索木の例を示す図">
+        <title>二分探索木の例を示す図</title>
+        <g stroke="var(--ink-2)" stroke-width="1.6">
+          <line x1="340" y1="46" x2="220" y2="118"/>
+          <line x1="340" y1="46" x2="480" y2="118"/>
+          <line x1="220" y1="130" x2="140" y2="198"/>
+          <line x1="220" y1="130" x2="280" y2="198"/>
+          <line x1="280" y1="210" x2="240" y2="278"/>
+          <line x1="280" y1="210" x2="320" y2="278"/>
+          <line x1="480" y1="130" x2="560" y2="198"/>
+          <line x1="560" y1="210" x2="520" y2="278"/>
+        </g>
+        <g text-anchor="middle" font-size="14" font-weight="700">
+          <circle cx="340" cy="34" r="22" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="340" y="39" style="fill:var(--marker-ink)">8</text>
+
+          <circle cx="220" cy="118" r="20" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="220" y="123">3</text>
+          <circle cx="480" cy="118" r="20" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="480" y="123">10</text>
+
+          <circle cx="140" cy="198" r="19" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="140" y="203">1</text>
+          <circle cx="280" cy="198" r="19" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="280" y="203">6</text>
+          <circle cx="560" cy="198" r="19" fill="var(--paper-2)" stroke="var(--rule)"/>
+          <text x="560" y="203">14</text>
+
+          <circle cx="240" cy="278" r="18" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="240" y="283">4</text>
+          <circle cx="320" cy="278" r="18" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="320" y="283">7</text>
+          <circle cx="520" cy="278" r="18" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="520" y="283">13</text>
+        </g>
+        <text x="10" y="20" font-size="12" style="fill:var(--ink-2)">※ 各ノードで「左の子＜自分＜右の子」が成り立つ（例：14の左に13がある＝13は14より小さい）</text>
+      </svg>
+      <figcaption><b>図3</b>　二分探索木の例。根8から見て、3側の部分木はすべて8未満、10側の部分木はすべて8以上になっている。</figcaption>
+    </figure>
+
+    <p>
+    木を巡回する方法には、大きく「幅優先探索（BFS）」と「深さ優先探索（DFS）」がある。<strong>幅優先探索</strong>は根に近い階層（レベル）から順にすべて訪問する方法で、キューを使って実装するのが典型的である。<strong>深さ優先探索</strong>は、行けるところまで深く潜ってから戻る方法で、再帰呼び出し（内部的にはスタック）を使って実装するのが典型的である。深さ優先探索には、根を訪問するタイミングによって3つの順序がある。
+    </p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>走査法</th><th>訪問順</th><th>図3の木での結果</th></tr></thead>
+      <tbody>
+        <tr><td>行きがけ順（先行順・preorder）</td><td>根 → 左部分木 → 右部分木</td><td>8, 3, 1, 6, 4, 7, 10, 14, 13</td></tr>
+        <tr><td>通りがけ順（中間順・inorder）</td><td>左部分木 → 根 → 右部分木</td><td>1, 3, 4, 6, 7, 8, 10, 13, 14（＝昇順）</td></tr>
+        <tr><td>帰りがけ順（後行順・postorder）</td><td>左部分木 → 右部分木 → 根</td><td>1, 4, 7, 6, 3, 13, 14, 10, 8</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+    特に、<strong>二分探索木を通りがけ順で走査すると、必ず値が昇順に並ぶ</strong>という性質は試験でも頻出なので押さえておきたい。
+    </p>
+
+    <h3 id="search">3-4. 探索アルゴリズム</h3>
+    <p>
+    <strong>線形探索（逐次探索）</strong>は、先頭から順に1つずつ目的の値と一致するか比較していく最も単純な方法である。データが並んでいる必要はないが、最悪の場合（目的の値が末尾にある、または存在しない）はすべての要素を調べる必要があり、時間計算量はO(n)になる。
+    </p>
+    <p>
+    <strong>二分探索</strong>は、<strong>あらかじめ昇順（または降順）に並んでいるデータ</strong>を対象に、中央の要素と目的の値を比較して、探す範囲を半分に絞り込むことを繰り返す方法である。1回の比較で探索範囲がほぼ半分になるため、n個のデータに対して比較回数はおよそlog₂n回で済み、時間計算量はO(log n)になる。
+    </p>
+    <p>
+    たとえばn=1000のとき、線形探索は平均500回程度の比較が必要になるのに対し、二分探索はたかだか10回程度で済む。
+    </p>
+    <div class="callout note">
+      <span class="label">計算量の考え方</span>
+      <p>二分探索は毎回「範囲÷2」を繰り返すので、範囲の要素数が1になるまでの回数 k は 2^k ≒ n を満たす。これを k について解くと k ≒ log₂n となり、比較回数がO(log n)になる理由が分かる。</p>
+    </div>
+    <div class="callout caution">
+      <span class="label">前提条件に注意</span>
+      <p>二分探索は「データが事前にソート済みであること」が絶対条件である。ソートされていない配列にそのまま二分探索をかけると、正しい結果が得られない。ソートにかかるコスト（後述、最速でもO(n log n)）も含めて全体の処理時間を見積もる必要がある。</p>
+    </div>
+
+    <h3 id="sort">3-5. 整列アルゴリズム</h3>
+    <p>
+    整列（ソート）アルゴリズムには多くの種類があるが、基本情報・応用情報技術者試験でよく問われる代表的な5つの仕組みと計算量を押さえておく。
+    </p>
+    <ul>
+      <li><strong>バブルソート</strong>：隣り合う要素を先頭から順に比較し、大小が逆であれば交換する、という走査を繰り返す。1回の走査ごとに最大値（または最小値）が端に「浮き上がる」ように確定していく。仕組みが単純だが、比較・交換の回数が多くO(n²)。</li>
+      <li><strong>選択ソート</strong>：未整列の範囲から最小値（または最大値）を探し、その範囲の先頭要素と交換する、という操作を繰り返す。比較回数はバブルソートと同程度だが、交換回数は最大でn-1回とバブルソートより少ない。時間計算量はO(n²)。</li>
+      <li><strong>挿入ソート</strong>：整列済みの部分列に対して、次の要素を適切な位置に挿入していく。ランダムなデータではO(n²)だが、<strong>ほぼ整列済みのデータに対しては非常に高速（最良でO(n)）</strong>という特徴を持つ。</li>
+      <li><strong>クイックソート</strong>：基準値（ピボット）を1つ選び、ピボットより小さいグループと大きいグループに分割し、それぞれを再帰的に同じ方法でソートする「分割統治法」の代表例。平均的にはO(n log n)と高速だが、ピボットの選び方が悪い（すでにほぼ整列済みのデータで毎回端の要素を選ぶなど）と最悪O(n²)まで悪化する。</li>
+      <li><strong>マージソート</strong>：データを半分に分割することを1要素になるまで繰り返し、その後、整列済みの小さな列同士をマージ（併合）しながら1つに戻していく「分割統治法」のもう一つの代表例。常にO(n log n)で安定しているが、マージの過程で元のデータと同程度の追加メモリ（作業領域）を必要とする。</li>
+    </ul>
+
+    <figure>
+      <svg viewBox="0 0 680 220" role="img" aria-label="配列5,3,8,4,2,7,1,6からピボット6を選び、6未満のグループと6以上のグループに分割するクイックソートの1ステップを示す図">
+        <title>クイックソートの分割（パーティション）を示す図</title>
+        <defs>
+          <marker id="qsarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+        <g text-anchor="middle" font-size="14" font-weight="700">
+          <rect x="20" y="36" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="43" y="61">5</text>
+          <rect x="76" y="36" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="99" y="61">3</text>
+          <rect x="132" y="36" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="155" y="61">8</text>
+          <rect x="188" y="36" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="211" y="61">4</text>
+          <rect x="244" y="36" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="267" y="61">2</text>
+          <rect x="300" y="36" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="323" y="61">7</text>
+          <rect x="356" y="36" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="379" y="61">1</text>
+          <rect x="412" y="36" width="46" height="40" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="435" y="61" style="fill:var(--marker-ink)">6</text>
+        </g>
+        <text x="490" y="61" font-size="12.5" style="fill:var(--ink-2)">← ピボットに選ぶ</text>
+        <text x="10" y="20" font-size="12.5" font-weight="700" style="fill:var(--link)">分割前</text>
+
+        <path d="M240,90 V110" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#qsarr)"/>
+
+        <text x="10" y="134" font-size="12.5" font-weight="700" style="fill:var(--link)">分割後（ピボット6を境に「未満」「以上」へ再配置）</text>
+        <g text-anchor="middle" font-size="14" font-weight="700">
+          <rect x="20" y="150" width="46" height="40" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="43" y="175">5</text>
+          <rect x="76" y="150" width="46" height="40" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="99" y="175">3</text>
+          <rect x="132" y="150" width="46" height="40" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="155" y="175">4</text>
+          <rect x="188" y="150" width="46" height="40" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="211" y="175">2</text>
+          <rect x="244" y="150" width="46" height="40" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="267" y="175">1</text>
+          <rect x="300" y="150" width="46" height="40" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="323" y="175" style="fill:var(--marker-ink)">6</text>
+          <rect x="356" y="150" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="379" y="175">8</text>
+          <rect x="412" y="150" width="46" height="40" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="435" y="175">7</text>
+        </g>
+        <text x="150" y="202" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">6未満のグループ</text>
+        <text x="400" y="202" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">6以上のグループ</text>
+        <text x="10" y="216" font-size="12" style="fill:var(--ink-2)">→ ピボットは確定位置に収まり、左右の各グループに対して同じ手順を再帰的に繰り返す</text>
+      </svg>
+      <figcaption><b>図4</b>　クイックソートはピボットを基準に「小さいグループ」「大きいグループ」へ分割し、それぞれに同じ処理を再帰的に適用していく。</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 680 300" role="img" aria-label="配列を要素が1つになるまで半分ずつ分割し、その後隣り合う整列済みの列同士をマージしながら1つの整列済み配列に戻していくマージソートの流れを示す図">
+        <title>マージソートの分割と併合の流れを示す図</title>
+        <g font-family="var(--font-mono)" font-size="14" font-weight="700">
+          <text x="10" y="26">5 3 8 4 2 7 1 6</text>
+          <text x="10" y="66">5 3 8 4</text><text x="200" y="66">2 7 1 6</text>
+          <text x="10" y="106">5 3</text><text x="130" y="106">8 4</text><text x="260" y="106">2 7</text><text x="380" y="106">1 6</text>
+          <text x="10" y="146">5</text><text x="70" y="146">3</text><text x="130" y="146">8</text><text x="190" y="146">4</text><text x="260" y="146">2</text><text x="320" y="146">7</text><text x="380" y="146">1</text><text x="440" y="146">6</text>
+        </g>
+        <text x="470" y="146" font-size="12" style="fill:var(--ink-2)">← 要素1つは常に整列済み</text>
+
+        <g font-family="var(--font-mono)" font-size="14" font-weight="700" style="fill:var(--link)">
+          <text x="10" y="186">3 5</text><text x="130" y="186">4 8</text><text x="260" y="186">2 7</text><text x="380" y="186">1 6</text>
+          <text x="10" y="226">3 4 5 8</text><text x="200" y="226">1 2 6 7</text>
+          <text x="10" y="266">1 2 3 4 5 6 7 8</text>
+        </g>
+        <text x="230" y="266" font-size="12.5" style="fill:var(--ink-2)">← 整列済みの列同士をマージ（併合）して完成</text>
+
+        <text x="10" y="45" font-size="12" style="fill:var(--ink-2)">↓ 分割フェーズ（半分ずつに割っていく）</text>
+        <text x="10" y="166" font-size="12" style="fill:var(--link)">↑ 併合フェーズ（整列済みの列同士をマージしながら戻していく）</text>
+      </svg>
+      <figcaption><b>図5</b>　マージソートは配列を1要素になるまで分割し（上半分）、その後、整列済みの隣り合う列同士を比較しながらマージして1つの整列済み配列に戻す（下半分）。</figcaption>
+    </figure>
+
+    <p>
+    基本の3つ（バブル・選択・挿入）は、同じ配列 5, 1, 4, 2, 8 に対する動きを見比べると違いが分かりやすい。以下の図は、配列の1マスを1要素として、上から下へコマ送りで状態の変化を追ったものである。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 680 330" role="img" aria-label="配列5,1,4,2,8に対するバブルソートの1パス目を4ステップに分けて示す図。隣り合う2要素を比較し、5と1、5と4、5と2は逆順なので交換し、5と8は交換せず、最後に最大値8が右端に確定する">
+        <title>バブルソートの1パス目の動きを示す図</title>
+        <defs>
+          <marker id="bsarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+        <text x="10" y="18" font-size="13" font-weight="700" style="fill:var(--link)">バブルソート：隣り合う2つを比較し、逆順なら交換する（1パス目）</text>
+
+        <!-- 1回目 -->
+        <text x="10" y="57" font-size="12">1回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="36" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="162" y="57" style="fill:var(--marker-ink)">5</text>
+          <rect x="190" y="36" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="212" y="57" style="fill:var(--marker-ink)">1</text>
+          <rect x="240" y="36" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="57">4</text>
+          <rect x="290" y="36" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="57">2</text>
+          <rect x="340" y="36" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="57">8</text>
+        </g>
+        <path d="M162,79 H212" stroke="var(--ink-2)" stroke-width="1.6" marker-start="url(#bsarr)" marker-end="url(#bsarr)"/>
+        <text x="396" y="57" font-size="12">5 &gt; 1 なので交換する</text>
+
+        <!-- 2回目 -->
+        <text x="10" y="109" font-size="12">2回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="88" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="162" y="109">1</text>
+          <rect x="190" y="88" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="212" y="109" style="fill:var(--marker-ink)">5</text>
+          <rect x="240" y="88" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="262" y="109" style="fill:var(--marker-ink)">4</text>
+          <rect x="290" y="88" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="109">2</text>
+          <rect x="340" y="88" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="109">8</text>
+        </g>
+        <path d="M212,131 H262" stroke="var(--ink-2)" stroke-width="1.6" marker-start="url(#bsarr)" marker-end="url(#bsarr)"/>
+        <text x="396" y="109" font-size="12">5 &gt; 4 なので交換する</text>
+
+        <!-- 3回目 -->
+        <text x="10" y="161" font-size="12">3回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="140" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="162" y="161">1</text>
+          <rect x="190" y="140" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="212" y="161">4</text>
+          <rect x="240" y="140" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="262" y="161" style="fill:var(--marker-ink)">5</text>
+          <rect x="290" y="140" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="312" y="161" style="fill:var(--marker-ink)">2</text>
+          <rect x="340" y="140" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="161">8</text>
+        </g>
+        <path d="M262,183 H312" stroke="var(--ink-2)" stroke-width="1.6" marker-start="url(#bsarr)" marker-end="url(#bsarr)"/>
+        <text x="396" y="161" font-size="12">5 &gt; 2 なので交換する</text>
+
+        <!-- 4回目 -->
+        <text x="10" y="213" font-size="12">4回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="192" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="162" y="213">1</text>
+          <rect x="190" y="192" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="212" y="213">4</text>
+          <rect x="240" y="192" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="213">2</text>
+          <rect x="290" y="192" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="312" y="213" style="fill:var(--marker-ink)">5</text>
+          <rect x="340" y="192" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="362" y="213" style="fill:var(--marker-ink)">8</text>
+        </g>
+        <text x="396" y="213" font-size="12">5 &lt; 8 なので交換しない</text>
+
+        <!-- 結果 -->
+        <text x="10" y="265" font-size="12">結果</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="244" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="162" y="265">1</text>
+          <rect x="190" y="244" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="212" y="265">4</text>
+          <rect x="240" y="244" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="265">2</text>
+          <rect x="290" y="244" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="265">5</text>
+          <rect x="340" y="244" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="362" y="265">8</text>
+        </g>
+        <text x="396" y="265" font-size="12">最大値8が右端に確定</text>
+        <path d="M140,286 V292 H334 V286" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+        <text x="237" y="310" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">未整列（この範囲で次のパスを繰り返す）</text>
+      </svg>
+      <figcaption><b>図6</b>　バブルソートの1パス目。隣接する2つの比較と交換を左から右へ繰り返すと、最大値8が「浮き上がる」ように右端に確定する。以降は残りの未整列範囲に同じパスを繰り返す。</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 680 270" role="img" aria-label="配列5,1,4,2,8に対する選択ソートの1回目を3ステップに分けて示す図。未整列範囲を左から右へ走査して最小値1を見つけ、先頭の5と交換し、先頭要素が確定して残りの範囲で同じ操作を繰り返す">
+        <title>選択ソートの1回目の動きを示す図</title>
+        <defs>
+          <marker id="ssarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+        <text x="10" y="18" font-size="13" font-weight="700" style="fill:var(--link)">選択ソート：未整列の範囲から最小値を探し、先頭と交換する（1回目）</text>
+
+        <!-- 探索 -->
+        <path d="M140,46 H384" stroke="var(--ink-2)" stroke-width="1.6" fill="none" marker-end="url(#ssarr)"/>
+        <text x="396" y="50" font-size="12" style="fill:var(--ink-2)">左端から右端まで全体を走査</text>
+        <text x="10" y="77" font-size="12">① 探索</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="56" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="162" y="77">5</text>
+          <rect x="190" y="56" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="212" y="77" style="fill:var(--marker-ink)">1</text>
+          <rect x="240" y="56" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="77">4</text>
+          <rect x="290" y="56" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="77">2</text>
+          <rect x="340" y="56" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="77">8</text>
+        </g>
+        <text x="212" y="106" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">最小値</text>
+        <text x="396" y="77" font-size="12">未整列範囲の最小値は1</text>
+
+        <!-- 交換 -->
+        <text x="10" y="141" font-size="12">② 交換</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="120" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="162" y="141" style="fill:var(--marker-ink)">5</text>
+          <rect x="190" y="120" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="212" y="141" style="fill:var(--marker-ink)">1</text>
+          <rect x="240" y="120" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="141">4</text>
+          <rect x="290" y="120" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="141">2</text>
+          <rect x="340" y="120" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="141">8</text>
+        </g>
+        <path d="M162,166 H212" stroke="var(--ink-2)" stroke-width="1.6" marker-start="url(#ssarr)" marker-end="url(#ssarr)"/>
+        <text x="396" y="141" font-size="12">先頭の5と最小値1を交換</text>
+
+        <!-- 結果 -->
+        <text x="10" y="205" font-size="12">③ 結果</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="184" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="162" y="205">1</text>
+          <rect x="190" y="184" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="212" y="205">5</text>
+          <rect x="240" y="184" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="205">4</text>
+          <rect x="290" y="184" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="205">2</text>
+          <rect x="340" y="184" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="205">8</text>
+        </g>
+        <text x="396" y="205" font-size="12">先頭が確定、残りで繰り返す</text>
+        <path d="M140,226 V232 H184 V226" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+        <text x="162" y="250" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">確定</text>
+        <path d="M190,226 V232 H384 V226" stroke="var(--ink-2)" stroke-width="1.4" fill="none"/>
+        <text x="287" y="250" font-size="12" text-anchor="middle" style="fill:var(--ink-2)">未整列（次はこの範囲で探索）</text>
+      </svg>
+      <figcaption><b>図7</b>　選択ソートの1回目。未整列範囲を走査して最小値を1つ見つけ、その範囲の先頭と1回だけ交換する。交換回数が少ないのはこの「探して1回交換する」形のためである。</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 680 300" role="img" aria-label="配列5,1,4,2,8に対する挿入ソートの進み方を4ステップに分けて示す図。左側の整列済み部分に次の値を正しい位置へ差し込む操作を繰り返し、1、4、2、8を順に挿入して1,2,4,5,8になる">
+        <title>挿入ソートの進み方を示す図</title>
+        <text x="10" y="18" font-size="13" font-weight="700" style="fill:var(--link)">挿入ソート：整列済みの部分に、次の値を正しい位置へ差し込む</text>
+
+        <!-- 初期 -->
+        <text x="10" y="57" font-size="12">初期</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="36" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="162" y="57">5</text>
+          <rect x="190" y="36" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="212" y="57" style="fill:var(--marker-ink)">1</text>
+          <rect x="240" y="36" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="57">4</text>
+          <rect x="290" y="36" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="57">2</text>
+          <rect x="340" y="36" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="57">8</text>
+        </g>
+        <line x1="187" y1="30" x2="187" y2="74" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <text x="396" y="57" font-size="12">整列済みは5だけ。次は1を挿入</text>
+
+        <!-- 1回目 -->
+        <text x="10" y="105" font-size="12">1回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="84" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="162" y="105" style="fill:var(--marker-ink)">1</text>
+          <rect x="190" y="84" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="212" y="105">5</text>
+          <rect x="240" y="84" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="262" y="105">4</text>
+          <rect x="290" y="84" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="105">2</text>
+          <rect x="340" y="84" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="105">8</text>
+        </g>
+        <line x1="237" y1="78" x2="237" y2="122" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <text x="396" y="105" font-size="12">1は5より小さいので先頭へ</text>
+
+        <!-- 2回目 -->
+        <text x="10" y="153" font-size="12">2回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="132" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="162" y="153">1</text>
+          <rect x="190" y="132" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="212" y="153" style="fill:var(--marker-ink)">4</text>
+          <rect x="240" y="132" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="262" y="153">5</text>
+          <rect x="290" y="132" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="312" y="153">2</text>
+          <rect x="340" y="132" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="153">8</text>
+        </g>
+        <line x1="287" y1="126" x2="287" y2="170" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <text x="396" y="153" font-size="12">4は1と5の間へ差し込む</text>
+
+        <!-- 3回目 -->
+        <text x="10" y="201" font-size="12">3回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="180" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="162" y="201">1</text>
+          <rect x="190" y="180" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="212" y="201" style="fill:var(--marker-ink)">2</text>
+          <rect x="240" y="180" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="262" y="201">4</text>
+          <rect x="290" y="180" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="312" y="201">5</text>
+          <rect x="340" y="180" width="44" height="32" rx="5" fill="var(--paper-2)" stroke="var(--rule)"/><text x="362" y="201">8</text>
+        </g>
+        <line x1="337" y1="174" x2="337" y2="218" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <text x="396" y="201" font-size="12">2は1と4の間へ差し込む</text>
+
+        <!-- 4回目 -->
+        <text x="10" y="249" font-size="12">4回目</text>
+        <g text-anchor="middle" font-size="12.5" font-weight="700">
+          <rect x="140" y="228" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="162" y="249">1</text>
+          <rect x="190" y="228" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="212" y="249">2</text>
+          <rect x="240" y="228" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="262" y="249">4</text>
+          <rect x="290" y="228" width="44" height="32" rx="5" fill="var(--note)" stroke="var(--rule)"/><text x="312" y="249">5</text>
+          <rect x="340" y="228" width="44" height="32" rx="5" fill="var(--marker)" stroke="var(--rule)"/><text x="362" y="249" style="fill:var(--marker-ink)">8</text>
+        </g>
+        <text x="396" y="249" font-size="12">8はそのまま末尾へ（完成）</text>
+
+        <g font-size="12" style="fill:var(--ink-2)">
+          <rect x="140" y="272" width="16" height="14" rx="3" fill="var(--note)" stroke="var(--rule)"/>
+          <text x="162" y="284">整列済みの部分</text>
+          <rect x="300" y="272" width="16" height="14" rx="3" fill="var(--marker)" stroke="var(--rule)"/>
+          <text x="322" y="284">その回に挿入する値</text>
+          <line x1="470" y1="279" x2="486" y2="279" stroke="var(--ink-2)" stroke-width="1.4" stroke-dasharray="4 3"/>
+          <text x="492" y="284">整列済みと未整列の境界</text>
+        </g>
+      </svg>
+      <figcaption><b>図8</b>　挿入ソートは左側の整列済み部分に次の値を差し込んでいく。ほぼ整列済みのデータでは差し込み位置がすぐ決まるため、比較・移動がほとんど起きず最良でO(n)になる。</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>アルゴリズム</th><th>平均計算量</th><th>最悪計算量</th><th>追加の空間計算量</th><th>安定性</th></tr></thead>
+      <tbody>
+        <tr><td>バブルソート</td><td>O(n²)</td><td>O(n²)</td><td>O(1)</td><td>安定</td></tr>
+        <tr><td>選択ソート</td><td>O(n²)</td><td>O(n²)</td><td>O(1)</td><td>不安定</td></tr>
+        <tr><td>挿入ソート</td><td>O(n²)</td><td>O(n²)（最良O(n)）</td><td>O(1)</td><td>安定</td></tr>
+        <tr><td>クイックソート</td><td>O(n log n)</td><td>O(n²)</td><td>O(log n)</td><td>不安定</td></tr>
+        <tr><td>マージソート</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n)</td><td>安定</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>
+    なお実務のプログラミング言語では、これらを単純に使うのではなく、複数のアルゴリズムを組み合わせたハイブリッド方式が標準ソート関数として使われることが多い。たとえばPythonやJava（オブジェクト配列）は、挿入ソートとマージソートを組み合わせた<strong>Timsort</strong>を採用しており、既に整列済みの部分（run）を活かすことで実データに対して高速に動作する。
+    </p>
+
+    <h3 id="complexity">3-6. 計算量（オーダー記法）</h3>
+    <p>
+    アルゴリズムの効率は、実際の実行時間（環境や実装に左右される）ではなく、入力サイズnが大きくなったときに処理量がどんな比率で増えていくかという「オーダー（桁数のイメージ）」で比較するのが一般的である。これを表すのが<strong>O記法（Big-O記法）</strong>で、係数や小さい項を無視し、最も影響の大きい項だけを残して<code>O(...)</code>の形で表す。
+    </p>
+    <p>
+    たとえば「3n²+5n+2」という処理量であれば、nが大きくなるほどn²の項が支配的になるため、O(n²)と表記する。
+    </p>
+    <p>
+    また、計算量には「処理にかかるステップ数」を表す<strong>時間計算量</strong>と、「処理の実行に追加で必要なメモリ量」を表す<strong>空間計算量</strong>の2つの軸があり、両方を意識する必要がある（例：マージソートは時間計算量こそ優れているが、空間計算量ではその場で並べ替えられる他のアルゴリズムに劣る）。
+    </p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>オーダー</th><th>呼び方</th><th>代表例</th></tr></thead>
+      <tbody>
+        <tr><td>O(1)</td><td>定数時間</td><td>配列の添字アクセス、スタック/キューのpush・pop</td></tr>
+        <tr><td>O(log n)</td><td>対数時間</td><td>二分探索、バランスの取れた二分探索木での探索</td></tr>
+        <tr><td>O(n)</td><td>線形時間</td><td>線形探索、配列の全要素の走査</td></tr>
+        <tr><td>O(n log n)</td><td>線形対数時間</td><td>マージソート、平均的なクイックソート</td></tr>
+        <tr><td>O(n²)</td><td>二乗時間</td><td>バブルソート、選択ソート、挿入ソート（いずれも最悪の場合）</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 640 420" role="img" aria-label="入力サイズnが大きくなるにつれて処理量がどう増えるかを、O(1)、O(log n)、O(n)、O(n log n)、O(n^2)の5本の曲線で比較する折れ線グラフ">
+        <title>代表的な計算量オーダーの増加の比較グラフ</title>
+        <defs>
+          <marker id="axarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+        <line x1="60" y1="380" x2="610" y2="380" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#axarr)"/>
+        <line x1="60" y1="380" x2="60" y2="30" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#axarr)"/>
+        <text x="610" y="400" font-size="12.5" text-anchor="end">n（入力サイズ）</text>
+        <text x="30" y="26" font-size="12.5">処理量</text>
+
+        <path d="M60,363 L600,363" stroke="var(--ink-2)" stroke-width="2" stroke-dasharray="6 3" fill="none"/>
+        <path d="M114,380 L168,376.6 L222,374.6 L276,373.2 L330,372.1 L384,371.2 L438,370.4 L492,369.8 L546,369.2 L600,368.7" stroke="var(--link)" stroke-width="2.2" fill="none"/>
+        <path d="M60,380 L114,376.6 L168,373.2 L222,369.8 L276,366.4 L330,363 L384,359.6 L438,356.2 L492,352.8 L546,349.4 L600,346" stroke="var(--ink)" stroke-width="2.2" fill="none"/>
+        <path d="M114,380 L168,373.2 L222,363.9 L276,352.8 L330,340.6 L384,327.3 L438,313.2 L492,298.4 L546,283.1 L600,267.1" stroke="#b8432b" stroke-width="2.2" fill="none"/>
+        <path d="M60,380 L114,376.6 L168,366.4 L222,349.4 L276,325.6 L330,295 L384,257.6 L438,213.4 L492,162.4 L546,104.6 L600,40" stroke="#a8791a" stroke-width="2.2" fill="none"/>
+
+        <g font-size="12" font-weight="700">
+          <line x1="430" y1="46" x2="452" y2="46" stroke="var(--ink-2)" stroke-width="2" stroke-dasharray="6 3"/>
+          <text x="458" y="50">O(1)</text>
+          <line x1="430" y1="64" x2="452" y2="64" stroke="var(--link)" stroke-width="2.2"/>
+          <text x="458" y="68" style="fill:var(--link)">O(log n)</text>
+          <line x1="430" y1="82" x2="452" y2="82" stroke="var(--ink)" stroke-width="2.2"/>
+          <text x="458" y="86">O(n)</text>
+          <line x1="430" y1="100" x2="452" y2="100" stroke="#b8432b" stroke-width="2.2"/>
+          <text x="458" y="104" style="fill:#b8432b">O(n log n)</text>
+          <line x1="430" y1="118" x2="452" y2="118" stroke="#a8791a" stroke-width="2.2"/>
+          <text x="458" y="122" style="fill:#a8791a">O(n²)</text>
+        </g>
+        <text x="10" y="410" font-size="12" style="fill:var(--ink-2)">※ nが大きくなるほど O(n²) は急激に増加し、O(1) や O(log n) との差が広がっていく</text>
+      </svg>
+      <figcaption><b>図9</b>　nが小さいうちは差が目立たなくても、nが大きくなるほどO(n²)は急激に増加し、O(1)やO(log n)との差が大きく開いていく。</figcaption>
+    </figure>
+
+    <h2 id="s4">具体例・使いどころ</h2>
+
+    <div class="callout note">
+      <span class="label">具体例1　ブラウザの「戻る」と印刷待ち行列</span>
+      <p>Webブラウザの「戻る」ボタンは、訪れたページの履歴をスタックのように積み、直近に見たページから順に戻っていく（LIFO）。一方、プリンターへの印刷ジョブやコンビニのレジの行列は、先に頼んだ人・並んだ人から順に処理されるキュー（FIFO）の典型例である。</p>
+    </div>
+
+    <div class="callout note">
+      <span class="label">具体例2　ファイルシステムと索引構造</span>
+      <p>PCのフォルダとファイルの階層構造はまさに木構造そのものであり、フォルダを開く操作は木を深さ優先で辿ることに相当する。また、データベースの索引（インデックス）には二分探索木を発展させたB木・B+木がよく使われており、大量データの中から特定のレコードを高速（おおむねO(log n)）に見つけ出す仕組みの根底にある。</p>
+    </div>
+
+    <div class="callout note">
+      <span class="label">具体例3　用途に応じたソートアルゴリズムの選択</span>
+      <p>メモリ制約が厳しい組み込み機器や、ほぼ整列済みのデータを扱う場合は、実装が単純で追加メモリの少ない挿入ソートが向くことがある。大量データを高速に処理したい一般的な用途ではO(n log n)のクイックソートやマージソートが好まれ、「元の並び順を保ちたい」（例：氏名で並べ替えた後、日付でも並べ替えて両方の順序を活かしたい）場合は安定ソートであるマージソートが選ばれる。</p>
+    </div>
+
+    <h2 id="s5">注意点・よくある誤解</h2>
+    <div class="callout caution">
+      <span class="label">よくある誤解</span>
+      <ul>
+        <li><strong>「配列とリストはどちらかが常に優れている」わけではない。</strong> — 添字アクセスが多いなら配列、挿入・削除が多いなら連結リストというように、処理の傾向によって向き・不向きが逆転する。</li>
+        <li><strong>「クイックソートは常にO(n log n)」ではない。</strong> — 平均計算量はO(n log n)だが、ピボットの選び方が悪いと最悪O(n²)まで悪化する。マージソートは常にO(n log n)だが、代わりに追加メモリが必要になる、というトレードオフを混同しないこと。</li>
+        <li><strong>二分探索は「並んでいないデータ」には使えない。</strong> — 適用する前に必ずソート済みであることを確認する必要があり、この前提条件を忘れる誤りが非常に多い。</li>
+        <li><strong>木構造の操作がO(log n)になるのは「木の形がバランスしている場合」に限る。</strong> — 二分探索木にすでに整列済みのデータを順番に挿入していくと、木が一直線に伸びた連結リストのような形になり（偏った木）、最悪計算量はO(n)まで悪化する。</li>
+        <li><strong>「安定ソート＝速いソート」ではない。</strong> — 安定性（同じ値の要素の順序が保たれるか）と計算量（速さ）は別の軸の性質であり、たとえば挿入ソートは安定だがO(n²)、クイックソートは高速だが不安定、というように両立しない組み合わせもある。</li>
+        <li><strong>O記法は「厳密な実行時間」を表すものではない。</strong> — 係数や定数項を無視した漸近的な増加の目安であり、nが小さい範囲では理論上遅いはずのアルゴリズムの方が実測で速いこともある（例：小さなデータでは単純な挿入ソートの方が、オーバーヘッドの大きいクイックソートより速いことがある）。</li>
+      </ul>
+    </div>
+
+    <h2 id="s6">確認問題</h2>
+
+    <details class="quiz">
+      <summary>Q1. 配列と連結リストで、「途中への要素の挿入」と「添字を指定した参照」の計算量はそれぞれどう異なるか。また、どのような処理が多い場合にどちらを選ぶべきか。</summary>
+      <div class="answer"><p>配列は添字参照がO(1)と高速だが、途中への挿入は後続要素をずらす必要がありO(n)かかる。連結リストは挿入位置が分かっていればポインタの繋ぎ替えだけでO(1)だが、n番目の参照は先頭からたどる必要がありO(n)かかる。ランダムアクセスが多い処理には配列、挿入・削除が頻繁な処理には連結リストが向く。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q2. スタックとキューの違いをLIFO/FIFOという言葉を使って説明し、それぞれの代表的な用途を1つずつ挙げよ。</summary>
+      <div class="answer"><p>スタックは最後に入れたデータを最初に取り出すLIFO（後入れ先出し）の構造で、プログラムの関数呼び出し管理（コールスタック）や深さ優先探索に使われる。キューは最初に入れたデータを最初に取り出すFIFO（先入れ先出し）の構造で、幅優先探索やタスクの順番待ち処理に使われる。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q3. 二分探索木を通りがけ順（中間順）で走査すると、値はどのような順序で得られるか。また、その理由を簡潔に説明せよ。</summary>
+      <div class="answer"><p>値は昇順に得られる。通りがけ順は「左部分木→根→右部分木」の順に訪れるが、二分探索木では常に「左の子＜親＜右の子」という大小関係が保たれているため、左側の小さい値から先に訪問し、最後に右側の大きい値を訪問する形になり、結果として全体が小さい順に並ぶ。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q4. 二分探索の時間計算量がO(log n)になる理由を説明せよ。また、二分探索を使うために満たす必要がある前提条件は何か。</summary>
+      <div class="answer"><p>二分探索は比較のたびに探索範囲を約半分に絞り込むため、範囲の要素数が1になるまでの比較回数kは 2^k ≒ n を満たし、k ≒ log₂n となる。そのため時間計算量はO(log n)になる。前提条件は、対象のデータがあらかじめ昇順（または降順）にソートされていることである。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q5. クイックソートとマージソートは、どちらも平均計算量O(n log n)だが、最悪計算量・安定性・追加メモリの点でどのように異なるか。</summary>
+      <div class="answer"><p>クイックソートは最悪計算量がO(n²)（ピボットの選び方が悪い場合）で、不安定ソートだが、追加メモリはO(log n)程度と少ない。マージソートは最悪計算量でも常にO(n log n)で安定しており安定ソートだが、マージの作業領域としてO(n)の追加メモリが必要になる。</p></div>
+    </details>
+
+    <h2 id="s7">参考リンク</h2>
+    <ul class="refs">
+      <li><a href="https://hackson.jp/data-structure-array-list/" target="_blank" rel="noopener">データ構造（配列・リスト）とは？違いと使い分けを図解で完全解説｜確認テスト付き</a></li>
+      <li><a href="https://tech.connehito.com/entry/2023/10/16/115909" target="_blank" rel="noopener">配列と連結リストの線形探索における計算速度とキャッシュメモリの重要性｜コネヒト開発者ブログ</a></li>
+      <li><a href="https://e-words.jp/w/%E9%80%A3%E7%B5%90%E3%83%AA%E3%82%B9%E3%83%88.html" target="_blank" rel="noopener">連結リスト（リンクリスト）とは｜IT用語辞典 e-Words</a></li>
+      <li><a href="https://hackson.jp/stack-lifo/" target="_blank" rel="noopener">スタック（LIFO）とは？PUSH・POPの仕組みとキューとの違いを図解｜確認テスト付き</a></li>
+      <li><a href="https://www.issoh.co.jp/tech/details/4587/" target="_blank" rel="noopener">スタックとキューの違い｜FIFO/LIFOと使い分け・Python実装</a></li>
+      <li><a href="https://www.momoyama-usagi.com/entry/info-algo-tree-traverse" target="_blank" rel="noopener">うさぎでもわかる2分探索木 後編 2分探索木における4つの走査方法｜工業大学生ももやまのうさぎ塾</a></li>
+      <li><a href="https://qiita.com/lymansouka2017/items/6ba22c234a348df3e1b7" target="_blank" rel="noopener">2分木の探索－幅優先、行きがけ順(先行順)深さ優先、帰りがけ順(後行順)深さ優先、通りがけ順(中間順)深さ優先探索｜Qiita</a></li>
+      <li><a href="https://www.momoyama-usagi.com/entry/info-algo-search" target="_blank" rel="noopener">うさぎでもわかる探索アルゴリズム 線形探索・2分探索・ハッシュ探索｜工業大学生ももやまのうさぎ塾</a></li>
+      <li><a href="https://lwprg.com/cs005/317/" target="_blank" rel="noopener">線形探索と二分探索の性能を比較する｜LWP ライフ ウィズ プログラミング</a></li>
+      <li><a href="https://www.momoyama-usagi.com/entry/info-algo-sort-basic" target="_blank" rel="noopener">うさぎでもわかるソーティング 基本ソート編 バブルソート・選択ソート・挿入ソート｜工業大学生ももやまのうさぎ塾</a></li>
+      <li><a href="https://www.momoyama-usagi.com/entry/info-algo-sort-advance" target="_blank" rel="noopener">うさぎでもわかるソーティング 応用ソート編 クイックソート・マージソート・シェルソート・ヒープソート｜工業大学生ももやまのうさぎ塾</a></li>
+      <li><a href="https://blog.taiyaki.cc/posts/sort-comparison" target="_blank" rel="noopener">ソートアルゴリズム比較・計算量まとめ｜安定性・特徴一覧</a></li>
+      <li><a href="https://nabutan.com/sort-algorithm-basic-information/" target="_blank" rel="noopener">基本情報技術者試験のソートアルゴリズム入門｜バブル・選択・挿入・クイック・マージを比較</a></li>
+      <li><a href="https://tech.preferred.jp/ja/blog/tim-sort/" target="_blank" rel="noopener">高速な安定ソートアルゴリズム "TimSort" の解説｜Preferred Networks Tech Blog</a></li>
+      <li><a href="https://shikaku.pepenoheya.blog/order-notation/" target="_blank" rel="noopener">オーダー記法(O記法)と計算量についてわかりやすく解説!!【基本情報】｜IT資格ドットコム</a></li>
+      <li><a href="https://nisshingeppo.com/programming/culc-order/" target="_blank" rel="noopener">計算量(オーダー)とは？計算量オーダーの実用範囲を表で解説｜プログラミングナビ</a></li>
+      <li><a href="https://techgym.jp/column/keisanryo/" target="_blank" rel="noopener">時間計算量と空間計算量とは？Big-O記法から実例まで初心者向けに解説｜テックジム</a></li>
+    </ul>
+
+  </main>
+
+  <footer>
+    <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+  </footer>
+</div>
+</body>
+</html>
