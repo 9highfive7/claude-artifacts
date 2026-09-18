@@ -12,7 +12,7 @@ argument-hint: <学びたいテーマ>
 
 ## 1. 準備
 - `git pull` で最新にする
-- 今日の日付とテーマから英語スラッグを決め、保存先を `reports/YYYY-MM-DD-<slug>.html` とする（同名があれば末尾に -2 などを付ける）
+- テーマから英語スラッグを決め、保存先を `reports/<slug>.html` とする（日付は付けない。同名があれば末尾に -2 などを付ける）
 
 ## 2. 調査・初稿（Sonnet 5）
 researcher サブエージェントを呼び出す。呼び出し時は model に sonnet を明示する。
