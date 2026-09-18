@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ネットワークの基礎：OSI参照モデル・TCP/IP・IPアドレス・ルーティング・DNS | 学習レポート</title>
+<style>
+  :root{
+    --ink:#1b2027; --sub:#5a6675; --line:#dfe5ec;
+    --bg:#f7f9fb; --card:#ffffff; --accent:#0b6fbf; --accent-soft:#e8f2fb;
+    --code-inline:#e7ecf2;
+    --warn-bg:#fdf6e7; --warn-line:#e0bd85; --warn-ink:#8a5a00;
+    --tip-bg:#eef6ec; --tip-line:#a9c9a4; --tip-ink:#3f6b45;
+    --hero-a:#10263a; --hero-b:#0b3d63; --hero-ink:#f6fafd; --hero-sub:#c6d8e6;
+    --fig-bg:#fcfdfe; --fig-line:#c6d0da; --fig-ink:#232a32; --fig-sub:#63707e;
+    /* 層ごとの色（図と本文で共通） */
+    --c-a:#2b7fc4;  --c-a-soft:#e6f1fa;   /* アプリケーション寄り */
+    --c-t:#4f8a5b;  --c-t-soft:#eaf3ec;   /* トランスポート */
+    --c-n:#c2532c;  --c-n-soft:#fbeae2;   /* ネットワーク（IP） */
+    --c-l:#6b7787;  --c-l-soft:#eef1f5;   /* データリンク・物理 */
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#e4eaf1; --sub:#98a5b4; --line:#2f3841;
+      --bg:#11151a; --card:#1a1f26; --accent:#68b6f0; --accent-soft:#16283a;
+      --code-inline:#242c35;
+      --warn-bg:#2b2416; --warn-line:#755a31; --warn-ink:#e7bd79;
+      --tip-bg:#19241a; --tip-line:#466b47; --tip-ink:#a6cfa4;
+      --hero-a:#16212b; --hero-b:#0a1a26; --hero-ink:#f2f7fb; --hero-sub:#aebdcb;
+      --fig-bg:#161b21; --fig-line:#3d4854; --fig-ink:#e2e8ef; --fig-sub:#95a2b0;
+      --c-a:#6cb4e8;  --c-a-soft:#16283a;
+      --c-t:#93c79c;  --c-t-soft:#1c2a1e;
+      --c-n:#e9906a;  --c-n-soft:#33231c;
+      --c-l:#9aa8b8;  --c-l-soft:#222a33;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    line-height:1.9;font-size:16.5px;letter-spacing:.012em;
+    text-rendering:optimizeLegibility}
+  .wrap{max-width:880px;margin:0 auto;padding:0 22px 90px}
+
+  /* ---- hero ---- */
+  header.hero{background:linear-gradient(160deg,var(--hero-a),var(--hero-b));
+    color:var(--hero-ink);padding:56px 22px 48px;margin-bottom:38px;
+    border-bottom:1px solid var(--line)}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero .tag{display:inline-block;font-size:12px;letter-spacing:.14em;
+    border:1px solid rgba(255,255,255,.35);padding:4px 12px;border-radius:20px;margin-bottom:18px}
+  header.hero h1{font-size:clamp(22px,4.6vw,30px);line-height:1.45;margin:0 0 14px;letter-spacing:.01em}
+  header.hero p{margin:0;color:var(--hero-sub);font-size:14.5px;letter-spacing:.06em}
+
+  /* ---- 見出し・本文 ---- */
+  h2{font-size:clamp(20px,3.6vw,23px);margin:60px 0 8px;padding-bottom:12px;
+    border-bottom:2px solid var(--ink);scroll-margin-top:16px}
+  h2 .num{display:block;color:var(--accent);font-size:12.5px;letter-spacing:.14em;margin-bottom:8px}
+  h3{font-size:17.5px;margin:36px 0 10px;color:var(--accent);line-height:1.6;scroll-margin-top:16px}
+  p{margin:0 0 15px}
+  a{color:var(--accent);text-underline-offset:3px}
+  a:hover{text-decoration:none}
+  ul,ol{margin:0 0 16px;padding-left:1.35em}
+  li{margin-bottom:8px}
+  strong{font-weight:700}
+
+  /* ---- 目次 ---- */
+  nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px 24px;margin:0 0 10px}
+  nav.toc .toc-ttl{display:block;font-size:12.5px;letter-spacing:.14em;color:var(--accent);
+    font-weight:700;margin-bottom:6px}
+  nav.toc ol{margin:6px 0 0;padding-left:1.3em}
+  nav.toc li{margin:5px 0;font-size:15px}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  nav.toc a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  nav.toc ul.sub{margin:4px 0 2px;padding-left:1.1em;list-style:none}
+  nav.toc ul.sub li{font-size:13.6px;margin:3px 0;color:var(--sub)}
+  nav.toc ul.sub a{color:var(--sub)}
+
+  /* ---- 表 ---- */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:16px 0 20px}
+  table{border-collapse:collapse;width:100%;font-size:14.8px;background:var(--card);
+    min-width:460px;line-height:1.75}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:700;white-space:nowrap}
+  td:first-child{white-space:nowrap;font-weight:600}
+  table.wide-first td:first-child{white-space:normal;font-weight:400}
+  table.osi td:first-child{text-align:center;color:var(--accent)}
+  table.osi td:nth-child(3){white-space:normal;font-weight:400}
+
+  /* ---- コード ---- */
+  code{background:var(--code-inline);padding:1px 6px;border-radius:4px;font-size:.9em;
+    font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+
+  /* ---- 図 ---- */
+  figure.fig{margin:22px 0 28px;background:var(--fig-bg);border:1px solid var(--line);
+    border-radius:12px;padding:16px 16px 12px}
+  .fig-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  figure.fig svg{display:block;width:100%;min-width:470px;height:auto}
+  figcaption{margin-top:12px;font-size:13.2px;line-height:1.8;color:var(--sub)}
+  figcaption b{color:var(--accent);font-weight:700}
+  .fig .lbl{font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    fill:var(--fig-ink)}
+  .fig .mono{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+  .fig .sub{fill:var(--fig-sub)}
+  .fig .ttl{fill:var(--fig-ink);font-weight:700}
+  .fig .step{fill:var(--accent);font-size:11px;letter-spacing:.12em;font-weight:700}
+  .fig .edge{stroke:var(--fig-line);stroke-width:2;fill:none}
+  .fig .panel{fill:var(--card);stroke:var(--fig-line);stroke-width:1.5}
+  .fig .bracket{stroke:var(--fig-line);stroke-width:1.6;fill:none}
+
+  /* ---- ボックス ---- */
+  .box{border:1px solid var(--line);background:var(--card);border-radius:12px;
+    padding:18px 20px;margin:0 0 18px}
+  .box > :last-child{margin-bottom:0}
+  .box.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+  .box.warn strong{color:var(--warn-ink)}
+  .box.tip{border-color:var(--tip-line);background:var(--tip-bg)}
+  .box .mark{display:block;font-size:11.5px;letter-spacing:.14em;margin-bottom:8px;color:var(--sub)}
+  .box.tip .mark{color:var(--tip-ink)}
+  .box.warn .mark{color:var(--warn-ink)}
+  .box.tip .ttl{display:block;font-weight:700;margin-bottom:6px}
+
+  /* ---- 確認問題 ---- */
+  .q{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 20px;margin:0 0 14px}
+  .q p.question{font-weight:700;margin:0 0 8px;line-height:1.7}
+  .q .qno{color:var(--accent);margin-right:.4em}
+  details{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
+  details p{margin:10px 0 2px;font-size:15px}
+  summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:14.5px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";}
+  details[open] summary::before{content:"▾ ";}
+
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:13.2px;color:var(--sub);line-height:1.8}
+  .refs li{margin-bottom:10px;font-size:15px}
+  .scroll-hint{display:none;font-size:12px;color:var(--sub);margin-top:6px}
+
+  @media (max-width:620px){
+    body{font-size:16px;line-height:1.85}
+    .wrap{padding:0 16px 70px}
+    header.hero{padding:40px 16px 36px;margin-bottom:28px}
+    h2{margin-top:46px}
+    figure.fig{padding:12px 12px 10px}
+    .box,.q{padding:14px 16px}
+    .scroll-hint{display:block}
+  }
+  @media print{
+    header.hero{background:none;color:#000;border-bottom:2px solid #000}
+    nav.toc,.scroll-hint{display:none}
+    details{display:block}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <span class="tag">NETWORK 入門レポート</span>
+    <h1>ネットワークの基礎：OSI参照モデル・TCP/IP・IPアドレス・ルーティング・DNS</h1>
+    <p>作成日 2026-09-18 ／ テーマ: ネットワークの基礎</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc" aria-label="目次">
+  <span class="toc-ttl">目次</span>
+  <ol>
+    <li><a href="#overview">概要</a></li>
+    <li><a href="#terms">基本用語</a></li>
+    <li><a href="#mechanism">仕組み・全体像</a>
+      <ul class="sub">
+        <li><a href="#osi">3-1. OSI参照モデル（7階層）</a></li>
+        <li><a href="#tcpip">3-2. TCP/IPモデルとOSIとの対応</a></li>
+        <li><a href="#tcp-udp">3-3. TCPとUDPの違い</a></li>
+        <li><a href="#ipaddr">3-4. IPアドレスの基礎（IPv4 / IPv6）</a></li>
+        <li><a href="#subnet">3-5. サブネットマスクとCIDR表記</a></li>
+        <li><a href="#routing">3-6. ルーティングの基本的な仕組み</a></li>
+        <li><a href="#dns">3-7. DNSの仕組み（名前解決の流れ）</a></li>
+      </ul>
+    </li>
+    <li><a href="#examples">具体例・使いどころ</a></li>
+    <li><a href="#pitfalls">注意点・よくある誤解</a></li>
+    <li><a href="#quiz">確認問題</a></li>
+    <li><a href="#links">参考リンク</a></li>
+  </ol>
+</nav>
+
+<h2 id="overview"><span class="num">SECTION 1</span>概要</h2>
+<div class="box tip">
+  <span class="mark">SUMMARY</span>
+  <ul>
+    <li>ネットワーク通信は役割ごとに層（レイヤー）で分担しており、その設計図が「OSI参照モデル」、実際に世界中で使われている実装が「TCP/IP」である。</li>
+    <li>通信の相手を特定する住所が「IPアドレス」、住所をもとに荷物を届ける経路選びが「ルーティング」、人間が読める名前（ドメイン名）を住所（IPアドレス）に変換する仕組みが「DNS」である。</li>
+    <li>これらは独立した技術ではなく、Webページを1つ開くだけでも DNS → ルーティング → TCP/IP → OSI各層 という流れで連携して動いている。</li>
+  </ul>
+</div>
+
+<h2 id="terms"><span class="num">SECTION 2</span>基本用語</h2>
+<div class="table-scroll">
+<table>
+  <thead>
+    <tr><th>用語</th><th>意味</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>プロトコル</td><td>通信のルール・手順の取り決め。例：HTTP、TCP、IP</td></tr>
+    <tr><td>パケット</td><td>データを一定サイズに分割した通信の単位</td></tr>
+    <tr><td>カプセル化</td><td>上位層のデータに、下位層がヘッダー（宛先情報など）を付け足していく処理</td></tr>
+    <tr><td>ポート番号</td><td>1台のコンピュータの中で、どのアプリケーション宛の通信かを区別する番号（例：HTTPは80番）</td></tr>
+    <tr><td>IPアドレス</td><td>ネットワーク上の機器を識別する住所にあたる番号</td></tr>
+    <tr><td>サブネットマスク／CIDR</td><td>IPアドレスのうち「ネットワーク部」と「ホスト部」の境界を示す表記</td></tr>
+    <tr><td>ルーター</td><td>異なるネットワーク同士をつなぎ、パケットの転送経路を決める機器</td></tr>
+    <tr><td>デフォルトゲートウェイ</td><td>自分のネットワークの外にパケットを送るときの出口となる機器（通常はルーター）</td></tr>
+    <tr><td>ドメイン名</td><td>example.com のような人間が読みやすいインターネット上の名前</td></tr>
+    <tr><td>DNSリゾルバ</td><td>ドメイン名からIPアドレスを問い合わせる役割を担うサーバー（多くはプロバイダやOSが用意）</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<h2 id="mechanism"><span class="num">SECTION 3</span>仕組み・全体像</h2>
+
+<h3 id="osi">3-1. OSI参照モデル（7階層）</h3>
+<p>
+OSI参照モデルは、通信機能を7つの階層に分けて整理した「考え方の設計図」である。
+</p>
+<p>
+1980年代、メーカーごとに独自仕様のネットワーク機器が多く相互接続が難しかったため、ISO（国際標準化機構）が共通の枠組みとして定めた。実際のプロトコル実装というより、通信をレイヤーごとに切り分けて理解・設計・トラブルシューティングするための「地図」として今も使われている。
+</p>
+<div class="table-scroll">
+<table class="osi">
+  <thead>
+    <tr><th>層</th><th>名称</th><th>役割（自分の言葉で）</th><th>代表的なプロトコル・機器</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>7</td><td>アプリケーション層</td><td>利用者が使うアプリの通信内容そのもの（Webページ取得、メール送信など）</td><td>HTTP, HTTPS, SMTP, DNS</td></tr>
+    <tr><td>6</td><td>プレゼンテーション層</td><td>文字コードや暗号化・圧縮などデータの表現形式を整える</td><td>SSL/TLS（の一部）, 文字コード変換</td></tr>
+    <tr><td>5</td><td>セッション層</td><td>通信の開始から終了までの一連のやり取り（セッション）を管理する</td><td>NetBIOS, セッション管理API</td></tr>
+    <tr><td>4</td><td>トランスポート層</td><td>データを確実に届けるか、速度優先で届けるかなど通信の品質を制御する</td><td>TCP, UDP</td></tr>
+    <tr><td>3</td><td>ネットワーク層</td><td>異なるネットワーク間の経路を選び、宛先まで届ける（住所の役割）</td><td>IP, ICMP, ルーター</td></tr>
+    <tr><td>2</td><td>データリンク層</td><td>同じネットワーク内の機器同士でデータをやり取りする（MACアドレスで識別）</td><td>Ethernet, スイッチ</td></tr>
+    <tr><td>1</td><td>物理層</td><td>電気信号・光信号・電波など物理的にビットを伝送する</td><td>LANケーブル, 光ファイバー, Wi-Fi電波, ハブ</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- FIGURE: OSI参照モデル7層を上から積み上げた図。各層の左に機器例（ハブ/スイッチ/ルーター）を添える -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 420" role="img" aria-label="OSI参照モデルの7階層を上から積み上げ、各層の代表的なプロトコルや機器を示した図">
+    <!-- 上位層ブラケット -->
+    <path class="bracket" d="M138,38 H124 V180 H138"/>
+    <text class="lbl" x="112" y="102" font-size="12.5" text-anchor="end">上位層（5〜7層）</text>
+    <text class="lbl sub" x="112" y="122" font-size="11" text-anchor="end">データの中身・意味を扱う</text>
+    <!-- 下位層ブラケット -->
+    <path class="bracket" d="M138,194 H124 V388 H138"/>
+    <text class="lbl" x="112" y="286" font-size="12.5" text-anchor="end">下位層（1〜4層）</text>
+    <text class="lbl sub" x="112" y="306" font-size="11" text-anchor="end">データを運ぶ仕組みを扱う</text>
+
+    <!-- L7 -->
+    <rect x="150" y="34" width="356" height="46" rx="8" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <circle cx="176" cy="57" r="13" fill="var(--c-a)"/>
+    <text class="lbl" x="176" y="62" font-size="13" text-anchor="middle" style="fill:#fff">7</text>
+    <text class="lbl ttl" x="200" y="62" font-size="13.5">アプリケーション層</text>
+    <text class="lbl sub" x="518" y="62" font-size="11.5">HTTP / HTTPS / SMTP / DNS</text>
+    <!-- L6 -->
+    <rect x="150" y="86" width="356" height="46" rx="8" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <circle cx="176" cy="109" r="13" fill="var(--c-a)"/>
+    <text class="lbl" x="176" y="114" font-size="13" text-anchor="middle" style="fill:#fff">6</text>
+    <text class="lbl ttl" x="200" y="114" font-size="13.5">プレゼンテーション層</text>
+    <text class="lbl sub" x="518" y="114" font-size="11.5">SSL/TLS・文字コード変換</text>
+    <!-- L5 -->
+    <rect x="150" y="138" width="356" height="46" rx="8" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <circle cx="176" cy="161" r="13" fill="var(--c-a)"/>
+    <text class="lbl" x="176" y="166" font-size="13" text-anchor="middle" style="fill:#fff">5</text>
+    <text class="lbl ttl" x="200" y="166" font-size="13.5">セッション層</text>
+    <text class="lbl sub" x="518" y="166" font-size="11.5">NetBIOS・セッション管理API</text>
+    <!-- L4 -->
+    <rect x="150" y="190" width="356" height="46" rx="8" fill="var(--c-t-soft)" stroke="var(--c-t)" stroke-width="1.5"/>
+    <circle cx="176" cy="213" r="13" fill="var(--c-t)"/>
+    <text class="lbl" x="176" y="218" font-size="13" text-anchor="middle" style="fill:#fff">4</text>
+    <text class="lbl ttl" x="200" y="218" font-size="13.5">トランスポート層</text>
+    <text class="lbl sub" x="518" y="218" font-size="11.5">TCP / UDP</text>
+    <!-- L3 -->
+    <rect x="150" y="242" width="356" height="46" rx="8" fill="var(--c-n-soft)" stroke="var(--c-n)" stroke-width="1.5"/>
+    <circle cx="176" cy="265" r="13" fill="var(--c-n)"/>
+    <text class="lbl" x="176" y="270" font-size="13" text-anchor="middle" style="fill:#fff">3</text>
+    <text class="lbl ttl" x="200" y="270" font-size="13.5">ネットワーク層</text>
+    <text class="lbl sub" x="518" y="270" font-size="11.5">IP・ICMP／ルーター</text>
+    <!-- L2 -->
+    <rect x="150" y="294" width="356" height="46" rx="8" fill="var(--c-l-soft)" stroke="var(--c-l)" stroke-width="1.5"/>
+    <circle cx="176" cy="317" r="13" fill="var(--c-l)"/>
+    <text class="lbl" x="176" y="322" font-size="13" text-anchor="middle" style="fill:#fff">2</text>
+    <text class="lbl ttl" x="200" y="322" font-size="13.5">データリンク層</text>
+    <text class="lbl sub" x="518" y="322" font-size="11.5">Ethernet／スイッチ</text>
+    <!-- L1 -->
+    <rect x="150" y="346" width="356" height="46" rx="8" fill="var(--c-l-soft)" stroke="var(--c-l)" stroke-width="1.5"/>
+    <circle cx="176" cy="369" r="13" fill="var(--c-l)"/>
+    <text class="lbl" x="176" y="374" font-size="13" text-anchor="middle" style="fill:#fff">1</text>
+    <text class="lbl ttl" x="200" y="374" font-size="13.5">物理層</text>
+    <text class="lbl sub" x="518" y="368" font-size="11.5">LANケーブル・光ファイバー</text>
+    <text class="lbl sub" x="518" y="384" font-size="11.5">Wi-Fi電波／ハブ</text>
+
+    <!-- 見出し -->
+    <text class="lbl step" x="150" y="20">OSI参照モデル（7階層）</text>
+    <text class="lbl sub" x="518" y="20" font-size="11">代表的なプロトコル・機器</text>
+  </svg>
+  </div>
+  <figcaption><b>図1</b>　OSI参照モデルの7階層。上にいくほど「人間・アプリに近い処理」、下にいくほど「物理的にビットを運ぶ処理」になる。ハブは第1層、スイッチは第2層、ルーターは第3層で動く機器という対応も押さえておくとよい。</figcaption>
+</figure>
+
+<p>
+覚え方としては「上位層（5〜7層）はデータの中身・意味を扱う」「下位層（1〜4層）は実際にデータを運ぶ仕組みを扱う」とざっくり分けると理解しやすい。
+</p>
+
+<h3 id="tcpip">3-2. TCP/IPモデルとOSIとの対応</h3>
+<p>
+実際のインターネットで使われているのはOSIの7層ではなく、より簡略化された4階層の「TCP/IPモデル」である。OSIが理論的な設計図だとすれば、TCP/IPは実装に基づいた現実解といえる。
+</p>
+<div class="table-scroll">
+<table class="wide-first">
+  <thead>
+    <tr><th>TCP/IPモデル</th><th>対応するOSI層</th><th>代表プロトコル</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>アプリケーション層</td><td>アプリケーション層〜セッション層（5〜7層）</td><td>HTTP, DNS, SMTP</td></tr>
+    <tr><td>トランスポート層</td><td>トランスポート層（4層）</td><td>TCP, UDP</td></tr>
+    <tr><td>インターネット層</td><td>ネットワーク層（3層）</td><td>IP, ICMP</td></tr>
+    <tr><td>ネットワークインターフェース層</td><td>データリンク層〜物理層（1〜2層）</td><td>Ethernet, Wi-Fi</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- FIGURE: OSI7層とTCP/IP4層を横に並べて対応関係を矢印でつなぐ図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 420" role="img" aria-label="OSI参照モデルの7層とTCP/IPモデルの4層の対応関係を矢印で結んだ図">
+    <defs>
+      <marker id="nmap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+
+    <text class="lbl step" x="148" y="20" text-anchor="middle">OSI参照モデル（7層）</text>
+    <text class="lbl step" x="536" y="20" text-anchor="middle">TCP/IPモデル（4層）</text>
+
+    <!-- OSI 側 -->
+    <rect x="28" y="34" width="240" height="46" rx="8" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <text class="lbl" x="148" y="62" font-size="13" text-anchor="middle">7 アプリケーション層</text>
+    <rect x="28" y="86" width="240" height="46" rx="8" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <text class="lbl" x="148" y="114" font-size="13" text-anchor="middle">6 プレゼンテーション層</text>
+    <rect x="28" y="138" width="240" height="46" rx="8" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <text class="lbl" x="148" y="166" font-size="13" text-anchor="middle">5 セッション層</text>
+    <rect x="28" y="190" width="240" height="46" rx="8" fill="var(--c-t-soft)" stroke="var(--c-t)" stroke-width="1.5"/>
+    <text class="lbl" x="148" y="218" font-size="13" text-anchor="middle">4 トランスポート層</text>
+    <rect x="28" y="242" width="240" height="46" rx="8" fill="var(--c-n-soft)" stroke="var(--c-n)" stroke-width="1.5"/>
+    <text class="lbl" x="148" y="270" font-size="13" text-anchor="middle">3 ネットワーク層</text>
+    <rect x="28" y="294" width="240" height="46" rx="8" fill="var(--c-l-soft)" stroke="var(--c-l)" stroke-width="1.5"/>
+    <text class="lbl" x="148" y="322" font-size="13" text-anchor="middle">2 データリンク層</text>
+    <rect x="28" y="346" width="240" height="46" rx="8" fill="var(--c-l-soft)" stroke="var(--c-l)" stroke-width="1.5"/>
+    <text class="lbl" x="148" y="374" font-size="13" text-anchor="middle">1 物理層</text>
+
+    <!-- 対応の矢印 -->
+    <path class="bracket" d="M276,38 H290 V180 H276"/>
+    <path d="M290,109 H392" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nmap)"/>
+    <path d="M276,213 H392" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nmap)"/>
+    <path d="M276,265 H392" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nmap)"/>
+    <path class="bracket" d="M276,298 H290 V388 H276"/>
+    <path d="M290,343 H392" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nmap)"/>
+
+    <!-- TCP/IP 側 -->
+    <rect x="400" y="34" width="272" height="150" rx="10" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <text class="lbl ttl" x="536" y="96" font-size="14" text-anchor="middle">アプリケーション層</text>
+    <text class="lbl sub" x="536" y="120" font-size="11.5" text-anchor="middle">HTTP / DNS / SMTP</text>
+    <text class="lbl sub" x="536" y="142" font-size="11.5" text-anchor="middle">OSIの5〜7層をまとめた範囲</text>
+
+    <rect x="400" y="190" width="272" height="46" rx="10" fill="var(--c-t-soft)" stroke="var(--c-t)" stroke-width="1.5"/>
+    <text class="lbl ttl" x="536" y="211" font-size="13.5" text-anchor="middle">トランスポート層</text>
+    <text class="lbl sub" x="536" y="229" font-size="11.5" text-anchor="middle">TCP / UDP</text>
+
+    <rect x="400" y="242" width="272" height="46" rx="10" fill="var(--c-n-soft)" stroke="var(--c-n)" stroke-width="1.5"/>
+    <text class="lbl ttl" x="536" y="263" font-size="13.5" text-anchor="middle">インターネット層</text>
+    <text class="lbl sub" x="536" y="281" font-size="11.5" text-anchor="middle">IP / ICMP</text>
+
+    <rect x="400" y="294" width="272" height="98" rx="10" fill="var(--c-l-soft)" stroke="var(--c-l)" stroke-width="1.5"/>
+    <text class="lbl ttl" x="536" y="332" font-size="13.5" text-anchor="middle">ネットワークインターフェース層</text>
+    <text class="lbl sub" x="536" y="354" font-size="11.5" text-anchor="middle">Ethernet / Wi-Fi</text>
+    <text class="lbl sub" x="536" y="376" font-size="11.5" text-anchor="middle">OSIの1〜2層をまとめた範囲</text>
+  </svg>
+  </div>
+  <figcaption><b>図2</b>　OSIの7層とTCP/IPの4層の対応。TCP/IPではOSIの5〜7層が「アプリケーション層」に、1〜2層が「ネットワークインターフェース層」にまとめられている。</figcaption>
+</figure>
+
+<h3 id="tcp-udp">3-3. TCPとUDPの違い</h3>
+<p>
+どちらもトランスポート層のプロトコルで、ポート番号を使ってアプリケーションを識別する点は共通だが、「確実さ」と「速さ」のどちらを優先するかが大きく異なる。
+</p>
+<div class="table-scroll">
+<table>
+  <thead>
+    <tr><th>項目</th><th>TCP</th><th>UDP</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>接続の確立</td><td>3ウェイハンドシェイクで接続を確立してから通信する</td><td>接続確立をせずいきなりデータを送る</td></tr>
+    <tr><td>信頼性</td><td>到達確認・再送・順序保証あり</td><td>保証なし（届いたかどうかもわからない）</td></tr>
+    <tr><td>速度・オーバーヘッド</td><td>制御が多い分やや遅い</td><td>制御が少なく高速・低遅延</td></tr>
+    <tr><td>たとえ</td><td>受領印をもらう書留郵便</td><td>ポストに投函するだけの普通郵便</td></tr>
+    <tr><td>主な用途</td><td>Webサイト閲覧、メール、ファイル転送</td><td>動画・音声のストリーミング、オンラインゲーム、DNSの問い合わせ</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="scroll-hint">※ 表は横にスクロールできます。</p>
+
+<h3 id="ipaddr">3-4. IPアドレスの基礎（IPv4 / IPv6）</h3>
+<p>
+IPアドレスはネットワーク上の機器を一意に識別する「住所」である。現在主に使われているのは32ビットの<strong>IPv4</strong>（例：<code>192.168.1.1</code>）で、約43億個のアドレスしか作れず、スマートフォンやIoT機器の急増によって世界的にアドレスが枯渇しつつある。
+</p>
+<p>
+この問題に対応するため128ビットの<strong>IPv6</strong>（例：<code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code>）への移行が進められており、実質無限に近い数のアドレスを扱える。
+</p>
+<p>
+家庭や社内のLANでは、外部に直接公開されない「プライベートIPアドレス」（<code>192.168.x.x</code>や<code>10.x.x.x</code>など）を使い、ルーターがNAT（Network Address Translation）という技術で1つの「グローバルIPアドレス」に変換してインターネットへ送り出すのが一般的である。
+</p>
+<p>
+IPv6ではアドレスの数に余裕があるため、NATを使わずに端末へ直接グローバルなアドレスを割り当てる運用も広がっている。
+</p>
+
+<h3 id="subnet">3-5. サブネットマスクとCIDR表記</h3>
+<p>
+IPv4アドレスは32ビットで、「ネットワーク部」（所属するネットワークを示す部分）と「ホスト部」（そのネットワーク内の個々の機器を示す部分）に分かれる。この境界を示すのがサブネットマスクであり、<code>/24</code>のように「ネットワーク部が何ビットか」を書く表記法をCIDR（Classless Inter-Domain Routing）表記と呼ぶ。
+</p>
+<div class="box tip">
+  <span class="mark">EXAMPLE</span>
+  <strong class="ttl">例：<code>192.168.1.0/24</code></strong>
+  <ul>
+    <li>先頭24ビット（<code>192.168.1</code>の部分）がネットワーク部</li>
+    <li>残り8ビットがホスト部 → 2^8 = 256通り（実際に機器へ割り当てられるのは、ネットワークアドレスとブロードキャストアドレスを除いた254個）</li>
+    <li>サブネットマスク表記では <code>255.255.255.0</code> と同じ意味になる</li>
+  </ul>
+</div>
+<p>
+サブネッティングとは、1つの大きなネットワークをCIDRの数値を大きくする（ホスト部のビットを減らす）ことで、複数の小さなネットワークに分割する考え方である。例えば <code>/24</code>を<code>/26</code>にすると、256個の枠を4分割（各64個）でき、部署ごと・フロアごとにネットワークを分けたいときなどに使われる。
+</p>
+
+<!-- FIGURE: 32ビットのIPアドレスを「ネットワーク部」「ホスト部」に色分けし、/24と/26でホスト部の範囲が変わる様子を示す図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 350" role="img" aria-label="32ビットのIPアドレスをネットワーク部とホスト部に色分けし、スラッシュ24とスラッシュ26でホスト部の範囲が変わる様子を示した図">
+    <defs>
+      <marker id="nsub" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+
+    <!-- ビット定規 -->
+    <text class="lbl sub mono" x="70" y="20" font-size="10.5" text-anchor="middle">0</text>
+    <text class="lbl sub mono" x="210" y="20" font-size="10.5" text-anchor="middle">8</text>
+    <text class="lbl sub mono" x="350" y="20" font-size="10.5" text-anchor="middle">16</text>
+    <text class="lbl sub mono" x="490" y="20" font-size="10.5" text-anchor="middle">24</text>
+    <text class="lbl sub mono" x="630" y="20" font-size="10.5" text-anchor="middle">32</text>
+    <path class="edge" d="M70,28 H630" stroke-width="1"/>
+    <path class="edge" d="M70,24 V32 M210,24 V32 M350,24 V32 M490,24 V32 M630,24 V32" stroke-width="1"/>
+    <text class="lbl sub" x="350" y="46" font-size="11" text-anchor="middle">IPv4アドレスは全体で32ビット（8ビットずつ4つの区切り）</text>
+
+    <!-- /24 -->
+    <text class="lbl ttl mono" x="70" y="72" font-size="13">192.168.1.0/24</text>
+    <rect x="70" y="80" width="420" height="50" rx="6" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <text class="lbl" x="280" y="102" font-size="12.5" text-anchor="middle">ネットワーク部（24ビット）</text>
+    <text class="lbl sub mono" x="280" y="120" font-size="11.5" text-anchor="middle">192.168.1</text>
+    <rect x="490" y="80" width="140" height="50" rx="6" fill="var(--c-n-soft)" stroke="var(--c-n)" stroke-width="1.5"/>
+    <text class="lbl" x="560" y="102" font-size="12.5" text-anchor="middle">ホスト部</text>
+    <text class="lbl sub" x="560" y="120" font-size="11.5" text-anchor="middle">8ビット</text>
+    <text class="lbl sub" x="70" y="150" font-size="11.5">→ 2^8 = 256通り（機器に割り当てられるのは254個）／ サブネットマスク 255.255.255.0</text>
+
+    <!-- /26 -->
+    <text class="lbl ttl mono" x="70" y="190" font-size="13">192.168.1.0/26</text>
+    <rect x="70" y="198" width="455" height="50" rx="6" fill="var(--c-a-soft)" stroke="var(--c-a)" stroke-width="1.5"/>
+    <text class="lbl" x="297" y="220" font-size="12.5" text-anchor="middle">ネットワーク部（26ビット）</text>
+    <text class="lbl sub" x="297" y="238" font-size="11.5" text-anchor="middle">ネットワーク部を2ビット増やす</text>
+    <rect x="525" y="198" width="105" height="50" rx="6" fill="var(--c-n-soft)" stroke="var(--c-n)" stroke-width="1.5"/>
+    <text class="lbl" x="577" y="220" font-size="12.5" text-anchor="middle">ホスト部</text>
+    <text class="lbl sub" x="577" y="238" font-size="11.5" text-anchor="middle">6ビット</text>
+
+    <!-- 分割矢印 -->
+    <path d="M350,252 V278" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 4" fill="none" marker-end="url(#nsub)"/>
+    <text class="lbl step" x="364" y="272">256個の枠を4分割</text>
+
+    <!-- 4分割ブロック -->
+    <rect x="70" y="284" width="136" height="48" rx="6" fill="var(--c-t-soft)" stroke="var(--c-t)" stroke-width="1.5"/>
+    <text class="lbl mono" x="138" y="306" font-size="10.5" text-anchor="middle">192.168.1.0/26</text>
+    <text class="lbl sub" x="138" y="323" font-size="10.5" text-anchor="middle">64個（利用可能62）</text>
+    <rect x="211" y="284" width="136" height="48" rx="6" fill="var(--c-t-soft)" stroke="var(--c-t)" stroke-width="1.5"/>
+    <text class="lbl mono" x="279" y="306" font-size="10.5" text-anchor="middle">192.168.1.64/26</text>
+    <text class="lbl sub" x="279" y="323" font-size="10.5" text-anchor="middle">64個（利用可能62）</text>
+    <rect x="352" y="284" width="136" height="48" rx="6" fill="var(--c-t-soft)" stroke="var(--c-t)" stroke-width="1.5"/>
+    <text class="lbl mono" x="420" y="306" font-size="10.5" text-anchor="middle">192.168.1.128/26</text>
+    <text class="lbl sub" x="420" y="323" font-size="10.5" text-anchor="middle">64個（利用可能62）</text>
+    <rect x="493" y="284" width="137" height="48" rx="6" fill="var(--c-t-soft)" stroke="var(--c-t)" stroke-width="1.5"/>
+    <text class="lbl mono" x="561" y="306" font-size="10.5" text-anchor="middle">192.168.1.192/26</text>
+    <text class="lbl sub" x="561" y="323" font-size="10.5" text-anchor="middle">64個（利用可能62）</text>
+  </svg>
+  </div>
+  <figcaption><b>図3</b>　CIDRの数値はネットワーク部のビット数を表す。<code>/24</code>から<code>/26</code>に変えるとネットワーク部が2ビット増え、その分ホスト部が減って、1つのネットワークが4つの小さなネットワークに分割される。</figcaption>
+</figure>
+
+<h3 id="routing">3-6. ルーティングの基本的な仕組み</h3>
+<p>
+同じネットワーク内の機器同士はスイッチなどを介して直接通信できるが、異なるネットワークへ送るときは「ルーター」が経路を選んで転送する。この経路選びをルーティングと呼ぶ。
+</p>
+<ul>
+  <li><strong>ルーティングテーブル</strong>：ルーターや端末が持つ「この宛先ネットワークには、この次の転送先（ネクストホップ）へ送る」という経路の一覧表。</li>
+  <li><strong>デフォルトゲートウェイ</strong>：ルーティングテーブルに一致する経路が見つからないとき、とりあえず送り先とする「出口」の機器。家庭用ルーターがこの役割を担うことが多い。</li>
+  <li><strong>最長一致（ロンゲストマッチ）</strong>：宛先IPアドレスに複数の経路が当てはまる場合、最もCIDRの数値が大きい（範囲が狭く、より具体的な）経路が優先される。</li>
+</ul>
+<p>
+端末がパケットを送るときは、まず宛先IPアドレスが自分と同じネットワーク内かどうかを自分のIPアドレスとサブネットマスクから判断する。
+</p>
+<p>
+同じネットワークならスイッチ経由で直接届け、異なるネットワークならデフォルトゲートウェイ（ルーター）へ送り、そこから先はルーター同士がルーティングテーブルを参照しながらバケツリレーのように次のルーターへパケットを転送していく。
+</p>
+
+<!-- FIGURE: PC→スイッチ→ルーター（デフォルトゲートウェイ）→インターネット上の複数ルーター→宛先サーバー、という経路をバケツリレー風に示す図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 340" role="img" aria-label="PCからスイッチ、デフォルトゲートウェイのルーターを経て、インターネット上の複数のルーターがバケツリレー式にパケットを転送し宛先サーバーへ届く経路の図">
+    <defs>
+      <marker id="nrt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+
+    <text class="lbl step" x="30" y="24">自分のネットワーク（同一サブネット）</text>
+
+    <!-- PC -->
+    <rect class="panel" x="30" y="36" width="150" height="80" rx="10"/>
+    <text class="lbl ttl" x="105" y="62" font-size="13.5" text-anchor="middle">PC</text>
+    <text class="lbl sub mono" x="105" y="82" font-size="11" text-anchor="middle">192.168.1.10/24</text>
+    <text class="lbl sub" x="105" y="102" font-size="11" text-anchor="middle">宛先が同一NWか判定</text>
+    <path d="M182,76 H226" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nrt)"/>
+
+    <!-- スイッチ -->
+    <rect class="panel" x="232" y="36" width="140" height="80" rx="10" fill="var(--c-l-soft)" stroke="var(--c-l)"/>
+    <text class="lbl ttl" x="302" y="66" font-size="13.5" text-anchor="middle">スイッチ</text>
+    <text class="lbl sub" x="302" y="88" font-size="11" text-anchor="middle">同じNW内なら</text>
+    <text class="lbl sub" x="302" y="104" font-size="11" text-anchor="middle">ここで直接届く</text>
+    <path d="M374,76 H418" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nrt)"/>
+
+    <!-- デフォルトGW -->
+    <rect class="panel" x="424" y="36" width="200" height="80" rx="10" fill="var(--c-n-soft)" stroke="var(--c-n)"/>
+    <text class="lbl ttl" x="524" y="62" font-size="13.5" text-anchor="middle">ルーター</text>
+    <text class="lbl sub" x="524" y="82" font-size="11" text-anchor="middle">デフォルトゲートウェイ</text>
+    <text class="lbl sub mono" x="524" y="102" font-size="11" text-anchor="middle">192.168.1.1</text>
+
+    <!-- 折り返し -->
+    <path d="M524,120 V150 H60 V196" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nrt)"/>
+    <text class="lbl step" x="330" y="142" text-anchor="middle">別ネットワーク宛はここから外へ</text>
+
+    <!-- インターネット側 -->
+    <text class="lbl step" x="90" y="188">インターネット（ルーター同士のバケツリレー）</text>
+
+    <rect class="panel" x="30" y="200" width="150" height="80" rx="10" fill="var(--c-n-soft)" stroke="var(--c-n)"/>
+    <text class="lbl ttl" x="105" y="230" font-size="13.5" text-anchor="middle">ルーターA</text>
+    <text class="lbl sub" x="105" y="252" font-size="11" text-anchor="middle">ルーティングテーブル</text>
+    <text class="lbl sub" x="105" y="268" font-size="11" text-anchor="middle">を参照して転送</text>
+    <path d="M182,240 H226" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nrt)"/>
+
+    <rect class="panel" x="232" y="200" width="140" height="80" rx="10" fill="var(--c-n-soft)" stroke="var(--c-n)"/>
+    <text class="lbl ttl" x="302" y="230" font-size="13.5" text-anchor="middle">ルーターB</text>
+    <text class="lbl sub" x="302" y="252" font-size="11" text-anchor="middle">最長一致で</text>
+    <text class="lbl sub" x="302" y="268" font-size="11" text-anchor="middle">次のホップを選ぶ</text>
+    <path d="M374,240 H418" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#nrt)"/>
+
+    <rect class="panel" x="424" y="200" width="200" height="80" rx="10" fill="var(--c-t-soft)" stroke="var(--c-t)"/>
+    <text class="lbl ttl" x="524" y="230" font-size="13.5" text-anchor="middle">宛先サーバー</text>
+    <text class="lbl sub mono" x="524" y="252" font-size="11" text-anchor="middle">93.184.216.34</text>
+    <text class="lbl sub" x="524" y="270" font-size="11" text-anchor="middle">パケット到着</text>
+
+    <text class="lbl sub" x="350" y="316" font-size="11.5" text-anchor="middle">※ ルーターは1台ずつ「次はどこへ渡すか」だけを判断し、宛先まで順に手渡していく</text>
+  </svg>
+  </div>
+  <figcaption><b>図4</b>　パケットはまず「宛先が自分と同じネットワークか」で行き先が分かれる。別ネットワーク宛ならデフォルトゲートウェイへ送られ、その先はルーター同士がルーティングテーブルを見ながらバケツリレー式に転送していく。</figcaption>
+</figure>
+
+<h3 id="dns">3-7. DNSの仕組み（名前解決の流れ）</h3>
+<p>
+人間は<code>example.com</code>のような名前でWebサイトを覚えるが、実際の通信にはIPアドレスが必要になる。この名前からIPアドレスへの変換を「名前解決」といい、DNS（Domain Name System）が担う。
+</p>
+<ol>
+  <li>ブラウザがOSやプロバイダの「DNSリゾルバ（キャッシュサーバー）」に<code>example.com</code>のIPアドレスを問い合わせる。</li>
+  <li>リゾルバが答えをキャッシュしていなければ、まず「ルートDNSサーバー」に聞き、「.comを管理しているサーバーはこちら」と案内される。</li>
+  <li>次に「.com」を管理するTLD（トップレベルドメイン）サーバーに聞き、「example.comを管理しているのはこの権威DNSサーバー」と案内される。</li>
+  <li>最後に「権威DNSサーバー」（そのドメインの持ち主が管理するサーバー）に問い合わせ、実際のIPアドレスの回答を得る。</li>
+  <li>リゾルバはこの結果をブラウザに返すと同時に、一定時間キャッシュしておき、次回以降の問い合わせを高速化する。</li>
+</ol>
+
+<!-- FIGURE: ブラウザ→リゾルバ→ルート→TLD→権威DNSサーバーへと順に問い合わせが階層をたどる図 -->
+<figure class="fig">
+  <div class="fig-scroll">
+  <svg viewBox="0 0 700 380" role="img" aria-label="ブラウザからDNSリゾルバへ問い合わせ、リゾルバがルートDNSサーバー、TLDサーバー、権威DNSサーバーの順にたどってIPアドレスを得る流れの図">
+    <defs>
+      <marker id="ndns" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+      </marker>
+      <marker id="ndns2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--c-t)"/>
+      </marker>
+    </defs>
+
+    <!-- ブラウザ -->
+    <rect class="panel" x="40" y="36" width="180" height="70" rx="10"/>
+    <text class="lbl ttl" x="130" y="64" font-size="13.5" text-anchor="middle">ブラウザ</text>
+    <text class="lbl sub mono" x="130" y="86" font-size="11" text-anchor="middle">example.com</text>
+
+    <!-- ①下向き・⑤上向き -->
+    <path d="M100,110 V160" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#ndns)"/>
+    <text class="lbl step" x="92" y="140" text-anchor="end">①</text>
+    <path d="M160,160 V110" stroke="var(--c-t)" stroke-width="2" fill="none" marker-end="url(#ndns2)"/>
+    <text class="lbl step" x="170" y="140" style="fill:var(--c-t)">⑤</text>
+
+    <!-- リゾルバ -->
+    <rect class="panel" x="40" y="164" width="180" height="110" rx="10" fill="var(--accent-soft)"/>
+    <text class="lbl ttl" x="130" y="196" font-size="13.5" text-anchor="middle">DNSリゾルバ</text>
+    <text class="lbl sub" x="130" y="216" font-size="11" text-anchor="middle">（キャッシュサーバー）</text>
+    <text class="lbl sub" x="130" y="242" font-size="11" text-anchor="middle">キャッシュがあれば</text>
+    <text class="lbl sub" x="130" y="258" font-size="11" text-anchor="middle">ここで即回答</text>
+
+    <!-- ②③④ 矢印 -->
+    <path d="M226,196 C300,150 330,80 392,66" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#ndns)"/>
+    <text class="lbl step" x="300" y="128">②</text>
+    <path d="M226,214 C300,206 330,190 392,182" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#ndns)"/>
+    <text class="lbl step" x="300" y="196">③</text>
+    <path d="M226,244 C300,276 330,290 392,298" stroke="var(--accent)" stroke-width="2" fill="none" marker-end="url(#ndns)"/>
+    <text class="lbl step" x="300" y="284">④</text>
+
+    <!-- 階層サーバー -->
+    <text class="lbl sub" x="666" y="20" font-size="11" text-anchor="end">DNSの階層をたどる</text>
+
+    <rect class="panel" x="400" y="30" width="268" height="72" rx="10" fill="var(--c-a-soft)" stroke="var(--c-a)"/>
+    <text class="lbl ttl" x="534" y="58" font-size="13.5" text-anchor="middle">ルートDNSサーバー</text>
+    <text class="lbl sub" x="534" y="80" font-size="11" text-anchor="middle">「.com はこちら」と案内</text>
+
+    <rect class="panel" x="400" y="146" width="268" height="72" rx="10" fill="var(--c-a-soft)" stroke="var(--c-a)"/>
+    <text class="lbl ttl" x="534" y="174" font-size="13.5" text-anchor="middle">TLDサーバー（.com）</text>
+    <text class="lbl sub" x="534" y="196" font-size="11" text-anchor="middle">「権威DNSはこちら」と案内</text>
+
+    <rect class="panel" x="400" y="262" width="268" height="72" rx="10" fill="var(--c-t-soft)" stroke="var(--c-t)"/>
+    <text class="lbl ttl" x="534" y="290" font-size="13.5" text-anchor="middle">権威DNSサーバー</text>
+    <text class="lbl sub" x="534" y="312" font-size="11" text-anchor="middle">実際のIPアドレスを回答</text>
+
+    <!-- 凡例 -->
+    <text class="lbl sub" x="40" y="306" font-size="11">①問い合わせ　②ルートへ　③TLDへ　④権威DNSへ</text>
+    <text class="lbl sub" x="40" y="326" font-size="11">⑤結果をブラウザへ返し、一定時間キャッシュする</text>
+  </svg>
+  </div>
+  <figcaption><b>図5</b>　キャッシュがない場合、リゾルバは「ルート → TLD（.com） → 権威DNS」と階層を上から順にたどって答えにたどり着く。得られた結果は一定時間キャッシュされるため、2回目以降のアクセスは高速になる。</figcaption>
+</figure>
+
+<p>代表的なDNSレコードの種類：</p>
+<div class="table-scroll">
+<table>
+  <thead>
+    <tr><th>レコード</th><th>役割</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Aレコード</td><td>ドメイン名をIPv4アドレスに対応づける（例：example.com → 93.184.216.34）</td></tr>
+    <tr><td>AAAAレコード</td><td>ドメイン名をIPv6アドレスに対応づける</td></tr>
+    <tr><td>CNAMEレコード</td><td>あるドメイン名に別名（エイリアス）を付け、別のドメイン名を参照させる</td></tr>
+    <tr><td>MXレコード</td><td>そのドメイン宛のメールを受け取るメールサーバーを指定する</td></tr>
+    <tr><td>NSレコード</td><td>そのドメインを管理する権威DNSサーバーを指定する</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="examples"><span class="num">SECTION 4</span>具体例・使いどころ</h2>
+
+<div class="box tip">
+  <span class="mark">CASE 1</span>
+  <strong class="ttl">Webページを開くまでの全体の流れ（総合例）</strong>
+  <ol>
+    <li>ブラウザに<code>https://example.com</code>と入力する。</li>
+    <li>DNSで<code>example.com</code>が<code>93.184.216.34</code>というIPアドレスに解決される。</li>
+    <li>自分のPCは自分のIPアドレスとサブネットマスクから、宛先が別ネットワークだと判断し、デフォルトゲートウェイ（自宅ルーター）へパケットを送る。</li>
+    <li>その後、インターネット上の複数のルーターがルーティングテーブルをもとにバケツリレー式にパケットを転送し、宛先サーバーへ到達する。</li>
+    <li>TCPが3ウェイハンドシェイクで接続を確立し、HTTPS（アプリケーション層）のリクエストとレスポンスがやり取りされる。</li>
+    <li>この一連の処理を、OSI参照モデルの各層（物理層でケーブルを流れる電気信号から、アプリケーション層のHTTPリクエストまで）が役割分担して実現している。</li>
+  </ol>
+</div>
+
+<div class="box tip">
+  <span class="mark">CASE 2</span>
+  <strong class="ttl">社内ネットワークをサブネットで分ける例</strong>
+  <p>本社に <code>10.0.0.0/24</code>（254台分）を割り当てていたが、部署が増えたため <code>10.0.0.0/26</code>（営業部・約62台）、<code>10.0.0.64/26</code>（開発部・約62台）のように分割し、部署ごとにネットワークを分離してセキュリティやトラブル対応をしやすくする、といった使い方がある。</p>
+</div>
+
+<h2 id="pitfalls"><span class="num">SECTION 5</span>注意点・よくある誤解</h2>
+<div class="box warn">
+  <span class="mark">CAUTION</span>
+  <ul>
+    <li><strong>「OSI参照モデル＝実際に動いているプロトコル」ではない。</strong>OSIはあくまで通信を整理するための概念モデルであり、実際にインターネットで動いているのはTCP/IPモデルに基づく実装である。学習・議論のための「地図」として使うのが正しい使い方。</li>
+    <li><strong>5〜7層の境界はきっちり分かれていない。</strong>実際のプロトコル（HTTPSなど）はセッション管理や暗号化の役割も併せ持つことが多く、OSIの層に機械的に1対1で当てはめようとすると混乱しやすい。</li>
+    <li><strong>「サブネットマスクを大きくする＝ネットワークが大きくなる」は逆。</strong>CIDRの数値（例：/24 → /26）が大きくなるほど、ネットワーク部のビットが増え、1つのネットワークに入れる機器の数（ホスト部）は少なくなる。</li>
+    <li><strong>ネットワークアドレスとブロードキャストアドレスは機器に割り当てられない。</strong>/24なら256個のうち、実際に端末へ割り当てられるのは254個である点を忘れがち。</li>
+    <li><strong>デフォルトゲートウェイは「唯一の経路」ではなく「経路が見つからないときの最後の手段」。</strong>ルーティングテーブルに具体的な経路があればそちらが優先される。</li>
+    <li><strong>DNSは1回の問い合わせで完結するとは限らない。</strong>キャッシュがなければルート→TLD→権威DNSと段階的に問い合わせるため、初回アクセスとキャッシュ済みアクセスでは応答速度が異なる。</li>
+    <li><strong>UDPは「信頼性がない＝悪い」わけではない。</strong>動画配信やゲームのように多少のデータ欠落より速度を優先したい場面では、あえてUDPが選ばれる。</li>
+  </ul>
+</div>
+
+<h2 id="quiz"><span class="num">SECTION 6</span>確認問題</h2>
+
+<div class="q">
+  <p class="question"><span class="qno">問1.</span>OSI参照モデルにおいて、IPアドレスを使った経路選択を担当するのは第何層か。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>第3層（ネットワーク層）。IPやルーターが該当する。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問2.</span>TCPとUDPのうち、3ウェイハンドシェイクを行い、データの到達を保証するのはどちらか。またその特性が向いている用途を1つ挙げよ。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>TCP。到達確認・再送制御があり信頼性が高いため、Webサイト閲覧やファイル転送、メール送信などデータの欠落が許されない用途に向く。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問3.</span><code>192.168.10.0/26</code> のネットワークで、ホスト部は何ビットあり、割り当て可能なホスト数（ネットワークアドレス・ブロードキャストアドレスを除く）はいくつか。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>32ビット中26ビットがネットワーク部なので、ホスト部は 32 − 26 = 6ビット。2^6 = 64通りのうち、ネットワークアドレスとブロードキャストアドレスの2つを除いた62個が割り当て可能。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問4.</span>自分の端末が持つルーティングテーブルに宛先ネットワークへの経路が見つからない場合、パケットはどこへ送られるか。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>デフォルトゲートウェイ（多くの場合ルーター）へ送られ、そこから先の経路探索を委ねる。</p>
+  </details>
+</div>
+
+<div class="q">
+  <p class="question"><span class="qno">問5.</span>ブラウザで初めて<code>example.com</code>にアクセスするとき、DNSの名前解決はどのような順番でサーバーに問い合わせるか、簡単に説明せよ。</p>
+  <details>
+    <summary>答えを見る</summary>
+    <p>DNSリゾルバ（キャッシュサーバー）に問い合わせ→キャッシュがなければルートDNSサーバー→「.com」を管理するTLDサーバー→example.comを管理する権威DNSサーバー、の順にたどってIPアドレスを取得する。</p>
+  </details>
+</div>
+
+<h2 id="links"><span class="num">SECTION 7</span>参考リンク</h2>
+<ul class="refs">
+  <li><a href="https://ja.wikipedia.org/wiki/OSI%E5%8F%82%E7%85%A7%E3%83%A2%E3%83%87%E3%83%AB" target="_blank" rel="noopener">OSI参照モデル - Wikipedia</a></li>
+  <li><a href="https://www.itmanage.co.jp/column/osi-reference-model/" target="_blank" rel="noopener">OSI参照モデルとは？TCP/IPとの違いを図解で解説｜ITコラム</a></li>
+  <li><a href="https://techtarget.itmedia.co.jp/tt/news/1909/20/news05.html" target="_blank" rel="noopener">いまさら聞けない「TCP/IP」と「OSI参照モデル」の違いは？｜TechTargetジャパン</a></li>
+  <li><a href="https://www.infra-manual.com/network-ccna-tcp-udp/" target="_blank" rel="noopener">TCPとUDPの違いとは？通信の仕組みと使い分けをわかりやすく解説｜インフラマニュアル</a></li>
+  <li><a href="https://beginners-network.com/subnet.html" target="_blank" rel="noopener">サブネットとCIDRの計算方法！2進数を使わない簡単なコツも解説｜ネットワーク入門サイト</a></li>
+  <li><a href="https://www.infra-manual.com/ip-subnetmask-cidr/" target="_blank" rel="noopener">CIDRとは？サブネットマスクとの違いと表記の意味をわかりやすく解説｜インフラマニュアル</a></li>
+  <li><a href="https://www.n-study.com/iprouting/default-gateway-detail/" target="_blank" rel="noopener">デフォルトゲートウェイの詳細｜ネットワークのおべんきょしませんか？</a></li>
+  <li><a href="https://catchon-hub.com/blog/202409_3" target="_blank" rel="noopener">デフォルトルートとは？ 仕組みやルーティングの基礎から解説</a></li>
+  <li><a href="https://www.infra-manual.com/network-beginner-dns/" target="_blank" rel="noopener">DNSとは？名前解決の仕組み・DNSサーバーの流れを図解で解説｜インフラマニュアル</a></li>
+  <li><a href="https://group.gmo/security/brandsecurity/dns/" target="_blank" rel="noopener">DNSとは？名前解決の流れやサーバーの種類・設定方法をわかりやすく解説｜GMOグループ</a></li>
+  <li><a href="https://tech-blog.rakus.co.jp/entry/20210107/network" target="_blank" rel="noopener">【非エンジニア向け】IPv4とIPv6についてまとめてみた｜RAKUS Developers Blog</a></li>
+</ul>
+
+<footer>
+  <p>本レポートは公開情報をもとに要約・再構成した学習用資料です。内容の正確性については参考リンク先の一次情報も併せてご確認ください。</p>
+  <p>作成日: 2026-09-18 ／ テーマ: ネットワークの基礎（OSI参照モデル・TCP/IP・IPアドレス・ルーティング・DNS）</p>
+</footer>
+
+</div>
+</body>
+</html>
