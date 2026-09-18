@@ -1,3 +1,5 @@
 run_id,timestamp,theme,file,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,cost_usd
 "907e90f7-e3e1-5f21-8679-36ada47ce6f1@2026-09-18T03:09:14.505Z","2026-09-18T03:16:53.130Z","Dockerとは何か","reports/2026-09-18-what-is-docker.html","claude-sonnet-5","44","10580","82502","835319","0.4792"
 "907e90f7-e3e1-5f21-8679-36ada47ce6f1@2026-09-18T03:09:14.505Z","2026-09-18T03:16:53.130Z","Dockerとは何か","reports/2026-09-18-what-is-docker.html","claude-opus-5","12","24770","49704","82575","0.9712"
+"907e90f7-e3e1-5f21-8679-36ada47ce6f1@2026-09-18T03:33:13.011Z","2026-09-18T03:43:18.793Z","ネットワーク: OSI参照モデル、TCP/IP、IPアドレスとサブネット、ルーティング、DNS","reports/2026-09-18-networking-basics.html","claude-sonnet-5","31","14921","42611","731691","0.4021"
+"907e90f7-e3e1-5f21-8679-36ada47ce6f1@2026-09-18T03:33:13.011Z","2026-09-18T03:43:18.793Z","ネットワーク: OSI参照モデル、TCP/IP、IPアドレスとサブネット、ルーティング、DNS","reports/2026-09-18-networking-basics.html","claude-opus-5","24","34510","101917","433641","1.7167"
