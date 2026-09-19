@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>基礎理論：基数変換・補数・論理演算・浮動小数点 | 学習ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f2;
+    --paper-2: #e9ede8;
+    --ink: #14202b;
+    --ink-2: #55636f;
+    --rule: #d3dad6;
+    --marker: #ffe56b;
+    --marker-ink: #14202b;
+    --link: #1f4b99;
+    --note: #dfe9f7;
+    --caution: #ffe3dc;
+    --code-bg: #e9ede8;
+    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+      --note: #1e2f45; --caution: #4a2620; --code-bg: #1b242c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.7;
+    text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 0.15em; }
+  a:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
+  em { font-style: normal; font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
+
+  .cover { padding: var(--sp-4) 0 var(--sp-3); border-bottom: 2px solid var(--ink); margin-bottom: var(--sp-4); }
+  .cover .back { font-size: 0.9rem; color: var(--ink-2); text-decoration: none; }
+  .cover .back:hover { color: var(--ink); }
+  .cover h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 5.5vw, 2.6rem); line-height: 1.3;
+    margin: var(--sp-2) 0 var(--sp-2);
+  }
+  .cover h1 span {
+    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
+  }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.9rem; color: var(--ink-2); }
+
+  .toc { margin: 0 0 var(--sp-5); padding: var(--sp-2) var(--sp-3); background: var(--paper-2); border-radius: 4px; }
+  .toc h2 { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--ink-2); margin: 0 0 var(--sp-1); }
+  .toc ol { margin: 0; padding-left: 1.6em; }
+  .toc li { margin: 4px 0; }
+  .toc a { text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ul.sub { margin: 4px 0 4px; padding-left: 1.3em; list-style: none; }
+  .toc ul.sub a { color: var(--ink-2); font-size: 0.85rem; }
+
+  .prose h2 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 1.5rem; line-height: 1.4;
+    margin: var(--sp-5) 0 var(--sp-2); padding-bottom: var(--sp-1);
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: var(--sp-3);
+  }
+  .prose h3 { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin: var(--sp-4) 0 var(--sp-1); scroll-margin-top: var(--sp-3); }
+  /* h4 は本文と同じ 16px のまま太字で示し、上余白 > 下余白で「次の本文に属する」ことを表す */
+  .prose h4 { font-size: 1rem; font-weight: 700; line-height: 1.5; margin: var(--sp-3) 0 var(--sp-1); scroll-margin-top: var(--sp-3); }
+  .prose p { max-width: var(--measure); margin: 0; }
+  .prose p + p { margin-top: var(--sp-3); }
+  .prose ul, .prose ol { max-width: var(--measure); margin: var(--sp-2) 0; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: var(--sp-1); }
+  .prose strong { font-weight: 700; }
+
+  .callout { max-width: var(--measure); margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border-left: 4px solid var(--ink); background: var(--paper-2); border-radius: 0 4px 4px 0; }
+  .callout.summary { border-left-color: var(--marker); }
+  .callout.note { background: var(--note); border-left-color: var(--link); }
+  .callout.caution { background: var(--caution); border-left-color: #b8432b; }
+  .callout > :first-child { margin-top: 0; }
+  .callout p + p { margin-top: var(--sp-2); }
+  .callout .label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+
+  .table-wrap { overflow-x: auto; margin: var(--sp-3) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+  th, td { padding: var(--sp-1) var(--sp-2); line-height: 1.5; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  thead th { border-bottom: 2px solid var(--ink-2); font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  figure { margin: var(--sp-4) 0; }
+  figure > svg { display: block; max-width: 100%; height: auto; color: var(--ink); }
+  figure svg text { font-family: var(--font-body); font-size: 12px; fill: currentColor; }
+  /* 図の中の主役（箱の見出し）だけ一段大きく。説明文は 12px のまま */
+  figure svg text.node { font-size: 14px; font-weight: 700; }
+  /* ビット列は桁がそろわないと読めないので等幅にする */
+  figure svg text.bits { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+  figcaption { margin-top: var(--sp-1); font-size: 0.875rem; color: var(--ink-2); }
+
+  pre { margin: var(--sp-3) 0; padding: var(--sp-2); background: var(--code-bg); border-radius: 4px; overflow-x: auto; line-height: 1.6; }
+  code { font-family: var(--font-mono); font-size: 0.875em; }
+  :not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+
+  .quiz { max-width: var(--measure); margin: var(--sp-2) 0; border: 1px solid var(--rule); border-radius: 4px; }
+  .quiz summary { padding: var(--sp-2); cursor: pointer; font-weight: 700; }
+  .quiz summary::marker { color: var(--ink-2); }
+  .quiz .answer { padding: 0 var(--sp-2) var(--sp-2); border-top: 1px solid var(--rule); }
+  .quiz .answer > :first-child { margin-top: var(--sp-2); }
+
+  .refs { max-width: var(--measure); }
+  .refs li { word-break: break-all; }
+
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
+
+  @media (max-width: 600px) {
+    .page { padding: 0 var(--sp-2) var(--sp-4); }
+    .prose h2 { font-size: 1.3rem; }
+    /* 図は縮小しすぎると文字が 12px を下回るため、図の中だけ横スクロールさせる
+       （図の viewBox 幅は最大 680 なので、等倍を保てる 680px を下限にする） */
+    figure { overflow-x: auto; }
+    figure > svg { min-width: 680px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="cover">
+    <a class="back" href="../index.html">学習ノートに戻る</a>
+    <h1><span>基礎理論：基数変換・補数・論理演算・浮動小数点</span></h1>
+    <ul class="meta">
+      <li>作成日 2026-09-19</li>
+      <li>分野 コンピュータサイエンス基礎</li>
+    </ul>
+  </header>
+
+  <nav class="toc" aria-label="目次">
+    <h2>目次</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a>
+        <ul class="sub">
+          <li><a href="#radix">3-1. 基数と基数変換</a></li>
+          <li><a href="#complement">3-2. 補数</a></li>
+          <li><a href="#logic">3-3. 論理演算</a></li>
+          <li><a href="#float">3-4. 浮動小数点数</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a></li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <main class="prose">
+
+    <h2 id="s1">概要</h2>
+    <div class="callout summary">
+      <span class="label">3行でいうと</span>
+      <ul>
+        <li>コンピュータは内部で2進数（ビット列）しか扱えないため、基数変換は「人間が読む10進数」と「機械が扱う2進数・16進数」を橋渡しする、基礎理論すべての土台になる技術である。</li>
+        <li>負の数は符号を別枠で持つのではなく「2の補数」というビット列の工夫で表現され、これにより足し算の回路だけで引き算も実現でき、CPUの回路設計を単純化できる。</li>
+        <li>実数はIEEE754という「符号×仮数×基数^指数」の浮動小数点形式で表され、広い範囲の数値を少ないビット数で扱える代わりに、有限桁ゆえの丸め誤差・桁落ち・情報落ちが必ず発生する。</li>
+      </ul>
+    </div>
+
+    <h2 id="s2">基本用語</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>用語</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>基数（radix / base）</td><td>数を位取り記数法で表すときの基準となる数。2進数は基数2、10進数は基数10、16進数は基数16</td></tr>
+          <tr><td>位取り記数法</td><td>各桁の位置（重み）に基数のべき乗を割り当てて数を表す方法。例：10進数の123は 1×10²+2×10¹+3×10⁰</td></tr>
+          <tr><td>補数（complement）</td><td>ある数に足すと桁上がりして0（またはきりのよい数）になる数。負の数の表現や減算に利用する</td></tr>
+          <tr><td>1の補数</td><td>2進数の各ビットを反転（0↔1）して得られる補数</td></tr>
+          <tr><td>2の補数</td><td>1の補数に1を加えて得られる補数。現在のコンピュータで負の整数を表現する標準的な方式</td></tr>
+          <tr><td>論理演算</td><td>真（1）・偽（0）の2値を対象に行う演算。AND（論理積）・OR（論理和）・NOT（否定）・XOR（排他的論理和）が基本</td></tr>
+          <tr><td>ビットマスク</td><td>特定のビットだけを取り出したり書き換えたりするために、AND・OR・XORと組み合わせて使う定数のビット列</td></tr>
+          <tr><td>シフト演算</td><td>ビット列全体を左または右にずらす演算。論理シフトと算術シフトの2種類がある</td></tr>
+          <tr><td>ド・モルガンの法則</td><td>「AかつBの否定」は「Aの否定またはBの否定」に等しい、という論理演算の変形則。回路の簡略化や条件式の書き換えに使う</td></tr>
+          <tr><td>固定小数点数</td><td>小数点の位置をあらかじめ固定して数値を表す方式。仕組みは単純だが表現できる範囲が狭い</td></tr>
+          <tr><td>浮動小数点数</td><td>「符号×仮数×基数^指数」の形で数値を表し、指数部によって小数点の位置を動かせる（floatする）方式</td></tr>
+          <tr><td>IEEE754</td><td>浮動小数点数の表現方法を定めた国際標準規格。現在のほとんどのコンピュータ・プログラミング言語が採用している</td></tr>
+          <tr><td>正規化</td><td>浮動小数点数の仮数部を「1.〇〇×2^e」の形にそろえること。2進数では先頭が必ず1になるため、その1を省略して1ビット分を節約できる（ケチ表現）</td></tr>
+          <tr><td>バイアス（下駄履き表現）</td><td>指数部に、実際の指数へある一定値（バイアス）を足した値を格納する方式。負の指数も0以上の整数として保存できる</td></tr>
+          <tr><td>丸め誤差・桁落ち・情報落ち・打ち切り誤差</td><td>浮動小数点演算で生じる代表的な4種類の誤差。原因が異なるため区別して覚える必要がある</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="s3">仕組み・全体像</h2>
+
+    <h3 id="radix">3-1. 基数と基数変換</h3>
+    <p>
+    普段使う10進数は、各桁に「10のべき乗」の重みを持たせて数を表す位取り記数法である。同じ考え方を基数2・8・16に当てはめたものが2進数・8進数・16進数であり、コンピュータの内部では電圧の高低（ON/OFF）に対応する2進数がすべての基本になる。
+    </p>
+    <p>
+    人間には桁数が長くて読みにくい2進数を、3桁または4桁ずつまとめて短く表記するために8進数・16進数が使われる。
+    </p>
+
+    <h4>2進数 → 10進数（位取りで足し合わせる）</h4>
+    <p>
+    2進数の各桁に、右から順に2⁰, 2¹, 2², … の重みを掛けて合計すればよい。例えば2進数 <code>1011001</code> を10進数に変換すると次のようになる。
+    </p>
+    <pre><code>1011001(2)
+= 1×2⁶ + 0×2⁵ + 1×2⁴ + 1×2³ + 0×2² + 0×2¹ + 1×2⁰
+= 64    + 0    + 16    + 8     + 0    + 0    + 1
+= 89</code></pre>
+
+    <h4>10進数 → 2進数（割り算法）</h4>
+    <p>
+    整数部分は、基数（2）で割り続けて商が0になるまで繰り返し、出てきた余りを「下から上（最後に出た余りが最上位桁）」の順に並べると2進数になる。10進数の89を例に手順をすべて示す。
+    </p>
+    <pre><code>89 ÷ 2 = 44 … 余り 1
+44 ÷ 2 = 22 … 余り 0
+22 ÷ 2 = 11 … 余り 0
+11 ÷ 2 =  5 … 余り 1
+ 5 ÷ 2 =  2 … 余り 1
+ 2 ÷ 2 =  1 … 余り 0
+ 1 ÷ 2 =  0 … 余り 1
+
+余りを下から上に読む → 1011001(2)</code></pre>
+    <p>
+    確かに先ほどの2進→10進の計算結果89と一致しており、往復で検算できる。
+    </p>
+
+    <h4>10進小数 → 2進小数（掛け算法）</h4>
+    <p>
+    小数部分は、2を掛け続けて出てきた整数部分（0または1）を「上から下」の順に並べる。10進数の0.625を例にすると、次のようになる。
+    </p>
+    <pre><code>0.625 × 2 = 1.25 → 整数部 1、残り 0.25
+0.25  × 2 = 0.5  → 整数部 0、残り 0.5
+0.5   × 2 = 1.0  → 整数部 1、残り 0（割り切れたので終了）
+
+整数部を上から下に読む → 0.101(2)</code></pre>
+    <p>
+    検算：0.101(2) = 1×2⁻¹ + 0×2⁻² + 1×2⁻³ = 0.5 + 0 + 0.125 = 0.625 で一致する。
+    </p>
+    <p>
+    なお、10進小数はすべて割り切れて2進小数になるとは限らず、0.1のように2進数では無限に続く循環小数になってしまう値も多い（後述の丸め誤差の原因になる）。
+    </p>
+
+    <h4>2進数 ⇔ 16進数・8進数（区切って読み替える）</h4>
+    <p>
+    16 = 2⁴、8 = 2³ であるため、2進数を右端から<strong>4ビットずつ</strong>区切れば16進数の1桁に、<strong>3ビットずつ</strong>区切れば8進数の1桁に、それぞれ変換の割り算をせずに読み替えるだけで変換できる。10進数717を例に、2進・16進・8進の関係をすべて確認する。
+    </p>
+    <pre><code>717(10) = 1011001101(2)
+
+【16進数へ】右から4ビットずつ区切る（足りない上位は0で埋める）
+  0010 1100 1101
+   2    C    D
+→ 2CD(16)
+
+【8進数へ】右から3ビットずつ区切る（足りない上位は0で埋める）
+  001 011 001 101
+   1   3   1   5
+→ 1315(8)</code></pre>
+    <p>
+    検算：2CD(16) = 2×16² + 12×16 + 13 = 512 + 192 + 13 = 717、1315(8) = 1×8³ + 3×8² + 1×8 + 5 = 512 + 192 + 8 + 5 = 717 となり、どちらも元の717と一致する。
+    </p>
+    <p>
+    16進数のA〜Fは10〜15を表すアルファベットである点も忘れずに押さえておきたい。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 680 316" role="img" aria-label="10進数717を中心に、割り算法で2進数1011001101に変換し、その2進数から4ビットずつ区切って16進数2CD、3ビットずつ区切って8進数1315にそれぞれ変換する流れを示す図">
+        <title>基数変換の全体像を示す図</title>
+        <defs>
+          <marker id="rdxarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <rect x="250" y="10" width="180" height="48" rx="6" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="node" x="340" y="40" text-anchor="middle" style="fill:var(--marker-ink)">10進数　717</text>
+
+        <path d="M348,58 V108" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#rdxarr)"/>
+        <text x="360" y="80" style="fill:var(--ink-2)">2で割り続け、余りを</text>
+        <text x="360" y="96" style="fill:var(--ink-2)">下から上に並べる（割り算法）</text>
+
+        <path d="M332,108 V58" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#rdxarr)"/>
+        <text x="320" y="80" text-anchor="end" style="fill:var(--ink-2)">各桁に2のべき乗を</text>
+        <text x="320" y="96" text-anchor="end" style="fill:var(--ink-2)">掛けて足す（位取り）</text>
+
+        <rect x="220" y="110" width="240" height="48" rx="6" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="node" x="340" y="140" text-anchor="middle">2進数　1011001101</text>
+
+        <path d="M300,158 L156,234" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#rdxarr)"/>
+        <text x="120" y="194" text-anchor="middle" style="fill:var(--ink-2)">右から3ビットずつ区切って</text>
+        <text x="120" y="210" text-anchor="middle" style="fill:var(--ink-2)">8進の1桁に読み替える</text>
+
+        <path d="M380,158 L524,234" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#rdxarr)"/>
+        <text x="560" y="194" text-anchor="middle" style="fill:var(--ink-2)">右から4ビットずつ区切って</text>
+        <text x="560" y="210" text-anchor="middle" style="fill:var(--ink-2)">16進の1桁に読み替える</text>
+
+        <rect x="30" y="240" width="200" height="48" rx="6" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="node" x="130" y="270" text-anchor="middle">8進数　1315</text>
+        <text class="bits" x="130" y="306" text-anchor="middle" style="fill:var(--ink-2)">001 011 001 101</text>
+
+        <rect x="450" y="240" width="200" height="48" rx="6" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="node" x="550" y="270" text-anchor="middle">16進数　2CD</text>
+        <text class="bits" x="550" y="306" text-anchor="middle" style="fill:var(--ink-2)">0010 1100 1101</text>
+      </svg>
+      <figcaption><b>図1</b>　10進数717を軸にした基数変換の全体像。10進⇔2進は割り算法・掛け算法で、2進⇔16進・8進はビットの区切り直しだけで相互変換できる。どの表記も同じ「717」という量を表しており、見た目のビット列が違うだけである。</figcaption>
+    </figure>
+
+    <h3 id="complement">3-2. 補数</h3>
+    <p>
+    補数とは「ある数に足すと桁上がりしてちょうど0（またはきりのよい数）になる数」のことである。n進数には2種類の補数があり、2進数の場合はそれぞれ<strong>1の補数</strong>（各桁を基数−1から引いた数、2進数では単純にビット反転）と<strong>2の補数</strong>（1の補数に1を加えた数）と呼ぶ。
+    </p>
+    <p>
+    現在のコンピュータでは、負の整数を表現する方式としてほぼ例外なく2の補数が使われている。
+    </p>
+    <p>
+    2の補数を求める手順は次の2ステップだけである。8ビットで5の2の補数（＝−5を表すビット列）を求めてみる。
+    </p>
+    <pre><code>5 の2進数表現（8ビット）
+    0 0 0 0 0 1 0 1
+
+① 各ビットを反転する（0↔1）→ 1の補数
+    1 1 1 1 1 0 1 0
+
+② 1の補数に1を加える → 2の補数（-5を表す）
+    1 1 1 1 1 0 1 1</code></pre>
+
+    <figure>
+      <svg viewBox="0 0 680 252" role="img" aria-label="5を表す8ビット00000101から、各ビットを反転して1の補数11111010を作り、さらに最下位ビットに1を加えて2の補数11111011（-5を表す）を求める2ステップの流れを、ビットを縦にそろえたマス目で示す図">
+        <title>2の補数の求め方（ビット反転して1を加える）を示す図</title>
+        <defs>
+          <marker id="cmparr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <text x="188" y="26" text-anchor="end" style="fill:var(--ink-2)">ビット位置</text>
+        <text x="222" y="26" text-anchor="middle" style="fill:var(--ink-2)">b7</text>
+        <text x="266" y="26" text-anchor="middle" style="fill:var(--ink-2)">b6</text>
+        <text x="310" y="26" text-anchor="middle" style="fill:var(--ink-2)">b5</text>
+        <text x="354" y="26" text-anchor="middle" style="fill:var(--ink-2)">b4</text>
+        <text x="398" y="26" text-anchor="middle" style="fill:var(--ink-2)">b3</text>
+        <text x="442" y="26" text-anchor="middle" style="fill:var(--ink-2)">b2</text>
+        <text x="486" y="26" text-anchor="middle" style="fill:var(--ink-2)">b1</text>
+        <text x="530" y="26" text-anchor="middle" style="fill:var(--ink-2)">b0</text>
+
+        <text class="node" x="188" y="60" text-anchor="end">5（8ビット）</text>
+        <rect x="200" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="222" y="60" text-anchor="middle">0</text>
+        <rect x="244" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="266" y="60" text-anchor="middle">0</text>
+        <rect x="288" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="310" y="60" text-anchor="middle">0</text>
+        <rect x="332" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="354" y="60" text-anchor="middle">0</text>
+        <rect x="376" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="398" y="60" text-anchor="middle">0</text>
+        <rect x="420" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="442" y="60" text-anchor="middle">1</text>
+        <rect x="464" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="486" y="60" text-anchor="middle">0</text>
+        <rect x="508" y="36" width="44" height="38" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="530" y="60" text-anchor="middle">1</text>
+        <text x="564" y="60" style="fill:var(--ink-2)">＝ 10進の 5</text>
+
+        <path d="M376,74 V104" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#cmparr)"/>
+        <text x="390" y="94" style="fill:var(--ink-2)">① 各ビットを反転（0↔1）</text>
+
+        <text class="node" x="188" y="130" text-anchor="end">1の補数</text>
+        <rect x="200" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="222" y="130" text-anchor="middle">1</text>
+        <rect x="244" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="266" y="130" text-anchor="middle">1</text>
+        <rect x="288" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="310" y="130" text-anchor="middle">1</text>
+        <rect x="332" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="354" y="130" text-anchor="middle">1</text>
+        <rect x="376" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="398" y="130" text-anchor="middle">1</text>
+        <rect x="420" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="442" y="130" text-anchor="middle">0</text>
+        <rect x="464" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="486" y="130" text-anchor="middle">1</text>
+        <rect x="508" y="106" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="530" y="130" text-anchor="middle">0</text>
+
+        <path d="M376,144 V174" stroke="var(--ink-2)" stroke-width="1.6" marker-end="url(#cmparr)"/>
+        <text x="390" y="164" style="fill:var(--ink-2)">② 1の補数に +1 する</text>
+
+        <text class="node" x="188" y="200" text-anchor="end">2の補数</text>
+        <rect x="200" y="176" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="222" y="200" text-anchor="middle">1</text>
+        <rect x="244" y="176" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="266" y="200" text-anchor="middle">1</text>
+        <rect x="288" y="176" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="310" y="200" text-anchor="middle">1</text>
+        <rect x="332" y="176" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="354" y="200" text-anchor="middle">1</text>
+        <rect x="376" y="176" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="398" y="200" text-anchor="middle">1</text>
+        <rect x="420" y="176" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="442" y="200" text-anchor="middle">0</text>
+        <rect x="464" y="176" width="44" height="38" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="486" y="200" text-anchor="middle">1</text>
+        <rect x="508" y="176" width="44" height="38" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="530" y="200" text-anchor="middle" style="fill:var(--marker-ink)">1</text>
+        <rect x="198" y="174" width="356" height="42" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        <text x="564" y="200">＝ -5 を表す</text>
+        <text x="552" y="238" text-anchor="end" style="fill:var(--ink-2)">↑ +1 で変わった桁（最下位ビット）</text>
+      </svg>
+      <figcaption><b>図2</b>　2の補数を求める手順。ビットをすべて反転させてから1を加えるだけで、負の数を表すビット列が得られる。このビット列 11111011 が、8ビットの世界で「-5」を表す。</figcaption>
+    </figure>
+
+    <div class="callout note">
+      <span class="label">なぜ2の補数で負数を表すのか</span>
+      <p>2の補数は「2ⁿ − x」という値に等しく、0を起点として負方向にxだけ進んだ位置に自然に対応する。この性質のおかげで、CPUは<strong>足し算のための加算回路だけ</strong>で引き算（A − B = A + (−B)）も実現でき、減算専用の回路を別に用意しなくてよくなる。ハードウェアを単純化しつつ高速化できる、非常に実用的な工夫である。</p>
+    </div>
+
+    <p>
+    2の補数を使った減算は、「引く数を2の補数にしてから足し、桁あふれ（キャリー）は単純に捨てる」だけで計算できる。8ビットで <code>11 − 5</code> を計算してみる。
+    </p>
+    <pre><code>  11 の8ビット表現
+      0 0 0 0 1 0 1 1
+  -5 の2の補数（図2より）
+  +   1 1 1 1 1 0 1 1
+  ---------------------
+  そのまま加算すると
+    1 0 0 0 0 0 1 1 0      ← 9ビットになる
+
+  8ビットからあふれた最上位の桁（キャリー）を捨てる
+  ---------------------
+  結果（8ビット）
+      0 0 0 0 0 1 1 0      = 6</code></pre>
+    <p>
+    11 − 5 = 6 と正しく一致する。減算を「補数を作って足すだけ」の処理に統一できるのが2の補数の最大の利点である。
+    </p>
+
+    <div class="callout caution">
+      <span class="label">表現できる範囲に注意</span>
+      <p>nビットの2の補数表現で表せる整数の範囲は <strong>−2ⁿ⁻¹ 〜 2ⁿ⁻¹ − 1</strong> であり、正と負で表現できる個数が非対称になる。8ビットなら −128〜127であり、最上位ビットが1で残りがすべて0の <code>10000000</code> は特別に−128を表す（対応する正の数+128は8ビットでは表現できない）。</p>
+    </div>
+
+    <h3 id="logic">3-3. 論理演算</h3>
+    <p>
+    論理演算は、真（1）・偽（0）の2値を対象にした演算で、AND（論理積）・OR（論理和）・NOT（否定）・XOR（排他的論理和）の4つが基本になる。コンピュータの内部では、これらをビット列の各桁ごとに適用する「ビット単位の論理演算」として利用されることが多い。
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>A</th><th>B</th><th>AND（A∧B）</th><th>OR（A∨B）</th><th>XOR（A⊕B）</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+          <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+          <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+    NOTは1入力の演算で、0と1を反転させるだけである（NOT 0 = 1、NOT 1 = 0）。ANDは「両方とも1のときだけ1」、ORは「どちらか一方でも1なら1」、XORは「入力が異なるときだけ1（同じなら0）」という性質を持つ。
+    </p>
+    <p>
+    これらを8ビットのビット列 A = 10101100（10進数172）と B = 11001010（10進数202）に対して、桁ごとに適用すると次のようになる。
+    </p>
+
+    <figure>
+      <svg viewBox="0 0 680 246" role="img" aria-label="8ビットのAとBそれぞれ10101100と11001010に対して、桁ごとにAND、OR、XORを計算した結果、10001000、11101110、01100110になる様子を、ビットを縦にそろえたマス目で示す図">
+        <title>ビット単位の論理演算の計算例を示す図</title>
+
+        <text x="150" y="22" text-anchor="end" style="fill:var(--ink-2)">桁の重み</text>
+        <text x="180" y="22" text-anchor="middle" style="fill:var(--ink-2)">128</text>
+        <text x="220" y="22" text-anchor="middle" style="fill:var(--ink-2)">64</text>
+        <text x="260" y="22" text-anchor="middle" style="fill:var(--ink-2)">32</text>
+        <text x="300" y="22" text-anchor="middle" style="fill:var(--ink-2)">16</text>
+        <text x="340" y="22" text-anchor="middle" style="fill:var(--ink-2)">8</text>
+        <text x="380" y="22" text-anchor="middle" style="fill:var(--ink-2)">4</text>
+        <text x="420" y="22" text-anchor="middle" style="fill:var(--ink-2)">2</text>
+        <text x="460" y="22" text-anchor="middle" style="fill:var(--ink-2)">1</text>
+
+        <text class="node" x="150" y="52" text-anchor="end">A ＝ 172</text>
+        <rect x="160" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="180" y="52" text-anchor="middle">1</text>
+        <rect x="200" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="220" y="52" text-anchor="middle">0</text>
+        <rect x="240" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="260" y="52" text-anchor="middle">1</text>
+        <rect x="280" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="300" y="52" text-anchor="middle">0</text>
+        <rect x="320" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="340" y="52" text-anchor="middle">1</text>
+        <rect x="360" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="380" y="52" text-anchor="middle">1</text>
+        <rect x="400" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="420" y="52" text-anchor="middle">0</text>
+        <rect x="440" y="30" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="460" y="52" text-anchor="middle">0</text>
+
+        <text class="node" x="150" y="90" text-anchor="end">B ＝ 202</text>
+        <rect x="160" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="180" y="90" text-anchor="middle">1</text>
+        <rect x="200" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="220" y="90" text-anchor="middle">1</text>
+        <rect x="240" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="260" y="90" text-anchor="middle">0</text>
+        <rect x="280" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="300" y="90" text-anchor="middle">0</text>
+        <rect x="320" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="340" y="90" text-anchor="middle">1</text>
+        <rect x="360" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="380" y="90" text-anchor="middle">0</text>
+        <rect x="400" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="420" y="90" text-anchor="middle">1</text>
+        <rect x="440" y="68" width="40" height="34" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="bits" x="460" y="90" text-anchor="middle">0</text>
+
+        <line x1="150" y1="110" x2="500" y2="110" stroke="var(--ink-2)" stroke-width="1.4"/>
+
+        <text class="node" x="150" y="140" text-anchor="end">AND</text>
+        <rect x="160" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="180" y="140" text-anchor="middle">1</text>
+        <rect x="200" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="220" y="140" text-anchor="middle">0</text>
+        <rect x="240" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="260" y="140" text-anchor="middle">0</text>
+        <rect x="280" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="300" y="140" text-anchor="middle">0</text>
+        <rect x="320" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="340" y="140" text-anchor="middle">1</text>
+        <rect x="360" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="380" y="140" text-anchor="middle">0</text>
+        <rect x="400" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="420" y="140" text-anchor="middle">0</text>
+        <rect x="440" y="118" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="460" y="140" text-anchor="middle">0</text>
+        <text x="492" y="140" style="fill:var(--ink-2)">= 136（両方1の桁だけ1）</text>
+
+        <text class="node" x="150" y="178" text-anchor="end">OR</text>
+        <rect x="160" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="180" y="178" text-anchor="middle">1</text>
+        <rect x="200" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="220" y="178" text-anchor="middle">1</text>
+        <rect x="240" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="260" y="178" text-anchor="middle">1</text>
+        <rect x="280" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="300" y="178" text-anchor="middle">0</text>
+        <rect x="320" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="340" y="178" text-anchor="middle">1</text>
+        <rect x="360" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="380" y="178" text-anchor="middle">1</text>
+        <rect x="400" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="420" y="178" text-anchor="middle">1</text>
+        <rect x="440" y="156" width="40" height="34" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="bits" x="460" y="178" text-anchor="middle">0</text>
+        <text x="492" y="178" style="fill:var(--ink-2)">= 238（どちらか1なら1）</text>
+
+        <text class="node" x="150" y="216" text-anchor="end">XOR</text>
+        <rect x="160" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="180" y="216" text-anchor="middle" style="fill:var(--marker-ink)">0</text>
+        <rect x="200" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="220" y="216" text-anchor="middle" style="fill:var(--marker-ink)">1</text>
+        <rect x="240" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="260" y="216" text-anchor="middle" style="fill:var(--marker-ink)">1</text>
+        <rect x="280" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="300" y="216" text-anchor="middle" style="fill:var(--marker-ink)">0</text>
+        <rect x="320" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="340" y="216" text-anchor="middle" style="fill:var(--marker-ink)">0</text>
+        <rect x="360" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="380" y="216" text-anchor="middle" style="fill:var(--marker-ink)">1</text>
+        <rect x="400" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="420" y="216" text-anchor="middle" style="fill:var(--marker-ink)">1</text>
+        <rect x="440" y="194" width="40" height="34" fill="var(--marker)" stroke="var(--rule)"/>
+        <text class="bits" x="460" y="216" text-anchor="middle" style="fill:var(--marker-ink)">0</text>
+        <text x="492" y="216" style="fill:var(--ink-2)">= 102（異なる桁だけ1）</text>
+      </svg>
+      <figcaption><b>図3</b>　同じ2つのビット列に対するAND・OR・XORの計算例。桁ごとに独立して真理値表どおりの演算を行うだけでよい。</figcaption>
+    </figure>
+    <div class="callout note">
+      <span class="label">図3の検算と使いどころ</span>
+      <p>検算：AND(136) + OR(238) = 374 = A(172) + B(202) となり、桁ごとの計算が矛盾なく一致している。</p>
+      <p>ANDは「余分なビットを消すマスク処理」、ORは「特定のビットを立てる処理」、XORは「差分の検出やビット反転」によく使われる。</p>
+    </div>
+
+    <h4>シフト演算</h4>
+    <p>
+    シフト演算はビット列全体を左または右にずらす演算で、<strong>論理シフト</strong>と<strong>算術シフト</strong>の2種類がある。論理シフトは符号を意識せず、あふれたビットを捨てて空いた桁に単純に0を詰める。
+    </p>
+    <p>
+    算術シフトは符号付きの数として扱うことを前提にしており、算術左シフトは論理左シフトと同じ（0を詰める）だが、<strong>算術右シフトは最上位の符号ビットをコピーして空いた桁に詰める（符号拡張）</strong>点が異なる。
+    </p>
+    <pre><code>算術左シフト（×2 に相当）
+   6 (00000110) を1ビット左へ → 00001100 = 12   （6×2=12）
+
+算術右シフト（÷2 の切り捨てに相当、符号ビットを保持）
+  -6 (11111010、2の補数8ビット) を1ビット右へ → 11111101 = -3   （-6÷2=-3）</code></pre>
+    <p>
+    算術左シフトはnビット左シフトで「×2ⁿ」、算術右シフトはnビット右シフトで「÷2ⁿ（切り捨て）」に相当する。ただし左シフトでは符号ビットの領域まで値があふれる「オーバーフロー」が起きる場合があるため注意が必要である。
+    </p>
+
+    <h4>ド・モルガンの法則</h4>
+    <p>
+    ド・モルガンの法則は、ANDとORの否定を相互に変形できることを示す法則で、次の2つの式で表される。
+    </p>
+    <pre><code>NOT (A AND B)  =  (NOT A) OR  (NOT B)
+NOT (A OR  B)  =  (NOT A) AND (NOT B)</code></pre>
+    <p>
+    「かつ」の否定は「それぞれの否定」の「または」になり、「または」の否定は「それぞれの否定」の「かつ」になる、と言い換えられる。プログラムの条件式を読みやすい形に書き換えたり、論理回路をNAND・NORだけで構成したりする際の基礎になる、試験でも頻出の法則である。
+    </p>
+
+    <h3 id="float">3-4. 浮動小数点数</h3>
+    <p>
+    小数を含む数値をコンピュータで表す方式には、大きく<strong>固定小数点数</strong>と<strong>浮動小数点数</strong>の2種類がある。
+    </p>
+    <p>
+    固定小数点数は、あらかじめ「整数部○ビット・小数部○ビット」のように小数点の位置を固定して数値を表す方式で、仕組みが単純で誤差の予測がしやすい反面、表現できる数値の範囲が狭い。
+    </p>
+    <p>
+    これに対して浮動小数点数は、数値を<strong>「符号 × 仮数 × 基数^指数」</strong>という形で表し、指数部の値によって小数点の位置を動かせる（floatする）ようにした方式である。少ないビット数でも、非常に大きい数から非常に小さい数まで幅広い範囲を扱えるのが最大の利点である。
+    </p>
+
+    <h4>IEEE754の構造</h4>
+    <p>
+    現在のほぼすべてのコンピュータ・プログラミング言語は、浮動小数点数の表現方式として<strong>IEEE754</strong>という国際標準規格を採用している。ビット列は<strong>符号部</strong>・<strong>指数部</strong>・<strong>仮数部</strong>の3つに分かれており、代表的なのは32ビットの<strong>単精度</strong>と64ビットの<strong>倍精度</strong>である。
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>形式</th><th>全体</th><th>符号部</th><th>指数部</th><th>仮数部</th><th>指数バイアス</th><th>10進の有効桁数の目安</th></tr></thead>
+        <tbody>
+          <tr><td>単精度（float）</td><td>32ビット</td><td>1ビット</td><td>8ビット</td><td>23ビット</td><td>127</td><td>約7桁</td></tr>
+          <tr><td>倍精度（double）</td><td>64ビット</td><td>1ビット</td><td>11ビット</td><td>52ビット</td><td>1023</td><td>約15〜16桁</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+    値は次の式で求められる。
+    </p>
+    <pre><code>値 = (-1)^符号 × 1.仮数部(2進数として) × 2^(指数部の値 − バイアス)</code></pre>
+    <p>
+    2進数を正規化すると先頭の桁は必ず1になる性質を利用し、その「1.」の部分は仮数部に格納せず省略する（<strong>ケチ表現</strong>）。
+    </p>
+    <p>
+    また指数部には、実際の指数にバイアス（単精度は127、倍精度は1023）を足した値を格納することで、負の指数も0以上の整数として保存でき、大小比較もビット列のまま行いやすくなる。
+    </p>
+    <p>
+    単精度で <code>-6.25</code> を表現する手順を、途中式を省略せずに示す。
+    </p>
+    <pre><code>① 絶対値6.25を2進数にする
+   6      = 110(2)
+   0.25   = 0.01(2)
+   6.25   = 110.01(2)
+
+② 正規化する（1.〇〇 × 2^e の形にそろえる）
+   110.01(2) = 1.1001(2) × 2^2
+
+③ 各部を求める
+   符号部　: 負の数なので 1
+   指数部　: 実際の指数2 + バイアス127 = 129 = 10000001(2)（8ビット）
+   仮数部　: 1.1001 の小数点以下「1001」を左詰めし、残りを0で埋めて23ビットに
+             1001 0000 0000 0000 0000 000（23ビット）
+
+④ 32ビットに並べる
+   符号(1) 指数部(8)  仮数部(23)
+     1    10000001   10010000000000000000000</code></pre>
+
+    <figure>
+      <svg viewBox="0 0 680 276" role="img" aria-label="IEEE754単精度32ビットと倍精度64ビットのビット構成を、符号部・指数部・仮数部の3領域にビット数の比どおりの幅で分けて示し、単精度の下には-6.25を表現した具体的なビット列の例を添えた図">
+        <title>IEEE754のビット構成を示す図</title>
+        <defs>
+          <marker id="f754arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+          </marker>
+        </defs>
+
+        <text class="node" x="80" y="62" text-anchor="end">単精度</text>
+        <text x="80" y="80" text-anchor="end" style="fill:var(--ink-2)">32ビット</text>
+
+        <text x="90" y="34" style="fill:var(--ink-2)">符号部（1ビット）</text>
+        <path d="M99.1,38 V46" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#f754arr)"/>
+
+        <rect x="90" y="46" width="18.1" height="44" fill="var(--marker)" stroke="var(--rule)"/>
+        <rect x="108.1" y="46" width="145" height="44" fill="var(--note)" stroke="var(--rule)"/>
+        <text class="node" x="180.6" y="74" text-anchor="middle">指数部（8ビット）</text>
+        <rect x="253.1" y="46" width="416.9" height="44" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="node" x="461.6" y="74" text-anchor="middle">仮数部（23ビット）</text>
+
+        <text class="bits" x="99.1" y="112" text-anchor="middle">1</text>
+        <text class="bits" x="180.6" y="112" text-anchor="middle">10000001</text>
+        <text class="bits" x="461.6" y="112" text-anchor="middle">10010000000000000000000</text>
+        <text x="90" y="134" style="fill:var(--ink-2)">↑ 例：-6.25 を単精度で表現したビット列（符号1・指数129・仮数1001000…0）</text>
+
+        <text class="node" x="80" y="202" text-anchor="end">倍精度</text>
+        <text x="80" y="220" text-anchor="end" style="fill:var(--ink-2)">64ビット</text>
+
+        <text x="90" y="174" style="fill:var(--ink-2)">符号部（1ビット）</text>
+        <path d="M94.5,178 V186" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#f754arr)"/>
+        <text x="235" y="174" style="fill:var(--ink-2)">指数部（11ビット）</text>
+        <path d="M230,170 L148.9,184" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#f754arr)"/>
+
+        <rect x="90" y="186" width="9.1" height="44" fill="var(--marker)" stroke="var(--rule)"/>
+        <rect x="99.1" y="186" width="99.7" height="44" fill="var(--note)" stroke="var(--rule)"/>
+        <rect x="198.8" y="186" width="471.3" height="44" fill="var(--paper-2)" stroke="var(--rule)"/>
+        <text class="node" x="434.4" y="214" text-anchor="middle">仮数部（52ビット）</text>
+
+        <text x="90" y="254" style="fill:var(--ink-2)">左端が最上位ビット。領域の幅は、そのままビット数の比を表している</text>
+      </svg>
+      <figcaption><b>図4</b>　IEEE754のビット構成。符号・指数・仮数の3領域に分かれており、指数部にはバイアスを足した値、仮数部には正規化後の小数点以下だけを格納する。</figcaption>
+    </figure>
+    <p>
+    倍精度は単精度より指数部・仮数部が広いため、表現できる範囲が広く、精度（有効桁数）も高い。
+    </p>
+    <p>
+    指数部と仮数部のビットパターンには、通常の数値以外にも特別な意味を持つ組み合わせが定められている。指数部が全ビット0または全ビット1になる場合は、0・非正規化数・無限大・NaNなど特別な意味を持つ。
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>指数部</th><th>仮数部</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>すべて0</td><td>すべて0</td><td>±0（符号部により+0と-0を区別）</td></tr>
+          <tr><td>すべて0</td><td>0以外</td><td>非正規化数（0に極めて近い小さな値。暗黙の先頭ビットを1ではなく0として扱う）</td></tr>
+          <tr><td>すべて1</td><td>すべて0</td><td>±無限大（オーバーフロー時などに現れる）</td></tr>
+          <tr><td>すべて1</td><td>0以外</td><td>NaN（Not a Number、非数。0÷0など定義できない演算の結果）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>浮動小数点演算に伴う誤差</h4>
+    <p>
+    仮数部のビット数が有限である以上、浮動小数点数で表せる値は連続ではなく離散的であり、次のような誤差が原理的に避けられない。
+    </p>
+    <ul>
+      <li><strong>丸め誤差</strong>：仮数部の桁数に収まりきらない値を四捨五入・切り捨てなどで丸めることで生じる誤差。10進数の0.1は2進数では無限循環小数になり正確に表せないため、多くの言語で <code>0.1 + 0.2</code> が <code>0.3</code> ぴったりにならないのはこの丸め誤差が原因である。</li>
+      <li><strong>情報落ち</strong>：絶対値の差が非常に大きい数同士を加減算したとき、小さいほうの値が仮数部の桁数からあふれて結果にまったく反映されなくなる誤差。例えば「1.0×10⁸」に「1.0×10⁻⁸」を足しても、桁の差が大きすぎて結果が1.0×10⁸のまま変わらないことがある。</li>
+      <li><strong>桁落ち</strong>：絶対値がほぼ等しい数同士の減算（または符号が逆で絶対値がほぼ等しい数同士の加算）を行ったときに、上位の桁が打ち消し合って有効桁数が大きく減ってしまう誤差。例えば <code>1.000001 − 1.000000 = 0.000001</code> のように、有効桁の大部分が失われる。</li>
+      <li><strong>打ち切り誤差</strong>：円周率や数値積分・級数展開のように本来は無限に計算が続くものを、途中で打ち切ることによって生じる誤差。</li>
+    </ul>
+    <div class="callout caution">
+      <span class="label">桁落ちと情報落ちは原因が逆</span>
+      <p>桁落ちは「絶対値がほぼ等しい数どうしの引き算（打ち消し合い）」で起き、情報落ちは「絶対値の差が大きすぎる数どうしの足し算（小さいほうが埋もれる）」で起きる。どちらも「有効桁が足りなくなる」結果は似ているが、発生する場面が正反対である点を混同しやすいので注意したい。</p>
+    </div>
+
+    <h2 id="s4">具体例・使いどころ</h2>
+
+    <div class="callout note">
+      <span class="label">具体例1　16進数はメモリアドレスや色コードの表記に使われる</span>
+      <p>デバッグ時に見るメモリアドレスや、Webページの色指定（<code>#FF8800</code>など）は16進数で表記される。2進数を4ビットごとに区切って読み替えられる性質のおかげで、人間にとって長い2進数を短く扱いやすい形に圧縮できるためである。</p>
+    </div>
+
+    <div class="callout note">
+      <span class="label">具体例2　ネットワークのサブネットマスクはAND演算そのもの</span>
+      <p>IPアドレスとサブネットマスクをビット単位でAND演算すると、そのIPアドレスが属するネットワークアドレスが求まる。「マスク（覆う）」という名前のとおり、ANDで不要な下位ビットを0に落とす典型的な使いどころである。</p>
+    </div>
+
+    <div class="callout note">
+      <span class="label">具体例3　権限やオプションのフラグ管理</span>
+      <p>OSのファイルパーミッションや、複数の設定項目をまとめて1つの整数で管理する「ビットフラグ」は、OR演算で特定のビットを立て（有効化）、AND演算で特定のビットだけを調べ、XORでトグル（反転）するという形で論理演算を活用している。</p>
+    </div>
+
+    <div class="callout note">
+      <span class="label">具体例4　金額計算に浮動小数点数を使ってはいけない理由</span>
+      <p>0.1や0.01のような10進小数の多くは2進数で正確に表現できず丸め誤差を含むため、金額計算をfloat/doubleで積み重ねると、わずかなズレが蓄積して合計額が1円単位でずれることがある。実務では、金額を整数（例：円ではなく銭単位の整数）で扱ったり、10進演算専用の型（多くの言語にある decimal 型など）を使ったりして、この誤差を避けるのが定石である。</p>
+    </div>
+
+    <h2 id="s5">注意点・よくある誤解</h2>
+    <div class="callout caution">
+      <span class="label">よくある誤解</span>
+      <ul>
+        <li><strong>「1の補数と2の補数を混同する」誤り。</strong> — 1の補数は単なるビット反転、2の補数はそれに+1したものである。現在のコンピュータの負数表現に使われているのは2の補数であり、1の補数には「+0と-0が別のビット列として存在する」という欠点がある。</li>
+        <li><strong>「2の補数の表現範囲は正負対称」だと思い込む誤り。</strong> — nビットで表せる範囲は −2ⁿ⁻¹〜2ⁿ⁻¹−1であり、負の側が1つだけ多い（8ビットなら−128〜127）。最小値をそのまま符号反転しようとするとオーバーフローする点に注意。</li>
+        <li><strong>「論理右シフトと算術右シフトは同じ」だと思い込む誤り。</strong> — 論理右シフトは空いた桁に必ず0を詰めるのに対し、算術右シフトは符号ビットを複製して詰めるため、負の数を扱うときの結果が異なる。符号なし整数には論理シフト、符号付き整数には算術シフトを使うのが基本である。</li>
+        <li><strong>「浮動小数点数は実数を正確に表せる」という誤解。</strong> — 表現できるのはあくまで有限個の離散的な値であり、0.1のような一見きりのよい10進小数でも2進数では正確に表せず丸め誤差を持つ。等号（==）で浮動小数点数どうしを比較するのは避け、許容誤差（イプシロン）を使った比較をするのが定石である。</li>
+        <li><strong>「桁落ちと情報落ちは同じ現象」という誤解。</strong> — 桁落ちは近い値同士の引き算で有効桁が消える現象、情報落ちは大きさの違いすぎる値同士の足し算で小さいほうが無視される現象であり、原因も対策も異なる。</li>
+        <li><strong>「ド・モルガンの法則はANDとORを単純に入れ替えるだけ」という誤解。</strong> — ANDとORを入れ替えるだけでなく、内側の各項にもNOTを付け直す必要がある（NOT(A AND B) は (NOT A) OR (NOT B) であり、(NOT A) AND (NOT B) ではない）。</li>
+      </ul>
+    </div>
+
+    <h2 id="s6">確認問題</h2>
+
+    <details class="quiz">
+      <summary>Q1. 10進数89を、割り算法の手順（余りを書きながら）を使って2進数に変換せよ。</summary>
+      <div class="answer"><p>89÷2=44余り1、44÷2=22余り0、22÷2=11余り0、11÷2=5余り1、5÷2=2余り1、2÷2=1余り0、1÷2=0余り1。余りを下から上に読むと <code>1011001</code>(2) になる（検算：64+16+8+1=89）。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q2. 8ビットで5の2の補数を求め、その2の補数を使って「11−5」を筆算で計算せよ。</summary>
+      <div class="answer"><p>5=<code>00000101</code>をビット反転すると1の補数<code>11111010</code>、これに1を加えると2の補数<code>11111011</code>（-5）になる。11=<code>00001011</code>に<code>11111011</code>を加えると<code>100000110</code>（9ビット）となり、8ビットからあふれた最上位ビットを捨てると<code>00000110</code>=6が得られ、11-5=6と一致する。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q3. ある8ビットの値から下位4ビットだけを取り出したい。どの論理演算と、どんなビット列（マスク値）を使えばよいか。</summary>
+      <div class="answer"><p>AND演算と、マスク値<code>00001111</code>（16進数で<code>0x0F</code>）を使う。ANDは「両方とも1のときだけ1」になる性質を持つため、上位4ビットは元の値に関わらず0になり、下位4ビットだけが元の値のまま残る。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q4. IEEE754の単精度（32ビット）で -6.25 を表現するとき、符号部・指数部・仮数部はそれぞれどうなるか、途中式とともに答えよ。</summary>
+      <div class="answer"><p>6.25を2進数にすると<code>110.01</code>となり、正規化すると<code>1.1001×2²</code>になる。符号部は負の数なので1、指数部は実際の指数2にバイアス127を足した129=<code>10000001</code>（8ビット）、仮数部は正規化後の小数点以下「1001」を23ビットに0で埋めた<code>10010000000000000000000</code>になる。32ビット全体では <code>1 10000001 10010000000000000000000</code> となる。</p></div>
+    </details>
+
+    <details class="quiz">
+      <summary>Q5. 「桁落ち」と「情報落ち」の違いを、それぞれが発生する具体的な計算の例とともに説明せよ。</summary>
+      <div class="answer"><p>桁落ちは、絶対値がほぼ等しい数同士の減算（例：1.000001−1.000000=0.000001）で上位の桁が打ち消し合い、有効桁数が大きく減る現象である。情報落ちは、絶対値の差が非常に大きい数同士の加減算（例：1.0×10⁸に1.0×10⁻⁸を足す）で、小さいほうの値が仮数部の桁からあふれて結果にまったく反映されなくなる現象である。前者は「近い値の引き算」、後者は「大きさの違いすぎる値の足し算」で起きる点が異なる。</p></div>
+    </details>
+
+    <h2 id="s7">参考リンク</h2>
+    <ul class="refs">
+      <li><a href="https://www.foresight.jp/fe/column/binary-hexadecimal/" target="_blank" rel="noopener">基本情報技術者試験で問われる2進数と16進数の算出方法とは？｜フォーサイト</a></li>
+      <li><a href="https://itengineer-nh.com/34/" target="_blank" rel="noopener">基数変換｜【基本情報技術者試験】2進数、10進数｜IT習得部屋</a></li>
+      <li><a href="https://hiraq.net/radix_conversion/" target="_blank" rel="noopener">基数変換を完全マスター！小数・2の補数の計算もステップ解説【基本情報・ITパスポート】</a></li>
+      <li><a href="https://note.com/sennai/n/neabaea3a11b8" target="_blank" rel="noopener">「補数」問題を集めてみた（基本情報技術者試験、ITパスポート）｜せんないの過去問解説Note</a></li>
+      <li><a href="https://hackson.jp/twos-complement/" target="_blank" rel="noopener">補数とは？2の補数で負の数を表す仕組みをわかりやすく解説【IPA試験対策】</a></li>
+      <li><a href="https://eng.kice.tokyo/logic/twos-complement/" target="_blank" rel="noopener">２の補数表現｜石丸技術士事務所 ディジタル技術資料</a></li>
+      <li><a href="https://eng.kice.tokyo/logic/demorgan/" target="_blank" rel="noopener">ドモルガンの法則｜石丸技術士事務所 ディジタル技術資料</a></li>
+      <li><a href="https://e-words.jp/w/%E3%83%89%E3%83%BB%E3%83%A2%E3%83%AB%E3%82%AC%E3%83%B3%E3%81%AE%E6%B3%95%E5%89%87.html" target="_blank" rel="noopener">ド・モルガンの法則とは｜IT用語辞典 e-Words</a></li>
+      <li><a href="https://susiso.jp/fixpoint_floationgpoint/" target="_blank" rel="noopener">固定小数点数、浮動小数点数の違いとは？IEEE754の単精度と倍精度についても解説｜すしそブログ</a></li>
+      <li><a href="https://www.seplus.jp/dokushuzemi/ec/fe/fenavi/mastering_tech/float/" target="_blank" rel="noopener">基本情報でわかる 浮動小数点｜基本情報技術者試験 受験ナビ</a></li>
+      <li><a href="https://pystyle.info/floating-point-numbers/" target="_blank" rel="noopener">浮動小数点数 (IEEE754) について解説｜pystyle</a></li>
+      <li><a href="https://hwb.ecc.u-tokyo.ac.jp/wp/information-2/coding/number/precision/" target="_blank" rel="noopener">浮動小数点表現の精度・範囲と特別な値｜HWB（東京大学）</a></li>
+      <li><a href="https://hackson.jp/computational-error/" target="_blank" rel="noopener">誤差（桁落ち/情報落ち/丸め誤差）とは？違いと覚え方を解説【IPA試験対策】</a></li>
+      <li><a href="https://www.momoyama-usagi.com/entry/info-calc-sys04" target="_blank" rel="noopener">うさぎでもわかる計算機システム Part04 桁落ち・情報落ち・丸め誤差・打ち切り誤差について｜工業大学生ももやまのうさぎ塾</a></li>
+    </ul>
+
+  </main>
+
+  <footer>
+    <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+  </footer>
+</div>
+</body>
+</html>
