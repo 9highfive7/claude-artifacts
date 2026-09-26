@@ -141,6 +141,304 @@
     .prose h2 { font-size: 1.3rem; }
   }
 </style>
+<!-- modern-ui:start （全レポート共通の操作部品。本文の見た目の基本は上の <style>） -->
+<style id="mu-style">
+  /* =====================================================================
+     モダンUIレイヤー（全レポート共通）
+     - 上部バー（戻る・現在の章・文字サイズ・配色切替・読了バー）
+     - 広い画面では目次を右サイドに固定し、いま読んでいる章を強調
+     - 狭い画面では上部バーの「目次」から引き出しで目次を開く
+     - 見出しリンクのコピー、コードのコピー、図の拡大、解答の一括表示
+     本文の数値基準（16px・行間1.7・40字・8pxスケール）は上のテンプレートのまま
+     ===================================================================== */
+  :root {
+    --surface: #fbfcfa;
+    --topbar-h: 56px;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgb(20 32 43 / 0.06), 0 6px 20px rgb(20 32 43 / 0.07);
+    --focus: var(--link);
+    color-scheme: light;
+    interpolate-size: allow-keywords;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --surface: #18212a;
+      --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 6px 20px rgb(0 0 0 / 0.3);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
+    --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
+    --note: #1e2f45; --caution: #4a2620; --code-bg: #1b242c;
+    --surface: #18212a;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 6px 20px rgb(0 0 0 / 0.3);
+    color-scheme: dark;
+  }
+  /* 文字サイズ切替（rem 基準で本文・見出しが一緒に拡大する） */
+  :root[data-fs="l"] { font-size: 112.5%; }
+  :root[data-fs="xl"] { font-size: 125%; }
+  body { font-size: 1rem; }
+
+  /* 上部バーの高さぶん。見出し側の scroll-margin（24px）と足し合わされる */
+  html { scroll-padding-top: var(--topbar-h); }
+  .prose h2, .prose h3, .prose h4 { scroll-margin-top: var(--sp-3); }
+  ::selection { background: var(--marker); color: var(--marker-ink); }
+  :where(button, summary, [tabindex]):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* ---- 本文へスキップ ---- */
+  .mu-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--paper); border-radius: 6px; }
+  .mu-skip:focus { top: var(--sp-1); }
+
+  /* ---- 上部バー ---- */
+  .mu-topbar {
+    position: sticky; top: 0; z-index: 50;
+    height: var(--topbar-h);
+    background: color-mix(in srgb, var(--paper) 86%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .mu-topbar-inner { max-width: 1160px; height: 100%; margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2); }
+  .mu-home { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; color: var(--ink); text-decoration: none; font-weight: 700; font-size: 0.95rem; padding: 6px 10px 6px 6px; margin-left: -6px; border-radius: 8px; }
+  .mu-home:hover { background: var(--paper-2); }
+  .mu-home svg { width: 20px; height: 20px; }
+  .mu-where { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--sp-1); font-size: 0.9rem; color: var(--ink-2); opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; }
+  .mu-where.is-shown { opacity: 1; transform: none; }
+  .mu-where .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mu-where .t-page { flex: 0 1 auto; max-width: 45%; }
+  .mu-where .sep { flex-shrink: 0; }
+  .mu-where .t-sec { flex: 0 1 auto; color: var(--ink); font-weight: 500; }
+  .mu-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .mu-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-width: 40px; height: 40px; padding: 0 10px;
+    font: inherit; font-size: 0.875rem; font-weight: 500; color: var(--ink);
+    background: none; border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+  }
+  .mu-btn:hover { background: var(--paper-2); }
+  .mu-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .mu-btn[aria-pressed="true"] { border-color: var(--rule); background: var(--paper-2); }
+  .mu-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--link); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* ---- 表紙 ---- */
+  .mu-js .cover .back { display: none; }
+  .cover { padding-top: var(--sp-5); }
+  .cover h1 { margin-top: 0; }
+  .cover .meta li { padding: 2px 12px; background: var(--paper-2); border-radius: 100px; }
+
+  /* ---- 目次（共通の見た目） ---- */
+  .toc { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--sp-2) var(--sp-3); }
+  .toc h2 { font-size: 0.875rem; letter-spacing: 0.08em; }
+  .toc a { color: var(--ink); border-radius: 6px; }
+  .toc .sub a { color: var(--ink-2); }
+  .toc a.is-active { color: var(--link); font-weight: 700; }
+
+  /* 広い画面: 本文の右に目次を固定（本文の幅 760px はそのまま） */
+  @media (min-width: 1200px) {
+    .page {
+      max-width: 1160px;
+      display: grid;
+      grid-template-columns: minmax(0, 760px) 272px;
+      column-gap: var(--sp-5);
+      justify-content: center;
+    }
+    .page > :not(.toc) { grid-column: 1; min-width: 0; }
+    .page > .toc {
+      grid-column: 2; grid-row: 1 / span 4;
+      position: sticky; top: calc(var(--topbar-h) + var(--sp-3)); align-self: start;
+      max-height: calc(100vh - var(--topbar-h) - var(--sp-4));
+      overflow-y: auto; overscroll-behavior: contain;
+      margin: var(--sp-5) 0 0;
+      padding: 0 0 0 var(--sp-2);
+      background: none; border: 0; border-left: 1px solid var(--rule); border-radius: 0;
+      font-size: 0.9rem; line-height: 1.5;
+      scrollbar-width: thin;
+    }
+    .page > .toc ol { padding-left: 1.4em; }
+    .page > .toc li { margin: 2px 0; }
+    .page > .toc a { display: block; padding: 4px 8px; margin-left: -8px; }
+    .page > .toc a:hover { background: var(--paper-2); text-decoration: none; }
+    .page > .toc a.is-active { background: color-mix(in srgb, var(--link) 12%, transparent); }
+    .page > .toc .sub a { font-size: 0.85rem; }
+    .mu-toc-btn { display: none !important; }
+  }
+
+  /* 狭い画面: 引き出し式の目次 */
+  .mu-drawer {
+    margin: 0 0 0 auto; height: 100%; max-height: 100dvh; width: min(360px, 88vw); max-width: none;
+    padding: 0; border: 0; border-left: 1px solid var(--rule);
+    background: var(--surface); color: var(--ink); box-shadow: var(--shadow);
+  }
+  .mu-drawer::backdrop { background: rgb(10 16 22 / 0.45); }
+  .mu-drawer[open] { animation: mu-slide .22s ease-out; }
+  @keyframes mu-slide { from { transform: translateX(24px); opacity: 0; } }
+  .mu-drawer-head { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3); background: var(--surface); border-bottom: 1px solid var(--rule); }
+  .mu-drawer-head strong { font-size: 0.95rem; }
+  .mu-drawer nav { padding: var(--sp-2) var(--sp-3) var(--sp-4); line-height: 1.5; }
+  .mu-drawer ol { margin: 0; padding-left: 1.4em; }
+  .mu-drawer li { margin: 2px 0; }
+  .mu-drawer ul.sub { margin: 2px 0 4px; padding-left: 0.6em; list-style: none; }
+  .mu-drawer a { display: block; padding: 8px; margin-left: -8px; color: var(--ink); text-decoration: none; border-radius: 6px; }
+  .mu-drawer .sub a { color: var(--ink-2); font-size: 0.9rem; padding: 6px 8px; }
+  .mu-drawer a:hover { background: var(--paper-2); }
+  .mu-drawer a.is-active { color: var(--link); font-weight: 700; background: color-mix(in srgb, var(--link) 12%, transparent); }
+
+  /* ---- 見出し ---- */
+  .prose h2::before { content: ""; display: inline-block; width: 6px; height: 0.9em; margin-right: 10px; vertical-align: -0.1em; border-radius: 3px; background: var(--marker); }
+  .mu-anchor {
+    margin-left: 6px; padding: 0 6px; border-radius: 6px;
+    font-family: var(--font-body); font-size: 0.8em; font-weight: 500;
+    color: var(--ink-2); text-decoration: none; opacity: 0; transition: opacity .15s;
+  }
+  :is(h2, h3, h4):hover > .mu-anchor, .mu-anchor:focus-visible { opacity: 1; }
+  .mu-anchor:hover { background: var(--paper-2); color: var(--ink); }
+  @media (hover: none) { .mu-anchor { display: none; } }
+
+  /* ---- 囲み（要点・補足・注意） ---- */
+  .callout { border-radius: 0 var(--radius) var(--radius) 0; }
+  .callout .label { display: flex; align-items: center; gap: 6px; letter-spacing: 0.04em; }
+  .callout .label::before {
+    content: ""; width: 18px; height: 18px; flex-shrink: 0; background: currentColor;
+    -webkit-mask: var(--mu-icon) center / contain no-repeat; mask: var(--mu-icon) center / contain no-repeat;
+    --mu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z'/%3E%3C/svg%3E");
+  }
+  .callout.summary .label::before { --mu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E"); }
+  .callout.note .label { color: var(--link); }
+  .callout.note .label::before { --mu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4M12 8h.01'/%3E%3C/svg%3E"); }
+  .callout.caution .label::before { --mu-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01'/%3E%3C/svg%3E"); }
+
+  /* ---- 表 ---- */
+  .table-wrap { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+  .table-wrap table { margin: 0; }
+  .table-wrap caption { padding: var(--sp-1) var(--sp-2) 0; }
+  thead th { background: var(--paper-2); border-bottom-color: var(--rule); }
+  .table-wrap tbody tr:last-child > * { border-bottom: 0; }
+  tbody tr:nth-child(even) { background: color-mix(in srgb, var(--paper-2) 45%, transparent); }
+  tbody tr:hover { background: color-mix(in srgb, var(--link) 8%, transparent); }
+
+  /* 横にはみ出す表・図は、続きがある側の端をフェードさせて示す */
+  .mu-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+  .mu-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+  .mu-more-left.mu-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+  .mu-scroll-hint { display: none; margin: calc(var(--sp-1) * -1) 0 var(--sp-2); font-size: 0.8rem; color: var(--ink-2); }
+  .mu-scroll-hint.is-shown { display: block; }
+
+  /* ---- 図 ---- */
+  .prose figure { padding: var(--sp-3) var(--sp-2) var(--sp-2); border: 1px solid var(--rule); border-radius: var(--radius); }
+  .prose figure figcaption { padding: var(--sp-1) var(--sp-1) 0; border-top: 1px dashed var(--rule); margin-top: var(--sp-2); }
+  /* 図が横スクロールしてもボタンが流れないよう、外側の枠にボタンを置く */
+  .mu-fig { position: relative; margin: var(--sp-4) 0; }
+  .mu-fig > figure { margin: 0; }
+  /* 拡大ボタンは枠線の上にまたがせ、図の中身に重ねない */
+  .mu-expand {
+    position: absolute; top: -14px; right: var(--sp-2); z-index: 1;
+    height: 28px; min-width: 28px; padding: 0 10px; font-size: 0.8rem;
+    background: var(--paper); border-color: var(--rule); border-radius: 100px; color: var(--ink-2);
+  }
+  .mu-expand:hover { color: var(--ink); background: var(--paper-2); }
+  .mu-expand svg { width: 14px; height: 14px; }
+  .mu-lightbox {
+    width: min(1200px, 96vw); max-width: none; max-height: 92dvh; padding: 0;
+    border: 1px solid var(--rule); border-radius: var(--radius);
+    background: var(--paper); color: var(--ink); box-shadow: var(--shadow);
+  }
+  .mu-lightbox::backdrop { background: rgb(10 16 22 / 0.6); }
+  .mu-lightbox .mu-drawer-head { padding-left: var(--sp-2); }
+  .mu-lightbox .mu-drawer-head strong { font-size: 0.875rem; font-weight: 500; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mu-lightbox figure { margin: 0; padding: var(--sp-3); overflow: auto; }
+  .mu-lightbox figure > svg { width: 100%; min-width: 760px; }
+
+  /* ---- コード ---- */
+  /* 本文中の長いコード（URL・コマンド）は画面幅で折り返す */
+  :not(pre) > code { overflow-wrap: anywhere; }
+  .mu-code { position: relative; margin: var(--sp-3) 0; }
+  .mu-code > pre { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); padding-right: 88px; }
+  .mu-copy {
+    position: absolute; top: var(--sp-1); right: var(--sp-1);
+    height: 32px; padding: 0 10px; font-size: 0.8rem;
+    background: var(--surface); border-color: var(--rule); color: var(--ink-2);
+  }
+  .mu-copy svg { width: 16px; height: 16px; }
+
+  /* ---- 確認問題 ---- */
+  .mu-quiz-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); max-width: var(--measure); margin: var(--sp-2) 0; font-size: 0.875rem; color: var(--ink-2); }
+  .mu-quiz-tools .mu-btn { border-color: var(--rule); height: 36px; white-space: nowrap; }
+  .quiz { background: var(--surface); border-radius: var(--radius); transition: border-color .15s, box-shadow .15s; }
+  .quiz:hover { border-color: color-mix(in srgb, var(--link) 45%, var(--rule)); }
+  :is(.quiz, .more) summary { position: relative; list-style: none; padding-right: 48px; border-radius: var(--radius); }
+  :is(.quiz, .more) summary::-webkit-details-marker { display: none; }
+  :is(.quiz, .more) summary::after {
+    content: ""; position: absolute; right: var(--sp-2); top: calc(var(--sp-2) + 0.2em); width: 20px; height: 20px;
+    background: var(--ink-2); transition: transform .2s;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .quiz details[open] > summary::after, details:is(.quiz, .more)[open] > summary::after { transform: rotate(180deg); }
+  :is(.quiz, .more) summary:hover { background: var(--paper-2); }
+  .quiz details summary { padding-right: 32px; }
+  .quiz details summary::after { right: 0; top: calc(var(--sp-1) + 0.2em); }
+  details.quiz[open] { box-shadow: var(--shadow); border-color: color-mix(in srgb, var(--link) 45%, var(--rule)); }
+  .quiz .answer { position: relative; }
+  .quiz .answer::before { content: "答え"; display: inline-block; margin-top: var(--sp-2); padding: 0 8px; font-size: 0.75rem; font-weight: 700; color: var(--paper); background: var(--link); border-radius: 4px; }
+  .quiz .answer > :first-child { margin-top: var(--sp-1); }
+  .quiz details .answer::before { margin-top: 0; }
+  details::details-content { transition: block-size .25s ease, content-visibility .25s allow-discrete; overflow: clip; block-size: 0; }
+  details[open]::details-content { block-size: auto; }
+
+  /* ---- 折りたたみ補足（what-is-jev の .more など） ---- */
+  .more { background: var(--surface); border-radius: var(--radius); }
+  .more summary::after { background: var(--link); }
+
+  /* ---- 参考リンク・フッター ---- */
+  .refs li::marker { color: var(--ink-2); }
+  .refs a { text-decoration-thickness: 1px; }
+  .refs a:hover { text-decoration-thickness: 2px; }
+
+  /* ---- 右下のボタン（先頭へ） ---- */
+  .mu-fab {
+    position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--rule); box-shadow: var(--shadow);
+    opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .mu-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+
+  /* ---- 通知 ---- */
+  .mu-toast {
+    position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60;
+    transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    padding: var(--sp-1) var(--sp-2); border-radius: 8px;
+    background: var(--ink); color: var(--paper); font-size: 0.875rem; box-shadow: var(--shadow);
+    transition: opacity .2s, transform .2s;
+  }
+  .mu-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 600px) {
+    .mu-topbar-inner { padding: 0 var(--sp-2); gap: var(--sp-1); }
+    .mu-home .label, .mu-where .t-page, .mu-where .sep, .mu-btn .label { display: none; }
+    .mu-btn { padding: 0 8px; }
+    .mu-expand .label { display: inline; }
+    /* 狭い画面で1列目が1文字ずつ折り返さないよう、セルに最小幅を持たせる（はみ出した分は表の中で横スクロール） */
+    .table-wrap th, .table-wrap td { min-width: 5em; }
+    .cover { padding-top: var(--sp-4); }
+    .mu-fab { right: var(--sp-2); bottom: var(--sp-2); }
+    .toc { padding: var(--sp-2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after, ::details-content { transition: none !important; animation: none !important; }
+  }
+  @media print {
+    .mu-topbar, .mu-fab, .mu-toast, .mu-anchor, .mu-copy, .mu-expand, .mu-quiz-tools, .mu-scroll-hint, .mu-skip { display: none !important; }
+    .page { display: block; max-width: none; }
+    .page > .toc { position: static; max-height: none; border: 0; }
+    .mu-more-left, .mu-more-right { -webkit-mask-image: none; mask-image: none; }
+    .prose figure, .quiz, .table-wrap, .callout { break-inside: avoid; box-shadow: none; }
+  }
+</style>
+<script>try{var t=localStorage.getItem('ln-theme'),f=localStorage.getItem('ln-fs'),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);if(f==='l'||f==='xl')r.setAttribute('data-fs',f);}catch(e){}</script>
+<!-- modern-ui:end -->
 </head>
 <body>
 <div class="page">
@@ -608,5 +906,347 @@
     <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
   </footer>
 </div>
+<!-- modern-ui-js:start -->
+<script>
+/* モダンUIレイヤー（全レポート共通）。本文の HTML には手を加えず、読み込み後に操作部品だけを足す */
+(() => {
+  'use strict';
+  const d = document, root = d.documentElement;
+  const page = d.querySelector('.page'), main = d.querySelector('main');
+  if (!page || !main) return;
+  root.classList.add('mu-js');
+
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+  };
+  const svg = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  const ICON = {
+    back: svg('<path d="m15 18-6-6 6-6"/>'),
+    toc: svg('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>'),
+    text: svg('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'),
+    auto: svg('<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"/>'),
+    light: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+    dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+    up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+    copy: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    check: svg('<path d="M20 6 9 17l-5-5"/>'),
+    expand: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'),
+    close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  };
+  const el = (tag, attrs = {}, html = '') => {
+    const n = d.createElement(tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (html) n.innerHTML = html;
+    return n;
+  };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const cover = d.querySelector('.cover');
+  const toc = d.querySelector('.toc');
+  const h1 = cover && cover.querySelector('h1');
+  const pageTitle = h1 ? h1.textContent.trim() : d.title;
+  const back = cover && cover.querySelector('.back');
+
+  /* ---- 通知 ---- */
+  const toast = el('div', { class: 'mu-toast', role: 'status', 'aria-live': 'polite' });
+  let toastTimer;
+  const say = (msg) => {
+    toast.textContent = msg;
+    toast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800);
+  };
+  const copyText = (text) => {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((ok, ng) => {
+      const ta = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      d.body.appendChild(ta);
+      ta.select();
+      try { d.execCommand('copy') ? ok() : ng(); } catch (e) { ng(e); }
+      ta.remove();
+    });
+  };
+
+  /* ---- 本文へスキップ・上部バー ---- */
+  if (!main.id) main.id = 'main';
+  const skip = el('a', { class: 'mu-skip', href: '#' + main.id }, '本文へスキップ');
+  const bar = el('div', { class: 'mu-topbar' },
+    '<div class="mu-topbar-inner">' +
+      '<a class="mu-home" aria-label="学習ノートの一覧に戻る" href="' + (back ? back.getAttribute('href') : '../index.html') + '">' + ICON.back + '<span class="label">学習ノート</span></a>' +
+      '<div class="mu-where" aria-hidden="true"><span class="t t-page"></span><span class="sep">›</span><span class="t t-sec"></span></div>' +
+      '<div class="mu-actions">' +
+        (toc ? '<button type="button" class="mu-btn mu-toc-btn" aria-haspopup="dialog" aria-label="目次を開く">' + ICON.toc + '<span class="label">目次</span></button>' : '') +
+        '<button type="button" class="mu-btn mu-fs-btn">' + ICON.text + '<span class="label"></span></button>' +
+        '<button type="button" class="mu-btn mu-theme-btn"><span class="ic"></span><span class="label"></span></button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="mu-progress" aria-hidden="true"></div>');
+  d.body.prepend(skip, bar);
+  bar.querySelector('.t-page').textContent = pageTitle;
+  const whereBox = bar.querySelector('.mu-where'), whereSec = bar.querySelector('.t-sec');
+  const progress = bar.querySelector('.mu-progress');
+
+  /* 文字サイズ: 標準 → 大 → 特大 */
+  const FS = [['', '標準'], ['l', '大'], ['xl', '特大']];
+  const fsBtn = bar.querySelector('.mu-fs-btn');
+  const renderFs = () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const label = (FS.find((f) => f[0] === cur) || FS[0])[1];
+    fsBtn.querySelector('.label').textContent = '文字 ' + label;
+    fsBtn.setAttribute('aria-label', '文字サイズ: ' + label + '（押すと切り替え）');
+    fsBtn.title = '文字サイズ: ' + label;
+  };
+  fsBtn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const next = FS[(FS.findIndex((f) => f[0] === cur) + 1) % FS.length];
+    next[0] ? root.setAttribute('data-fs', next[0]) : root.removeAttribute('data-fs');
+    store.set('ln-fs', next[0] || null);
+    renderFs();
+    say('文字サイズ: ' + next[1]);
+    onScroll();
+  });
+  renderFs();
+
+  /* 配色: 自動（端末に合わせる）→ ライト → ダーク */
+  const THEMES = [['auto', '自動'], ['light', 'ライト'], ['dark', 'ダーク']];
+  const themeBtn = bar.querySelector('.mu-theme-btn');
+  const renderTheme = () => {
+    const cur = root.getAttribute('data-theme') || 'auto';
+    const label = (THEMES.find((t) => t[0] === cur) || THEMES[0])[1];
+    themeBtn.querySelector('.ic').outerHTML = '<span class="ic">' + ICON[cur] + '</span>';
+    themeBtn.querySelector('.label').textContent = label;
+    themeBtn.setAttribute('aria-label', '配色: ' + label + '（押すと切り替え）');
+    themeBtn.title = '配色: ' + label;
+  };
+  themeBtn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme') || 'auto';
+    const next = THEMES[(THEMES.findIndex((t) => t[0] === cur) + 1) % THEMES.length];
+    next[0] === 'auto' ? root.removeAttribute('data-theme') : root.setAttribute('data-theme', next[0]);
+    store.set('ln-theme', next[0] === 'auto' ? null : next[0]);
+    renderTheme();
+    say('配色: ' + next[1]);
+  });
+  renderTheme();
+
+  /* ---- 読了目安 ---- */
+  const meta = cover && cover.querySelector('.meta');
+  if (meta) {
+    const chars = main.textContent.replace(/\s+/g, '').length;
+    meta.appendChild(el('li', {}, '読了目安 約' + Math.max(1, Math.round(chars / 500)) + '分'));
+  }
+
+  /* ---- 見出しのリンク ---- */
+  const headText = new Map();
+  main.querySelectorAll('h2, h3').forEach((h, i) => {
+    headText.set(h, h.textContent.trim());
+    if (!h.id) h.id = 'sec-' + (i + 1);
+    const a = el('a', { class: 'mu-anchor', href: '#' + h.id, 'aria-label': '「' + headText.get(h) + '」へのリンクをコピー' }, '#');
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.replaceState(null, '', '#' + h.id);
+      h.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      copyText(location.href).then(() => say('見出しへのリンクをコピーしました'), () => say('リンクをアドレス欄に表示しました'));
+    });
+    h.appendChild(a);
+  });
+
+  /* ---- 目次: 引き出し（狭い画面）と現在地の強調 ---- */
+  let drawer = null;
+  if (toc) {
+    const list = toc.querySelector('ol, ul');
+    drawer = el('dialog', { class: 'mu-drawer', 'aria-label': '目次' },
+      '<div class="mu-drawer-head"><strong>目次</strong><button type="button" class="mu-btn mu-close" aria-label="目次を閉じる">' + ICON.close + '</button></div>');
+    const nav = el('nav', { 'aria-label': '目次' });
+    if (list) nav.appendChild(list.cloneNode(true));
+    drawer.appendChild(nav);
+    d.body.appendChild(drawer);
+    const tocBtn = bar.querySelector('.mu-toc-btn');
+    tocBtn.addEventListener('click', () => {
+      drawer.showModal();
+      const act = drawer.querySelector('a.is-active');
+      if (act) act.scrollIntoView({ block: 'center' });
+    });
+    drawer.querySelector('.mu-close').addEventListener('click', () => drawer.close());
+    drawer.addEventListener('click', (e) => {
+      if (e.target === drawer || e.target.closest('a')) drawer.close();
+    });
+  }
+  const tocLinks = toc ? [...toc.querySelectorAll('a[href^="#"]'), ...drawer.querySelectorAll('a[href^="#"]')] : [];
+  const targets = [];
+  const seen = new Set();
+  tocLinks.forEach((a) => {
+    const id = decodeURIComponent(a.getAttribute('href').slice(1));
+    const h = d.getElementById(id);
+    if (h && !seen.has(id)) { seen.add(id); targets.push({ id, h }); }
+  });
+  const h2s = [...main.querySelectorAll('h2')];
+  let activeId = null, activeH2 = null;
+
+  const setActive = (id) => {
+    if (id === activeId) return;
+    activeId = id;
+    tocLinks.forEach((a) => {
+      const on = id && a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', !!on);
+      on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
+    });
+    // サイドの目次が長いときは、強調した項目が見える位置まで目次だけをスクロール
+    const a = toc && toc.querySelector('a.is-active');
+    if (a && toc.scrollHeight > toc.clientHeight + 4) {
+      const r = a.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if (r.top < tr.top + 24 || r.bottom > tr.bottom - 24) toc.scrollTop += r.top - tr.top - tr.height / 3;
+    }
+  };
+
+  /* ---- 先頭へ戻る ---- */
+  const fab = el('button', { type: 'button', class: 'mu-btn mu-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
+  fab.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    bar.querySelector('.mu-home').focus({ preventScroll: true });
+  });
+  d.body.append(fab, toast);
+
+  /* ---- スクロールに連動する部品（読了バー・現在地・先頭へ） ---- */
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY, max = root.scrollHeight - window.innerHeight;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    const barH = bar.offsetHeight, line = barH + 40;
+    whereBox.classList.toggle('is-shown', !!cover && cover.getBoundingClientRect().bottom < barH);
+    fab.classList.toggle('is-shown', y > 800);
+
+    let cur = null;
+    if (max > 0 && y >= max - 2 && targets.length) cur = targets[targets.length - 1];
+    else for (const t of targets) { if (t.h.getBoundingClientRect().top <= line) cur = t; else break; }
+    setActive(cur ? cur.id : null);
+
+    let sec = null;
+    for (const h of h2s) { if (h.getBoundingClientRect().top <= line) sec = h; else break; }
+    if (cur && h2s.includes(cur.h)) sec = cur.h;
+    if (sec !== activeH2) { activeH2 = sec; whereSec.textContent = sec ? headText.get(sec) : ''; }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  /* ---- 表: 横にはみ出すときは端をぼかし、ひとこと添える ---- */
+  const scrollers = [];
+  main.querySelectorAll('.table-wrap').forEach((w) => {
+    const hint = el('p', { class: 'mu-scroll-hint', 'aria-hidden': 'true' }, '← 表は横にスクロールできます →');
+    w.after(hint);
+    scrollers.push({ w, hint, mask: true });
+  });
+
+  /* ---- 図: 拡大表示 ---- */
+  const lightbox = el('dialog', { class: 'mu-lightbox', 'aria-label': '図の拡大表示' },
+    '<div class="mu-drawer-head"><strong></strong><button type="button" class="mu-btn mu-close" aria-label="拡大表示を閉じる">' + ICON.close + '</button></div>');
+  lightbox.querySelector('.mu-close').addEventListener('click', () => lightbox.close());
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener('close', () => { const f = lightbox.querySelector('figure'); if (f) f.remove(); });
+  d.body.appendChild(lightbox);
+  main.querySelectorAll('figure').forEach((fig) => {
+    const pic = fig.querySelector(':scope > svg');
+    if (!pic) return;
+    const wrap = el('div', { class: 'mu-fig' });
+    fig.before(wrap);
+    wrap.appendChild(fig);
+    const cap = fig.querySelector('figcaption');
+    const label = (cap ? cap.textContent : (pic.querySelector('title') || {}).textContent || '図').trim();
+    const btn = el('button', { type: 'button', class: 'mu-btn mu-expand', 'aria-label': '図を拡大表示: ' + label }, ICON.expand + '<span class="label">拡大</span>');
+    btn.addEventListener('click', () => {
+      const f = el('figure', { class: fig.className });
+      f.appendChild(pic.cloneNode(true));
+      lightbox.querySelector('.mu-drawer-head strong').textContent = label;
+      lightbox.appendChild(f);
+      lightbox.showModal();
+    });
+    wrap.appendChild(btn);
+    const hint = el('p', { class: 'mu-scroll-hint', 'aria-hidden': 'true' }, '← 図は横にスクロールできます（「拡大」で全体表示）→');
+    wrap.after(hint);
+    scrollers.push({ w: fig, hint, mask: false });
+  });
+  const updateScroller = (s) => {
+    const max = s.w.scrollWidth - s.w.clientWidth;
+    const can = max > 4;
+    s.hint.classList.toggle('is-shown', can);
+    if (s.mask) {
+      s.w.classList.toggle('mu-more-right', can && s.w.scrollLeft < max - 4);
+      s.w.classList.toggle('mu-more-left', can && s.w.scrollLeft > 4);
+    }
+  };
+  scrollers.forEach((s) => s.w.addEventListener('scroll', () => updateScroller(s), { passive: true }));
+  const updateScrollers = () => scrollers.forEach(updateScroller);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(updateScrollers);
+    scrollers.forEach((s) => ro.observe(s.w));
+  } else addEventListener('resize', updateScrollers);
+
+  /* ---- コードのコピー ---- */
+  main.querySelectorAll('pre').forEach((pre) => {
+    const wrap = el('div', { class: 'mu-code' });
+    pre.before(wrap);
+    wrap.appendChild(pre);
+    const btn = el('button', { type: 'button', class: 'mu-btn mu-copy', 'aria-label': 'コードをコピー' }, ICON.copy + '<span>コピー</span>');
+    btn.addEventListener('click', () => {
+      copyText(pre.innerText.replace(/\n$/, '')).then(() => {
+        btn.innerHTML = ICON.check + '<span>コピー済み</span>';
+        say('コードをコピーしました');
+        setTimeout(() => { btn.innerHTML = ICON.copy + '<span>コピー</span>'; }, 1600);
+      }, () => say('コピーできませんでした'));
+    });
+    wrap.appendChild(btn);
+  });
+
+  /* ---- 確認問題: 答えの一括表示 ---- */
+  const quizzes = [...main.querySelectorAll('.quiz')];
+  const answers = [...main.querySelectorAll('details.quiz, .quiz details')];
+  if (answers.length >= 2) {
+    const tools = el('div', { class: 'mu-quiz-tools' },
+      '<span>全' + quizzes.length + '問。問題を押すと答えが開きます</span><button type="button" class="mu-btn"></button>');
+    const tbtn = tools.querySelector('button');
+    const render = () => {
+      const allOpen = answers.every((x) => x.open);
+      tbtn.textContent = allOpen ? '答えをすべて隠す' : '答えをすべて表示';
+      tbtn.setAttribute('aria-pressed', String(allOpen));
+    };
+    tbtn.addEventListener('click', () => {
+      const open = !answers.every((x) => x.open);
+      answers.forEach((x) => { x.open = open; });
+      render();
+    });
+    answers.forEach((x) => x.addEventListener('toggle', render));
+    quizzes[0].before(tools);
+    render();
+  }
+
+  /* ---- 印刷時は答えも含めてすべて開く ---- */
+  let closedForPrint = [];
+  addEventListener('beforeprint', () => {
+    closedForPrint = [...d.querySelectorAll('details:not([open])')];
+    closedForPrint.forEach((x) => { x.open = true; });
+  });
+  addEventListener('afterprint', () => { closedForPrint.forEach((x) => { x.open = false; }); closedForPrint = []; });
+
+  // #付きURLで開いたとき、上部バーの追加やフォント読み込みで見出しの位置がずれるので合わせ直す
+  // （読み手が自分でスクロールし始めたら触らない）
+  let userMoved = false;
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((t) => addEventListener(t, () => { userMoved = true; }, { once: true, passive: true }));
+  const realignHash = () => {
+    if (userMoved || !location.hash) return;
+    let t = null;
+    try { t = d.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (t) t.scrollIntoView({ behavior: 'instant' });
+  };
+
+  realignHash();
+  update();
+  updateScrollers();
+  if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { realignHash(); onScroll(); updateScrollers(); });
+  addEventListener('load', () => { realignHash(); onScroll(); }, { once: true });
+})();
+</script>
+<!-- modern-ui-js:end -->
 </body>
 </html>
