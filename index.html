@@ -7,280 +7,189 @@
 <meta name="description" content="Claude Code に調べさせて、あとから読み返すための学習ノート。テーマごとに1ページ。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Klee+One:wght@600&family=Zen+Kaku+Gothic+New:wght@700&display=swap" rel="stylesheet">
 <style>
-  /* ---- design tokens（各レポートも同じ値を使う） ---- */
-  :root {
-    --paper: #f3f5f2;
-    --paper-2: #e9ede8;
-    --ink: #14202b;
-    --ink-2: #55636f;
-    --rule: #d3dad6;
-    --marker: #ffe56b;          /* 蛍光ペン。目立たせる要素はこれだけ */
-    --marker-ink: #14202b;
-    --link: #1f4b99;
-    --font-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
-    --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI", sans-serif;
-    /* 余白: 8px ベース、5段階 */
-    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
-      --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
-    }
-  }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: inherit; }
-  a:focus-visible, button:focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; }
-
-  .page { max-width: 760px; margin: 0 auto; padding: 0 var(--sp-3) var(--sp-5); }
-
-  /* ---- 表紙 ---- */
-  .cover { padding: var(--sp-5) 0 var(--sp-4); border-bottom: 2px solid var(--ink); }
-  .cover h1 {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(2.6rem, 9vw, 4.4rem);
-    line-height: 1.1;
-    letter-spacing: 0.02em;
-    margin: 0 0 var(--sp-2);
-  }
-  .cover .lead { font-size: 1.05rem; max-width: 34em; margin: 0 0 var(--sp-3); }
-  .cover .facts { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: 0.92rem; color: var(--ink-2); margin: 0; padding: 0; list-style: none; }
-  .cover .facts strong { color: var(--ink); font-weight: 500; }
-
-  /* ---- 絞り込み ---- */
-  .filters { display: flex; flex-wrap: wrap; gap: var(--sp-1); padding: var(--sp-3) 0 var(--sp-2); }
-  .filters button {
-    font: inherit; font-size: 0.9rem; font-weight: 500;
-    background: none; color: var(--ink-2);
-    border: 1px solid var(--rule); border-radius: 100px;
-    padding: 5px 14px; cursor: pointer;
-  }
-  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .filters .count { font-size: 0.85rem; color: var(--ink-2); align-self: center; margin-left: auto; }
-
-  /* ---- 索引（月ごと） ---- */
-  .month { margin-top: var(--sp-4); }
-  .month h2 {
-    font-family: var(--font-body); font-weight: 500;
-    font-size: 0.9rem; color: var(--ink-2);
-    margin: 0 0 var(--sp-1); padding-bottom: var(--sp-1);
-    border-bottom: 1px solid var(--rule);
-  }
-  .month[hidden] { display: none; }
-
-  .entry {
-    display: grid;
-    grid-template-columns: 4.5em 1fr;
-    gap: var(--sp-2);
-    padding: var(--sp-3) 0;
-    border-bottom: 1px solid var(--rule);
-  }
-  .entry[hidden] { display: none; }
-  .entry .day { font-size: 0.85rem; color: var(--ink-2); padding-top: 0.55em; font-variant-numeric: tabular-nums; }
-  .entry h3 {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.35rem;
-    line-height: 1.4;
-    margin: 0 0 var(--sp-1);
-  }
-  .entry h3 a { text-decoration: none; }
-  /* 蛍光ペンの下塗り。読みたい行に触れたときだけ光る */
-  .entry h3 a span {
-    background-image: linear-gradient(transparent 62%, var(--marker) 62%, var(--marker) 92%, transparent 92%);
-    background-size: 0% 100%; background-repeat: no-repeat;
-    transition: background-size .25s ease-out;
-  }
-  .entry h3 a:hover span, .entry h3 a:focus-visible span, .entry.is-new h3 a span { background-size: 100% 100%; }
-  .entry p { margin: 0 0 var(--sp-1); font-size: 0.95rem; max-width: 40em; color: var(--ink); }
-  .entry .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-  .entry .tags li { font-size: 0.78rem; color: var(--ink-2); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 8px; }
-  .entry .tags li.new { border-color: var(--marker); background: var(--marker); color: var(--marker-ink); font-weight: 500; }
-  .entry .more { font-size: 0.82rem; color: var(--ink-2); margin-top: var(--sp-1); }
-  .entry .more a { color: var(--link); }
-
-  .empty { padding: var(--sp-4) 0; color: var(--ink-2); }
-
-  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-2); }
-  footer a { color: var(--link); }
-
-  @media (max-width: 600px) {
-    .page { padding: 0 var(--sp-2) var(--sp-4); }
-    .cover { padding-top: var(--sp-4); }
-    .entry { grid-template-columns: 1fr; gap: 4px; }
-    .entry .day { padding-top: 0; }
-    .entry h3 { font-size: 1.2rem; }
-  }
-  @media (prefers-reduced-motion: reduce) { .entry h3 a span { transition: none; } }
-</style>
-<!-- modern-ui:start （トップページ版の操作部品。配色・文字サイズの設定はレポートと共有） -->
-<style id="mu-style">
   /* =====================================================================
-     モダンUIレイヤー（トップページ版）
-     各レポートと同じ上部バー・文字サイズ／配色切替・先頭へ戻るを、一覧ページ向けに調整したもの。
-     配色と文字サイズの設定はレポートと共有（localStorage: ln-theme / ln-fs）
+     学習ノート トップページ（「書き込みノート」デザイン）
+     色・書体・余白は各レポートの notebook-ui と同じ値。配色と文字サイズの設定はレポートと共有
      ===================================================================== */
   :root {
-    --surface: #fbfcfa;
-    --topbar-h: 56px;
-    --radius: 10px;
-    --shadow: 0 1px 2px rgb(20 32 43 / 0.06), 0 6px 20px rgb(20 32 43 / 0.07);
-    --focus: var(--link);
+    --desk: #F3F5F7; --grid-line: rgba(42, 75, 141, .06); --sheet: #FFFFFF;
+    --ink: #22262B; --ink-sub: #46505B; --ink-muted: #4C5560; --rule: #B9C2CC;
+    --hl: #FFE24A; --hl-fill: #FFE24A; --red-pen: #C8332A; --blue-ink: #2A4B8D; --link: #1F5BB5; --code-bg: #F3F5F7;
+    --sheet-shadow: 0 1px 2px rgba(30, 40, 55, .08), 0 8px 24px rgba(30, 40, 55, .06);
+    --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    --font-title: "Zen Kaku Gothic New", "BIZ UDPGothic", "Hiragino Sans", sans-serif;
+    --font-hand: "Klee One", "BIZ UDPGothic", cursive;
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --topbar-h: 64px;
+    --fs-title: 2rem; --fs-h3: calc(19rem / 17); --fs-sum: calc(16rem / 17);
+    --fs-small: calc(15rem / 17); --fs-meta: calc(14rem / 17);
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --surface: #18212a;
-      --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 6px 20px rgb(0 0 0 / 0.3);
+      --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+      --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+      --hl: rgba(255, 226, 74, .34); --hl-fill: rgba(255, 226, 74, .28); --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+      --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --paper: #131a20; --paper-2: #1b242c; --ink: #e9edf0; --ink-2: #9aa7b2;
-    --rule: #2b363f; --marker: #d9c33f; --marker-ink: #131a20; --link: #8fb3ee;
-    --surface: #18212a;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 6px 20px rgb(0 0 0 / 0.3);
+    --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+    --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+    --hl: rgba(255, 226, 74, .34); --hl-fill: rgba(255, 226, 74, .28); --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+    --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
     color-scheme: dark;
   }
-  :root[data-fs="l"] { font-size: 112.5%; }
-  :root[data-fs="xl"] { font-size: 125%; }
-  body { font-size: 1rem; }
-  html { scroll-padding-top: var(--topbar-h); }
-  ::selection { background: var(--marker); color: var(--marker-ink); }
-  :where(button, input, summary, [tabindex]):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-
-  /* ---- 本文へスキップ ---- */
-  .mu-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--paper); border-radius: 6px; }
-  .mu-skip:focus { top: var(--sp-1); }
-
-  /* ---- 上部バー ---- */
-  .mu-topbar {
-    position: sticky; top: 0; z-index: 50;
-    height: var(--topbar-h);
-    background: color-mix(in srgb, var(--paper) 86%, transparent);
-    -webkit-backdrop-filter: saturate(1.4) blur(12px);
-    backdrop-filter: saturate(1.4) blur(12px);
-    border-bottom: 1px solid var(--rule);
+  html { font-size: 106.25%; scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + 72px); }
+  :root[data-fs="l"] { font-size: 118.75%; }
+  :root[data-fs="xl"] { font-size: 131.25%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--ink); background-color: var(--desk);
+    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--font-body); font-size: 1rem; line-height: 1.9; letter-spacing: 0.02em;
+    -webkit-font-smoothing: antialiased; text-size-adjust: 100%;
   }
-  .mu-topbar-inner { max-width: 760px; height: 100%; margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2); }
-  .mu-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
-  .mu-brand svg { width: 20px; height: 20px; }
-  .mu-spacer { flex: 1; }
-  .mu-actions { display: flex; gap: 4px; flex-shrink: 0; }
-  .mu-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    min-width: 40px; height: 40px; padding: 0 10px;
-    font: inherit; font-size: 0.875rem; font-weight: 500; color: var(--ink);
-    background: none; border: 1px solid transparent; border-radius: 8px; cursor: pointer;
-  }
-  .mu-btn:hover { background: var(--paper-2); }
-  .mu-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
-  .mu-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--link); transform-origin: 0 50%; transform: scaleX(0); }
+  a { color: var(--link); text-underline-offset: 0.2em; }
+  :where(a, button, input, [tabindex]):focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+  ::selection { background: var(--hl); }
+  mark { background: linear-gradient(transparent 60%, var(--hl) 60%); color: inherit; }
 
-  /* ---- 検索と絞り込み ---- */
-  .mu-search { position: relative; margin-top: var(--sp-4); }
-  .mu-search svg { position: absolute; left: 14px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: var(--ink-2); pointer-events: none; }
-  .mu-search input {
+  /* ---- 白い紙を1枚 ---- */
+  .page { max-width: 880px; margin: 0 auto; padding: var(--sp-4) var(--sp-3) var(--sp-5); }
+  .sheet { background: var(--sheet); padding: 48px 56px 64px; box-shadow: var(--sheet-shadow); }
+
+  /* ---- 表紙 ---- */
+  .cover h1 { margin: 0 0 var(--sp-2); font-family: var(--font-title); font-weight: 700; font-size: var(--fs-title); line-height: 1.4; letter-spacing: 0; }
+  .cover .lead { max-width: 40em; margin: 0 0 var(--sp-2); }
+  .cover .facts { display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); margin: 0; padding: 0; list-style: none; font-size: var(--fs-meta); color: var(--ink-muted); }
+  .cover .facts strong { color: var(--ink); font-weight: 700; }
+
+  /* ---- 検索・絞り込み ---- */
+  .search { position: relative; margin: var(--sp-4) 0 0; }
+  .search svg { position: absolute; left: 14px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: var(--ink-sub); pointer-events: none; }
+  .search input {
     width: 100%; height: 48px; padding: 0 48px 0 44px;
-    font: inherit; font-size: 1rem; color: var(--ink);
-    background: var(--surface); border: 1px solid var(--rule); border-radius: 100px;
-    -webkit-appearance: none; appearance: none;
+    font: inherit; font-size: 1rem; color: var(--ink); letter-spacing: 0.02em;
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; -webkit-appearance: none; appearance: none;
   }
-  .mu-search input::placeholder { color: var(--ink-2); opacity: 1; }
-  .mu-search input:focus { outline: none; border-color: var(--link); box-shadow: 0 0 0 3px color-mix(in srgb, var(--link) 25%, transparent); }
-  .mu-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
-  .mu-search kbd {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    min-width: 24px; padding: 0 6px; text-align: center;
-    font-family: var(--font-mono, ui-monospace, Consolas, monospace); font-size: 0.8rem; color: var(--ink-2);
-    border: 1px solid var(--rule); border-radius: 6px; background: var(--paper);
+  .search input::placeholder { color: var(--ink-muted); opacity: 1; }
+  .search input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--link) 25%, transparent); }
+  .search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .search kbd {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%); min-width: 24px; padding: 0 6px; text-align: center;
+    font-family: var(--font-mono); font-size: var(--fs-meta); line-height: 1.6; color: var(--ink-sub); border: 1px solid var(--rule); border-radius: 6px;
   }
-  .mu-search .mu-clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border-radius: 100px; color: var(--ink-2); }
-  .mu-search .mu-clear[hidden], .mu-search kbd[hidden] { display: none; }
-  @media (hover: none) { .mu-search kbd { display: none; } }
-  .filters { position: sticky; top: var(--topbar-h); z-index: 20; background: var(--paper); padding-top: var(--sp-2); }
-  .filters button { transition: background-color .15s, color .15s, border-color .15s; }
-  .filters button:hover { border-color: var(--ink-2); color: var(--ink); }
-  .filters button[aria-pressed="true"]:hover { color: var(--paper); }
+  .search .clear { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); border: 0; background: none; }
+  .search .clear[hidden], .search kbd[hidden] { display: none; }
+  @media (hover: none) { .search kbd { display: none; } }
 
-  /* ---- 一覧の各項目：行全体を押せるカード ---- */
-  .entry { position: relative; margin: 0 calc(var(--sp-2) * -1); padding: var(--sp-3) var(--sp-2); border-radius: var(--radius); transition: background-color .15s, box-shadow .15s; }
-  .entry:hover, .entry:focus-within { background: var(--surface); box-shadow: var(--shadow); border-bottom-color: transparent; }
-  /* カードのどこに触れても、タイトルに蛍光ペンが引かれる */
-  .entry:hover h3 a span, .entry:focus-within h3 a span { background-size: 100% 100%; }
-  .entry h3 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
-  .entry h3 a:focus-visible { outline: none; }
-  .entry h3 a:focus-visible::after { outline: 3px solid var(--focus); outline-offset: 2px; }
-  .entry .more a { position: relative; z-index: 1; }
-  .entry mark { background: color-mix(in srgb, var(--marker) 70%, transparent); color: inherit; border-radius: 2px; }
-
-  /* ---- シリーズ（タグを押すとそのシリーズだけに絞り込む） ---- */
-  .entry .tags li.series { padding: 0; border-color: color-mix(in srgb, var(--link) 45%, var(--rule)); }
-  .entry .tags li.series button {
-    position: relative; z-index: 1; padding: 1px 8px;
-    font: inherit; color: var(--link); background: none; border: 0; border-radius: 4px; cursor: pointer;
+  .filters {
+    position: sticky; top: var(--topbar-h); z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1);
+    margin: 0 -8px; padding: var(--sp-2) 8px; background: var(--sheet);
   }
-  .entry .tags li.series button:hover { background: color-mix(in srgb, var(--link) 12%, transparent); }
-  .series-bar {
-    display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1);
-    margin: var(--sp-1) 0 0; padding: var(--sp-1) var(--sp-2);
-    font-size: 0.9rem; background: color-mix(in srgb, var(--link) 10%, transparent); border-radius: var(--radius);
+  .filters button {
+    min-height: 44px; padding: 0 16px; font: inherit; font-size: var(--fs-small); letter-spacing: 0; color: var(--ink);
+    background: none; border: 1.5px dashed var(--rule); border-radius: 8px; cursor: pointer;
   }
+  .filters button:hover { border-color: var(--ink-sub); }
+  .filters button[aria-pressed="true"] { background: var(--hl-fill); border-color: var(--ink); font-weight: 700; }
+  .filters .count { margin-left: auto; font-size: var(--fs-meta); color: var(--ink-muted); }
+  .series-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); margin: 0 0 var(--sp-1); padding: var(--sp-1) var(--sp-2); font-size: var(--fs-small); border: 1.5px dashed var(--blue-ink); border-radius: 8px; }
   .series-bar[hidden] { display: none; }
-  .series-bar button { margin-left: auto; font: inherit; font-size: 0.85rem; color: var(--link); background: none; border: 1px solid currentColor; border-radius: 100px; padding: 2px 12px; cursor: pointer; }
+  .series-bar button { margin-left: auto; min-height: 36px; padding: 0 12px; font: inherit; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; }
 
-  /* ---- 先頭へ戻る・通知 ---- */
-  .mu-fab {
-    position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40;
-    width: 48px; height: 48px; border-radius: 50%;
-    background: var(--surface); border: 1px solid var(--rule); box-shadow: var(--shadow);
-    opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s;
+  /* ---- 月ごとの一覧 ---- */
+  .month { margin-top: var(--sp-4); }
+  .month[hidden] { display: none; }
+  .month h2 { margin: 0 0 var(--sp-1); font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); line-height: 1.5; letter-spacing: 0.04em; color: var(--ink); }
+  .entry {
+    position: relative; display: grid; grid-template-columns: 5.5em 1fr; gap: var(--sp-2);
+    padding: 20px 0; border-bottom: 1px dashed var(--rule);
   }
-  .mu-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
-  .mu-toast {
-    position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60;
-    transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
-    padding: var(--sp-1) var(--sp-2); border-radius: 8px;
-    background: var(--ink); color: var(--paper); font-size: 0.875rem; box-shadow: var(--shadow);
-    transition: opacity .2s, transform .2s;
+  .month h2 + .entry { border-top: 1px dashed var(--rule); }
+  .entry[hidden] { display: none; }
+  .entry .day { padding-top: 2px; font-size: var(--fs-meta); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+  .entry h3 { margin: 0 0 4px; font-size: var(--fs-h3); font-weight: 700; line-height: 1.6; letter-spacing: 0.01em; }
+  .entry h3 a { color: var(--ink); text-decoration: none; }
+  .entry h3 a::after { content: ""; position: absolute; inset: 0; }
+  .entry h3 a:focus-visible { outline: none; }
+  .entry h3 a:focus-visible::after { outline: 3px solid var(--link); outline-offset: 2px; }
+  .entry:hover h3 a span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+  /* 新着: タイトルの下に蛍光ペンの線 */
+  .entry.is-new h3 a span { background: linear-gradient(var(--hl), var(--hl)) 0 100% / 100% 0.32em no-repeat; padding-bottom: 1px; }
+  /* 読み終えた記事: タイトルの左に赤ペンのチェック */
+  .entry .done { display: inline-block; width: 1.2em; height: 1.2em; margin-right: 6px; vertical-align: -0.2em; color: var(--red-pen); }
+  .entry p { max-width: 40em; margin: 0 0 4px; font-size: var(--fs-sum); line-height: 1.8; color: var(--ink-sub); }
+  .entry .tags { display: flex; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; font-size: var(--fs-meta); color: var(--ink-muted); }
+  .entry .tags li.new { display: none; }
+  .entry .tags li + li::before { content: "・"; }
+  .entry .tags li.series::before { content: "　"; }
+  .entry .tags li.series button { position: relative; z-index: 1; padding: 0; font: inherit; color: var(--link); background: none; border: 0; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+  .entry .more { position: relative; z-index: 1; margin-top: 4px; font-size: var(--fs-meta); color: var(--ink-muted); }
+  .empty { padding: var(--sp-4) 0; color: var(--ink-sub); }
+
+  footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1.5px dashed var(--rule); font-size: var(--fs-meta); color: var(--ink-muted); }
+  footer p { margin: 0; }
+
+  /* ---- 上部バー・先頭へ・通知 ---- */
+  .nb-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); border-radius: 8px; }
+  .nb-skip:focus { top: var(--sp-1); }
+  .nb-topbar {
+    position: sticky; top: 0; z-index: 50; height: var(--topbar-h); letter-spacing: 0;
+    background: color-mix(in srgb, var(--desk) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
   }
-  .mu-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+  .nb-topbar-inner { max-width: 880px; height: 100%; margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2); }
+  .nb-brand { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: none; font-family: var(--font-title); font-weight: 700; font-size: calc(18rem / 17); }
+  .nb-actions { display: flex; gap: var(--sp-1); margin-left: auto; }
+  .nb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 14px;
+    font: inherit; font-size: var(--fs-small); line-height: 1; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer;
+  }
+  .nb-btn:hover { border-color: var(--ink-sub); }
+  .nb-btn[aria-pressed="true"] { border-color: var(--ink); font-weight: 700; }
+  .nb-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nb-fab { position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40; width: 48px; height: 48px; padding: 0; box-shadow: var(--sheet-shadow); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s; }
+  .nb-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+  .nb-toast { position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60; transform: translate(-50%, 16px); opacity: 0; pointer-events: none; padding: var(--sp-1) var(--sp-2); border-radius: 8px; background: var(--ink); color: var(--sheet); font-size: var(--fs-small); transition: opacity .2s, transform .2s; }
+  .nb-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
 
   @media (max-width: 600px) {
-    .mu-topbar-inner { padding: 0 var(--sp-2); gap: var(--sp-1); }
-    .mu-btn .label { display: none; }
-    .mu-btn { padding: 0 8px; }
-    .mu-search { margin-top: var(--sp-3); }
-    .entry { margin: 0 calc(var(--sp-1) * -1); padding: var(--sp-2) var(--sp-1); }
-    .mu-fab { right: var(--sp-2); bottom: var(--sp-2); }
+    :root { --topbar-h: 56px; }
+    .page { padding: var(--sp-2) 10px var(--sp-4); }
+    .sheet { padding: 32px 20px 48px; }
+    .nb-topbar-inner { padding: 0 var(--sp-2); gap: var(--sp-1); }
+    .nb-btn .label-wide { display: none; }
+    .nb-btn { padding: 0 10px; }
+    /* 狭い画面では絞り込みボタンを1行に並べ、はみ出した分は横スクロール */
+    .filters { flex-wrap: nowrap; overflow-x: auto; margin: 0 -20px; padding: 12px 20px; gap: 6px; scrollbar-width: none; }
+    .filters button { flex: none; padding: 0 12px; }
+    .filters .count { flex: none; padding-right: 4px; }
+    .entry { grid-template-columns: 1fr; gap: 0; }
+    .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { transition: none !important; animation: none !important; }
   }
   @media print {
-    .mu-topbar, .mu-fab, .mu-toast, .mu-skip, .mu-search, .filters { display: none !important; }
-    .entry { box-shadow: none !important; break-inside: avoid; }
+    body { background: #fff; }
+    .nb-topbar, .nb-fab, .nb-toast, .nb-skip, .search, .filters { display: none !important; }
+    .page { padding: 0; } .sheet { box-shadow: none; padding: 0; }
+    .entry { break-inside: avoid; }
   }
 </style>
 <script>try{var t=localStorage.getItem('ln-theme'),f=localStorage.getItem('ln-fs'),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);if(f==='l'||f==='xl')r.setAttribute('data-fs',f);}catch(e){}</script>
-<!-- modern-ui:end -->
 </head>
 <body>
 <div class="page">
+<div class="sheet">
 
   <header class="cover">
     <h1>学習ノート</h1>
@@ -288,15 +197,15 @@
     <ul class="facts">
       <li><strong id="total-count">10</strong> テーマ</li>
       <li>最終更新 <strong id="last-updated">2026-09-19</strong></li>
-      <li>各ページは1ファイルで完結</li>
+      <li>読み終えたノートには赤ペンのチェックが付きます</li>
     </ul>
   </header>
 
-  <div class="mu-search" role="search">
+  <div class="search" role="search">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <input type="search" id="q" placeholder="タイトル・内容で検索" aria-label="ノートをキーワードで検索" autocomplete="off" enterkeyhint="search">
     <kbd aria-hidden="true">/</kbd>
-    <button type="button" class="mu-btn mu-clear" aria-label="検索語を消す" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <button type="button" class="nb-btn clear" aria-label="検索語を消す" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </div>
 
   <nav class="filters" aria-label="分野で絞り込む">
@@ -314,7 +223,7 @@
   ENTRY TEMPLATE（新しいレポートを追加するときは、該当する月の <section class="month"> の先頭にこの形で入れる。
   月のセクションがなければ <section class="month" data-month="YYYY-MM"><h2>YYYY年M月</h2> … </section> を先頭に作る。
   data-topic は ai / infra / security / dev のいずれか。複数なら半角スペース区切り。
-  直前の新着エントリから class="is-new" と <li class="new">新着</li> を外し、新しいエントリに付け替える。
+  直前の新着エントリから class="is-new" を外し、新しいエントリに付け替える（新着はタイトル下の蛍光ペンの線で示す）。
   連載（シリーズ）の1回なら data-series="シリーズ名" と data-order="何回目か（数字）" を足す（任意）。
   シリーズ名は同じシリーズで一字一句そろえる。タグは自動で付くので <ul class="tags"> には書かない。
   ここに書いた data-topic / data-series / data-order は、各レポート末尾の「シリーズ」「関連ノート」の表示にも使われる。）
@@ -324,7 +233,7 @@
     <div>
       <h3><a href="reports/slug.html"><span>タイトル</span></a></h3>
       <p>2〜3行の要約。</p>
-      <ul class="tags"><li class="new">新着</li><li>AI</li></ul>
+      <ul class="tags"><li>AI</li></ul>
     </div>
   </article>
 -->
@@ -337,7 +246,7 @@
         <div>
           <h3><a href="reports/number-systems-and-floating-point.html"><span>基礎理論：基数変換・補数・論理演算・浮動小数点</span></a></h3>
           <p>2/8/10/16進の相互変換、2の補数による負数表現と減算、AND/OR/NOT/XORの真理値表とシフト演算、IEEE754の符号部・指数部・仮数部の構造と丸め誤差・桁落ち・情報落ちを、途中式つきで解説。</p>
-          <ul class="tags"><li class="new">新着</li><li>開発</li></ul>
+          <ul class="tags"><li>開発</li></ul>
         </div>
       </article>
 
@@ -471,6 +380,7 @@
     <p>ソースは <a href="https://github.com/9highfive7/claude-artifacts">github.com/9highfive7/claude-artifacts</a>。生成にかかった費用は <a href="usage-dashboard.html">利用コスト台帳</a> で公開しています。</p>
   </footer>
 </div>
+</div>
 
 <script>
 (function () {
@@ -480,8 +390,19 @@
   const countEl = document.getElementById('visible-count');
   const emptyEl = document.getElementById('empty');
   const qEl     = document.getElementById('q');
-  const clearEl = document.querySelector('.mu-search .mu-clear');
-  const kbdEl   = document.querySelector('.mu-search kbd');
+  const clearEl = document.querySelector('.search .clear');
+  const kbdEl   = document.querySelector('.search kbd');
+
+  // 読み終えたノート（各レポートの目次で全章にチェックが付いたもの）のタイトル左に赤ペンのチェック
+  entries.forEach(e => {
+    const a = e.querySelector('h3 a');
+    if (!a) return;
+    const file = decodeURIComponent(a.getAttribute('href').split('/').pop());
+    let done = null;
+    try { done = localStorage.getItem('ln-done:' + file); } catch (err) {}
+    if (!done) return;
+    a.insertAdjacentHTML('afterbegin', '<svg class="done" viewBox="0 0 24 24" role="img" aria-label="読了"><path d="M3.8 12.6c1.6 1.4 2.8 3.1 3.9 5 2.6-5.7 6.5-10.7 12.4-15.8" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  });
 
   // 件数と最終更新日はエントリから自動で数える（手で直さなくてよい）
   document.getElementById('total-count').textContent = entries.length;
@@ -582,29 +503,19 @@
   apply();
 })();
 </script>
-<!-- modern-ui-js:start -->
 <script>
-/* モダンUIレイヤー（トップページ版）: 上部バー・文字サイズ／配色切替・先頭へ戻る */
+/* 上部バー（文字サイズ・ダーク切替）と先頭へ戻る。設定はレポートと共有（localStorage: ln-theme / ln-fs） */
 (() => {
   'use strict';
   const d = document, root = d.documentElement;
   const main = d.querySelector('main');
   if (!main) return;
-  root.classList.add('mu-js');
-
   const store = {
     get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
   };
   const svg = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
-  const ICON = {
-    book: svg('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>'),
-    text: svg('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'),
-    auto: svg('<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"/>'),
-    light: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
-    dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
-    up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>'),
-  };
+  const ICON = { dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'), up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>') };
   const el = (tag, attrs = {}, html = '') => {
     const n = d.createElement(tag);
     for (const k in attrs) n.setAttribute(k, attrs[k]);
@@ -612,46 +523,32 @@
     return n;
   };
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-
-  const toast = el('div', { class: 'mu-toast', role: 'status', 'aria-live': 'polite' });
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  const toast = el('div', { class: 'nb-toast', role: 'status', 'aria-live': 'polite' });
   let toastTimer;
-  const say = (msg) => {
-    toast.textContent = msg;
-    toast.classList.add('is-shown');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800);
-  };
+  const say = (msg) => { toast.textContent = msg; toast.classList.add('is-shown'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800); };
 
-  /* ---- 本文へスキップ・上部バー ---- */
   if (!main.id) main.id = 'main';
-  const skip = el('a', { class: 'mu-skip', href: '#' + main.id }, '一覧へスキップ');
-  const bar = el('div', { class: 'mu-topbar' },
-    '<div class="mu-topbar-inner">' +
-      '<a class="mu-brand" href="#top">' + ICON.book + '<span>学習ノート</span></a>' +
-      '<span class="mu-spacer"></span>' +
-      '<div class="mu-actions">' +
-        '<button type="button" class="mu-btn mu-fs-btn">' + ICON.text + '<span class="label"></span></button>' +
-        '<button type="button" class="mu-btn mu-theme-btn"><span class="ic"></span><span class="label"></span></button>' +
+  const skip = el('a', { class: 'nb-skip', href: '#' + main.id }, '一覧へスキップ');
+  const bar = el('div', { class: 'nb-topbar' },
+    '<div class="nb-topbar-inner">' +
+      '<a class="nb-brand" href="#top">学習ノート</a>' +
+      '<div class="nb-actions">' +
+        '<button type="button" class="nb-btn nb-fs-btn"><span class="label"></span></button>' +
+        '<button type="button" class="nb-btn nb-theme-btn" aria-label="ダークモード">' + ICON.dark + '<span class="label-wide">ダーク</span></button>' +
       '</div>' +
-    '</div>' +
-    '<div class="mu-progress" aria-hidden="true"></div>');
+    '</div>');
   d.body.prepend(skip, bar);
   if (!d.getElementById('top')) d.body.id = 'top';
-  bar.querySelector('.mu-brand').addEventListener('click', (e) => {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
-  });
-  const progress = bar.querySelector('.mu-progress');
+  bar.querySelector('.nb-brand').addEventListener('click', (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' }); });
 
-  /* 文字サイズ: 標準 → 大 → 特大（レポートと設定を共有） */
   const FS = [['', '標準'], ['l', '大'], ['xl', '特大']];
-  const fsBtn = bar.querySelector('.mu-fs-btn');
+  const fsBtn = bar.querySelector('.nb-fs-btn');
   const renderFs = () => {
     const cur = root.getAttribute('data-fs') || '';
     const label = (FS.find((f) => f[0] === cur) || FS[0])[1];
     fsBtn.querySelector('.label').textContent = '文字 ' + label;
     fsBtn.setAttribute('aria-label', '文字サイズ: ' + label + '（押すと切り替え）');
-    fsBtn.title = '文字サイズ: ' + label;
   };
   fsBtn.addEventListener('click', () => {
     const cur = root.getAttribute('data-fs') || '';
@@ -663,48 +560,27 @@
   });
   renderFs();
 
-  /* 配色: 自動 → ライト → ダーク（レポートと設定を共有） */
-  const THEMES = [['auto', '自動'], ['light', 'ライト'], ['dark', 'ダーク']];
-  const themeBtn = bar.querySelector('.mu-theme-btn');
-  const renderTheme = () => {
-    const cur = root.getAttribute('data-theme') || 'auto';
-    const label = (THEMES.find((t) => t[0] === cur) || THEMES[0])[1];
-    themeBtn.querySelector('.ic').outerHTML = '<span class="ic">' + ICON[cur] + '</span>';
-    themeBtn.querySelector('.label').textContent = label;
-    themeBtn.setAttribute('aria-label', '配色: ' + label + '（押すと切り替え）');
-    themeBtn.title = '配色: ' + label;
-  };
+  const themeBtn = bar.querySelector('.nb-theme-btn');
+  const isDark = () => root.getAttribute('data-theme') === 'dark' || (!root.hasAttribute('data-theme') && darkMq.matches);
+  const renderTheme = () => themeBtn.setAttribute('aria-pressed', String(isDark()));
   themeBtn.addEventListener('click', () => {
-    const cur = root.getAttribute('data-theme') || 'auto';
-    const next = THEMES[(THEMES.findIndex((t) => t[0] === cur) + 1) % THEMES.length];
-    next[0] === 'auto' ? root.removeAttribute('data-theme') : root.setAttribute('data-theme', next[0]);
-    store.set('ln-theme', next[0] === 'auto' ? null : next[0]);
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store.set('ln-theme', next);
     renderTheme();
-    say('配色: ' + next[1]);
+    say(next === 'dark' ? 'ダーク: オン' : 'ダーク: オフ');
   });
+  darkMq.addEventListener && darkMq.addEventListener('change', renderTheme);
   renderTheme();
 
-  /* ---- 先頭へ戻る ---- */
-  const fab = el('button', { type: 'button', class: 'mu-btn mu-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
-  fab.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
-    bar.querySelector('.mu-brand').focus({ preventScroll: true });
-  });
+  const fab = el('button', { type: 'button', class: 'nb-btn nb-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
+  fab.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' }); bar.querySelector('.nb-brand').focus({ preventScroll: true }); });
   d.body.append(fab, toast);
-
   let ticking = false;
-  const update = () => {
-    ticking = false;
-    const y = window.scrollY, max = root.scrollHeight - window.innerHeight;
-    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
-    fab.classList.toggle('is-shown', y > 800);
-  };
-  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
-  addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('resize', onScroll);
+  const update = () => { ticking = false; fab.classList.toggle('is-shown', window.scrollY > 800); };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
   update();
 })();
 </script>
-<!-- modern-ui-js:end -->
 </body>
 </html>
