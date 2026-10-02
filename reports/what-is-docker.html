@@ -36,7 +36,8 @@
     --sheet-shadow: 0 1px 2px rgba(30, 40, 55, .08), 0 8px 24px rgba(30, 40, 55, .06);
     /* 旧デザインの変数名（既存の図・レポート固有スタイルとの互換用） */
     --paper: var(--sheet); --paper-2: var(--code-bg); --ink-2: var(--ink-sub);
-    --marker-ink: #22262B; --note: var(--code-bg); --caution: var(--code-bg);
+    --marker-ink: #22262B;
+    --note: #E3EBF7; --caution: #FBE6E3;   /* 図の中で「種類」を塗り分ける淡い色（強調には使わない） */
     --surface: var(--sheet); --radius: 10px; --shadow: var(--sheet-shadow); --focus: var(--link);
 
     --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
@@ -64,20 +65,20 @@
     :root:not([data-theme="light"]) {
       --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
       --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
-      --marker: #D9C33F; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+      --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
       --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
       --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
-      --marker-ink: #1B1F24;
+      --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
     --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
-    --marker: #D9C33F; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+    --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
     --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
     --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
-    --marker-ink: #1B1F24;
+    --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
     color-scheme: dark;
   }
   /* 文字サイズ切替（rem 基準なので本文・見出しが一緒に拡大する） */
@@ -164,6 +165,7 @@
   .nb-toc-note { margin: var(--sp-2) 0 0; font-size: var(--fs-meta); color: var(--ink-muted); }
 
   /* ---- 本文 ---- */
+  .prose { overflow-wrap: break-word; }   /* 長い英単語・URLが狭い画面からはみ出さないように */
   .prose > :first-child { margin-top: 0; }
   .prose p, .prose ul, .prose ol { max-width: var(--measure); }
   .prose p { margin: 0 0 1.5em; }
@@ -517,7 +519,7 @@
       <li>イメージを <code>docker run</code> で実行すると、<mark>コンテナ</mark>（実行中のインスタンス）が起動する。</li>
       <li>作成したイメージは <strong>レジストリ</strong>（Docker Hubなど）に <code>push</code> して保存・共有でき、他の人や別のサーバーはそこから <code>pull</code> して同じ環境を再現できる。</li>
     </ol>
-    <aside class="memo">覚え方：Dockerfile→イメージ→コンテナは「設計図→型→実物」</aside>
+    <aside class="memo">Dockerfile→イメージ→コンテナ＝設計図→型→実物</aside>
     </div>
 
     <figure>
