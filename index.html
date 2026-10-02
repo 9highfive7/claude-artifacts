@@ -227,6 +227,21 @@
   .entry .more a { position: relative; z-index: 1; }
   .entry mark { background: color-mix(in srgb, var(--marker) 70%, transparent); color: inherit; border-radius: 2px; }
 
+  /* ---- シリーズ（タグを押すとそのシリーズだけに絞り込む） ---- */
+  .entry .tags li.series { padding: 0; border-color: color-mix(in srgb, var(--link) 45%, var(--rule)); }
+  .entry .tags li.series button {
+    position: relative; z-index: 1; padding: 1px 8px;
+    font: inherit; color: var(--link); background: none; border: 0; border-radius: 4px; cursor: pointer;
+  }
+  .entry .tags li.series button:hover { background: color-mix(in srgb, var(--link) 12%, transparent); }
+  .series-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1);
+    margin: var(--sp-1) 0 0; padding: var(--sp-1) var(--sp-2);
+    font-size: 0.9rem; background: color-mix(in srgb, var(--link) 10%, transparent); border-radius: var(--radius);
+  }
+  .series-bar[hidden] { display: none; }
+  .series-bar button { margin-left: auto; font: inherit; font-size: 0.85rem; color: var(--link); background: none; border: 1px solid currentColor; border-radius: 100px; padding: 2px 12px; cursor: pointer; }
+
   /* ---- 先頭へ戻る・通知 ---- */
   .mu-fab {
     position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40;
@@ -292,18 +307,22 @@
     <button type="button" data-topic="dev" aria-pressed="false">開発</button>
     <span class="count" id="visible-count"></span>
   </nav>
+  <p class="series-bar" id="series-bar" hidden><span>シリーズ「<strong></strong>」のノートを表示中</span><button type="button">解除</button></p>
 
   <main id="index">
 <!--
   ENTRY TEMPLATE（新しいレポートを追加するときは、該当する月の <section class="month"> の先頭にこの形で入れる。
   月のセクションがなければ <section class="month" data-month="YYYY-MM"><h2>YYYY年M月</h2> … </section> を先頭に作る。
   data-topic は ai / infra / security / dev のいずれか。複数なら半角スペース区切り。
-  直前の新着エントリから class="is-new" と <li class="new">新着</li> を外し、新しいエントリに付け替える。）
+  直前の新着エントリから class="is-new" と <li class="new">新着</li> を外し、新しいエントリに付け替える。
+  連載（シリーズ）の1回なら data-series="シリーズ名" と data-order="何回目か（数字）" を足す（任意）。
+  シリーズ名は同じシリーズで一字一句そろえる。タグは自動で付くので <ul class="tags"> には書かない。
+  ここに書いた data-topic / data-series / data-order は、各レポート末尾の「シリーズ」「関連ノート」の表示にも使われる。）
 
-  <article class="entry is-new" data-topic="ai" data-date="YYYY-MM-DD">
+  <article class="entry is-new" data-topic="ai" data-date="YYYY-MM-DD" data-series="シリーズ名（任意）" data-order="1">
     <div class="day">M月D日</div>
     <div>
-      <h3><a href="reports/YYYY-MM-DD-slug.html"><span>タイトル</span></a></h3>
+      <h3><a href="reports/slug.html"><span>タイトル</span></a></h3>
       <p>2〜3行の要約。</p>
       <ul class="tags"><li class="new">新着</li><li>AI</li></ul>
     </div>
@@ -469,6 +488,33 @@
   const dates = entries.map(e => e.dataset.date).filter(Boolean).sort();
   if (dates.length) document.getElementById('last-updated').textContent = dates[dates.length - 1];
 
+  // シリーズ（data-series / data-order）: タグを自動で付け、押すとそのシリーズだけに絞り込む（?series= でも指定できる）
+  let series = new URLSearchParams(location.search).get('series') || '';
+  const seriesBar = document.getElementById('series-bar');
+  function setSeries(s) {
+    series = s;
+    const url = new URL(location.href);
+    s ? url.searchParams.set('series', s) : url.searchParams.delete('series');
+    history.replaceState(null, '', url);
+    apply();
+    if (s) seriesBar.scrollIntoView({ block: 'nearest' });
+  }
+  entries.forEach(e => {
+    const s = (e.dataset.series || '').trim();
+    const tags = e.querySelector('.tags');
+    if (!s || !tags) return;
+    const li = document.createElement('li');
+    li.className = 'series';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = 'シリーズ「' + s + '」' + (e.dataset.order ? ' 第' + e.dataset.order + '回' : '');
+    b.title = 'このシリーズのノートだけを表示';
+    b.addEventListener('click', () => setSeries(s));
+    li.appendChild(b);
+    tags.appendChild(li);
+  });
+  seriesBar.querySelector('button').addEventListener('click', () => setSeries(''));
+
   // 検索: タイトル・要約・タグを対象に、空白区切りの語をすべて含むものを残す（全角半角・大小文字は区別しない）
   const norm = s => s.normalize('NFKC').toLowerCase();
   const marks = entries.map(e => [...e.querySelectorAll('h3 a span, p')]);
@@ -500,13 +546,16 @@
     entries.forEach((e, i) => {
       const okTopic = topic === 'all' || (e.dataset.topic || '').split(/\s+/).includes(topic);
       const okQuery = terms.every(t => haystack[i].includes(t));
-      const ok = okTopic && okQuery;
+      const okSeries = !series || (e.dataset.series || '').trim() === series;
+      const ok = okTopic && okQuery && okSeries;
       e.hidden = !ok; if (ok) shown++;
       highlight(i, ok ? terms : []);
     });
     months.forEach(m => { m.hidden = !m.querySelector('.entry:not([hidden])'); });
-    countEl.textContent = topic === 'all' && !terms.length ? '' : `${shown} 件`;
-    emptyEl.textContent = terms.length ? '条件に合うノートが見つかりません。語を減らすか、分野を「すべて」にしてみてください。' : 'この分野のノートはまだありません。';
+    countEl.textContent = topic === 'all' && !terms.length && !series ? '' : `${shown} 件`;
+    seriesBar.hidden = !series;
+    seriesBar.querySelector('strong').textContent = series;
+    emptyEl.textContent = terms.length || series ? '条件に合うノートが見つかりません。語を減らすか、分野を「すべて」にしてみてください。' : 'この分野のノートはまだありません。';
     emptyEl.hidden = shown !== 0;
     clearEl.hidden = !qEl.value;
     kbdEl.hidden = !!qEl.value || document.activeElement === qEl;

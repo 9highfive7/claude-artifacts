@@ -380,6 +380,38 @@
   .refs a { text-decoration-thickness: 1px; }
   .refs a:hover { text-decoration-thickness: 2px; }
 
+  /* ---- シリーズの前後移動・関連ノート（トップページの一覧から自動生成） ---- */
+  .cover .meta li.mu-series-chip { background: color-mix(in srgb, var(--link) 12%, transparent); }
+  .mu-series-chip a { color: var(--link); font-weight: 500; text-decoration: none; }
+  .mu-series-chip a:hover { text-decoration: underline; }
+  .mu-related { margin-top: var(--sp-5); }
+  .mu-related h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; line-height: 1.4; margin: 0 0 var(--sp-2); }
+  .mu-related > section + section { margin-top: var(--sp-4); }
+  .mu-series { padding: var(--sp-3); background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+  .mu-series-list { margin: 0; padding-left: 1.6em; }
+  .mu-series-list li + li { margin-top: 4px; }
+  .mu-series-list .is-current { font-weight: 700; }
+  .mu-series-list li:has(.is-current)::marker { color: var(--link); font-weight: 700; }
+  .mu-pn { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: var(--sp-3); }
+  .mu-pn .is-next { grid-column: 2; text-align: right; }
+  .mu-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--sp-2); }
+  .mu-card {
+    display: flex; flex-direction: column; gap: 4px; height: 100%;
+    padding: var(--sp-2); color: var(--ink); text-decoration: none;
+    background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius);
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+  }
+  .mu-also .mu-card { background: var(--surface); }
+  .mu-card:hover { border-color: color-mix(in srgb, var(--link) 50%, var(--rule)); box-shadow: var(--shadow); transform: translateY(-2px); }
+  .mu-card-meta { font-size: 0.8rem; color: var(--ink-2); }
+  .mu-card-title { font-weight: 700; line-height: 1.5; }
+  .mu-card:hover .mu-card-title { color: var(--link); }
+  .mu-card-sum { font-size: 0.875rem; line-height: 1.6; color: var(--ink-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  @media (max-width: 600px) {
+    .mu-pn { grid-template-columns: 1fr; }
+    .mu-pn .is-next { grid-column: 1; }
+  }
+
   /* ---- 右下のボタン（先頭へ） ---- */
   .mu-fab {
     position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40;
@@ -1384,6 +1416,115 @@
     closedForPrint.forEach((x) => { x.open = true; });
   });
   addEventListener('afterprint', () => { closedForPrint.forEach((x) => { x.open = false; }); closedForPrint = []; });
+
+  /* ---- シリーズの前後移動・関連ノート ----
+     トップページ（index.html）の一覧を台帳として読み込み、
+     同じシリーズ（data-series / data-order）と同じ分野（data-topic）のノートへのリンクを末尾に出す。
+     新しいノートは index.html に1行足すだけで、過去のノートにも自動で反映される。
+     ファイルを直接開いた場合（file://）は読み込めないので何も出さない */
+  const TOPIC = { ai: 'AI', infra: 'インフラ', security: 'セキュリティ', dev: '開発' };
+  const indexHref = back ? back.getAttribute('href') : '../index.html';
+  const here = decodeURIComponent(location.pathname.split('/').pop() || '');
+  const node = (tag, cls, text) => {
+    const n = d.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const card = (n, label) => {
+    const a = node('a', 'mu-card');
+    a.href = n.url;
+    const meta = [label, n.date, n.topics.map((t) => TOPIC[t] || t).join('・')].filter(Boolean).join('　');
+    a.append(node('span', 'mu-card-meta', meta), node('strong', 'mu-card-title', n.title));
+    if (n.summary) a.appendChild(node('span', 'mu-card-sum', n.summary));
+    return a;
+  };
+  const loadRelated = async () => {
+    if (!/^https?:$/.test(location.protocol) || !here) return;
+    const base = new URL(indexHref, location.href);
+    const res = await fetch(base, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const notes = [...doc.querySelectorAll('article.entry')].map((e) => {
+      const a = e.querySelector('h3 a');
+      if (!a) return null;
+      const url = new URL(a.getAttribute('href'), base);
+      return {
+        url: url.href,
+        file: decodeURIComponent(url.pathname.split('/').pop()),
+        title: a.textContent.trim(),
+        summary: ((e.querySelector('p') || {}).textContent || '').trim(),
+        topics: (e.dataset.topic || '').split(/\s+/).filter(Boolean),
+        date: e.dataset.date || '',
+        series: (e.dataset.series || '').trim(),
+        order: Number(e.dataset.order) || 0,
+      };
+    }).filter(Boolean);
+    const me = notes.find((n) => n.file === here);
+    if (!me) return;
+
+    const aside = node('aside', 'mu-related');
+    aside.setAttribute('aria-label', '次に読む');
+    let members = [];
+    if (me.series) {
+      members = notes.filter((n) => n.series === me.series)
+        .sort((a, b) => (a.order - b.order) || a.date.localeCompare(b.date));
+      const i = members.indexOf(me);
+      const seriesUrl = new URL(base);
+      seriesUrl.searchParams.set('series', me.series);
+      // 表紙にシリーズ名と何回目かを出す
+      if (meta) {
+        const li = node('li', 'mu-series-chip');
+        const a = node('a', '', 'シリーズ「' + me.series + '」 ' + (i + 1) + '/' + members.length);
+        a.href = seriesUrl.href;
+        li.appendChild(a);
+        meta.prepend(li);
+      }
+      const box = node('section', 'mu-series');
+      const h = node('h2', '', 'シリーズ「' + me.series + '」');
+      const ol = node('ol', 'mu-series-list');
+      members.forEach((n) => {
+        const li = node('li');
+        if (n === me) {
+          li.appendChild(node('span', 'is-current', n.title + '（このページ）'));
+          li.firstChild.setAttribute('aria-current', 'page');
+        } else {
+          const a = node('a', '', n.title);
+          a.href = n.url;
+          li.appendChild(a);
+        }
+        ol.appendChild(li);
+      });
+      const pn = node('div', 'mu-pn');
+      if (members[i - 1]) pn.appendChild(card(members[i - 1], '← 前の回')).classList.add('is-prev');
+      if (members[i + 1]) pn.appendChild(card(members[i + 1], '次の回 →')).classList.add('is-next');
+      box.append(h, ol);
+      if (pn.children.length) box.appendChild(pn);
+      aside.appendChild(box);
+    }
+
+    // 関連ノート: 分野が重なるものを、重なりの多い順・新しい順に最大4件（シリーズの回は除く）
+    const mine = new Set(me.topics);
+    const related = notes
+      .filter((n) => n !== me && !members.includes(n))
+      .map((n) => ({ n, score: n.topics.filter((t) => mine.has(t)).length }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => (b.score - a.score) || b.n.date.localeCompare(a.n.date))
+      .slice(0, 4)
+      .map((x) => x.n);
+    if (related.length) {
+      const box = node('section', 'mu-also');
+      const ul = node('ul', 'mu-cards');
+      related.forEach((n) => { const li = node('li'); li.appendChild(card(n)); ul.appendChild(li); });
+      box.append(node('h2', '', '関連ノート'), ul);
+      aside.appendChild(box);
+    }
+    if (!aside.children.length) return;
+    const footer = page.querySelector(':scope > footer');
+    footer ? footer.before(aside) : page.appendChild(aside);
+    onScroll();
+  };
+  loadRelated().catch(() => {});
 
   // #付きURLで開いたとき、上部バーの追加やフォント読み込みで見出しの位置がずれるので合わせ直す
   // （読み手が自分でスクロールし始めたら触らない）
