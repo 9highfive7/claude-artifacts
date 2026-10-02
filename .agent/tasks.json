@@ -1,0 +1,10 @@
+{
+  "_schema": {
+    "id": "文字列。例: T-001",
+    "status": "todo | doing | done",
+    "title": "タスクの題",
+    "blocker": "止まっている理由（なければ null）",
+    "updated": "ISO 8601 の更新日時（任意）"
+  },
+  "tasks": []
+}

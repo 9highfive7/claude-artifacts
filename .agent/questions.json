@@ -1,0 +1,12 @@
+{
+  "_schema": {
+    "id": "文字列。例: Q-001",
+    "urgency": "high | medium | low",
+    "question": "人間への問い",
+    "default_action": "回答がない場合にエージェントが取る行動",
+    "status": "open | answered",
+    "answer": "回答（未回答なら null）",
+    "asked_at": "ISO 8601 の日時（任意）"
+  },
+  "questions": []
+}

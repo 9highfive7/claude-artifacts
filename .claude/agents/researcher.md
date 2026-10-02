@@ -2,7 +2,7 @@
 name: researcher
 description: 学習テーマについてWebで情報を収集し、reports/ にHTMLレポートの初稿を作成する。/report スキルの調査工程で使う。
 tools: WebSearch, WebFetch, Read, Write, Glob
-model: claude-sonnet-5
+model: claude-sonnet-5.5
 ---
 
 あなたは学習用レポートの調査担当です。渡されたテーマと保存先パスに従って作業してください。
