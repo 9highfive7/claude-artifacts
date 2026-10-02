@@ -14,20 +14,20 @@ argument-hint: <学びたいテーマ>
 - `git pull` で最新にする
 - テーマから英語スラッグを決め、保存先を `reports/<slug>.html` とする（日付は付けない。同名があれば末尾に -2 などを付ける）
 
-## 2. 調査・初稿（Sonnet 5）
-researcher サブエージェントを呼び出す。呼び出し時は model に sonnet を明示する。
+## 2. 調査・初稿（Sonnet 5.5）
+researcher サブエージェントを呼び出す。model は指定しない（エージェント定義の `claude-sonnet-5-5` がそのまま使われる。別名の sonnet を渡すと版が変わることがある）。
 テーマと保存先パスを渡し、完了を待つ。
 
 ## 3. デザイン仕上げ（Opus 5.5）
-designer サブエージェントを呼び出す。呼び出し時は model に opus を明示する。
+designer サブエージェントを呼び出す。model は指定しない（エージェント定義の `claude-opus-5-5` がそのまま使われる）。
 2で作られたファイルのパスを渡し、完了を待つ。
 
 ## 4. トップページ更新
 index.html を読み、先頭の <!-- ENTRY TEMPLATE --> コメントの書式どおりに
 新しい <article class="entry"> を該当する月の <section class="month"> の先頭に追加する。
 月のセクションがなければ新しく作る。
-直前まで新着だったエントリから class="is-new" と <li class="new">新着</li> を外し、
-新しいエントリに付ける。data-topic は ai / infra / security / dev から選ぶ。
+直前まで新着だったエントリから class="is-new" を外し、新しいエントリに付ける
+（新着はタイトル下の蛍光ペンの線で示すので、「新着」タグは書かない）。data-topic は ai / infra / security / dev から選ぶ。
 テーマに連載（シリーズ）名や「第N回」が書かれていれば、data-series="シリーズ名" と data-order="N" を付ける。
 既存のシリーズの続きなら、index.html にある同じシリーズのエントリとシリーズ名を一字一句そろえ、
 回数は既存の最大値の次にする。シリーズの指定がなければ付けない（各レポート末尾の
