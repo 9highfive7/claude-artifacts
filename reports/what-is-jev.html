@@ -249,6 +249,16 @@
   figcaption { margin-top: var(--sp-1); font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
   figcaption b:first-child { color: var(--ink); margin-right: 0.3em; }
 
+  /* ---- やさしく図解（大きな絵と少ない言葉。縦長の図にして、スマホでも図の文字を12px前後に保つ） ---- */
+  .eli5 { max-width: 440px; margin: var(--sp-4) auto; }
+  .eli5 .nb-fig, .eli5 figure { margin: 0; }
+  .prose :is(h2, h3, h4) + .eli5 { margin-top: 0; }
+  .eli5-label {
+    display: inline-block; margin: 0 0 var(--sp-2); padding: 0 12px;
+    font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.6; letter-spacing: 0;
+    color: var(--blue-ink); border: 1.5px dashed var(--blue-ink); border-radius: 10px;
+  }
+
   /* ---- 確認問題 ---- */
   .quiz { max-width: var(--measure); margin: 0; border: 0; border-bottom: 1px dashed var(--rule); border-radius: 0; background: none; }
   :not(.quiz) + .quiz { border-top: 1px dashed var(--rule); }
@@ -432,6 +442,7 @@
     .memo { flex-basis: 100%; padding-left: 1em; }
     table.nb-term tbody tr > :first-child { white-space: normal; min-width: 7em; }
     .table-wrap :is(th, td) { min-width: 5em; }
+    .eli5 figure > svg { padding: 12px; }
     .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
   }
   @media (prefers-reduced-motion: reduce) {
