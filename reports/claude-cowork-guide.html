@@ -249,6 +249,16 @@
   figcaption { margin-top: var(--sp-1); font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
   figcaption b:first-child { color: var(--ink); margin-right: 0.3em; }
 
+  /* ---- やさしく図解（大きな絵と少ない言葉。縦長の図にして、スマホでも図の文字を12px前後に保つ） ---- */
+  .eli5 { max-width: 440px; margin: var(--sp-4) auto; }
+  .eli5 .nb-fig, .eli5 figure { margin: 0; }
+  .prose :is(h2, h3, h4) + .eli5 { margin-top: 0; }
+  .eli5-label {
+    display: inline-block; margin: 0 0 var(--sp-2); padding: 0 12px;
+    font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.6; letter-spacing: 0;
+    color: var(--blue-ink); border: 1.5px dashed var(--blue-ink); border-radius: 10px;
+  }
+
   /* ---- 確認問題 ---- */
   .quiz { max-width: var(--measure); margin: 0; border: 0; border-bottom: 1px dashed var(--rule); border-radius: 0; background: none; }
   :not(.quiz) + .quiz { border-top: 1px dashed var(--rule); }
@@ -432,6 +442,7 @@
     .memo { flex-basis: 100%; padding-left: 1em; }
     table.nb-term tbody tr > :first-child { white-space: normal; min-width: 7em; }
     .table-wrap :is(th, td) { min-width: 5em; }
+    .eli5 figure > svg { padding: 12px; }
     .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -519,6 +530,42 @@
 
     <p>いちばん大きな違いは、1問1答ではないことです。通常のチャットは質問に1回答えて終わりますが、Coworkは「こういう成果物が欲しい」と伝えると、計画を立て、複数のステップを自分で実行し、フォーマット済みの文書・整理されたファイル・まとめられた調査結果として返してきます。公式サイトの表現を借りると「How（やり方）ではなくWhat（何が欲しいか）を伝える」ツールです。</p>
 
+    <div class="eli5">
+      <span class="eli5-label">やさしく図解</span>
+      <figure>
+        <svg viewBox="0 0 360 486" role="img" aria-label="上は通常のチャットで、あなたが質問し、AIが答える1往復。下はClaude Coworkで、欲しい成果物を伝えると、Claudeが計画、実行をくり返し、成果物をあなたに返す。">
+          <title>通常のチャットとClaude Coworkの違い</title>
+          <defs><marker id="c1-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <text x="20" y="32" text-anchor="start" font-size="16" font-weight="700">通常のチャット</text>
+          <text x="70" y="78" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+          <g transform="translate(70 124)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+          <line x1="112" y1="112" x2="238" y2="112" stroke="currentColor" stroke-width="2.5" marker-end="url(#c1-ah)"/>
+          <text x="175" y="96" text-anchor="middle" font-size="16">質問</text>
+          <line x1="238" y1="138" x2="112" y2="138" stroke="currentColor" stroke-width="2.5" marker-end="url(#c1-ah)"/>
+          <text x="175" y="162" text-anchor="middle" font-size="16">答え</text>
+          <text x="290" y="78" text-anchor="middle" font-size="16" font-weight="700">AI</text>
+          <g transform="translate(290 128)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+          <line x1="20" y1="190" x2="340" y2="190" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+          <text x="20" y="226" text-anchor="start" font-size="16" font-weight="700">Claude Cowork</text>
+          <text x="70" y="270" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+          <g transform="translate(70 318)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+          <line x1="112" y1="306" x2="238" y2="306" stroke="currentColor" stroke-width="2.5" marker-end="url(#c1-ah)"/>
+          <text x="175" y="290" text-anchor="middle" font-size="16">欲しい成果物</text>
+          <text x="290" y="270" text-anchor="middle" font-size="16" font-weight="700">Claude</text>
+          <g transform="translate(290 314)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+          <line x1="290" y1="338" x2="290" y2="388" stroke="currentColor" stroke-width="2.5" marker-end="url(#c1-ah)"/>
+          <rect x="260" y="394" width="80" height="48" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="300.0" y="424.0" text-anchor="middle" font-size="16" font-weight="700">計画</text>
+          <rect x="140" y="394" width="80" height="48" rx="10" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/><text x="180.0" y="424.0" text-anchor="middle" font-size="16" font-weight="700">実行</text>
+          <rect x="20" y="394" width="80" height="48" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="60.0" y="424.0" text-anchor="middle" font-size="16" font-weight="700">成果物</text>
+          <line x1="256" y1="418" x2="226" y2="418" stroke="currentColor" stroke-width="2.5" marker-end="url(#c1-ah)"/>
+          <line x1="136" y1="418" x2="106" y2="418" stroke="currentColor" stroke-width="2.5" marker-end="url(#c1-ah)"/>
+          <line x1="60" y1="388" x2="60" y2="344" stroke="currentColor" stroke-width="2.5" marker-end="url(#c1-ah)"/>
+          <text x="180" y="470" text-anchor="middle" font-size="16" font-weight="700">自分で何度も進める</text>
+        </svg>
+        <figcaption><b>図1</b>通常のチャットとClaude Coworkの違い。チャットは1問1答。Coworkは、欲しい成果物を伝えると、計画から実行までを自分で進めて、成果物を返す。</figcaption>
+      </figure>
+    </div>
+
     <div class="table-wrap">
       <table>
         <caption>通常のチャットとの比較</caption>
@@ -560,6 +607,57 @@
 
     <h3 id="s3-2">「勝手にやらせる度合い」を3段階で選べる</h3>
     <p>Coworkには、Claudeがどこまで確認を取るかを決める3つのモードがあります（公式ヘルプより）。</p>
+
+    <div class="eli5">
+      <span class="eli5-label">やさしく図解</span>
+      <figure>
+        <svg viewBox="0 0 360 448" role="img" aria-label="承認モードの違い。手動で承認は、行動のたびに止まってあなたが許可する。自動承認は、止まらず進み、Claudeが安全を審査して危険なものをブロックする。すべての承認をスキップは、止まらず、チェックもしない。">
+          <title>3つの承認モードの違い</title>
+          <defs><marker id="c2-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <line x1="20" y1="152" x2="340" y2="152" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+          <line x1="20" y1="302" x2="340" y2="302" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+          <rect x="20" y="14" width="104" height="30" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+          <text x="32" y="35" text-anchor="start" font-size="16" font-weight="700">手動で承認</text>
+          <line x1="46" y1="74" x2="80" y2="74" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="106" y1="74" x2="140" y2="74" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="160" y1="74" x2="194" y2="74" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="220" y1="74" x2="254" y2="74" stroke="currentColor" stroke-width="2.5"/>
+          <g transform="translate(93 74)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-9" r="6"/><path d="M-11 11 C-11 -1 11 -1 11 11 Z"/></g>
+          <g transform="translate(207 74)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-9" r="6"/><path d="M-11 11 C-11 -1 11 -1 11 11 Z"/></g>
+          <line x1="274" y1="74" x2="332" y2="74" stroke="currentColor" stroke-width="2.5" marker-end="url(#c2-ah)"/>
+          <circle cx="36" cy="74" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <circle cx="150" cy="74" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <circle cx="264" cy="74" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="116" text-anchor="middle" font-size="16">行動ごとに一時停止</text>
+          <text x="180" y="136" text-anchor="middle" font-size="16">あなたが許可／拒否</text>
+          <rect x="20" y="164" width="88" height="30" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="32" y="185" text-anchor="start" font-size="16" font-weight="700">自動承認</text>
+          <line x1="46" y1="224" x2="80" y2="224" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="106" y1="224" x2="140" y2="224" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="160" y1="224" x2="194" y2="224" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="220" y1="224" x2="254" y2="224" stroke="currentColor" stroke-width="2.5"/>
+          <g transform="translate(93 224)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M0 -14 L12 -9 V3 C12 11 6 16 0 19 C-6 16 -12 11 -12 3 V-9 Z"/><path d="M-5 3 L-1 8 L7 -4" fill="none"/></g>
+          <g transform="translate(207 224)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M0 -14 L12 -9 V3 C12 11 6 16 0 19 C-6 16 -12 11 -12 3 V-9 Z"/><path d="M-5 3 L-1 8 L7 -4" fill="none"/></g>
+          <line x1="274" y1="224" x2="332" y2="224" stroke="currentColor" stroke-width="2.5" marker-end="url(#c2-ah)"/>
+          <circle cx="36" cy="224" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <circle cx="150" cy="224" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <circle cx="264" cy="224" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="266" text-anchor="middle" font-size="16">Claudeが安全を審査</text>
+          <text x="180" y="286" text-anchor="middle" font-size="16">危険なものはブロック</text>
+          <rect x="20" y="314" width="200" height="30" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="32" y="335" text-anchor="start" font-size="16" font-weight="700">すべての承認をスキップ</text>
+          <line x1="46" y1="374" x2="140" y2="374" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="160" y1="374" x2="254" y2="374" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="274" y1="374" x2="332" y2="374" stroke="currentColor" stroke-width="2.5" marker-end="url(#c2-ah)"/>
+          <circle cx="36" cy="374" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <circle cx="150" cy="374" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <circle cx="264" cy="374" r="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="416" text-anchor="middle" font-size="16">止まらず、チェックもなし</text>
+          <text x="180" y="436" text-anchor="middle" font-size="16">信頼できるときだけ</text>
+        </svg>
+        <figcaption><b>図2</b>3つの承認モードの違い（イメージ）。行動ごとの確認を、あなたがするか、Claudeがするか、しないかで決まる。</figcaption>
+      </figure>
+    </div>
     <div class="table-wrap">
       <table>
         <caption>3つの承認モード</caption>
@@ -584,6 +682,34 @@
     </ul>
 
     <h3 id="s3-4">プラグインで「専門家化」する</h3>
+
+    <div class="eli5">
+      <span class="eli5-label">やさしく図解</span>
+      <figure>
+        <svg viewBox="0 0 360 410" role="img" aria-label="プラグインの箱の中に、スキル、コネクタ、サブエージェントの3つが入っている。入れるだけで、初日から専門家のように振る舞う。">
+          <title>プラグインの中身</title>
+          <defs><marker id="c3-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <rect x="20" y="20" width="320" height="272" rx="14" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="50" text-anchor="middle" font-size="18" font-weight="700">プラグイン</text>
+          <rect x="50" y="66" width="260" height="54" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="88" text-anchor="middle" font-size="16" font-weight="700">スキル</text>
+          <text x="180" y="109" text-anchor="middle" font-size="16">手順や専門知識</text>
+          <text x="180" y="138" text-anchor="middle" font-size="16" font-weight="700">＋</text>
+          <rect x="50" y="144" width="260" height="54" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="166" text-anchor="middle" font-size="16" font-weight="700">コネクタ</text>
+          <text x="180" y="187" text-anchor="middle" font-size="16">データ接続</text>
+          <text x="180" y="216" text-anchor="middle" font-size="16" font-weight="700">＋</text>
+          <rect x="50" y="222" width="260" height="54" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="244" text-anchor="middle" font-size="16" font-weight="700">サブエージェント</text>
+          <text x="180" y="265" text-anchor="middle" font-size="16">下請けのAI</text>
+          <line x1="180" y1="296" x2="180" y2="340" stroke="currentColor" stroke-width="2.5" marker-end="url(#c3-ah)"/>
+          <text x="194" y="324" text-anchor="start" font-size="16">入れるだけ</text>
+          <rect x="60" y="346" width="240" height="52" rx="26" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="378" text-anchor="middle" font-size="16" font-weight="700">初日から専門家のように</text>
+        </svg>
+        <figcaption><b>図3</b>プラグインの中身。スキル・コネクタ・サブエージェントを1つにまとめた箱で、入れるだけで使える。</figcaption>
+      </figure>
+    </div>
     <div class="with-memo">
       <p>プラグインは、<mark>スキル（手順や専門知識）＋コネクタ（データ接続）＋サブエージェント（下請けのAI）</mark>を1つのパッケージにまとめたもの。入れるだけで、Claudeが初日からその職種の専門家として振る舞うようにするための仕組みです（公式ヘルプ・公式サイト）。</p>
       <aside class="memo">プラグイン＝スキル＋コネクタ＋サブエージェント</aside>
