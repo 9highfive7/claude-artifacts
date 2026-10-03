@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Codeのコンテキストとコンテキストウィンドウ：仕組みと管理コマンド | 学習ノート</title>
+<!-- notebook-ui:start （全レポート共通の見た目と操作部品。このブロックは編集しない） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Klee+One:wght@600&family=Zen+Kaku+Gothic+New:wght@700&display=swap" rel="stylesheet">
+<style id="nb-style">
+  /* =====================================================================
+     学習ノート「書き込みノート」デザイン（全レポート共通）
+     白い紙のノートに、蛍光ペン（重要語）と赤ペン（要点メモ）だけで書き込んだ見た目。
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文 17px・行間 1.9・字間 0.02em・1行 40字（max-width: 40em）
+     - 文字サイズは タイトル34px／h2 26px／h3 19px／本文17px
+     - 余白は 8px ベース。見出しは前のセクションから離し、直後の本文に近づける
+     - 強調は <mark>（蛍光ペン）と .memo（赤ペン）の2種類だけ
+     ===================================================================== */
+  :root {
+    --desk: #F3F5F7;
+    --grid-line: rgba(42, 75, 141, .06);
+    --sheet: #FFFFFF;
+    --ink: #22262B;
+    --ink-sub: #46505B;
+    --ink-muted: #4C5560;
+    --rule: #B9C2CC;
+    --marker: #FFE24A;
+    --hl: #FFE24A;                 /* 文字に引く蛍光ペン */
+    --marker-fill: #FFE24A;        /* 図の中で1か所だけ塗る蛍光ペン */
+    --red-pen: #C8332A;
+    --blue-ink: #2A4B8D;
+    --link: #1F5BB5;
+    --code-bg: #F3F5F7;
+    --sheet-shadow: 0 1px 2px rgba(30, 40, 55, .08), 0 8px 24px rgba(30, 40, 55, .06);
+    /* 旧デザインの変数名（既存の図・レポート固有スタイルとの互換用） */
+    --paper: var(--sheet); --paper-2: var(--code-bg); --ink-2: var(--ink-sub);
+    --marker-ink: #22262B;
+    --note: #E3EBF7; --caution: #FBE6E3;   /* 図の中で「種類」を塗り分ける淡い色（強調には使わない） */
+    --surface: var(--sheet); --radius: 10px; --shadow: var(--sheet-shadow); --focus: var(--link);
+
+    --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    --font-title: "Zen Kaku Gothic New", "BIZ UDPGothic", "Hiragino Sans", sans-serif;
+    --font-hand: "Klee One", "BIZ UDPGothic", cursive;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --font-display: var(--font-title);
+
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+    --topbar-h: 64px;
+    --toc-w: 230px;
+    --sheet-w: 940px;
+    /* 文字サイズ（17px = 1rem） */
+    --fs-title: 2rem;              /* 34px */
+    --fs-h2: calc(26rem / 17);     /* 26px */
+    --fs-h3: calc(19rem / 17);     /* 19px */
+    --fs-small: calc(15rem / 17);  /* 15px キャプション・目次・メモ */
+    --fs-meta: calc(14rem / 17);   /* 14px メタ情報 */
+    color-scheme: light;
+    interpolate-size: allow-keywords;
+  }
+  /* ---- 夜のノート（ダーク）: 端末の設定に合わせる＋手動切替 ---- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+      --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+      --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+      --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+      --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+      --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+    --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+    --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+    --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+    --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+    --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+    color-scheme: dark;
+  }
+  /* 文字サイズ切替（rem 基準なので本文・見出しが一緒に拡大する） */
+  html { font-size: 106.25%; }
+  :root[data-fs="l"] { font-size: 118.75%; }
+  :root[data-fs="xl"] { font-size: 131.25%; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + var(--sp-2)); }
+  body {
+    margin: 0; color: var(--ink);
+    background-color: var(--desk);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--font-body); font-size: 1rem; line-height: 1.9; letter-spacing: 0.02em;
+    text-align: left; -webkit-font-smoothing: antialiased; text-size-adjust: 100%;
+  }
+  a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :where(a, button, summary, input, [tabindex]):focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+  em, i, cite { font-style: normal; font-weight: 700; }
+  strong, b { font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+  ::selection { background: var(--hl); color: inherit; }
+
+  /* ---- 蛍光ペン（その節で一番大事な語句だけ） ---- */
+  mark { background: linear-gradient(transparent 60%, var(--hl) 60%); color: inherit; padding: 0 0.08em; }
+
+  /* ---- ページの骨組み: 左に目次、右に本文の紙 ---- */
+  .page {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2);
+    margin: 0 auto; padding: var(--sp-4) var(--sp-3) var(--sp-5);
+    display: grid; grid-template-columns: var(--toc-w) minmax(0, var(--sheet-w));
+    column-gap: var(--sp-4); align-items: start; justify-content: center;
+  }
+  .sheet {
+    grid-column: 2; min-width: 0;
+    background: var(--sheet); padding: 48px 56px 64px;
+    box-shadow: var(--sheet-shadow);
+  }
+
+  /* ---- 表紙 ---- */
+  .cover { margin: 0 0 var(--sp-4); padding: 0 0 var(--sp-3); border-bottom: 1.5px dashed var(--rule); }
+  .cover .back { display: inline-block; margin-bottom: var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+  .nb-js .cover .back { display: none; }
+  .cover h1 {
+    margin: 0 0 var(--sp-2); font-family: var(--font-title); font-weight: 700;
+    font-size: var(--fs-title); line-height: 1.4; letter-spacing: 0;
+  }
+  .cover h1 span { background: none; }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); font-size: var(--fs-meta); line-height: 1.7; color: var(--ink-muted); }
+  .cover .meta a { color: inherit; }
+
+  /* ---- 目次（左に固定。読み終えた章に赤ペンのチェック） ---- */
+  .toc {
+    grid-column: 1; grid-row: 1 / span 2;
+    position: sticky; top: calc(var(--topbar-h) + var(--sp-3));
+    max-height: calc(100vh - var(--topbar-h) - var(--sp-5)); overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) 0; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    scrollbar-width: thin;
+  }
+  .toc h2 { margin: 0 0 12px; font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); line-height: 1.4; color: var(--ink); }
+  .toc ol, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol > li > a { padding-left: 30px; }
+  .toc ol > li > a, .nb-row a { display: block; padding-top: 4px; padding-bottom: 4px; }
+  .toc .sub { padding-left: 30px; margin: 0 0 6px; }
+  .toc .sub a { display: block; padding: 2px 0; color: var(--ink-sub); font-size: var(--fs-meta); }
+  .toc a.is-active { font-weight: 700; }
+  .toc a.is-active .t, .nb-drawer a.is-active .t { background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-row { display: flex; align-items: flex-start; gap: 8px; }
+  .nb-row a { flex: 1; min-width: 0; }
+  .nb-check {
+    flex: none; width: 22px; height: 22px; margin-top: 5px; padding: 0;
+    background: none; border: 0; color: var(--ink-sub); cursor: pointer;
+  }
+  .nb-check svg { display: block; width: 22px; height: 22px; overflow: visible; }
+  .nb-tick { stroke: var(--red-pen); stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .35s ease-out; }
+  .is-read > .nb-row .nb-tick, .nb-check[aria-pressed="true"] .nb-tick { stroke-dashoffset: 0; }
+  .nb-toc-note { margin: var(--sp-2) 0 0; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 本文 ---- */
+  .prose { overflow-wrap: break-word; }   /* 長い英単語・URLが狭い画面からはみ出さないように */
+  .prose > :first-child { margin-top: 0; }
+  .prose p, .prose ul, .prose ol { max-width: var(--measure); }
+  .prose p { margin: 0 0 1.5em; }
+  .prose ul, .prose ol { margin: 0 0 1.5em; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: 0.4em; }
+  .prose li > ul, .prose li > ol { margin: 0.4em 0 0; }
+  .prose h2 {
+    position: relative; width: fit-content; max-width: 100%;
+    margin: 80px 0 var(--sp-3); padding-bottom: 12px;
+    font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: 0;
+  }
+  /* 蛍光ペンで引いたような、少しゆがんだ下線（h2だけ） */
+  .prose h2::after {
+    content: ""; position: absolute; left: -4px; right: -6px; bottom: 0; height: 10px;
+    background: var(--hl);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  }
+  .prose h3 { margin: 56px 0 12px; font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .prose h4 { margin: 40px 0 8px; padding: 0; border: 0; font-size: 1rem; font-weight: 700; line-height: 1.6; letter-spacing: 0; color: var(--ink); }
+  .prose h2 + h3 { margin-top: var(--sp-3); }
+  .prose :is(h2, h3, h4) + :is(p, ul, ol, .with-memo, .callout, .table-wrap, figure, .nb-fig, pre, .nb-code, details, .nb-quiz-tools) { margin-top: 0; }
+
+  /* ---- 赤ペンのメモ（本文の右余白。狭い画面では段落の下へ回り込む） ---- */
+  .with-memo { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 32px; margin: 0 0 1.5em; }
+  .with-memo > :not(.memo) { flex: 1 1 22em; min-width: 0; margin-bottom: 0; }
+  .memo {
+    flex: 0 1 190px; margin: 4px 0 0; padding: 0;
+    font-family: var(--font-hand); font-weight: 600; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    color: var(--red-pen); transform: rotate(-1.5deg); transform-origin: 0 0;
+  }
+  .memo p { margin: 0; }
+
+  /* ---- 3行でいうと（青インクの破線枠＋手書きラベル） ---- */
+  .callout {
+    position: relative; max-width: var(--measure); margin: var(--sp-4) 0;
+    padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; background: none;
+  }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout p + p { margin-top: 0; }
+  .callout ul, .callout ol { margin-bottom: 0; }
+  .callout .label { display: block; margin-bottom: 4px; font-size: var(--fs-small); font-weight: 700; color: var(--ink-sub); letter-spacing: 0; }
+  .callout.caution .label { font-family: var(--font-hand); font-weight: 600; font-size: 1rem; color: var(--red-pen); }
+  .callout.note .label { color: var(--blue-ink); }
+  .callout.summary { margin: var(--sp-4) 0 var(--sp-5); padding: 28px var(--sp-3) 20px; border-color: var(--blue-ink); }
+  .callout.summary .label {
+    position: absolute; top: 0; left: 18px; transform: translateY(-55%); margin: 0; padding: 0 10px;
+    background: var(--sheet); font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.4; color: var(--blue-ink);
+  }
+  .callout.summary :is(ul, ol) { list-style: decimal; padding-inline-start: 1.6em; }
+  .callout.summary li::marker { font-family: var(--font-hand); font-weight: 600; color: var(--blue-ink); }
+
+  /* ---- 表（ヘッダー下は実線、行の区切りは破線） ---- */
+  .table-wrap { overflow-x: auto; margin: var(--sp-4) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: calc(16rem / 17); line-height: 1.7; letter-spacing: 0.01em; }
+  caption { caption-side: top; text-align: left; padding: 0 0 var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); }
+  th, td { padding: 10px var(--sp-2) 10px 0; text-align: left; vertical-align: top; border-bottom: 1px dashed var(--rule); }
+  :is(th, td):last-child { padding-right: 0; }
+  thead th { border-bottom: 2px solid var(--ink); font-weight: 700; white-space: nowrap; }
+  tbody th { font-weight: 700; }
+  table.nb-term tbody tr > :first-child { font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- コード ---- */
+  pre {
+    margin: var(--sp-4) 0; padding: var(--sp-2) 20px; overflow-x: auto;
+    background: var(--code-bg); border-radius: 8px;
+    font-size: var(--fs-small); line-height: 1.7; letter-spacing: 0;
+  }
+  code { font-family: var(--font-mono); }
+  pre code { font-size: inherit; }
+  :not(pre) > code { padding: 0.1em 0.35em; background: var(--code-bg); border-radius: 4px; font-size: 0.88em; letter-spacing: 0; overflow-wrap: anywhere; }
+
+  /* ---- 図（実線の枠に入れたインラインSVG。キャプションは図の直下） ---- */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg {
+    display: block; width: 100%; height: auto; padding: 20px;
+    border: 1.5px solid var(--ink); border-radius: 12px; color: var(--ink); background: var(--sheet);
+  }
+  figure svg text { font-family: var(--font-body); fill: currentColor; letter-spacing: 0; }
+  figcaption { margin-top: var(--sp-1); font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  figcaption b:first-child { color: var(--ink); margin-right: 0.3em; }
+
+  /* ---- やさしく図解（大きな絵と少ない言葉。縦長の図にして、スマホでも図の文字を12px前後に保つ） ---- */
+  .eli5 { max-width: 440px; margin: var(--sp-4) auto; }
+  .eli5 .nb-fig, .eli5 figure { margin: 0; }
+  .prose :is(h2, h3, h4) + .eli5 { margin-top: 0; }
+  .eli5-label {
+    display: inline-block; margin: 0 0 var(--sp-2); padding: 0 12px;
+    font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.6; letter-spacing: 0;
+    color: var(--blue-ink); border: 1.5px dashed var(--blue-ink); border-radius: 10px;
+  }
+
+  /* ---- 確認問題 ---- */
+  .quiz { max-width: var(--measure); margin: 0; border: 0; border-bottom: 1px dashed var(--rule); border-radius: 0; background: none; }
+  :not(.quiz) + .quiz { border-top: 1px dashed var(--rule); }
+  .quiz summary, .more summary { position: relative; padding: 14px 40px 14px 0; cursor: pointer; font-weight: 700; list-style: none; }
+  .quiz summary::-webkit-details-marker, .more summary::-webkit-details-marker { display: none; }
+  .quiz summary::after, .more summary::after {
+    content: ""; position: absolute; right: 8px; top: calc(14px + 0.45em); width: 18px; height: 18px;
+    background: var(--ink-sub); transition: transform .2s;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  details[open] > summary::after { transform: rotate(180deg); }
+  .quiz summary:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+  .quiz .answer { padding: 0 0 var(--sp-2); border: 0; }
+  .quiz .answer::before { content: "答え"; display: block; font-family: var(--font-hand); font-weight: 600; color: var(--red-pen); line-height: 1.6; }
+  .quiz .answer > :last-child { margin-bottom: 0; }
+  .quiz .question { margin: var(--sp-2) 0 4px; font-weight: 700; }
+  .quiz .choices { margin: 0 0 4px; }
+  .quiz details { margin: 0; border: 0; }
+  .quiz details summary { padding-top: 4px; padding-bottom: 8px; font-weight: 400; color: var(--link); }
+  .quiz details summary::after { top: calc(4px + 0.45em); }
+  details::details-content { transition: block-size .25s ease, content-visibility .25s allow-discrete; overflow: clip; block-size: 0; }
+  details[open]::details-content { block-size: auto; }
+  .more { max-width: var(--measure); margin: var(--sp-3) 0; padding: 0 var(--sp-2); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .more summary { color: var(--link); }
+  .more .inner { padding: 0 0 var(--sp-2); border: 0; }
+
+  /* ---- 参考リンク・フッター ---- */
+  .refs { max-width: var(--measure); }
+  .refs li { overflow-wrap: anywhere; }
+  .sheet > footer, .page > footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1.5px dashed var(--rule); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .sheet > footer p { margin: 0; }
+  .sheet > footer p + p { margin-top: var(--sp-1); }
+
+  /* ---- 上部バー ---- */
+  .nb-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); border-radius: 8px; }
+  .nb-skip:focus { top: var(--sp-1); }
+  .nb-topbar {
+    position: sticky; top: 0; z-index: 50; height: var(--topbar-h);
+    background: color-mix(in srgb, var(--desk) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+    letter-spacing: 0;
+  }
+  .nb-topbar-inner {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2); height: 100%;
+    margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2);
+  }
+  .nb-home {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; min-height: 44px; padding: 0 10px 0 4px; margin-left: -4px;
+    color: var(--ink); text-decoration: none; font-weight: 700; border-radius: 8px;
+  }
+  .nb-home:hover { background: color-mix(in srgb, var(--rule) 25%, transparent); text-decoration: none; }
+  .nb-home svg { width: 20px; height: 20px; }
+  .nb-where { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); opacity: 0; transition: opacity .2s; }
+  .nb-where.is-shown { opacity: 1; }
+  .nb-where .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-where .t-page { flex: 0 1 auto; max-width: 50%; }
+  .nb-where .sep { flex-shrink: 0; }
+  .nb-where .t-sec { flex: 0 1 auto; color: var(--ink); font-weight: 700; }
+  .nb-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; margin-left: auto; }
+  .nb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-width: 44px; min-height: 44px; padding: 0 14px;
+    font: inherit; font-size: var(--fs-small); line-height: 1; color: var(--ink);
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer;
+  }
+  .nb-btn:hover { border-color: var(--ink-sub); }
+  .nb-btn[aria-pressed="true"] { border-color: var(--ink); font-weight: 700; }
+  .nb-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nb-toc-btn { display: none; }
+  .nb-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--blue-ink); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* ---- 引き出し式の目次（900px以下） ---- */
+  .nb-drawer {
+    margin: 0 auto 0 0; height: 100%; max-height: 100dvh; width: min(340px, 88vw); max-width: none;
+    padding: 0; border: 0; background: var(--sheet); color: var(--ink); box-shadow: var(--sheet-shadow);
+    font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+  }
+  .nb-drawer::backdrop { background: rgb(10 14 20 / 0.45); }
+  .nb-drawer[open] { animation: nb-slide .22s ease-out; }
+  @keyframes nb-slide { from { transform: translateX(-24px); opacity: 0; } }
+  .nb-dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3); background: var(--sheet); border-bottom: 1px dashed var(--rule); }
+  .nb-dialog-head strong { font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); }
+  .nb-drawer nav { padding: var(--sp-2) var(--sp-3) var(--sp-4); }
+  .nb-drawer ol, .nb-drawer ul { list-style: none; margin: 0; padding: 0; }
+  .nb-drawer a { color: var(--ink); text-decoration: none; }
+  .nb-drawer ol > li > a { display: block; padding: 6px 0 6px 30px; }
+  .nb-drawer .nb-row a { padding: 6px 0; }
+  .nb-drawer .nb-check { margin-top: 7px; }
+  .nb-drawer .sub { padding-left: 30px; margin: 0 0 6px; }
+  .nb-drawer .sub a { display: block; padding: 6px 0; color: var(--ink-sub); }
+  .nb-drawer a.is-active { font-weight: 700; }
+
+  /* ---- 見出しのリンク ---- */
+  .nb-anchor { margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.75em; font-weight: 400; color: var(--ink-sub); text-decoration: none; opacity: 0; transition: opacity .15s; }
+  :is(h2, h3, h4):hover > .nb-anchor, .nb-anchor:focus-visible { opacity: 1; }
+  @media (hover: none) { .nb-anchor { display: none; } }
+
+  /* ---- 表・図の横スクロールの案内 ---- */
+  .nb-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+  .nb-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+  .nb-more-left.nb-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+  .nb-scroll-hint { display: none; margin: calc(var(--sp-3) * -1) 0 var(--sp-3); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .nb-scroll-hint.is-shown { display: block; }
+
+  /* ---- 図の拡大 ---- */
+  .nb-fig { position: relative; margin: var(--sp-4) 0; }
+  .nb-fig > figure { margin: 0; }
+  .nb-expand {
+    position: absolute; top: -14px; right: var(--sp-2); z-index: 1;
+    min-height: 28px; min-width: 28px; padding: 0 10px; font-size: var(--fs-meta);
+    color: var(--ink-sub); background: var(--sheet);
+  }
+  .nb-expand svg { width: 14px; height: 14px; }
+  .nb-lightbox {
+    width: min(1200px, 96vw); max-width: none; max-height: 92dvh; padding: 0;
+    border: 1.5px solid var(--ink); border-radius: 12px; background: var(--sheet); color: var(--ink);
+  }
+  .nb-lightbox::backdrop { background: rgb(10 14 20 / 0.6); }
+  .nb-lightbox .nb-dialog-head strong { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-small); color: var(--ink-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-lightbox figure { margin: 0; padding: var(--sp-3); overflow: auto; }
+  .nb-lightbox figure > svg { min-width: 760px; border: 0; padding: 0; }
+
+  /* ---- コードのコピー ---- */
+  .nb-code { position: relative; margin: var(--sp-4) 0; }
+  .nb-code > pre { margin: 0; padding-right: 96px; }
+  .nb-copy { position: absolute; top: var(--sp-1); right: var(--sp-1); min-height: 32px; padding: 0 10px; font-size: var(--fs-meta); color: var(--ink-sub); }
+  .nb-copy svg { width: 16px; height: 16px; }
+
+  /* ---- 確認問題の一括表示 ---- */
+  .nb-quiz-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-1) var(--sp-2); max-width: var(--measure); margin: 0 0 var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+
+  /* ---- シリーズ・関連ノート（トップページの一覧から自動で作る） ---- */
+  .nb-related { margin-top: var(--sp-5); }
+  .nb-related h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .nb-related > section + section { margin-top: var(--sp-4); }
+  .nb-series { padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .nb-series ol { margin: 0; padding-left: 1.6em; }
+  .nb-series li + li { margin-top: 4px; }
+  .nb-series .is-current { font-weight: 700; background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-pn { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-1) var(--sp-3); margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px dashed var(--rule); }
+  .nb-pn .is-next { margin-left: auto; text-align: right; }
+  .nb-list { list-style: none; margin: 0; padding: 0; }
+  .nb-list li { padding: 12px 0; border-bottom: 1px dashed var(--rule); }
+  .nb-list li:first-child { border-top: 1px dashed var(--rule); }
+  .nb-list a { font-weight: 700; }
+  .nb-list .s { display: block; margin-top: 2px; font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  .nb-list .m { display: block; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 先頭へ・通知 ---- */
+  .nb-fab {
+    position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40; width: 48px; height: 48px; padding: 0;
+    box-shadow: var(--sheet-shadow); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .nb-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+  .nb-toast {
+    position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    padding: var(--sp-1) var(--sp-2); border-radius: 8px; background: var(--ink); color: var(--sheet); font-size: var(--fs-small); letter-spacing: 0;
+    transition: opacity .2s, transform .2s;
+  }
+  .nb-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---- 900px以下: 目次はヘッダーから開く ---- */
+  @media (max-width: 900px) {
+    .page { display: block; max-width: calc(var(--sheet-w) + var(--sp-3) * 2); padding: var(--sp-3) var(--sp-2) var(--sp-5); }
+    .toc { position: static; max-height: none; overflow: visible; margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--sheet); }
+    .nb-js .page > .toc { display: none; }
+    .nb-toc-btn { display: inline-flex; }
+    .sheet { padding: 40px 32px 56px; }
+  }
+  @media (max-width: 600px) {
+    :root { --topbar-h: 56px; }
+    .page { padding: var(--sp-2) 10px var(--sp-4); }
+    .sheet { padding: 32px 20px 48px; }
+    .nb-topbar-inner { padding: 0 var(--sp-1) 0 var(--sp-2); gap: var(--sp-1); }
+    .nb-where, .nb-btn .label-wide { display: none; }
+    .nb-actions { gap: 6px; }
+    .nb-btn { padding: 0 10px; }
+    .prose h2 { margin-top: 64px; }
+    .memo { flex-basis: 100%; padding-left: 1em; }
+    table.nb-term tbody tr > :first-child { white-space: normal; min-width: 7em; }
+    .table-wrap :is(th, td) { min-width: 5em; }
+    .eli5 figure > svg { padding: 12px; }
+    .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after, ::details-content { transition: none !important; animation: none !important; }
+  }
+  @media print {
+    body { background: #fff; }
+    .nb-topbar, .nb-fab, .nb-toast, .nb-anchor, .nb-copy, .nb-expand, .nb-quiz-tools, .nb-scroll-hint, .nb-skip, .page > .toc, .nb-toc-note { display: none !important; }
+    .page { display: block; max-width: none; padding: 0; }
+    .sheet { box-shadow: none; padding: 0; }
+    .nb-more-left, .nb-more-right { -webkit-mask-image: none; mask-image: none; }
+    figure, .quiz, .table-wrap, .callout { break-inside: avoid; }
+  }
+</style>
+<script>try{var t=localStorage.getItem('ln-theme'),f=localStorage.getItem('ln-fs'),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);if(f==='l'||f==='xl')r.setAttribute('data-fs',f);}catch(e){}</script>
+<!-- notebook-ui:end -->
+<style>
+  /* このレポートだけで使うスタイル（必要なときだけ書く。色は上の CSS 変数を使う） */
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="toc" aria-label="目次">
+    <h2>もくじ</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a>
+        <ul class="sub">
+          <li><a href="#s3-1">コンテキストに入るもの</a></li>
+          <li><a href="#s3-2">埋まるとどうなるか</a></li>
+          <li><a href="#s3-3">圧縮後に残るもの</a></li>
+          <li><a href="#s3-4">サブエージェントの別枠</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a>
+        <ul class="sub">
+          <li><a href="#s4-1">コンテキスト管理コマンド</a></li>
+          <li><a href="#s4-2">カスタム圧縮の指示</a></li>
+          <li><a href="#s4-3">節約の実践テクニック</a></li>
+        </ul>
+      </li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <article class="sheet">
+    <header class="cover">
+      <a class="back" href="../index.html">学習ノートに戻る</a>
+      <h1>Claude Codeのコンテキストとコンテキストウィンドウ：仕組みと管理コマンド</h1>
+      <ul class="meta">
+        <li>作成日 2026-10-03</li>
+        <li>分野 AI</li>
+        <li>確認日 2026-10-03（公式ドキュメント。コマンドや閾値はバージョンで変わる）</li>
+      </ul>
+    </header>
+
+    <main class="prose">
+
+      <h2 id="s1">概要</h2>
+      <div class="callout summary">
+        <span class="label">3行でいうと</span>
+        <ol>
+          <li>コンテキストとは、Claudeが1回の応答のたびに読み返す「作業机の上の全部」で、その広さの上限が<mark>コンテキストウィンドウ</mark>。会話だけでなく、CLAUDE.md・ツール定義・読んだファイルも載る。</li>
+          <li>ウィンドウが埋まりそうになると、古い会話を要約に置き換える<mark>自動圧縮（auto-compact）</mark>が働く。手動なら <code>/compact</code>、全部捨てて始めるなら <code>/clear</code>、中身を見るなら <code>/context</code>。</li>
+          <li>節約の基本は、「無関係な作業の間に <code>/clear</code>」「長い出力はサブエージェントに任せる」「CLAUDE.mdは短く」。<mark>コンテキストが小さいほど</mark>、速く・安く・指示が守られやすい。</li>
+        </ol>
+      </div>
+      <p>Claude Codeを長く使っていると、「だんだん動きが鈍い」「さっき決めたことを忘れた」「使用量の減りが速い」と感じることがあります。原因の多くはコンテキストです。このノートでは、コンテキストに何が入り、いっぱいになると何が起き、どのコマンドで管理するかを、公式ドキュメントに沿って整理します。</p>
+      <p>CLAUDE.md・Skill・Hooks・サブエージェントなど各拡張の違いは、別のノート<a href="claude-code-extensions-overview.html">Claude Codeの拡張の全体像：どの仕組みをいつ使うか</a>が詳しく扱っています。このノートは「それぞれがコンテキストをどう使うか」という視点に絞ります。</p>
+
+      <h2 id="s2">基本用語</h2>
+      <div class="table-wrap">
+        <table class="nb-term">
+          <thead><tr><th>用語</th><th>意味</th></tr></thead>
+          <tbody>
+            <tr><td>コンテキスト</td><td>Claudeが応答を作るときに参照する情報の全体。システムプロンプト、CLAUDE.md、自動メモリ、ツール定義、あなたの発言、Claudeの返答、読んだファイル、コマンド出力などを含む。</td></tr>
+            <tr><td>コンテキストウィンドウ</td><td>一度に扱える情報量の上限。単位はトークン。モデルによって200Kや1M（100万）トークンなど違う。</td></tr>
+            <tr><td>トークン</td><td>文字より細かいテキストの単位。長さの目安であり、料金・使用量の計算単位でもある。</td></tr>
+            <tr><td>自動圧縮（auto-compact）</td><td>ウィンドウが閉じる前に、会話を構造化された要約へ置き換えて空きを作る仕組み。</td></tr>
+            <tr><td>セッション</td><td>1つの会話のまとまり。新しいセッションは空のコンテキストから始まる。CLAUDE.mdなどは毎回読み直される。</td></tr>
+            <tr><td>CLAUDE.md</td><td>あなたが書く、プロジェクト共通の指示ファイル。毎セッションの開始時にコンテキストへ読み込まれる。</td></tr>
+            <tr><td>自動メモリ（auto memory）</td><td>Claude自身が過去の訂正や好みから書き溜めるメモ。MEMORY.mdの先頭200行か25KBまでが読み込まれる。</td></tr>
+            <tr><td>サブエージェント</td><td>独立したコンテキストウィンドウで作業し、最終的な要約だけを本会話へ返す補助エージェント。</td></tr>
+            <tr><td>プロンプトキャッシュ</td><td>繰り返し送る同じ部分（システムプロンプトなど）を安く再利用する仕組み。放置するとキャッシュが切れて、再処理になる。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s3">仕組み・全体像</h2>
+
+      <h3 id="s3-1">コンテキストに入るもの</h3>
+      <p>Claude Codeは、リクエストのたびに会話全体をまとめて送ります。あなたが最初のメッセージを打つ前から、すでに多くのものが読み込まれています。公式の「コンテキストウィンドウを探る」ページのシミュレーションでは、起動時に次のものが自動で載ります。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>載るもの</th><th>いつ載るか</th><th>補足</th></tr></thead>
+          <tbody>
+            <tr><td>システムプロンプト</td><td>起動時</td><td>振る舞い・ツールの使い方の基本指示。ユーザーには見えない。</td></tr>
+            <tr><td>CLAUDE.md</td><td>起動時</td><td>階層（ユーザー・プロジェクトなど）ごとに読み込まれる。</td></tr>
+            <tr><td>自動メモリ</td><td>起動時</td><td>先頭200行または25KBまで。</td></tr>
+            <tr><td>環境情報・Gitの状態</td><td>起動時</td><td>作業ディレクトリ、OS、ブランチなど。</td></tr>
+            <tr><td>MCPツール</td><td>起動時（名前のみ）</td><td>既定では詳細スキーマは遅延読み込み。必要になった時にツール検索で取り込む。</td></tr>
+            <tr><td>スキルの一覧</td><td>起動時</td><td>説明文だけ載り、本体は呼ばれた時に載る。</td></tr>
+            <tr><td>あなたの発言・Claudeの返答</td><td>やり取りのたび</td><td>会話が続くほど積み上がる。</td></tr>
+            <tr><td>読んだファイル・コマンド出力</td><td>ツール実行のたび</td><td>実は一番かさばりやすい。</td></tr>
+            <tr><td>サブエージェントの返答</td><td>完了時</td><td>最終要約のみ。中の作業は載らない。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure>
+        <svg viewBox="0 0 720 250" role="img" aria-label="コンテキストウィンドウを1本のバーで表した図。左側に起動時に載る固定部分（システム、CLAUDE.md、メモリ、MCP、スキル一覧）があり、その右に会話で増える部分（発言・返答、ファイル読み込み、コマンド出力）が積み上がって、右端近くの自動圧縮の線に近づく。">
+          <title>コンテキストウィンドウの中身の積み上がり</title>
+          <defs><marker id="f1-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <!-- 上の括り -->
+          <path d="M22 76 V66 H346 V76" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="184" y="54" text-anchor="middle" font-size="14" font-weight="700">起動時に載る（固定）</text>
+          <path d="M354 76 V66 H648 V76" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="501" y="54" text-anchor="middle" font-size="14" font-weight="700">会話で増える</text>
+          <text x="700" y="54" text-anchor="end" font-size="14">上限</text>
+          <line x1="700" y1="60" x2="700" y2="84" stroke="currentColor" stroke-width="1.5"/>
+          <!-- バー本体 -->
+          <g stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+            <rect x="20" y="88" width="68" height="60" fill="var(--code-bg)"/>
+            <rect x="88" y="88" width="84" height="60" fill="var(--code-bg)"/>
+            <rect x="172" y="88" width="54" height="60" fill="var(--code-bg)"/>
+            <rect x="226" y="88" width="46" height="60" fill="var(--code-bg)"/>
+            <rect x="272" y="88" width="78" height="60" fill="var(--code-bg)"/>
+            <rect x="350" y="88" width="86" height="60" fill="none"/>
+            <rect x="436" y="88" width="124" height="60" fill="var(--marker-fill)"/>
+            <rect x="560" y="88" width="90" height="60" fill="none"/>
+            <rect x="650" y="88" width="50" height="60" fill="none" stroke-dasharray="5 4"/>
+          </g>
+          <g font-size="13" text-anchor="middle">
+            <text x="54" y="123">システム</text>
+            <text x="130" y="123">CLAUDE.md</text>
+            <text x="199" y="123">メモリ</text>
+            <text x="249" y="123">MCP</text>
+            <text x="311" y="123">スキル一覧</text>
+            <text x="393" y="123">発言・返答</text>
+            <text x="498" y="123" font-weight="700">ファイル読み込み</text>
+            <text x="605" y="123">コマンド出力</text>
+            <text x="668" y="123">空き</text>
+          </g>
+          <!-- 自動圧縮の線 -->
+          <line x1="688" y1="78" x2="688" y2="214" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="700" y="236" text-anchor="end" font-size="14" font-weight="700">自動圧縮の線</text>
+          <!-- 伸びる向き -->
+          <line x1="354" y1="172" x2="600" y2="172" stroke="currentColor" stroke-width="2.5" marker-end="url(#f1-ah)"/>
+          <text x="354" y="200" font-size="14">会話が進むと右へ伸びる</text>
+        </svg>
+        <figcaption><b>図1</b>コンテキストウィンドウの中身。起動時に載る部分のあとに会話の分が積み上がり、自動圧縮の線に近づく。各部分の幅は実際の比率ではない。</figcaption>
+      </figure>
+      <div class="with-memo">
+        <p>ポイントは、あなたの発言が全体の<mark>ごく一部</mark>にすぎないことです。公式のシミュレーションでも、コンテキストの大半を占めるのはプロジェクトの知識とファイルの中身でした。</p>
+        <aside class="memo">重いのは発言より、読んだファイル</aside>
+      </div>
+
+      <h3 id="s3-2">埋まるとどうなるか</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 440" role="img" aria-label="机に資料が積まれ、机がいっぱいになると、古い資料を要約メモ1枚にまとめ、机に空きができる、という4段の流れ。">
+            <title>机がいっぱいになると古い資料を要約する</title>
+            <g fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="22" cy="60" r="13"/><circle cx="22" cy="170" r="13"/><circle cx="22" cy="280" r="13"/><circle cx="22" cy="390" r="13"/>
+            </g>
+            <g font-size="16" font-weight="700" text-anchor="middle">
+              <text x="22" y="66">1</text><text x="22" y="176">2</text><text x="22" y="286">3</text><text x="22" y="396">4</text>
+            </g>
+            <g stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round">
+              <line x1="22" y1="77" x2="22" y2="153"/><line x1="22" y1="187" x2="22" y2="263"/><line x1="22" y1="297" x2="22" y2="373"/>
+            </g>
+            <!-- 机（ウィンドウ）の枠 -->
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <rect x="50" y="30" width="160" height="60" rx="8"/>
+              <rect x="50" y="140" width="160" height="60" rx="8"/>
+              <rect x="50" y="250" width="160" height="60" rx="8"/>
+              <rect x="50" y="360" width="160" height="60" rx="8"/>
+            </g>
+            <!-- 紙 -->
+            <g fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <rect x="58" y="40" width="20" height="40" rx="2"/><rect x="82" y="40" width="20" height="40" rx="2"/><rect x="106" y="40" width="20" height="40" rx="2"/>
+              <rect x="58" y="150" width="20" height="40" rx="2"/><rect x="82" y="150" width="20" height="40" rx="2"/><rect x="106" y="150" width="20" height="40" rx="2"/><rect x="130" y="150" width="20" height="40" rx="2"/><rect x="154" y="150" width="20" height="40" rx="2"/><rect x="178" y="150" width="20" height="40" rx="2"/>
+              <rect x="154" y="260" width="20" height="40" rx="2"/><rect x="178" y="260" width="20" height="40" rx="2"/>
+              <rect x="106" y="370" width="20" height="40" rx="2"/><rect x="130" y="370" width="20" height="40" rx="2"/>
+            </g>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4">
+              <rect x="58" y="260" width="20" height="40" rx="2"/><rect x="82" y="260" width="20" height="40" rx="2"/><rect x="106" y="260" width="20" height="40" rx="2"/><rect x="130" y="260" width="20" height="40" rx="2"/>
+            </g>
+            <rect x="58" y="370" width="40" height="40" rx="2" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+            <text x="78" y="396" text-anchor="middle" font-size="16" font-weight="700">要約</text>
+            <g font-size="16">
+              <text x="228" y="66">資料が積まれる</text>
+              <text x="228" y="176">机がいっぱい</text>
+              <text x="228" y="286">古い分を要約</text>
+              <text x="228" y="396">空きができる</text>
+            </g>
+          </svg>
+          <figcaption><b>図2</b>自動圧縮の流れ（イメージ）。机がコンテキストウィンドウ、紙が会話やファイルにあたる。</figcaption>
+        </figure>
+      </div>
+      <p>会話が長くなるとウィンドウに余裕がなくなります。このときClaude Codeは、古い会話を要約へ置き換えて空きを作ります。これが<mark>自動圧縮</mark>です。いつ発動するかはモデルによって違い、公式ドキュメントでは次のように説明されています（確認日時点）。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>モデル・条件</th><th>自動圧縮のタイミング（既定）</th></tr></thead>
+          <tbody>
+            <tr><td>Sonnet 4.6 / Opus 4.6（拡張コンテキストなし）</td><td>200Kトークン付近</td></tr>
+            <tr><td>Opus 4.8以降（200Kウィンドウの場合）</td><td>200Kトークン付近</td></tr>
+            <tr><td>1Mがネイティブのモデル（Sonnet 5、Fable系、Opus 4.7以降など）</td><td>約967Kトークン付近</td></tr>
+            <tr><td><code>CLAUDE_CODE_DISABLE_1M_CONTEXT=1</code> を設定</td><td>1Mモデルでも200K付近</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p>この閾値は <code>/autocompact</code> コマンド（100Kから1Mトークンの範囲で指定可能）、<code>--autocompact</code> フラグ、設定ファイルの <code>autoCompactWindow</code>、環境変数 <code>CLAUDE_CODE_AUTO_COMPACT_WINDOW</code> で変えられます。環境変数が一番優先されます。</p>
+        <aside class="memo">設定が効かないときは環境変数を疑う</aside>
+      </div>
+
+      <h3 id="s3-3">圧縮後に残るもの</h3>
+      <p>圧縮は「全部を記憶したまま小さくする」ものではありません。元の会話は、要望・重要な技術的概念・触ったファイルと主要なコード片・エラーとその直し方・残タスク・今の作業、を中心にした要約に置き換わります。ツールの出力全文や途中の思考は失われます。公式のシミュレーションで説明されている、圧縮後の扱いは次のとおりです。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>圧縮後</th></tr></thead>
+          <tbody>
+            <tr><td>システムプロンプト、CLAUDE.md、自動メモリ、MCPツール</td><td>自動的に読み込み直される</td></tr>
+            <tr><td>会話そのもの</td><td>構造化された要約に置き換わる（逐語は消える）</td></tr>
+            <tr><td>直近に触ったファイル</td><td>最近変更した最大5つほどを再読み込みする</td></tr>
+            <tr><td>呼び出し済みのスキル</td><td>本文を再投入する。1スキルあたり先頭5,000トークンまで、合計25,000トークンの予算</td></tr>
+            <tr><td>スキルの一覧</td><td>再読み込みされない</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p>つまり、<b>会話の中だけで伝えた指示は要約で薄まるが、CLAUDE.mdに書いた指示は毎回読み直される</b>、という違いが生まれます。長く守らせたいルールはCLAUDE.mdへ、という指針はここから来ています。</p>
+        <aside class="memo">覚え方：会話は薄まる、CLAUDE.mdは残る</aside>
+      </div>
+
+      <h3 id="s3-4">サブエージェントの別枠</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 380" role="img" aria-label="あなたがサブエージェントに調べものを頼み、サブエージェントは別の机で大量のファイルを読み、あなたには要約1枚だけが戻ってくる、という3段の流れ。">
+            <title>サブエージェントは別の机で作業する</title>
+            <defs><marker id="f3-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+            <g fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="22" cy="66" r="13"/><circle cx="22" cy="200" r="13"/><circle cx="22" cy="320" r="13"/>
+            </g>
+            <g font-size="16" font-weight="700" text-anchor="middle">
+              <text x="22" y="72">1</text><text x="22" y="206">2</text><text x="22" y="326">3</text>
+            </g>
+            <g stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round">
+              <line x1="22" y1="83" x2="22" y2="183"/><line x1="22" y1="217" x2="22" y2="303"/>
+            </g>
+            <!-- 1: 頼む -->
+            <g transform="translate(84 66)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+            <g transform="translate(270 66)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <line x1="114" y1="66" x2="238" y2="66" stroke="currentColor" stroke-width="2.5" marker-end="url(#f3-ah)"/>
+            <text x="177" y="50" text-anchor="middle" font-size="16">調べものを頼む</text>
+            <text x="84" y="112" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+            <text x="270" y="112" text-anchor="middle" font-size="16" font-weight="700">サブエージェント</text>
+            <!-- 2: 別の机で読む -->
+            <g transform="translate(70 200)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <rect x="120" y="170" width="220" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <g fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <rect x="130" y="180" width="20" height="40" rx="2"/><rect x="154" y="180" width="20" height="40" rx="2"/><rect x="178" y="180" width="20" height="40" rx="2"/><rect x="202" y="180" width="20" height="40" rx="2"/><rect x="226" y="180" width="20" height="40" rx="2"/><rect x="250" y="180" width="20" height="40" rx="2"/><rect x="274" y="180" width="20" height="40" rx="2"/><rect x="298" y="180" width="20" height="40" rx="2"/>
+            </g>
+            <text x="230" y="256" text-anchor="middle" font-size="16">別の机で大量に読む</text>
+            <!-- 3: 要約だけ戻る -->
+            <g transform="translate(84 320)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+            <g transform="translate(270 320)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <line x1="238" y1="320" x2="202" y2="320" stroke="currentColor" stroke-width="2.5"/>
+            <rect x="157" y="300" width="40" height="40" rx="2" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+            <text x="177" y="326" text-anchor="middle" font-size="16" font-weight="700">要約</text>
+            <line x1="152" y1="320" x2="114" y2="320" stroke="currentColor" stroke-width="2.5" marker-end="url(#f3-ah)"/>
+            <text x="177" y="286" text-anchor="middle" font-size="16">要約1枚だけ戻る</text>
+            <text x="84" y="366" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+          </svg>
+          <figcaption><b>図3</b>サブエージェントは別の机で作業する（イメージ）。読んだファイルはサブエージェント側に残り、本会話には要約だけが戻る。</figcaption>
+        </figure>
+      </div>
+      <div class="with-memo">
+        <p>サブエージェントは、新しい白紙のコンテキストウィンドウで始まります。あなたの会話履歴や、すでに読んだファイルは引き継がれません。代わりにそれ自身のシステムプロンプト、委任のメッセージ、CLAUDE.md、Gitの状態などを持ちます。作業中に読んだ大量のファイルやログはサブエージェント側に溜まり、本会話に戻るのは<mark>最終的な要約だけ</mark>です。公式のシミュレーションでは、6,100トークン分のファイルを読んだ結果、本会話に戻ったのは約420トークンでした。</p>
+        <aside class="memo">履歴は渡らないので、頼む文に要点を</aside>
+      </div>
+      <p>本会話が圧縮されても、サブエージェントの記録には影響しません。また、サブエージェント自身も同じ条件で自動圧縮されます。サブエージェント、CLAUDE.md、Hooksなどの比較は<a href="claude-code-extensions-overview.html">拡張の全体像のノート</a>を参照してください。</p>
+
+      <h2 id="s4">具体例・使いどころ</h2>
+
+      <h3 id="s4-1">コンテキスト管理コマンド</h3>
+      <div class="with-memo">
+        <p>公式のコマンド一覧（<a href="https://code.claude.com/docs/en/commands">Commands</a>）で存在を確認できたものだけを載せます。</p>
+        <aside class="memo">迷ったら、まず /context</aside>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>コマンド</th><th>何をするか</th><th>使いどころ</th></tr></thead>
+          <tbody>
+            <tr><td><code>/context [all]</code></td><td>今のコンテキスト使用量を色付きのグリッドで表示。重いツールやメモリの肥大化、容量の警告も出る。<code>all</code> で内訳を展開。</td><td>「何が場所を取っているか」を調べる最初の一手。</td></tr>
+            <tr><td><code>/compact [instructions]</code></td><td>会話を要約して空きを作る。指示を付けると要約で重視する点を指定できる。</td><td>同じ作業を続けたいが、会話が長くなってきたとき。</td></tr>
+            <tr><td><code>/clear [name]</code></td><td>空のコンテキストで新しい会話を始める。名前を付けると <code>/resume</code> の一覧で見つけやすい。別名 <code>/reset</code>、<code>/new</code>。</td><td>無関係な作業に切り替えるとき。</td></tr>
+            <tr><td><code>/usage</code></td><td>セッションのトークン使用量と費用の目安、プランの使用状況を表示。<code>/cost</code> は <code>/usage</code> の別名（エイリアス）。</td><td>使用量・費用の確認。</td></tr>
+            <tr><td><code>/autocompact [auto|トークン数]</code></td><td>自動圧縮が発動するウィンドウの大きさを設定する。v2.1.221以降。</td><td>早めに圧縮したいとき。</td></tr>
+            <tr><td><code>/memory</code></td><td>CLAUDE.mdの編集、自動メモリのオン／オフと内容の確認。</td><td>毎回読み込まれる指示の見直し。</td></tr>
+            <tr><td><code>/resume [session]</code></td><td>以前の会話を名前かIDで再開する。別名 <code>/continue</code>。</td><td><code>/clear</code> のあとで元の会話へ戻るとき。</td></tr>
+            <tr><td><code>/rewind</code></td><td>会話やコードを以前の時点に戻す、または選んだメッセージ以降を要約する。別名 <code>/checkpoint</code>、<code>/undo</code>。</td><td>脱線した方向を戻すとき。</td></tr>
+            <tr><td><code>/btw [question]</code></td><td>会話履歴に追加せずに、ちょっとした横道の質問をする。</td><td>本筋を汚したくない質問。</td></tr>
+            <tr><td><code>/rename [name]</code></td><td>セッションに名前を付ける。</td><td><code>/clear</code> の前に付けておくと再開しやすい。</td></tr>
+            <tr><td><code>/mcp</code></td><td>MCPサーバーの接続を管理。使わないサーバーは無効にできる。</td><td>ツール定義による消費の削減。</td></tr>
+            <tr><td><code>/doctor</code></td><td>使っていないスキル・MCP・プラグインと、そのコンテキスト消費を洗い出し、肥大したCLAUDE.mdの整理も提案する。</td><td>設定全体の棚卸し。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>なお、<code>/agents</code> は現在（v2.1.198以降）、対話画面を開かず「サブエージェントの作成や管理はClaudeに頼む、または <code>.claude/agents/</code> を直接編集する」という案内を表示します。<mark>古い解説と動きが違う</mark>点に注意してください。</p>
+
+      <h3 id="s4-2">カスタム圧縮の指示</h3>
+      <p>圧縮の方針は、<mark>コマンドの引数かCLAUDE.md</mark>で指定できます。</p>
+      <pre><code># その場で指定する
+/compact Focus on code samples and API usage
+
+# CLAUDE.md に書いておく
+# Compact instructions
+When you are using compact, please focus on test output and code changes</code></pre>
+
+      <h3 id="s4-3">節約の実践テクニック</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>やること</th><th>節約になる理由</th></tr></thead>
+          <tbody>
+            <tr><td>無関係な作業に移る前に <code>/clear</code></td><td>古い文脈は、以降のすべてのメッセージで毎回送られ続ける。</td></tr>
+            <tr><td>ログ・テスト・調査はサブエージェントへ</td><td>大量の出力が本会話に入らず、要約だけが戻る。</td></tr>
+            <tr><td>CLAUDE.mdは200行以内の要点だけにする</td><td>毎セッション常に載る。作業別の詳しい手順はスキルへ移すと、必要な時にだけ載る。</td></tr>
+            <tr><td>具体的に頼む（「auth.tsのログイン関数に入力検証を足して」）</td><td>「コードを改善して」のような曖昧な依頼は、広範囲を読み込みに行ってしまう。</td></tr>
+            <tr><td>使わないMCPサーバーを無効にする、可能なら <code>gh</code> などCLIを使う</td><td>CLIはツール一覧を増やさない。</td></tr>
+            <tr><td>複雑な作業はShift+Tabのプランモードで先に方針を決める</td><td>やり直しによる無駄な読み書きを防ぐ。</td></tr>
+            <tr><td>方向違いに気づいたらEscで止め、<code>/rewind</code> で戻す</td><td>間違った方向の履歴を積み上げない。</td></tr>
+            <tr><td>簡単な作業はSonnet、サブエージェントは <code>model: haiku</code> も検討</td><td>単価が下がる（コンテキストの大きさとは別の軸）。</td></tr>
+            <tr><td>ステータスラインにコンテキスト使用量を表示する</td><td>常に残量が目に入る。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s5">注意点・よくある誤解</h2>
+      <div class="callout caution">
+        <span class="label">よくある誤解1：「/clearすると全部忘れて、CLAUDE.mdも消える」</span>
+        <p>消えるのは会話です。新しいセッションでもCLAUDE.mdや自動メモリは読み直されます。<code>/clear</code> は「<mark>会話の白紙化</mark>」で、プロジェクトの記憶は保たれます。公式の説明でも、<code>/clear</code> は「プロジェクトの記憶を残したまま新しい作業を始める」ためのコマンドです。</p>
+      </div>
+      <div class="callout caution">
+        <span class="label">よくある誤解2：「/compactは無料で、やるほど得」</span>
+        <p><code>/compact</code> は要約のために会話を読むので、大きなコンテキストの圧縮は<mark>それ自体が大きなリクエスト</mark>になります。さらに、圧縮するとキャッシュが作り直しになり、細かい逐語の情報も失われます。続きが不要なら、費用がかからない <code>/clear</code> のほうが適しています。</p>
+      </div>
+      <div class="callout caution">
+        <span class="label">よくある誤解3：「/costは廃止された、または /usageと別物」</span>
+        <p>現在の公式ドキュメントでは、<code>/cost</code> は <code>/usage</code> の別名と書かれています。表示される金額はAPI料金換算の見積りで、PlanのPro／Maxではサブスクリプションに含まれるため請求額ではありません（正式な請求はConsoleで確認）。</p>
+      </div>
+      <div class="callout caution">
+        <span class="label">よくある誤解4：「ウィンドウが大きければ、何を載せても大丈夫」</span>
+        <p>大きなウィンドウは<mark>上限が伸びるだけ</mark>です。リクエストのたびに会話全体が送られるため、長いセッションは1回ごとに使用量が増えます。公式も、一日中開いたセッションでは短い質問でも会話全体分の使用量がかかる、と説明しています。</p>
+      </div>
+      <div class="callout note">
+        <span class="label">補足</span>
+        <p>プロンプトキャッシュには有効期間があり、休憩が長いと最初のメッセージでキャッシュが外れ、全コンテキストの再処理になります。サブスクリプションでは1時間、APIキーの既定では5分です。大きなセッションに長い休みの後で戻るなら、要約から再開する選択肢が提示される場合があります。</p>
+      </div>
+      <div class="callout note">
+        <span class="label">補足</span>
+        <p>CLAUDE.mdは強制ではなくコンテキストとして扱われます。「絶対に実行させない」ことはHooks（PreToolUse）で止めるのが確実です。詳しくは<a href="claude-code-extensions-overview.html">拡張の全体像のノート</a>へ。</p>
+      </div>
+
+      <h2 id="s6">確認問題</h2>
+      <details class="quiz">
+        <summary>Q1. コンテキストウィンドウに入るものを、会話以外で3つ挙げてください。</summary>
+        <div class="answer"><p>例：システムプロンプト、CLAUDE.md、自動メモリ、MCPツール名、スキルの一覧、環境情報、読んだファイルの中身、コマンドの出力。いずれも3つ挙がれば正解です。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q2. 別の機能の作業に移りたい。会話の続きは要らない。<code>/compact</code> と <code>/clear</code> のどちらが適切で、なぜですか。</summary>
+        <div class="answer"><p><code>/clear</code> です。続きが不要なら古い文脈は無駄であり、<code>/clear</code> は費用がかからず、CLAUDE.mdは新しい会話でも読み込まれます。<code>/compact</code> は同じ作業を続けたい場合に使います。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q3. 自動圧縮のあとでも確実に残ってほしいルールは、どこに書くべきですか。</summary>
+        <div class="answer"><p>CLAUDE.mdです。圧縮後も読み込み直されます。会話の中だけで伝えたルールは、要約で薄まる可能性があります。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q4. 大量のテストログを調べさせたい。本会話のコンテキストを汚さないための方法は何ですか。</summary>
+        <div class="answer"><p>サブエージェントに任せます。サブエージェントは独立したコンテキストで作業し、最終的な要約だけが本会話に戻ります。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q5. 今、何がコンテキストを占めているのか調べたい。どのコマンドを使いますか。</summary>
+        <div class="answer"><p><code>/context</code> です。使用量をグリッドで表示し、重いツールやメモリ肥大の提案も出ます。<code>all</code> を付けると内訳を展開できます。費用は <code>/usage</code>（別名 <code>/cost</code>）で見ます。</p></div>
+      </details>
+
+      <h2 id="s7">参考リンク</h2>
+      <ul class="refs">
+        <li><a href="https://code.claude.com/docs/en/commands">Commands - Claude Code Docs</a>（組み込みコマンドの一覧。/context、/compact、/clear、/costの定義）</li>
+        <li><a href="https://code.claude.com/docs/en/context-window">Explore the context window - Claude Code Docs</a>（起動時に載るものと圧縮後に残るもののシミュレーション）</li>
+        <li><a href="https://code.claude.com/docs/en/costs">Manage costs effectively - Claude Code Docs</a>（/usageと、トークン節約の方針）</li>
+        <li><a href="https://code.claude.com/docs/en/model-config">Model configuration - Claude Code Docs</a>（自動圧縮ウィンドウの設定、1Mコンテキスト）</li>
+        <li><a href="https://code.claude.com/docs/en/sub-agents">Create custom subagents - Claude Code Docs</a>（サブエージェントのコンテキストと圧縮）</li>
+        <li><a href="https://code.claude.com/docs/en/memory">How Claude remembers your project - Claude Code Docs</a>（CLAUDE.mdと自動メモリ）</li>
+      </ul>
+
+    </main>
+
+    <footer>
+      <p>このページはClaude CodeがWeb上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+    </footer>
+  </article>
+</div>
+<!-- notebook-ui-js:start -->
+<script>
+/* 書き込みノートUI（全レポート共通）。本文の HTML には手を加えず、読み込み後に操作部品だけを足す */
+(() => {
+  'use strict';
+  const d = document, root = d.documentElement;
+  const page = d.querySelector('.page'), main = d.querySelector('main');
+  if (!page || !main) return;
+  root.classList.add('nb-js');
+  const sheet = d.querySelector('.sheet') || page;
+
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+  };
+  const svg = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  const ICON = {
+    back: svg('<path d="m15 18-6-6 6-6"/>'),
+    toc: svg('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>'),
+    text: svg('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'),
+    dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+    up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+    copy: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    check: svg('<path d="M20 6 9 17l-5-5"/>'),
+    expand: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'),
+    close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  };
+  /* 手描き風のチェックボックスと赤ペンのチェック */
+  const CHECKBOX = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4.6 5.3C9 4.7 14.8 5 19.5 4.5c.3 5 0 10 .3 15.1-5.3.3-10.1-.3-15.4.1.3-5.1-.2-9.8.2-14.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path class="nb-tick" pathLength="1" d="M6.8 12.6c1.5 1.3 2.6 2.9 3.6 4.6 2.4-5.3 6-9.9 11.4-14.6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const el = (tag, attrs = {}, html = '') => {
+    const n = d.createElement(tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (html) n.innerHTML = html;
+    return n;
+  };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  const cover = d.querySelector('.cover');
+  const toc = d.querySelector('.toc');
+  const h1 = cover && cover.querySelector('h1');
+  const pageTitle = h1 ? h1.textContent.trim() : d.title;
+  const back = cover && cover.querySelector('.back');
+  const indexHref = back ? back.getAttribute('href') : '../index.html';
+  const here = decodeURIComponent(location.pathname.split('/').pop() || '');
+
+  /* ---- 通知 ---- */
+  const toast = el('div', { class: 'nb-toast', role: 'status', 'aria-live': 'polite' });
+  let toastTimer;
+  const say = (msg) => {
+    toast.textContent = msg;
+    toast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800);
+  };
+  const copyText = (text) => {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((ok, ng) => {
+      const ta = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      d.body.appendChild(ta);
+      ta.select();
+      try { d.execCommand('copy') ? ok() : ng(); } catch (e) { ng(e); }
+      ta.remove();
+    });
+  };
+
+  /* ---- 本文へスキップ・上部バー（パンくず: 学習ノート › ページ › 章） ---- */
+  if (!main.id) main.id = 'main';
+  const skip = el('a', { class: 'nb-skip', href: '#' + main.id }, '本文へスキップ');
+  const bar = el('div', { class: 'nb-topbar' },
+    '<div class="nb-topbar-inner">' +
+      '<a class="nb-home" aria-label="学習ノートの一覧に戻る" href="' + indexHref + '">' + ICON.back + '<span>学習ノート</span></a>' +
+      '<div class="nb-where" aria-hidden="true"><span class="sep">›</span><span class="t t-page"></span><span class="sep">›</span><span class="t t-sec"></span></div>' +
+      '<div class="nb-actions">' +
+        (toc ? '<button type="button" class="nb-btn nb-toc-btn" aria-haspopup="dialog" aria-label="もくじを開く">' + ICON.toc + '<span class="label-wide">もくじ</span></button>' : '') +
+        '<button type="button" class="nb-btn nb-fs-btn"><span class="label"></span></button>' +
+        '<button type="button" class="nb-btn nb-theme-btn" aria-label="ダークモード">' + ICON.dark + '<span class="label-wide">ダーク</span></button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="nb-progress" aria-hidden="true"></div>');
+  d.body.prepend(skip, bar);
+  bar.querySelector('.t-page').textContent = pageTitle;
+  const whereBox = bar.querySelector('.nb-where'), whereSec = bar.querySelector('.t-sec');
+  const progress = bar.querySelector('.nb-progress');
+
+  /* 文字サイズ: 標準 → 大 → 特大 */
+  const FS = [['', '標準'], ['l', '大'], ['xl', '特大']];
+  const fsBtn = bar.querySelector('.nb-fs-btn');
+  const renderFs = () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const label = (FS.find((f) => f[0] === cur) || FS[0])[1];
+    fsBtn.querySelector('.label').textContent = '文字 ' + label;
+    fsBtn.setAttribute('aria-label', '文字サイズ: ' + label + '（押すと切り替え）');
+  };
+  fsBtn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const next = FS[(FS.findIndex((f) => f[0] === cur) + 1) % FS.length];
+    next[0] ? root.setAttribute('data-fs', next[0]) : root.removeAttribute('data-fs');
+    store.set('ln-fs', next[0] || null);
+    renderFs();
+    say('文字サイズ: ' + next[1]);
+    onScroll();
+  });
+  renderFs();
+
+  /* ダーク（夜のノート）の切替。最初は端末の設定に合わせる */
+  const themeBtn = bar.querySelector('.nb-theme-btn');
+  const isDark = () => root.getAttribute('data-theme') === 'dark' || (!root.hasAttribute('data-theme') && darkMq.matches);
+  const renderTheme = () => themeBtn.setAttribute('aria-pressed', String(isDark()));
+  themeBtn.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store.set('ln-theme', next);
+    renderTheme();
+    say(next === 'dark' ? 'ダーク: オン' : 'ダーク: オフ');
+  });
+  darkMq.addEventListener && darkMq.addEventListener('change', renderTheme);
+  renderTheme();
+
+  /* ---- 読了目安 ---- */
+  const meta = cover && cover.querySelector('.meta');
+  if (meta) {
+    const chars = main.textContent.replace(/\s+/g, '').length;
+    meta.appendChild(el('li', {}, '読了目安 約' + Math.max(1, Math.round(chars / 500)) + '分'));
+  }
+
+  /* ---- 見出しのリンク ---- */
+  const headText = new Map();
+  main.querySelectorAll('h2, h3').forEach((h, i) => {
+    headText.set(h, h.textContent.trim());
+    if (!h.id) h.id = 'sec-' + (i + 1);
+    const a = el('a', { class: 'nb-anchor', href: '#' + h.id, 'aria-label': '「' + headText.get(h) + '」へのリンクをコピー' }, '#');
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.replaceState(null, '', '#' + h.id);
+      h.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      copyText(location.href).then(() => say('見出しへのリンクをコピーしました'), () => say('リンクをアドレス欄に表示しました'));
+    });
+    h.appendChild(a);
+  });
+
+  /* ---- 目次: 章ごとのチェックボックス・引き出し・現在地 ---- */
+  const READ_KEY = 'ln-read:' + here, DONE_KEY = 'ln-done:' + here;
+  let readSet = new Set();
+  try { readSet = new Set(JSON.parse(store.get(READ_KEY) || '[]')); } catch (e) {}
+  const chapters = [];
+  let drawer = null;
+  if (toc) {
+    const list = toc.querySelector('ol, ul');
+    if (list) {
+      [...list.children].forEach((li) => {
+        const a = li.querySelector(':scope > a');
+        if (!a || !a.getAttribute('href') || a.getAttribute('href')[0] !== '#') return;
+        const id = decodeURIComponent(a.getAttribute('href').slice(1));
+        const h = d.getElementById(id);
+        if (!h) return;
+        const row = el('span', { class: 'nb-row' });
+        const btn = el('button', { type: 'button', class: 'nb-check', 'data-id': id }, CHECKBOX);
+        a.before(row);
+        row.append(btn, a);
+        chapters.push({ id, h, title: a.textContent.trim() });
+      });
+    }
+    toc.querySelectorAll('a').forEach((a) => { a.innerHTML = '<span class="t">' + a.innerHTML + '</span>'; });
+    if (chapters.length) toc.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer = el('dialog', { class: 'nb-drawer', 'aria-label': 'もくじ' },
+      '<div class="nb-dialog-head"><strong>もくじ</strong><button type="button" class="nb-btn nb-close" aria-label="もくじを閉じる">' + ICON.close + '</button></div>');
+    const nav = el('nav', { 'aria-label': 'もくじ' });
+    if (list) nav.appendChild(list.cloneNode(true));
+    if (chapters.length) nav.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer.appendChild(nav);
+    d.body.appendChild(drawer);
+    bar.querySelector('.nb-toc-btn').addEventListener('click', () => {
+      drawer.showModal();
+      const act = drawer.querySelector('a.is-active');
+      if (act) act.scrollIntoView({ block: 'center' });
+    });
+    drawer.querySelector('.nb-close').addEventListener('click', () => drawer.close());
+    drawer.addEventListener('click', (e) => {
+      if (e.target === drawer || e.target.closest('a')) drawer.close();
+    });
+    [toc, drawer].forEach((box) => box.addEventListener('click', (e) => {
+      const b = e.target.closest('.nb-check');
+      if (b) setRead(b.dataset.id, !readSet.has(b.dataset.id), true);
+    }));
+  }
+  const checkBtns = (id) => d.querySelectorAll('.nb-check[data-id="' + CSS.escape(id) + '"]');
+  const titleOf = (id) => (chapters.find((c) => c.id === id) || {}).title || '';
+  const renderRead = (id) => {
+    const on = readSet.has(id);
+    checkBtns(id).forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-label', '「' + titleOf(id) + '」' + (on ? 'を読んだ（押すとチェックを外す）' : 'はまだ読んでいない（押すとチェックを付ける）'));
+      b.closest('li').classList.toggle('is-read', on);
+    });
+  };
+  function setRead(id, on, byHand) {
+    if (on === readSet.has(id)) return;
+    on ? readSet.add(id) : readSet.delete(id);
+    store.set(READ_KEY, readSet.size ? JSON.stringify([...readSet]) : null);
+    store.set(DONE_KEY, chapters.length && chapters.every((c) => readSet.has(c.id)) ? '1' : null);
+    renderRead(id);
+    if (byHand) say(on ? 'チェックを付けました' : 'チェックを外しました');
+  }
+  chapters.forEach((c) => renderRead(c.id));
+
+  const tocLinks = toc ? [...toc.querySelectorAll('a[href^="#"]'), ...drawer.querySelectorAll('a[href^="#"]')] : [];
+  const targets = [];
+  const seen = new Set();
+  tocLinks.forEach((a) => {
+    const id = decodeURIComponent(a.getAttribute('href').slice(1));
+    const h = d.getElementById(id);
+    if (h && !seen.has(id)) { seen.add(id); targets.push({ id, h }); }
+  });
+  targets.sort((x, y) => (x.h.compareDocumentPosition(y.h) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  const h2s = [...main.querySelectorAll('h2')];
+  let activeId = null, activeH2 = null;
+  const setActive = (id) => {
+    if (id === activeId) return;
+    activeId = id;
+    tocLinks.forEach((a) => {
+      const on = id && a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', !!on);
+      on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
+    });
+    const a = toc && toc.querySelector('a.is-active');
+    if (a && toc.scrollHeight > toc.clientHeight + 4) {
+      const r = a.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if (r.top < tr.top + 24 || r.bottom > tr.bottom - 24) toc.scrollTop += r.top - tr.top - tr.height / 3;
+    }
+  };
+
+  /* ---- 先頭へ戻る ---- */
+  const fab = el('button', { type: 'button', class: 'nb-btn nb-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
+  fab.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    bar.querySelector('.nb-home').focus({ preventScroll: true });
+  });
+  d.body.append(fab, toast);
+
+  /* ---- スクロールに連動する部品（読了バー・現在地・読んだ章のチェック） ---- */
+  let userMoved = false;
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((t) => addEventListener(t, () => { userMoved = true; }, { once: true, passive: true }));
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY, vh = window.innerHeight, max = root.scrollHeight - vh;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    const barH = bar.offsetHeight, line = barH + 48;
+    whereBox.classList.toggle('is-shown', !!cover && cover.getBoundingClientRect().bottom < barH);
+    fab.classList.toggle('is-shown', y > 800);
+
+    let cur = null;
+    if (max > 0 && y >= max - 2 && targets.length) cur = targets[targets.length - 1];
+    else for (const t of targets) { if (t.h.getBoundingClientRect().top <= line) cur = t; else break; }
+    setActive(cur ? cur.id : null);
+
+    let sec = null;
+    for (const h of h2s) { if (h.getBoundingClientRect().top <= line) sec = h; else break; }
+    if (cur && h2s.includes(cur.h)) sec = cur.h;
+    if (sec !== activeH2) { activeH2 = sec; whereSec.textContent = sec ? headText.get(sec) : ''; }
+
+    // 章の末尾（次の章の見出し、最後の章は本文の終わり）が画面に入ったら、その章を読んだことにする
+    if (userMoved) {
+      chapters.forEach((c, i) => {
+        if (readSet.has(c.id)) return;
+        const end = chapters[i + 1] ? chapters[i + 1].h.getBoundingClientRect().top : main.getBoundingClientRect().bottom;
+        const start = c.h.getBoundingClientRect().top;
+        if (start < vh && end >= -vh * 1.5 && end <= vh) setRead(c.id, true);
+      });
+    }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  /* ---- 表: 用語列の判定と、横にはみ出すときの案内 ---- */
+  const scrollers = [];
+  main.querySelectorAll('.table-wrap').forEach((w) => {
+    const t = w.querySelector('table');
+    const firsts = t ? [...t.querySelectorAll('tbody tr > :first-child')] : [];
+    if (firsts.length && firsts.every((c) => c.textContent.trim().length <= 16)) t.classList.add('nb-term');
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 表は横にスクロールできます →');
+    w.after(hint);
+    scrollers.push({ w, hint, mask: true });
+  });
+
+  /* ---- 図: 拡大表示 ---- */
+  const lightbox = el('dialog', { class: 'nb-lightbox', 'aria-label': '図の拡大表示' },
+    '<div class="nb-dialog-head"><strong></strong><button type="button" class="nb-btn nb-close" aria-label="拡大表示を閉じる">' + ICON.close + '</button></div>');
+  lightbox.querySelector('.nb-close').addEventListener('click', () => lightbox.close());
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener('close', () => { const f = lightbox.querySelector('figure'); if (f) f.remove(); });
+  d.body.appendChild(lightbox);
+  main.querySelectorAll('figure').forEach((fig) => {
+    const pic = fig.querySelector(':scope > svg');
+    if (!pic) return;
+    const wrap = el('div', { class: 'nb-fig' });
+    fig.before(wrap);
+    wrap.appendChild(fig);
+    const cap = fig.querySelector('figcaption');
+    const label = (cap ? cap.textContent : (pic.querySelector('title') || {}).textContent || '図').trim();
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-expand', 'aria-label': '図を拡大表示: ' + label }, ICON.expand + '<span>拡大</span>');
+    btn.addEventListener('click', () => {
+      const f = el('figure', { class: fig.className });
+      f.appendChild(pic.cloneNode(true));
+      lightbox.querySelector('.nb-dialog-head strong').textContent = label;
+      lightbox.appendChild(f);
+      lightbox.showModal();
+    });
+    wrap.appendChild(btn);
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 図は横にスクロールできます（「拡大」で全体表示）→');
+    wrap.after(hint);
+    scrollers.push({ w: fig, hint, mask: false });
+  });
+  const updateScroller = (s) => {
+    const max = s.w.scrollWidth - s.w.clientWidth;
+    const can = max > 4;
+    s.hint.classList.toggle('is-shown', can);
+    if (s.mask) {
+      s.w.classList.toggle('nb-more-right', can && s.w.scrollLeft < max - 4);
+      s.w.classList.toggle('nb-more-left', can && s.w.scrollLeft > 4);
+    }
+  };
+  scrollers.forEach((s) => s.w.addEventListener('scroll', () => updateScroller(s), { passive: true }));
+  const updateScrollers = () => scrollers.forEach(updateScroller);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(updateScrollers);
+    scrollers.forEach((s) => ro.observe(s.w));
+  } else addEventListener('resize', updateScrollers);
+
+  /* ---- コードのコピー ---- */
+  main.querySelectorAll('pre').forEach((pre) => {
+    const wrap = el('div', { class: 'nb-code' });
+    pre.before(wrap);
+    wrap.appendChild(pre);
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-copy', 'aria-label': 'コードをコピー' }, ICON.copy + '<span>コピー</span>');
+    btn.addEventListener('click', () => {
+      copyText(pre.innerText.replace(/\n$/, '')).then(() => {
+        btn.innerHTML = ICON.check + '<span>コピー済み</span>';
+        say('コードをコピーしました');
+        setTimeout(() => { btn.innerHTML = ICON.copy + '<span>コピー</span>'; }, 1600);
+      }, () => say('コピーできませんでした'));
+    });
+    wrap.appendChild(btn);
+  });
+
+  /* ---- 確認問題: 答えの一括表示 ---- */
+  const quizzes = [...main.querySelectorAll('.quiz')];
+  const answers = [...main.querySelectorAll('details.quiz, .quiz details')];
+  if (answers.length >= 2) {
+    const tools = el('div', { class: 'nb-quiz-tools' },
+      '<span>全' + quizzes.length + '問。問題を押すと答えが開きます</span><button type="button" class="nb-btn"></button>');
+    const tbtn = tools.querySelector('button');
+    const render = () => {
+      const allOpen = answers.every((x) => x.open);
+      tbtn.textContent = allOpen ? '答えをすべて隠す' : '答えをすべて表示';
+      tbtn.setAttribute('aria-pressed', String(allOpen));
+    };
+    tbtn.addEventListener('click', () => {
+      const open = !answers.every((x) => x.open);
+      answers.forEach((x) => { x.open = open; });
+      render();
+    });
+    answers.forEach((x) => x.addEventListener('toggle', render));
+    quizzes[0].before(tools);
+    render();
+  }
+
+  /* ---- 印刷時は答えも含めてすべて開く ---- */
+  let closedForPrint = [];
+  addEventListener('beforeprint', () => {
+    closedForPrint = [...d.querySelectorAll('details:not([open])')];
+    closedForPrint.forEach((x) => { x.open = true; });
+  });
+  addEventListener('afterprint', () => { closedForPrint.forEach((x) => { x.open = false; }); closedForPrint = []; });
+
+  /* ---- シリーズの前後移動・関連ノート ----
+     トップページ（index.html）の一覧を台帳として読み込み、
+     同じシリーズ（data-series / data-order）と同じ分野（data-topic）のノートへのリンクを末尾に出す。
+     ファイルを直接開いた場合（file://）は読み込めないので何も出さない */
+  const TOPIC = { ai: 'AI', infra: 'インフラ', security: 'セキュリティ', dev: '開発' };
+  const node = (tag, cls, text) => {
+    const n = d.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const item = (n) => {
+    const li = node('li');
+    const a = node('a', '', n.title);
+    a.href = n.url;
+    li.append(node('span', 'm', [n.date, n.topics.map((t) => TOPIC[t] || t).join('・')].filter(Boolean).join('　')), a);
+    if (n.summary) li.appendChild(node('span', 's', n.summary));
+    return li;
+  };
+  const loadRelated = async () => {
+    if (!/^https?:$/.test(location.protocol) || !here) return;
+    const base = new URL(indexHref, location.href);
+    const res = await fetch(base, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const notes = [...doc.querySelectorAll('article.entry')].map((e) => {
+      const a = e.querySelector('h3 a');
+      if (!a) return null;
+      const url = new URL(a.getAttribute('href'), base);
+      return {
+        url: url.href,
+        file: decodeURIComponent(url.pathname.split('/').pop()),
+        title: a.textContent.trim(),
+        summary: ((e.querySelector('p') || {}).textContent || '').trim(),
+        topics: (e.dataset.topic || '').split(/\s+/).filter(Boolean),
+        date: e.dataset.date || '',
+        series: (e.dataset.series || '').trim(),
+        order: Number(e.dataset.order) || 0,
+      };
+    }).filter(Boolean);
+    const me = notes.find((n) => n.file === here);
+    if (!me) return;
+
+    const aside = node('aside', 'nb-related');
+    aside.setAttribute('aria-label', '次に読む');
+    let members = [];
+    if (me.series) {
+      members = notes.filter((n) => n.series === me.series)
+        .sort((a, b) => (a.order - b.order) || a.date.localeCompare(b.date));
+      const i = members.indexOf(me);
+      const seriesUrl = new URL(base);
+      seriesUrl.searchParams.set('series', me.series);
+      if (meta) {
+        const li = node('li');
+        const a = node('a', '', 'シリーズ「' + me.series + '」 ' + (i + 1) + '/' + members.length);
+        a.href = seriesUrl.href;
+        li.appendChild(a);
+        meta.prepend(li);
+      }
+      const box = node('section', 'nb-series');
+      const ol = node('ol');
+      members.forEach((n) => {
+        const li = node('li');
+        if (n === me) {
+          li.appendChild(node('span', 'is-current', n.title + '（このページ）'));
+          li.firstChild.setAttribute('aria-current', 'page');
+        } else {
+          const a = node('a', '', n.title);
+          a.href = n.url;
+          li.appendChild(a);
+        }
+        ol.appendChild(li);
+      });
+      box.append(node('h2', '', 'シリーズ「' + me.series + '」'), ol);
+      const pn = node('div', 'nb-pn');
+      [[members[i - 1], '← 前の回: ', 'is-prev'], [members[i + 1], '次の回: ', 'is-next']].forEach(([n, label, cls]) => {
+        if (!n) return;
+        const a = node('a', cls, label + n.title + (cls === 'is-next' ? ' →' : ''));
+        a.href = n.url;
+        pn.appendChild(a);
+      });
+      if (pn.children.length) box.appendChild(pn);
+      aside.appendChild(box);
+    }
+
+    // 関連ノート: 分野が重なるものを、重なりの多い順・新しい順に最大4件（シリーズの回は除く）
+    const mine = new Set(me.topics);
+    const related = notes
+      .filter((n) => n !== me && !members.includes(n))
+      .map((n) => ({ n, score: n.topics.filter((t) => mine.has(t)).length }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => (b.score - a.score) || b.n.date.localeCompare(a.n.date))
+      .slice(0, 4)
+      .map((x) => x.n);
+    if (related.length) {
+      const box = node('section', 'nb-also');
+      const ul = node('ul', 'nb-list');
+      related.forEach((n) => ul.appendChild(item(n)));
+      box.append(node('h2', '', '関連ノート'), ul);
+      aside.appendChild(box);
+    }
+    if (!aside.children.length) return;
+    const footer = sheet.querySelector(':scope > footer');
+    footer ? footer.before(aside) : sheet.appendChild(aside);
+    onScroll();
+  };
+  loadRelated().catch(() => {});
+
+  // #付きURLで開いたとき、上部バーの追加やフォント読み込みで見出しの位置がずれるので合わせ直す
+  const realignHash = () => {
+    if (userMoved || !location.hash) return;
+    let t = null;
+    try { t = d.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (t) t.scrollIntoView({ behavior: 'instant' });
+  };
+
+  realignHash();
+  update();
+  updateScrollers();
+  if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { realignHash(); onScroll(); updateScrollers(); });
+  addEventListener('load', () => { realignHash(); onScroll(); }, { once: true });
+})();
+</script>
+<!-- notebook-ui-js:end -->
+</body>
+</html>
