@@ -4,6 +4,460 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Code の拡張の全体像：CLAUDE.md・Skill・Hooks・サブエージェント・MCP・プラグイン | 学習ノート</title>
+<!-- notebook-ui:start （全レポート共通の見た目と操作部品。このブロックは編集しない） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Klee+One:wght@600&family=Zen+Kaku+Gothic+New:wght@700&display=swap" rel="stylesheet">
+<style id="nb-style">
+  /* =====================================================================
+     学習ノート「書き込みノート」デザイン（全レポート共通）
+     白い紙のノートに、蛍光ペン（重要語）と赤ペン（要点メモ）だけで書き込んだ見た目。
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文 17px・行間 1.9・字間 0.02em・1行 40字（max-width: 40em）
+     - 文字サイズは タイトル34px／h2 26px／h3 19px／本文17px
+     - 余白は 8px ベース。見出しは前のセクションから離し、直後の本文に近づける
+     - 強調は <mark>（蛍光ペン）と .memo（赤ペン）の2種類だけ
+     ===================================================================== */
+  :root {
+    --desk: #F3F5F7;
+    --grid-line: rgba(42, 75, 141, .06);
+    --sheet: #FFFFFF;
+    --ink: #22262B;
+    --ink-sub: #46505B;
+    --ink-muted: #4C5560;
+    --rule: #B9C2CC;
+    --marker: #FFE24A;
+    --hl: #FFE24A;                 /* 文字に引く蛍光ペン */
+    --marker-fill: #FFE24A;        /* 図の中で1か所だけ塗る蛍光ペン */
+    --red-pen: #C8332A;
+    --blue-ink: #2A4B8D;
+    --link: #1F5BB5;
+    --code-bg: #F3F5F7;
+    --sheet-shadow: 0 1px 2px rgba(30, 40, 55, .08), 0 8px 24px rgba(30, 40, 55, .06);
+    /* 旧デザインの変数名（既存の図・レポート固有スタイルとの互換用） */
+    --paper: var(--sheet); --paper-2: var(--code-bg); --ink-2: var(--ink-sub);
+    --marker-ink: #22262B;
+    --note: #E3EBF7; --caution: #FBE6E3;   /* 図の中で「種類」を塗り分ける淡い色（強調には使わない） */
+    --surface: var(--sheet); --radius: 10px; --shadow: var(--sheet-shadow); --focus: var(--link);
+
+    --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    --font-title: "Zen Kaku Gothic New", "BIZ UDPGothic", "Hiragino Sans", sans-serif;
+    --font-hand: "Klee One", "BIZ UDPGothic", cursive;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --font-display: var(--font-title);
+
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+    --topbar-h: 64px;
+    --toc-w: 230px;
+    --sheet-w: 940px;
+    /* 文字サイズ（17px = 1rem） */
+    --fs-title: 2rem;              /* 34px */
+    --fs-h2: calc(26rem / 17);     /* 26px */
+    --fs-h3: calc(19rem / 17);     /* 19px */
+    --fs-small: calc(15rem / 17);  /* 15px キャプション・目次・メモ */
+    --fs-meta: calc(14rem / 17);   /* 14px メタ情報 */
+    color-scheme: light;
+    interpolate-size: allow-keywords;
+  }
+  /* ---- 夜のノート（ダーク）: 端末の設定に合わせる＋手動切替 ---- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+      --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+      --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+      --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+      --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+      --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+    --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+    --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+    --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+    --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+    --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+    color-scheme: dark;
+  }
+  /* 文字サイズ切替（rem 基準なので本文・見出しが一緒に拡大する） */
+  html { font-size: 106.25%; }
+  :root[data-fs="l"] { font-size: 118.75%; }
+  :root[data-fs="xl"] { font-size: 131.25%; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + var(--sp-2)); }
+  body {
+    margin: 0; color: var(--ink);
+    background-color: var(--desk);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--font-body); font-size: 1rem; line-height: 1.9; letter-spacing: 0.02em;
+    text-align: left; -webkit-font-smoothing: antialiased; text-size-adjust: 100%;
+  }
+  a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :where(a, button, summary, input, [tabindex]):focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+  em, i, cite { font-style: normal; font-weight: 700; }
+  strong, b { font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+  ::selection { background: var(--hl); color: inherit; }
+
+  /* ---- 蛍光ペン（その節で一番大事な語句だけ） ---- */
+  mark { background: linear-gradient(transparent 60%, var(--hl) 60%); color: inherit; padding: 0 0.08em; }
+
+  /* ---- ページの骨組み: 左に目次、右に本文の紙 ---- */
+  .page {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2);
+    margin: 0 auto; padding: var(--sp-4) var(--sp-3) var(--sp-5);
+    display: grid; grid-template-columns: var(--toc-w) minmax(0, var(--sheet-w));
+    column-gap: var(--sp-4); align-items: start; justify-content: center;
+  }
+  .sheet {
+    grid-column: 2; min-width: 0;
+    background: var(--sheet); padding: 48px 56px 64px;
+    box-shadow: var(--sheet-shadow);
+  }
+
+  /* ---- 表紙 ---- */
+  .cover { margin: 0 0 var(--sp-4); padding: 0 0 var(--sp-3); border-bottom: 1.5px dashed var(--rule); }
+  .cover .back { display: inline-block; margin-bottom: var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+  .nb-js .cover .back { display: none; }
+  .cover h1 {
+    margin: 0 0 var(--sp-2); font-family: var(--font-title); font-weight: 700;
+    font-size: var(--fs-title); line-height: 1.4; letter-spacing: 0;
+  }
+  .cover h1 span { background: none; }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); font-size: var(--fs-meta); line-height: 1.7; color: var(--ink-muted); }
+  .cover .meta a { color: inherit; }
+
+  /* ---- 目次（左に固定。読み終えた章に赤ペンのチェック） ---- */
+  .toc {
+    grid-column: 1; grid-row: 1 / span 2;
+    position: sticky; top: calc(var(--topbar-h) + var(--sp-3));
+    max-height: calc(100vh - var(--topbar-h) - var(--sp-5)); overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) 0; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    scrollbar-width: thin;
+  }
+  .toc h2 { margin: 0 0 12px; font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); line-height: 1.4; color: var(--ink); }
+  .toc ol, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol > li > a { padding-left: 30px; }
+  .toc ol > li > a, .nb-row a { display: block; padding-top: 4px; padding-bottom: 4px; }
+  .toc .sub { padding-left: 30px; margin: 0 0 6px; }
+  .toc .sub a { display: block; padding: 2px 0; color: var(--ink-sub); font-size: var(--fs-meta); }
+  .toc a.is-active { font-weight: 700; }
+  .toc a.is-active .t, .nb-drawer a.is-active .t { background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-row { display: flex; align-items: flex-start; gap: 8px; }
+  .nb-row a { flex: 1; min-width: 0; }
+  .nb-check {
+    flex: none; width: 22px; height: 22px; margin-top: 5px; padding: 0;
+    background: none; border: 0; color: var(--ink-sub); cursor: pointer;
+  }
+  .nb-check svg { display: block; width: 22px; height: 22px; overflow: visible; }
+  .nb-tick { stroke: var(--red-pen); stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .35s ease-out; }
+  .is-read > .nb-row .nb-tick, .nb-check[aria-pressed="true"] .nb-tick { stroke-dashoffset: 0; }
+  .nb-toc-note { margin: var(--sp-2) 0 0; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 本文 ---- */
+  .prose { overflow-wrap: break-word; }   /* 長い英単語・URLが狭い画面からはみ出さないように */
+  .prose > :first-child { margin-top: 0; }
+  .prose p, .prose ul, .prose ol { max-width: var(--measure); }
+  .prose p { margin: 0 0 1.5em; }
+  .prose ul, .prose ol { margin: 0 0 1.5em; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: 0.4em; }
+  .prose li > ul, .prose li > ol { margin: 0.4em 0 0; }
+  .prose h2 {
+    position: relative; width: fit-content; max-width: 100%;
+    margin: 80px 0 var(--sp-3); padding-bottom: 12px;
+    font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: 0;
+  }
+  /* 蛍光ペンで引いたような、少しゆがんだ下線（h2だけ） */
+  .prose h2::after {
+    content: ""; position: absolute; left: -4px; right: -6px; bottom: 0; height: 10px;
+    background: var(--hl);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  }
+  .prose h3 { margin: 56px 0 12px; font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .prose h4 { margin: 40px 0 8px; padding: 0; border: 0; font-size: 1rem; font-weight: 700; line-height: 1.6; letter-spacing: 0; color: var(--ink); }
+  .prose h2 + h3 { margin-top: var(--sp-3); }
+  .prose :is(h2, h3, h4) + :is(p, ul, ol, .with-memo, .callout, .table-wrap, figure, .nb-fig, pre, .nb-code, details, .nb-quiz-tools) { margin-top: 0; }
+
+  /* ---- 赤ペンのメモ（本文の右余白。狭い画面では段落の下へ回り込む） ---- */
+  .with-memo { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 32px; margin: 0 0 1.5em; }
+  .with-memo > :not(.memo) { flex: 1 1 22em; min-width: 0; margin-bottom: 0; }
+  .memo {
+    flex: 0 1 190px; margin: 4px 0 0; padding: 0;
+    font-family: var(--font-hand); font-weight: 600; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    color: var(--red-pen); transform: rotate(-1.5deg); transform-origin: 0 0;
+  }
+  .memo p { margin: 0; }
+
+  /* ---- 3行でいうと（青インクの破線枠＋手書きラベル） ---- */
+  .callout {
+    position: relative; max-width: var(--measure); margin: var(--sp-4) 0;
+    padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; background: none;
+  }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout p + p { margin-top: 0; }
+  .callout ul, .callout ol { margin-bottom: 0; }
+  .callout .label { display: block; margin-bottom: 4px; font-size: var(--fs-small); font-weight: 700; color: var(--ink-sub); letter-spacing: 0; }
+  .callout.caution .label { font-family: var(--font-hand); font-weight: 600; font-size: 1rem; color: var(--red-pen); }
+  .callout.note .label { color: var(--blue-ink); }
+  .callout.summary { margin: var(--sp-4) 0 var(--sp-5); padding: 28px var(--sp-3) 20px; border-color: var(--blue-ink); }
+  .callout.summary .label {
+    position: absolute; top: 0; left: 18px; transform: translateY(-55%); margin: 0; padding: 0 10px;
+    background: var(--sheet); font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.4; color: var(--blue-ink);
+  }
+  .callout.summary :is(ul, ol) { list-style: decimal; padding-inline-start: 1.6em; }
+  .callout.summary li::marker { font-family: var(--font-hand); font-weight: 600; color: var(--blue-ink); }
+
+  /* ---- 表（ヘッダー下は実線、行の区切りは破線） ---- */
+  .table-wrap { overflow-x: auto; margin: var(--sp-4) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: calc(16rem / 17); line-height: 1.7; letter-spacing: 0.01em; }
+  caption { caption-side: top; text-align: left; padding: 0 0 var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); }
+  th, td { padding: 10px var(--sp-2) 10px 0; text-align: left; vertical-align: top; border-bottom: 1px dashed var(--rule); }
+  :is(th, td):last-child { padding-right: 0; }
+  thead th { border-bottom: 2px solid var(--ink); font-weight: 700; white-space: nowrap; }
+  tbody th { font-weight: 700; }
+  table.nb-term tbody tr > :first-child { font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- コード ---- */
+  pre {
+    margin: var(--sp-4) 0; padding: var(--sp-2) 20px; overflow-x: auto;
+    background: var(--code-bg); border-radius: 8px;
+    font-size: var(--fs-small); line-height: 1.7; letter-spacing: 0;
+  }
+  code { font-family: var(--font-mono); }
+  pre code { font-size: inherit; }
+  :not(pre) > code { padding: 0.1em 0.35em; background: var(--code-bg); border-radius: 4px; font-size: 0.88em; letter-spacing: 0; overflow-wrap: anywhere; }
+
+  /* ---- 図（実線の枠に入れたインラインSVG。キャプションは図の直下） ---- */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg {
+    display: block; width: 100%; height: auto; padding: 20px;
+    border: 1.5px solid var(--ink); border-radius: 12px; color: var(--ink); background: var(--sheet);
+  }
+  figure svg text { font-family: var(--font-body); fill: currentColor; letter-spacing: 0; }
+  figcaption { margin-top: var(--sp-1); font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  figcaption b:first-child { color: var(--ink); margin-right: 0.3em; }
+
+  /* ---- 確認問題 ---- */
+  .quiz { max-width: var(--measure); margin: 0; border: 0; border-bottom: 1px dashed var(--rule); border-radius: 0; background: none; }
+  :not(.quiz) + .quiz { border-top: 1px dashed var(--rule); }
+  .quiz summary, .more summary { position: relative; padding: 14px 40px 14px 0; cursor: pointer; font-weight: 700; list-style: none; }
+  .quiz summary::-webkit-details-marker, .more summary::-webkit-details-marker { display: none; }
+  .quiz summary::after, .more summary::after {
+    content: ""; position: absolute; right: 8px; top: calc(14px + 0.45em); width: 18px; height: 18px;
+    background: var(--ink-sub); transition: transform .2s;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  details[open] > summary::after { transform: rotate(180deg); }
+  .quiz summary:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+  .quiz .answer { padding: 0 0 var(--sp-2); border: 0; }
+  .quiz .answer::before { content: "答え"; display: block; font-family: var(--font-hand); font-weight: 600; color: var(--red-pen); line-height: 1.6; }
+  .quiz .answer > :last-child { margin-bottom: 0; }
+  .quiz .question { margin: var(--sp-2) 0 4px; font-weight: 700; }
+  .quiz .choices { margin: 0 0 4px; }
+  .quiz details { margin: 0; border: 0; }
+  .quiz details summary { padding-top: 4px; padding-bottom: 8px; font-weight: 400; color: var(--link); }
+  .quiz details summary::after { top: calc(4px + 0.45em); }
+  details::details-content { transition: block-size .25s ease, content-visibility .25s allow-discrete; overflow: clip; block-size: 0; }
+  details[open]::details-content { block-size: auto; }
+  .more { max-width: var(--measure); margin: var(--sp-3) 0; padding: 0 var(--sp-2); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .more summary { color: var(--link); }
+  .more .inner { padding: 0 0 var(--sp-2); border: 0; }
+
+  /* ---- 参考リンク・フッター ---- */
+  .refs { max-width: var(--measure); }
+  .refs li { overflow-wrap: anywhere; }
+  .sheet > footer, .page > footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1.5px dashed var(--rule); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .sheet > footer p { margin: 0; }
+  .sheet > footer p + p { margin-top: var(--sp-1); }
+
+  /* ---- 上部バー ---- */
+  .nb-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); border-radius: 8px; }
+  .nb-skip:focus { top: var(--sp-1); }
+  .nb-topbar {
+    position: sticky; top: 0; z-index: 50; height: var(--topbar-h);
+    background: color-mix(in srgb, var(--desk) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+    letter-spacing: 0;
+  }
+  .nb-topbar-inner {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2); height: 100%;
+    margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2);
+  }
+  .nb-home {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; min-height: 44px; padding: 0 10px 0 4px; margin-left: -4px;
+    color: var(--ink); text-decoration: none; font-weight: 700; border-radius: 8px;
+  }
+  .nb-home:hover { background: color-mix(in srgb, var(--rule) 25%, transparent); text-decoration: none; }
+  .nb-home svg { width: 20px; height: 20px; }
+  .nb-where { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); opacity: 0; transition: opacity .2s; }
+  .nb-where.is-shown { opacity: 1; }
+  .nb-where .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-where .t-page { flex: 0 1 auto; max-width: 50%; }
+  .nb-where .sep { flex-shrink: 0; }
+  .nb-where .t-sec { flex: 0 1 auto; color: var(--ink); font-weight: 700; }
+  .nb-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; margin-left: auto; }
+  .nb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-width: 44px; min-height: 44px; padding: 0 14px;
+    font: inherit; font-size: var(--fs-small); line-height: 1; color: var(--ink);
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer;
+  }
+  .nb-btn:hover { border-color: var(--ink-sub); }
+  .nb-btn[aria-pressed="true"] { border-color: var(--ink); font-weight: 700; }
+  .nb-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nb-toc-btn { display: none; }
+  .nb-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--blue-ink); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* ---- 引き出し式の目次（900px以下） ---- */
+  .nb-drawer {
+    margin: 0 auto 0 0; height: 100%; max-height: 100dvh; width: min(340px, 88vw); max-width: none;
+    padding: 0; border: 0; background: var(--sheet); color: var(--ink); box-shadow: var(--sheet-shadow);
+    font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+  }
+  .nb-drawer::backdrop { background: rgb(10 14 20 / 0.45); }
+  .nb-drawer[open] { animation: nb-slide .22s ease-out; }
+  @keyframes nb-slide { from { transform: translateX(-24px); opacity: 0; } }
+  .nb-dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3); background: var(--sheet); border-bottom: 1px dashed var(--rule); }
+  .nb-dialog-head strong { font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); }
+  .nb-drawer nav { padding: var(--sp-2) var(--sp-3) var(--sp-4); }
+  .nb-drawer ol, .nb-drawer ul { list-style: none; margin: 0; padding: 0; }
+  .nb-drawer a { color: var(--ink); text-decoration: none; }
+  .nb-drawer ol > li > a { display: block; padding: 6px 0 6px 30px; }
+  .nb-drawer .nb-row a { padding: 6px 0; }
+  .nb-drawer .nb-check { margin-top: 7px; }
+  .nb-drawer .sub { padding-left: 30px; margin: 0 0 6px; }
+  .nb-drawer .sub a { display: block; padding: 6px 0; color: var(--ink-sub); }
+  .nb-drawer a.is-active { font-weight: 700; }
+
+  /* ---- 見出しのリンク ---- */
+  .nb-anchor { margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.75em; font-weight: 400; color: var(--ink-sub); text-decoration: none; opacity: 0; transition: opacity .15s; }
+  :is(h2, h3, h4):hover > .nb-anchor, .nb-anchor:focus-visible { opacity: 1; }
+  @media (hover: none) { .nb-anchor { display: none; } }
+
+  /* ---- 表・図の横スクロールの案内 ---- */
+  .nb-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+  .nb-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+  .nb-more-left.nb-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+  .nb-scroll-hint { display: none; margin: calc(var(--sp-3) * -1) 0 var(--sp-3); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .nb-scroll-hint.is-shown { display: block; }
+
+  /* ---- 図の拡大 ---- */
+  .nb-fig { position: relative; margin: var(--sp-4) 0; }
+  .nb-fig > figure { margin: 0; }
+  .nb-expand {
+    position: absolute; top: -14px; right: var(--sp-2); z-index: 1;
+    min-height: 28px; min-width: 28px; padding: 0 10px; font-size: var(--fs-meta);
+    color: var(--ink-sub); background: var(--sheet);
+  }
+  .nb-expand svg { width: 14px; height: 14px; }
+  .nb-lightbox {
+    width: min(1200px, 96vw); max-width: none; max-height: 92dvh; padding: 0;
+    border: 1.5px solid var(--ink); border-radius: 12px; background: var(--sheet); color: var(--ink);
+  }
+  .nb-lightbox::backdrop { background: rgb(10 14 20 / 0.6); }
+  .nb-lightbox .nb-dialog-head strong { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-small); color: var(--ink-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-lightbox figure { margin: 0; padding: var(--sp-3); overflow: auto; }
+  .nb-lightbox figure > svg { min-width: 760px; border: 0; padding: 0; }
+
+  /* ---- コードのコピー ---- */
+  .nb-code { position: relative; margin: var(--sp-4) 0; }
+  .nb-code > pre { margin: 0; padding-right: 96px; }
+  .nb-copy { position: absolute; top: var(--sp-1); right: var(--sp-1); min-height: 32px; padding: 0 10px; font-size: var(--fs-meta); color: var(--ink-sub); }
+  .nb-copy svg { width: 16px; height: 16px; }
+
+  /* ---- 確認問題の一括表示 ---- */
+  .nb-quiz-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-1) var(--sp-2); max-width: var(--measure); margin: 0 0 var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+
+  /* ---- シリーズ・関連ノート（トップページの一覧から自動で作る） ---- */
+  .nb-related { margin-top: var(--sp-5); }
+  .nb-related h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .nb-related > section + section { margin-top: var(--sp-4); }
+  .nb-series { padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .nb-series ol { margin: 0; padding-left: 1.6em; }
+  .nb-series li + li { margin-top: 4px; }
+  .nb-series .is-current { font-weight: 700; background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-pn { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-1) var(--sp-3); margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px dashed var(--rule); }
+  .nb-pn .is-next { margin-left: auto; text-align: right; }
+  .nb-list { list-style: none; margin: 0; padding: 0; }
+  .nb-list li { padding: 12px 0; border-bottom: 1px dashed var(--rule); }
+  .nb-list li:first-child { border-top: 1px dashed var(--rule); }
+  .nb-list a { font-weight: 700; }
+  .nb-list .s { display: block; margin-top: 2px; font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  .nb-list .m { display: block; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 先頭へ・通知 ---- */
+  .nb-fab {
+    position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40; width: 48px; height: 48px; padding: 0;
+    box-shadow: var(--sheet-shadow); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .nb-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+  .nb-toast {
+    position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    padding: var(--sp-1) var(--sp-2); border-radius: 8px; background: var(--ink); color: var(--sheet); font-size: var(--fs-small); letter-spacing: 0;
+    transition: opacity .2s, transform .2s;
+  }
+  .nb-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---- 900px以下: 目次はヘッダーから開く ---- */
+  @media (max-width: 900px) {
+    .page { display: block; max-width: calc(var(--sheet-w) + var(--sp-3) * 2); padding: var(--sp-3) var(--sp-2) var(--sp-5); }
+    .toc { position: static; max-height: none; overflow: visible; margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--sheet); }
+    .nb-js .page > .toc { display: none; }
+    .nb-toc-btn { display: inline-flex; }
+    .sheet { padding: 40px 32px 56px; }
+  }
+  @media (max-width: 600px) {
+    :root { --topbar-h: 56px; }
+    .page { padding: var(--sp-2) 10px var(--sp-4); }
+    .sheet { padding: 32px 20px 48px; }
+    .nb-topbar-inner { padding: 0 var(--sp-1) 0 var(--sp-2); gap: var(--sp-1); }
+    .nb-where, .nb-btn .label-wide { display: none; }
+    .nb-actions { gap: 6px; }
+    .nb-btn { padding: 0 10px; }
+    .prose h2 { margin-top: 64px; }
+    .memo { flex-basis: 100%; padding-left: 1em; }
+    table.nb-term tbody tr > :first-child { white-space: normal; min-width: 7em; }
+    .table-wrap :is(th, td) { min-width: 5em; }
+    .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after, ::details-content { transition: none !important; animation: none !important; }
+  }
+  @media print {
+    body { background: #fff; }
+    .nb-topbar, .nb-fab, .nb-toast, .nb-anchor, .nb-copy, .nb-expand, .nb-quiz-tools, .nb-scroll-hint, .nb-skip, .page > .toc, .nb-toc-note { display: none !important; }
+    .page { display: block; max-width: none; padding: 0; }
+    .sheet { box-shadow: none; padding: 0; }
+    .nb-more-left, .nb-more-right { -webkit-mask-image: none; mask-image: none; }
+    figure, .quiz, .table-wrap, .callout { break-inside: avoid; }
+  }
+</style>
+<script>try{var t=localStorage.getItem('ln-theme'),f=localStorage.getItem('ln-fs'),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);if(f==='l'||f==='xl')r.setAttribute('data-fs',f);}catch(e){}</script>
+<!-- notebook-ui:end -->
+<style>
+  /* このレポートだけで使うスタイル（必要なときだけ書く。色は上の CSS 変数を使う） */
+  /* 狭い画面では図を縮小しすぎると文字が 12px を下回るため、図の中だけ横スクロールさせる
+     （viewBox 幅 680 ＋ 図の枠の内側余白 40px を下限にする） */
+  @media (max-width: 600px) {
+    figure { overflow-x: auto; }
+    figure > svg { min-width: 720px; }
+  }
+</style>
 </head>
 <body>
 <div class="page">
@@ -17,15 +471,19 @@
         <ul class="sub">
           <li><a href="#s3-1">拡張の層と読み込みの流れ</a></li>
           <li><a href="#s3-2">4観点の比較表</a></li>
-          <li><a href="#s3-3">ハーネスと Mods の位置づけ</a></li>
+          <li><a href="#s3-3">ハーネスとModsの位置づけ</a></li>
           <li><a href="#s3-4">やりたいこと別の選び方</a></li>
         </ul>
       </li>
       <li><a href="#s4">具体例・使いどころ</a>
         <ul class="sub">
-          <li><a href="#s4-1">リポジトリの .claude/ 構成</a></li>
-          <li><a href="#s4-1-3">実例：Hooks と log-usage.js</a></li>
-          <li><a href="#s4-1-6">実例：拡張の連携</a></li>
+          <li><a href="#s4-1">リポジトリの.claude/構成</a></li>
+          <li><a href="#s4-1-1">CLAUDE.mdの実例</a></li>
+          <li><a href="#s4-1-2">permissionsの実例</a></li>
+          <li><a href="#s4-1-3">Hooksとlog-usage.jsの実例</a></li>
+          <li><a href="#s4-1-4">サブエージェントの定義</a></li>
+          <li><a href="#s4-1-5">Skillの定義</a></li>
+          <li><a href="#s4-1-6">拡張の連携（/reportの流れ）</a></li>
           <li><a href="#s4-2">ほかにある拡張</a></li>
         </ul>
       </li>
@@ -52,13 +510,16 @@
       <div class="callout summary">
         <span class="label">3行でいうと</span>
         <ol>
-          <li>Claude Codeの拡張は、モデルが読む指示（CLAUDE.md・Skill）、本体が実行する仕組み（Hooks・settings.json）、別の担い手を足す仕組み（サブエージェント・MCP）、それらを束ねる箱（プラグイン）に分けて考えると整理しやすい。</li>
-          <li>「必ず動かしたい」ことはCLAUDE.mdやSkillに書かず、Hooksとsettings.jsonのpermissionsに置く。前者はモデルが解釈する文脈で、後者は本体が強制する。</li>
-          <li>ハーネスは拡張の部品ではなく、モデルを包む層の全体を指す呼び名である。Modsはプラグインの一種として公式に位置づけられている。</li>
+          <li>Claude Codeの拡張は、モデルが読む指示（CLAUDE.md・Skill）、本体が実行する仕組み（Hooks・settings.json）、別の担い手を足す仕組み（サブエージェント・MCP）、それらを束ねる箱（プラグイン）に<mark>分けて考える</mark>と整理しやすい。</li>
+          <li>「必ず動かしたい」ことはCLAUDE.mdやSkillに書かず、Hooksとsettings.jsonのpermissionsに置く。前者はモデルが解釈する文脈で、後者は<mark>本体が強制する</mark>。</li>
+          <li>ハーネスは拡張の部品ではなく、<mark>モデルを包む層の全体</mark>を指す呼び名である。Modsはプラグインの一種として公式に位置づけられている。</li>
         </ol>
       </div>
       <p>この文書の確認日は2026-10-03である。Claude Codeは更新が速いため、機能名や挙動は公式ドキュメントで再確認してほしい。公式ページで確かめられなかった項目は「未確認」と書き、推測では埋めていない。</p>
-      <p>扱うのはCLAUDE.md、Skill、Hooks、サブエージェント、MCP、settings.json、プラグイン、ハーネス、Modsの9項目である。比較は「いつ読み込まれるか」「誰が実行するか」「確実に動くか（決定的か）」「コンテキストを消費するか」の4観点で行う。説明の中で、このリポジトリ（claude-artifacts）の<code>.claude/</code>配下を実例として引用する。</p>
+      <div class="with-memo">
+        <p>扱うのはCLAUDE.md、Skill、Hooks、サブエージェント、MCP、settings.json、プラグイン、ハーネス、Modsの9項目である。比較は「いつ読み込まれるか」「誰が実行するか」「確実に動くか（決定的か）」「コンテキストを消費するか」の4観点で行う。説明の中で、このリポジトリ（claude-artifacts）の<code>.claude/</code>配下を実例として引用する。</p>
+        <aside class="memo">ハーネスだけは部品でなく全体の呼び名</aside>
+      </div>
 
       <h2 id="s2">基本用語</h2>
       <div class="table-wrap">
@@ -66,7 +527,7 @@
           <thead><tr><th>用語</th><th>意味</th></tr></thead>
           <tbody>
             <tr><td>コンテキスト</td><td>モデルが1回の応答で見る情報の全体。会話履歴、読んだファイル、CLAUDE.md、読み込み済みのSkillなどが入る。大きくなるほど余裕が減る</td></tr>
-            <tr><td>決定的</td><td>同じ条件なら毎回同じ結果になること。ここでは「発火や強制が保証されること」の意味で使う。モデルの解釈を挟むものは決定的ではない</td></tr>
+            <tr><td>決定的</td><td>同じ条件なら毎回同じ結果になること。ここでは「<mark>発火や強制が保証されること</mark>」の意味で使う。モデルの解釈を挟むものは決定的ではない</td></tr>
             <tr><td>CLAUDE.md</td><td>プロジェクトの規約や「いつもこうする」を書くmarkdown。毎セッションの開始時にコンテキストへ読み込まれる</td></tr>
             <tr><td>Skill</td><td><code>SKILL.md</code>に書いた手順書や参考資料。説明文だけ常に見え、本文は使うときに読み込まれる。<code>/名前</code>で人が呼ぶことも、Claudeが自分で呼ぶこともできる</td></tr>
             <tr><td>Hook</td><td>ライフサイクルのイベント（ツール実行の前後、セッション開始など）でClaude Code本体が動かす処理。シェルコマンド、HTTP、MCPツール、プロンプト、サブエージェントの5種類がある</td></tr>
@@ -84,7 +545,7 @@
       <h2 id="s3">仕組み・全体像</h2>
 
       <h3 id="s3-1">拡張の層と読み込みの流れ</h3>
-      <p>Claude Codeの中心には、モデルが考えてツールで作業する「エージェントループ」（文脈を集める、行動する、結果を確かめる）がある。公式ドキュメントは、拡張をこのループの別々の場所に差し込む部品として説明している。</p>
+      <p>Claude Codeの中心には、モデルが考えてツールで作業する「<mark>エージェントループ</mark>」（文脈を集める、行動する、結果を確かめる）がある。公式ドキュメントは、拡張をこのループの別々の場所に差し込む部品として説明している。</p>
       <ul>
         <li>常に見える文脈を足す：CLAUDE.md</li>
         <li>必要なときに知識や手順を足す：Skill</li>
@@ -93,11 +554,61 @@
         <li>イベントで本体がスクリプトなどを動かす：Hooks</li>
         <li>これらを配布用にまとめる：プラグイン</li>
       </ul>
-      <!-- FIGURE: ここにエージェントループと各拡張の差し込み位置の図（CLAUDE.md=開始時に常駐、Skill=説明だけ常駐し本文は使用時、MCP=ツール名だけ常駐、サブエージェント=別コンテキスト、Hooks=イベント時に本体が実行、をループ図に重ねる） -->
-      <p>settings.jsonはこの部品群のどれとも少し性質が違う。モデルへの指示ではなく、本体の挙動（許可・拒否、フックの登録など）を決める設定である。公式の権限ページには「権限ルールはClaude Codeが強制するもので、モデルが強制するものではない。プロンプトやCLAUDE.mdの指示はClaudeが何を試みるかを左右するが、Claude Codeが何を許可するかは変えない」という趣旨の注記がある。</p>
+      <figure>
+        <svg viewBox="0 0 680 370" role="img" aria-label="エージェントループ（文脈を集める、行動する、結果を確かめる）に各拡張が差し込まれる位置。CLAUDE.mdは開始時から常駐、Skillは説明だけ常駐し本文は使用時、MCPはツール名だけ常駐、サブエージェントは別のコンテキストで作業、Hooksはイベント時に本体が実行する">
+          <title>エージェントループと各拡張の差し込み位置</title>
+          <defs>
+            <marker id="f1-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+          </defs>
+          <!-- 上段: 文脈として入る拡張 -->
+          <rect x="20" y="30" width="170" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="105" y="55" text-anchor="middle" font-size="15" font-weight="700">CLAUDE.md</text>
+          <text x="105" y="77" text-anchor="middle" font-size="13">開始時から常駐</text>
+          <rect x="210" y="30" width="210" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="315" y="55" text-anchor="middle" font-size="15" font-weight="700">Skill</text>
+          <text x="315" y="77" text-anchor="middle" font-size="13">説明は常駐、本文は使用時</text>
+          <rect x="450" y="30" width="210" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="555" y="55" text-anchor="middle" font-size="15" font-weight="700">MCP</text>
+          <text x="555" y="77" text-anchor="middle" font-size="13">ツール名だけ常駐</text>
+          <!-- ループ -->
+          <rect x="20" y="136" width="640" height="136" rx="12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="6 5"/>
+          <text x="644" y="158" text-anchor="end" font-size="13" font-weight="700">エージェントループ</text>
+          <rect x="44" y="172" width="160" height="52" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="124" y="203" text-anchor="middle" font-size="14" font-weight="700">文脈を集める</text>
+          <rect x="260" y="172" width="160" height="52" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="340" y="203" text-anchor="middle" font-size="14" font-weight="700">行動する</text>
+          <rect x="476" y="172" width="160" height="52" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="556" y="203" text-anchor="middle" font-size="14" font-weight="700">結果を確かめる</text>
+          <line x1="204" y1="198" x2="258" y2="198" stroke="currentColor" stroke-width="1.5" marker-end="url(#f1-ah)"/>
+          <line x1="420" y1="198" x2="474" y2="198" stroke="currentColor" stroke-width="1.5" marker-end="url(#f1-ah)"/>
+          <path d="M556 224 V246 H124 V227" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#f1-ah)"/>
+          <text x="190" y="264" text-anchor="middle" font-size="12">くり返す</text>
+          <!-- 上段から差し込む矢印 -->
+          <line x1="105" y1="90" x2="100" y2="169" stroke="currentColor" stroke-width="1.2" marker-end="url(#f1-ah)"/>
+          <line x1="315" y1="90" x2="180" y2="169" stroke="currentColor" stroke-width="1.2" marker-end="url(#f1-ah)"/>
+          <line x1="555" y1="90" x2="380" y2="169" stroke="currentColor" stroke-width="1.2" marker-end="url(#f1-ah)"/>
+          <!-- 下段: 別の担い手・本体の処理 -->
+          <rect x="150" y="296" width="220" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="260" y="321" text-anchor="middle" font-size="15" font-weight="700">サブエージェント</text>
+          <text x="260" y="343" text-anchor="middle" font-size="13">別のコンテキストで作業</text>
+          <rect x="430" y="296" width="230" height="60" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="545" y="321" text-anchor="middle" font-size="15" font-weight="700">Hooks</text>
+          <text x="545" y="343" text-anchor="middle" font-size="13">イベント時に本体が実行</text>
+          <line x1="318" y1="227" x2="282" y2="293" stroke="currentColor" stroke-width="1.2" marker-start="url(#f1-ah)" marker-end="url(#f1-ah)"/>
+          <line x1="540" y1="296" x2="449" y2="203" stroke="currentColor" stroke-width="1.2" marker-end="url(#f1-ah)"/>
+        </svg>
+        <figcaption><b>図1</b>エージェントループと、各拡張が差し込まれる位置。上の3つは文脈としてモデルに入り、下の2つは別の担い手や本体が動く</figcaption>
+      </figure>
+      <div class="with-memo">
+        <p>settings.jsonはこの部品群のどれとも少し性質が違う。モデルへの指示ではなく、本体の挙動（許可・拒否、フックの登録など）を決める設定である。公式の権限ページには「権限ルールはClaude Codeが強制するもので、モデルが強制するものではない。プロンプトやCLAUDE.mdの指示はClaudeが何を試みるかを左右するが、Claude Codeが何を許可するかは変えない」という趣旨の注記がある。</p>
+        <aside class="memo">指示は「試み」、権限は「許可」を決める</aside>
+      </div>
 
       <h3 id="s3-2">4観点の比較表</h3>
-      <p>次の表は、公式ドキュメント（Extend Claude Code、メモリ、Hooks、権限、プラグイン、Modsの各ページ）から確認できた内容をまとめたものである。ページに書かれていない欄は「未確認」としている。</p>
+      <div class="with-memo">
+        <p>次の表は、公式ドキュメント（Extend Claude Code、メモリ、Hooks、権限、プラグイン、Modsの各ページ）から確認できた内容をまとめたものである。ページに書かれていない欄は「未確認」としている。</p>
+        <aside class="memo">「決定的」の意味は欄ごとに違う</aside>
+      </div>
       <div class="table-wrap">
         <table>
           <caption>拡張9項目の比較（確認日2026-10-03）</caption>
@@ -195,7 +706,10 @@
           </tbody>
         </table>
       </div>
-      <p>ModsとHooksは名前が紛らわしい。Modsのページは、Claude Codeが両方をhooksと呼ぶと断ったうえで、設定ファイルに書くものを「settings hook」、modの関数を「hook」と区別している。settings hookは外部のスクリプトを動かし、modは本体の内側で動く。そのためmodには画面を描くことができるが、settings hookにはできない。</p>
+      <div class="with-memo">
+        <p>ModsとHooksは名前が紛らわしい。Modsのページは、Claude Codeが両方をhooksと呼ぶと断ったうえで、設定ファイルに書くものを「settings hook」、modの関数を「hook」と区別している。settings hookは外部のスクリプトを動かし、modは本体の内側で動く。そのためmodには画面を描くことができるが、settings hookにはできない。</p>
+        <aside class="memo">同じhookでも、settingsは外、modは内</aside>
+      </div>
       <p>Modsはユーザーの権限で動くコードで、サンドボックスの外で子プロセスを起動できる。公式は信頼できる作者と配布元のものだけを入れるよう警告している。この種のリスクは<a href="ai-security.html">AIセキュリティ入門 — 守る側のための教科書</a>が扱うエージェントやサプライチェーンの話と同じ筋にある。</p>
 
       <h3 id="s3-4">やりたいこと別の選び方</h3>
@@ -217,13 +731,77 @@
           </tbody>
         </table>
       </div>
-      <!-- FIGURE: やりたいこと別の判断フロー（起点は「やりたいこと」。分岐1=毎回必ず起きなければならないか→はい: 本体が強制する Hooks / permissions、いいえ→分岐2へ。分岐2=外部サービスが要るか→はい: MCP。分岐3=作業の途中経過でコンテキストが膨らむか→はい: サブエージェント。分岐4=手順書や参考資料か→はい: Skill、毎回知っておく規約なら CLAUDE.md。最後に、複数リポジトリへ配るなら全体をプラグインで包む） -->
-      <p>図の元になる考え方は2つの問いに絞れる。1つ目は「モデルが守らなくても必ず起きなければならないか」で、はいならHooksかpermissionsを選ぶ。2つ目は「常に必要か、ときどき必要か」で、常にならCLAUDE.md、ときどきならSkillを選ぶ。そのうえで、外部につなぐならMCP、作業を分離するならサブエージェント、配るならプラグインを足す。</p>
-      <p>確実性が高いものほど融通が利かず、融通が利くものほど確実性が下がる。確実さが必要な処理はHooksとpermissionsに、判断が必要な処理はSkillとサブエージェントに任せる、という分担になる。この「手順をコードで固定するか、モデルに任せるか」の軸は、既存ノート<a href="ai-agents-vs-workflows.html">AIエージェントとワークフローの違い</a>の整理とほぼ同じ構図である。</p>
+      <figure>
+        <svg viewBox="0 0 680 610" role="img" aria-label="やりたいこと別の判断フロー。毎回必ず起きなければならないなら、本体が強制するHooksかpermissions。いいえなら次へ。外部サービスが要るならMCP。作業の途中経過でコンテキストが膨らむならサブエージェント。手順書・参考資料ならSkill、毎回知っておく規約ならCLAUDE.md。複数リポジトリへ配るなら、選んだものをプラグインで包む">
+          <title>やりたいこと別の判断フロー</title>
+          <defs>
+            <marker id="f2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+          </defs>
+          <!-- 起点 -->
+          <rect x="60" y="12" width="200" height="40" rx="20" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="160" y="38" text-anchor="middle" font-size="15" font-weight="700">やりたいこと</text>
+          <line x1="160" y1="52" x2="160" y2="78" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <!-- プラグインの枠（答えの列を包む） -->
+          <rect x="384" y="58" width="288" height="540" rx="12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="6 5"/>
+          <text x="528" y="562" text-anchor="middle" font-size="15" font-weight="700">プラグインで包む</text>
+          <text x="528" y="584" text-anchor="middle" font-size="13">複数のリポジトリへ配るとき</text>
+          <!-- 問い1 -->
+          <rect x="20" y="80" width="280" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="160" y="111" text-anchor="middle" font-size="14" font-weight="700">毎回必ず起きなければならないか</text>
+          <line x1="300" y1="106" x2="398" y2="106" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="342" y="98" text-anchor="middle" font-size="13" font-weight="700">はい</text>
+          <rect x="400" y="72" width="256" height="68" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="528" y="100" text-anchor="middle" font-size="15" font-weight="700">Hooks／permissions</text>
+          <text x="528" y="124" text-anchor="middle" font-size="13">本体が強制する</text>
+          <line x1="160" y1="132" x2="160" y2="174" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="172" y="158" font-size="13">いいえ</text>
+          <!-- 問い2 -->
+          <rect x="20" y="176" width="280" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="160" y="207" text-anchor="middle" font-size="14" font-weight="700">外部サービスが要るか</text>
+          <line x1="300" y1="202" x2="398" y2="202" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="342" y="194" text-anchor="middle" font-size="13" font-weight="700">はい</text>
+          <rect x="400" y="172" width="256" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="528" y="197" text-anchor="middle" font-size="15" font-weight="700">MCP</text>
+          <text x="528" y="219" text-anchor="middle" font-size="13">外部につなぐ</text>
+          <line x1="160" y1="228" x2="160" y2="270" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="172" y="254" font-size="13">いいえ</text>
+          <!-- 問い3 -->
+          <rect x="20" y="272" width="280" height="64" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="160" y="298" text-anchor="middle" font-size="14" font-weight="700">作業の途中経過で</text>
+          <text x="160" y="320" text-anchor="middle" font-size="14" font-weight="700">コンテキストが膨らむか</text>
+          <line x1="300" y1="304" x2="398" y2="304" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="342" y="296" text-anchor="middle" font-size="13" font-weight="700">はい</text>
+          <rect x="400" y="274" width="256" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="528" y="299" text-anchor="middle" font-size="15" font-weight="700">サブエージェント</text>
+          <text x="528" y="321" text-anchor="middle" font-size="13">要約だけが戻る</text>
+          <line x1="160" y1="336" x2="160" y2="378" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="172" y="362" font-size="13">いいえ</text>
+          <!-- 問い4 -->
+          <rect x="20" y="380" width="280" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="160" y="411" text-anchor="middle" font-size="14" font-weight="700">手順書・参考資料か</text>
+          <line x1="300" y1="406" x2="398" y2="406" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="342" y="398" text-anchor="middle" font-size="13" font-weight="700">はい</text>
+          <rect x="400" y="376" width="256" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="528" y="401" text-anchor="middle" font-size="15" font-weight="700">Skill</text>
+          <text x="528" y="423" text-anchor="middle" font-size="13">ときどき必要な知識</text>
+          <path d="M160 432 V500 H398" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#f2-ah)"/>
+          <text x="172" y="462" font-size="13">いいえ</text>
+          <text x="280" y="492" text-anchor="middle" font-size="13">毎回知っておく規約</text>
+          <rect x="400" y="470" width="256" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="528" y="495" text-anchor="middle" font-size="15" font-weight="700">CLAUDE.md</text>
+          <text x="528" y="517" text-anchor="middle" font-size="13">常に必要な文脈</text>
+        </svg>
+        <figcaption><b>図2</b>やりたいこと別の判断フロー。上の問いから順に当てはめ、最後に配る範囲でプラグインにするかを決める</figcaption>
+      </figure>
+      <div class="with-memo">
+        <p>図の元になる考え方は2つの問いに絞れる。1つ目は「モデルが守らなくても必ず起きなければならないか」で、はいならHooksかpermissionsを選ぶ。2つ目は「常に必要か、ときどき必要か」で、常にならCLAUDE.md、ときどきならSkillを選ぶ。そのうえで、外部につなぐならMCP、作業を分離するならサブエージェント、配るならプラグインを足す。</p>
+        <aside class="memo">覚え方：必須か→常にか</aside>
+      </div>
+      <p><mark>確実性が高いものほど融通が利かず</mark>、融通が利くものほど確実性が下がる。確実さが必要な処理はHooksとpermissionsに、判断が必要な処理はSkillとサブエージェントに任せる、という分担になる。この「手順をコードで固定するか、モデルに任せるか」の軸は、既存ノート<a href="ai-agents-vs-workflows.html">AIエージェントとワークフローの違い</a>の整理とほぼ同じ構図である。</p>
 
       <h2 id="s4">具体例・使いどころ</h2>
 
-      <h3 id="s4-1">リポジトリの .claude/構成</h3>
+      <h3 id="s4-1">リポジトリの.claude/構成</h3>
       <p>このリポジトリは、学習レポートをHTMLにしてGitHub Pagesで公開するためのものである。次の対応表のとおり、拡張の多くを実際に使っている。なお<code>.mcp.json</code>、<code>.claude/rules/</code>、<code>.claude/workflows/</code>、<code>.claude/commands/</code>、<code>settings.local.json</code>は見つからなかった（2026-10-03時点）。</p>
       <div class="table-wrap">
         <table>
@@ -240,25 +818,31 @@
         </table>
       </div>
 
-      <h3 id="s4-1-1">実例：CLAUDE.md</h3>
+      <h3 id="s4-1-1">CLAUDE.mdの実例</h3>
       <p>CLAUDE.mdには「出力・報告はすべて日本語」「ファイル名は<code>reports/&lt;英小文字とハイフンのスラッグ&gt;.html</code>」「<code>git push --force</code>は絶対に使わない」などが書かれている。これらは毎セッションの文脈として読まれる。</p>
-      <p>注目点はforce pushの扱いである。CLAUDE.mdの一文だけでは「お願い」だが、このリポジトリはsettings.jsonのdenyにも同じ禁止を重ねている。確実に止めたい項目を二重にしている例である。</p>
+      <p>注目点はforce pushの扱いである。CLAUDE.mdの一文だけでは「お願い」だが、このリポジトリはsettings.jsonのdenyにも同じ禁止を重ねている。確実に止めたい項目を<mark>二重にしている</mark>例である。</p>
 
-      <h3 id="s4-1-2">実例：settings.jsonのpermissions</h3>
+      <h3 id="s4-1-2">permissionsの実例</h3>
       <p><code>.claude/settings.json</code>の<code>permissions</code>は次のとおりである（抜粋）。</p>
       <pre><code>"allow": [ "WebSearch", "WebFetch", "Read",
            "Edit(reports/**)", "Edit(index.html)",
            "Bash(git status)", "Bash(git add:*)", "Bash(git commit:*)",
            "Bash(git push origin main)", "Bash(git log:*)", ... ],
 "deny":  [ "Bash(git push --force:*)", "Bash(git push -f:*)" ]</code></pre>
-      <p>編集は<code>reports/</code>配下と<code>index.html</code>に限り、pushは<code>origin main</code>だけを許している。公式の判定順はdeny、ask、allowの順で、最初に当たったものが結果になる。denyに当たるforce pushは、allowに似たルールがあっても止まる。この強制は本体が行うので、モデルの気分に左右されない。</p>
+      <div class="with-memo">
+        <p>編集は<code>reports/</code>配下と<code>index.html</code>に限り、pushは<code>origin main</code>だけを許している。公式の判定順はdeny、ask、allowの順で、<mark>最初に当たったもの</mark>が結果になる。denyに当たるforce pushは、allowに似たルールがあっても止まる。この強制は本体が行うので、モデルの気分に左右されない。</p>
+        <aside class="memo">denyはallowより先に見られる</aside>
+      </div>
 
-      <h3 id="s4-1-3">実例：Hooksとlog-usage.js</h3>
+      <h3 id="s4-1-3">Hooksとlog-usage.jsの実例</h3>
       <p>同じsettings.jsonの<code>hooks</code>では、<code>PostToolUse</code>に<code>"matcher": "Bash|PowerShell"</code>を指定し、<code>node ".../.claude/hooks/log-usage.js"</code>を<code>timeout: 40</code>で動かしている。</p>
       <p>matcherはBashツールの実行ごとに当たるため、フックはgit以外のコマンドでも毎回起動する。絞り込みはスクリプト側の正規表現（<code>/\bgit\s+push\b/</code>）が担っている。pushが失敗していたら記録せず、成功していれば会話ログからトークン数を集計し、<code>reports/usage-log.csv</code>に追記して自分でcommitとpushを行う。末尾の<code>process.exit(0)</code>により、失敗してもメインの作業を止めない。</p>
-      <p>PostToolUseはツールがすでに動いた後なので、止める用途には使えない。このリポジトリのフックは「記録する」だけで、判断をモデルに任せる必要がない。Hooksが得意とする処理にあたる。フックの中のpushはClaudeのBashツールを通らず、スクリプトが直接gitを呼んでいるので、フック自身をもう一度起動する構造にはなっていない。</p>
+      <div class="with-memo">
+        <p>PostToolUseはツールがすでに動いた後なので、止める用途には使えない。このリポジトリのフックは「記録する」だけで、判断をモデルに任せる必要がない。Hooksが得意とする処理にあたる。フックの中のpushはClaudeのBashツールを通らず、スクリプトが直接gitを呼んでいるので、フック自身をもう一度起動する構造にはなっていない。</p>
+        <aside class="memo">PostToolUseは止められない。記録向き</aside>
+      </div>
 
-      <h3 id="s4-1-4">実例：サブエージェントの定義</h3>
+      <h3 id="s4-1-4">サブエージェントの定義</h3>
       <p><code>.claude/agents/</code>の2つは、frontmatterの書き方が違う。</p>
       <div class="table-wrap">
         <table>
@@ -271,9 +855,12 @@
         </table>
       </div>
       <p>researcherはtoolsを明示してBashやEditを持たせず、調査と書き出しに必要な道具だけを渡している。モデルはフルIDで固定している。reportスキルには「別名のsonnetを渡すと版が変わることがあるので、定義のIDをそのまま使う」という趣旨の注意がある。公式ドキュメントでは、modelに<code>sonnet</code>などの別名とフルIDの両方を書けるとされている。</p>
-      <p>この2つは、スキルから順番に呼ばれる分業役である。委任するかどうかはdescriptionを読んだClaudeが決める仕組みなので、descriptionには「どの工程で使うか」まで書いてある。</p>
+      <div class="with-memo">
+        <p>この2つは、スキルから順番に呼ばれる分業役である。委任するかどうかはdescriptionを読んだClaudeが決める仕組みなので、descriptionには「どの工程で使うか」まで書いてある。</p>
+        <aside class="memo">descriptionは委任の判断材料</aside>
+      </div>
 
-      <h3 id="s4-1-5">実例：Skillの定義</h3>
+      <h3 id="s4-1-5">Skillの定義</h3>
       <p><code>.claude/skills/</code>には3つのSkillがあり、それぞれ<code>SKILL.md</code>のfrontmatterにnameとdescriptionを持つ。</p>
       <div class="table-wrap">
         <table>
@@ -285,19 +872,68 @@
           </tbody>
         </table>
       </div>
-      <p>reportのSKILL.mdは、調査をresearcher、仕上げをdesignerに渡し、間にyomiyasuを挟む手順書である。つまりSkillが全体の段取りを持ち、サブエージェントが作業を担い、フックが最後に記録する。拡張同士を組み合わせた典型例で、公式の「Skill + Subagent」「Hook +外部処理」の型に近い。</p>
+      <div class="with-memo">
+        <p>reportのSKILL.mdは、調査をresearcher、仕上げをdesignerに渡し、間にyomiyasuを挟む手順書である。つまりSkillが全体の段取りを持ち、サブエージェントが作業を担い、フックが最後に記録する。拡張同士を組み合わせた典型例で、公式の「Skill + Subagent」「Hook +外部処理」の型に近い。</p>
+        <aside class="memo">段取りはSkill、作業はサブエージェント</aside>
+      </div>
       <p>reportは<code>.claude/skills/report/extract_text.py</code>という補助スクリプトも持つ。Skillはフォルダ単位で、SKILL.mdのほかに実行用のファイルを置ける。</p>
 
-      <h3 id="s4-1-6">実例：拡張の連携</h3>
+      <h3 id="s4-1-6">拡張の連携（/reportの流れ）</h3>
       <p>ここまでの流れを1本にすると、次のようになる。</p>
-      <ol>
-        <li>人が<code>/report テーマ</code>を実行する。Skill（report）の本文が読み込まれる。</li>
-        <li>Skillの手順に従い、Claudeがresearcher、次にdesignerを呼ぶ（サブエージェント）。</li>
-        <li>各工程で、settings.jsonのpermissionsが許可・拒否を判定する。</li>
-        <li>最後に<code>git push origin main</code>が成功すると、PostToolUseのフックが動き、コストを記録する。</li>
-      </ol>
-      <!-- FIGURE: ここに /report 実行時の流れの図（人 → Skill → サブエージェント2種 → permissions の判定 → git push → Hook の順で、どこがモデルの判断でどこが本体の強制かを色分けせず枠線の種類で区別する） -->
-      <p>このうち1と2はモデルが解釈する部分で、3と4は本体が確実に動かす部分である。確実性の高い処理が後ろに寄っているので、途中のモデルの揺れが記録や権限を壊しにくい。</p>
+      <div class="with-memo">
+        <ol>
+          <li>人が<code>/report テーマ</code>を実行する。Skill（report）の本文が読み込まれる。</li>
+          <li>Skillの手順に従い、Claudeがresearcher、次にdesignerを呼ぶ（サブエージェント）。</li>
+          <li>各工程で、settings.jsonのpermissionsが許可・拒否を判定する。</li>
+          <li>最後に<code>git push origin main</code>が成功すると、PostToolUseのフックが動き、コストを記録する。</li>
+        </ol>
+        <aside class="memo">1・2はモデル、3・4は本体</aside>
+      </div>
+      <figure>
+        <svg viewBox="0 0 680 400" role="img" aria-label="/report実行時の流れ。人が/reportを実行し、Skill（report）が読み込まれ、サブエージェントのresearcher、designerが順に呼ばれる。ここまでは破線の枠で、モデルが解釈する部分。各工程の操作はsettings.jsonのpermissionsが許可・拒否し、git push origin mainが成功するとHook（PostToolUse）のlog-usage.jsが記録する。ここは実線の枠で、本体が確実に動かす部分">
+          <title>/report 実行時の流れ</title>
+          <defs>
+            <marker id="f3-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+          </defs>
+          <!-- 人 -->
+          <text x="20" y="78" font-size="15" font-weight="700">人が実行</text>
+          <text x="20" y="100" font-size="13" style="font-family: var(--font-mono)">/report テーマ</text>
+          <line x1="132" y1="84" x2="168" y2="84" stroke="currentColor" stroke-width="1.5" marker-end="url(#f3-ah)"/>
+          <!-- モデルが解釈する部分（破線） -->
+          <rect x="170" y="52" width="170" height="64" rx="8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <text x="255" y="78" text-anchor="middle" font-size="14" font-weight="700">Skill（report）</text>
+          <text x="255" y="100" text-anchor="middle" font-size="13">手順書を読み込む</text>
+          <rect x="400" y="24" width="260" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <text x="530" y="47" text-anchor="middle" font-size="14" font-weight="700">サブエージェント researcher</text>
+          <text x="530" y="68" text-anchor="middle" font-size="13">調査・初稿</text>
+          <rect x="400" y="112" width="260" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <text x="530" y="135" text-anchor="middle" font-size="14" font-weight="700">サブエージェント designer</text>
+          <text x="530" y="156" text-anchor="middle" font-size="13">デザイン仕上げ</text>
+          <line x1="340" y1="76" x2="397" y2="54" stroke="currentColor" stroke-width="1.5" marker-end="url(#f3-ah)"/>
+          <line x1="530" y1="80" x2="530" y2="109" stroke="currentColor" stroke-width="1.5" marker-end="url(#f3-ah)"/>
+          <text x="542" y="100" font-size="12">次に呼ぶ</text>
+          <!-- 本体が確実に動かす部分（実線） -->
+          <line x1="530" y1="168" x2="530" y2="207" stroke="currentColor" stroke-width="1.5" marker-end="url(#f3-ah)"/>
+          <rect x="170" y="210" width="490" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="415" y="234" text-anchor="middle" font-size="14" font-weight="700">settings.json の permissions</text>
+          <text x="415" y="255" text-anchor="middle" font-size="13">各工程の操作を許可・拒否する</text>
+          <line x1="280" y1="266" x2="280" y2="303" stroke="currentColor" stroke-width="1.5" marker-end="url(#f3-ah)"/>
+          <rect x="170" y="306" width="220" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="280" y="330" text-anchor="middle" font-size="14" font-weight="700" style="font-family: var(--font-mono)">git push origin main</text>
+          <text x="280" y="351" text-anchor="middle" font-size="13">成功</text>
+          <line x1="390" y1="334" x2="437" y2="334" stroke="currentColor" stroke-width="1.5" marker-end="url(#f3-ah)"/>
+          <rect x="440" y="306" width="220" height="56" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+          <text x="550" y="330" text-anchor="middle" font-size="14" font-weight="700">Hook（PostToolUse）</text>
+          <text x="550" y="351" text-anchor="middle" font-size="13">log-usage.js が記録</text>
+          <!-- 凡例 -->
+          <rect x="20" y="378" width="32" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <text x="60" y="391" font-size="13">破線＝モデルが解釈する</text>
+          <rect x="260" y="378" width="32" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="300" y="391" font-size="13">実線＝本体が確実に動かす</text>
+        </svg>
+        <figcaption><b>図3</b>/report 実行時の流れ。破線の枠はモデルが解釈する部分、実線の枠は本体が確実に動かす部分</figcaption>
+      </figure>
+      <p>このうち1と2はモデルが解釈する部分で、3と4は本体が確実に動かす部分である。<mark>確実性の高い処理が後ろに寄っている</mark>ので、途中のモデルの揺れが記録や権限を壊しにくい。</p>
 
       <h3 id="s4-2">ほかにある拡張</h3>
       <p>公式ドキュメントの目次（2026-10-03時点）には、主題の9項目以外にも次の機能がある。名前の紹介にとどめる。</p>
@@ -311,7 +947,7 @@
       <h2 id="s5">注意点・よくある誤解</h2>
       <div class="callout caution">
         <span class="label">よくある誤解1</span>
-        <p>「CLAUDE.mdに書けば必ず守られる」は誤り。公式はCLAUDE.mdを文脈として扱い、強制される設定ではないと明記している。書き方が具体的で短いほど守られやすいが、保証にはならない。必ず守らせたいことはHooksかpermissionsに置く。</p>
+        <p>「CLAUDE.mdに書けば必ず守られる」は誤り。公式はCLAUDE.mdを文脈として扱い、<mark>強制される設定ではない</mark>と明記している。書き方が具体的で短いほど守られやすいが、保証にはならない。必ず守らせたいことはHooksかpermissionsに置く。</p>
       </div>
       <div class="callout caution">
         <span class="label">よくある誤解2</span>
@@ -319,7 +955,7 @@
       </div>
       <div class="callout caution">
         <span class="label">よくある誤解3</span>
-        <p>「Hooksは何でも止められる」とは限らない。止められるかはイベントで決まる。PreToolUseは実行前に止められるが、このリポジトリで使っているPostToolUseはツールがすでに動いた後なので止められない。用途が違う。</p>
+        <p>「Hooksは何でも止められる」とは限らない。<mark>止められるかはイベントで決まる</mark>。PreToolUseは実行前に止められるが、このリポジトリで使っているPostToolUseはツールがすでに動いた後なので止められない。用途が違う。</p>
       </div>
       <div class="callout caution">
         <span class="label">よくある誤解4</span>
@@ -386,5 +1022,508 @@
     </footer>
   </article>
 </div>
+<!-- notebook-ui-js:start -->
+<script>
+/* 書き込みノートUI（全レポート共通）。本文の HTML には手を加えず、読み込み後に操作部品だけを足す */
+(() => {
+  'use strict';
+  const d = document, root = d.documentElement;
+  const page = d.querySelector('.page'), main = d.querySelector('main');
+  if (!page || !main) return;
+  root.classList.add('nb-js');
+  const sheet = d.querySelector('.sheet') || page;
+
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+  };
+  const svg = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  const ICON = {
+    back: svg('<path d="m15 18-6-6 6-6"/>'),
+    toc: svg('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>'),
+    text: svg('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'),
+    dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+    up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+    copy: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    check: svg('<path d="M20 6 9 17l-5-5"/>'),
+    expand: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'),
+    close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  };
+  /* 手描き風のチェックボックスと赤ペンのチェック */
+  const CHECKBOX = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4.6 5.3C9 4.7 14.8 5 19.5 4.5c.3 5 0 10 .3 15.1-5.3.3-10.1-.3-15.4.1.3-5.1-.2-9.8.2-14.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path class="nb-tick" pathLength="1" d="M6.8 12.6c1.5 1.3 2.6 2.9 3.6 4.6 2.4-5.3 6-9.9 11.4-14.6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const el = (tag, attrs = {}, html = '') => {
+    const n = d.createElement(tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (html) n.innerHTML = html;
+    return n;
+  };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  const cover = d.querySelector('.cover');
+  const toc = d.querySelector('.toc');
+  const h1 = cover && cover.querySelector('h1');
+  const pageTitle = h1 ? h1.textContent.trim() : d.title;
+  const back = cover && cover.querySelector('.back');
+  const indexHref = back ? back.getAttribute('href') : '../index.html';
+  const here = decodeURIComponent(location.pathname.split('/').pop() || '');
+
+  /* ---- 通知 ---- */
+  const toast = el('div', { class: 'nb-toast', role: 'status', 'aria-live': 'polite' });
+  let toastTimer;
+  const say = (msg) => {
+    toast.textContent = msg;
+    toast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800);
+  };
+  const copyText = (text) => {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((ok, ng) => {
+      const ta = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      d.body.appendChild(ta);
+      ta.select();
+      try { d.execCommand('copy') ? ok() : ng(); } catch (e) { ng(e); }
+      ta.remove();
+    });
+  };
+
+  /* ---- 本文へスキップ・上部バー（パンくず: 学習ノート › ページ › 章） ---- */
+  if (!main.id) main.id = 'main';
+  const skip = el('a', { class: 'nb-skip', href: '#' + main.id }, '本文へスキップ');
+  const bar = el('div', { class: 'nb-topbar' },
+    '<div class="nb-topbar-inner">' +
+      '<a class="nb-home" aria-label="学習ノートの一覧に戻る" href="' + indexHref + '">' + ICON.back + '<span>学習ノート</span></a>' +
+      '<div class="nb-where" aria-hidden="true"><span class="sep">›</span><span class="t t-page"></span><span class="sep">›</span><span class="t t-sec"></span></div>' +
+      '<div class="nb-actions">' +
+        (toc ? '<button type="button" class="nb-btn nb-toc-btn" aria-haspopup="dialog" aria-label="もくじを開く">' + ICON.toc + '<span class="label-wide">もくじ</span></button>' : '') +
+        '<button type="button" class="nb-btn nb-fs-btn"><span class="label"></span></button>' +
+        '<button type="button" class="nb-btn nb-theme-btn" aria-label="ダークモード">' + ICON.dark + '<span class="label-wide">ダーク</span></button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="nb-progress" aria-hidden="true"></div>');
+  d.body.prepend(skip, bar);
+  bar.querySelector('.t-page').textContent = pageTitle;
+  const whereBox = bar.querySelector('.nb-where'), whereSec = bar.querySelector('.t-sec');
+  const progress = bar.querySelector('.nb-progress');
+
+  /* 文字サイズ: 標準 → 大 → 特大 */
+  const FS = [['', '標準'], ['l', '大'], ['xl', '特大']];
+  const fsBtn = bar.querySelector('.nb-fs-btn');
+  const renderFs = () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const label = (FS.find((f) => f[0] === cur) || FS[0])[1];
+    fsBtn.querySelector('.label').textContent = '文字 ' + label;
+    fsBtn.setAttribute('aria-label', '文字サイズ: ' + label + '（押すと切り替え）');
+  };
+  fsBtn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const next = FS[(FS.findIndex((f) => f[0] === cur) + 1) % FS.length];
+    next[0] ? root.setAttribute('data-fs', next[0]) : root.removeAttribute('data-fs');
+    store.set('ln-fs', next[0] || null);
+    renderFs();
+    say('文字サイズ: ' + next[1]);
+    onScroll();
+  });
+  renderFs();
+
+  /* ダーク（夜のノート）の切替。最初は端末の設定に合わせる */
+  const themeBtn = bar.querySelector('.nb-theme-btn');
+  const isDark = () => root.getAttribute('data-theme') === 'dark' || (!root.hasAttribute('data-theme') && darkMq.matches);
+  const renderTheme = () => themeBtn.setAttribute('aria-pressed', String(isDark()));
+  themeBtn.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store.set('ln-theme', next);
+    renderTheme();
+    say(next === 'dark' ? 'ダーク: オン' : 'ダーク: オフ');
+  });
+  darkMq.addEventListener && darkMq.addEventListener('change', renderTheme);
+  renderTheme();
+
+  /* ---- 読了目安 ---- */
+  const meta = cover && cover.querySelector('.meta');
+  if (meta) {
+    const chars = main.textContent.replace(/\s+/g, '').length;
+    meta.appendChild(el('li', {}, '読了目安 約' + Math.max(1, Math.round(chars / 500)) + '分'));
+  }
+
+  /* ---- 見出しのリンク ---- */
+  const headText = new Map();
+  main.querySelectorAll('h2, h3').forEach((h, i) => {
+    headText.set(h, h.textContent.trim());
+    if (!h.id) h.id = 'sec-' + (i + 1);
+    const a = el('a', { class: 'nb-anchor', href: '#' + h.id, 'aria-label': '「' + headText.get(h) + '」へのリンクをコピー' }, '#');
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.replaceState(null, '', '#' + h.id);
+      h.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      copyText(location.href).then(() => say('見出しへのリンクをコピーしました'), () => say('リンクをアドレス欄に表示しました'));
+    });
+    h.appendChild(a);
+  });
+
+  /* ---- 目次: 章ごとのチェックボックス・引き出し・現在地 ---- */
+  const READ_KEY = 'ln-read:' + here, DONE_KEY = 'ln-done:' + here;
+  let readSet = new Set();
+  try { readSet = new Set(JSON.parse(store.get(READ_KEY) || '[]')); } catch (e) {}
+  const chapters = [];
+  let drawer = null;
+  if (toc) {
+    const list = toc.querySelector('ol, ul');
+    if (list) {
+      [...list.children].forEach((li) => {
+        const a = li.querySelector(':scope > a');
+        if (!a || !a.getAttribute('href') || a.getAttribute('href')[0] !== '#') return;
+        const id = decodeURIComponent(a.getAttribute('href').slice(1));
+        const h = d.getElementById(id);
+        if (!h) return;
+        const row = el('span', { class: 'nb-row' });
+        const btn = el('button', { type: 'button', class: 'nb-check', 'data-id': id }, CHECKBOX);
+        a.before(row);
+        row.append(btn, a);
+        chapters.push({ id, h, title: a.textContent.trim() });
+      });
+    }
+    toc.querySelectorAll('a').forEach((a) => { a.innerHTML = '<span class="t">' + a.innerHTML + '</span>'; });
+    if (chapters.length) toc.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer = el('dialog', { class: 'nb-drawer', 'aria-label': 'もくじ' },
+      '<div class="nb-dialog-head"><strong>もくじ</strong><button type="button" class="nb-btn nb-close" aria-label="もくじを閉じる">' + ICON.close + '</button></div>');
+    const nav = el('nav', { 'aria-label': 'もくじ' });
+    if (list) nav.appendChild(list.cloneNode(true));
+    if (chapters.length) nav.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer.appendChild(nav);
+    d.body.appendChild(drawer);
+    bar.querySelector('.nb-toc-btn').addEventListener('click', () => {
+      drawer.showModal();
+      const act = drawer.querySelector('a.is-active');
+      if (act) act.scrollIntoView({ block: 'center' });
+    });
+    drawer.querySelector('.nb-close').addEventListener('click', () => drawer.close());
+    drawer.addEventListener('click', (e) => {
+      if (e.target === drawer || e.target.closest('a')) drawer.close();
+    });
+    [toc, drawer].forEach((box) => box.addEventListener('click', (e) => {
+      const b = e.target.closest('.nb-check');
+      if (b) setRead(b.dataset.id, !readSet.has(b.dataset.id), true);
+    }));
+  }
+  const checkBtns = (id) => d.querySelectorAll('.nb-check[data-id="' + CSS.escape(id) + '"]');
+  const titleOf = (id) => (chapters.find((c) => c.id === id) || {}).title || '';
+  const renderRead = (id) => {
+    const on = readSet.has(id);
+    checkBtns(id).forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-label', '「' + titleOf(id) + '」' + (on ? 'を読んだ（押すとチェックを外す）' : 'はまだ読んでいない（押すとチェックを付ける）'));
+      b.closest('li').classList.toggle('is-read', on);
+    });
+  };
+  function setRead(id, on, byHand) {
+    if (on === readSet.has(id)) return;
+    on ? readSet.add(id) : readSet.delete(id);
+    store.set(READ_KEY, readSet.size ? JSON.stringify([...readSet]) : null);
+    store.set(DONE_KEY, chapters.length && chapters.every((c) => readSet.has(c.id)) ? '1' : null);
+    renderRead(id);
+    if (byHand) say(on ? 'チェックを付けました' : 'チェックを外しました');
+  }
+  chapters.forEach((c) => renderRead(c.id));
+
+  const tocLinks = toc ? [...toc.querySelectorAll('a[href^="#"]'), ...drawer.querySelectorAll('a[href^="#"]')] : [];
+  const targets = [];
+  const seen = new Set();
+  tocLinks.forEach((a) => {
+    const id = decodeURIComponent(a.getAttribute('href').slice(1));
+    const h = d.getElementById(id);
+    if (h && !seen.has(id)) { seen.add(id); targets.push({ id, h }); }
+  });
+  targets.sort((x, y) => (x.h.compareDocumentPosition(y.h) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  const h2s = [...main.querySelectorAll('h2')];
+  let activeId = null, activeH2 = null;
+  const setActive = (id) => {
+    if (id === activeId) return;
+    activeId = id;
+    tocLinks.forEach((a) => {
+      const on = id && a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', !!on);
+      on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
+    });
+    const a = toc && toc.querySelector('a.is-active');
+    if (a && toc.scrollHeight > toc.clientHeight + 4) {
+      const r = a.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if (r.top < tr.top + 24 || r.bottom > tr.bottom - 24) toc.scrollTop += r.top - tr.top - tr.height / 3;
+    }
+  };
+
+  /* ---- 先頭へ戻る ---- */
+  const fab = el('button', { type: 'button', class: 'nb-btn nb-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
+  fab.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    bar.querySelector('.nb-home').focus({ preventScroll: true });
+  });
+  d.body.append(fab, toast);
+
+  /* ---- スクロールに連動する部品（読了バー・現在地・読んだ章のチェック） ---- */
+  let userMoved = false;
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((t) => addEventListener(t, () => { userMoved = true; }, { once: true, passive: true }));
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY, vh = window.innerHeight, max = root.scrollHeight - vh;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    const barH = bar.offsetHeight, line = barH + 48;
+    whereBox.classList.toggle('is-shown', !!cover && cover.getBoundingClientRect().bottom < barH);
+    fab.classList.toggle('is-shown', y > 800);
+
+    let cur = null;
+    if (max > 0 && y >= max - 2 && targets.length) cur = targets[targets.length - 1];
+    else for (const t of targets) { if (t.h.getBoundingClientRect().top <= line) cur = t; else break; }
+    setActive(cur ? cur.id : null);
+
+    let sec = null;
+    for (const h of h2s) { if (h.getBoundingClientRect().top <= line) sec = h; else break; }
+    if (cur && h2s.includes(cur.h)) sec = cur.h;
+    if (sec !== activeH2) { activeH2 = sec; whereSec.textContent = sec ? headText.get(sec) : ''; }
+
+    // 章の末尾（次の章の見出し、最後の章は本文の終わり）が画面に入ったら、その章を読んだことにする
+    if (userMoved) {
+      chapters.forEach((c, i) => {
+        if (readSet.has(c.id)) return;
+        const end = chapters[i + 1] ? chapters[i + 1].h.getBoundingClientRect().top : main.getBoundingClientRect().bottom;
+        const start = c.h.getBoundingClientRect().top;
+        if (start < vh && end >= -vh * 1.5 && end <= vh) setRead(c.id, true);
+      });
+    }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  /* ---- 表: 用語列の判定と、横にはみ出すときの案内 ---- */
+  const scrollers = [];
+  main.querySelectorAll('.table-wrap').forEach((w) => {
+    const t = w.querySelector('table');
+    const firsts = t ? [...t.querySelectorAll('tbody tr > :first-child')] : [];
+    if (firsts.length && firsts.every((c) => c.textContent.trim().length <= 16)) t.classList.add('nb-term');
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 表は横にスクロールできます →');
+    w.after(hint);
+    scrollers.push({ w, hint, mask: true });
+  });
+
+  /* ---- 図: 拡大表示 ---- */
+  const lightbox = el('dialog', { class: 'nb-lightbox', 'aria-label': '図の拡大表示' },
+    '<div class="nb-dialog-head"><strong></strong><button type="button" class="nb-btn nb-close" aria-label="拡大表示を閉じる">' + ICON.close + '</button></div>');
+  lightbox.querySelector('.nb-close').addEventListener('click', () => lightbox.close());
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener('close', () => { const f = lightbox.querySelector('figure'); if (f) f.remove(); });
+  d.body.appendChild(lightbox);
+  main.querySelectorAll('figure').forEach((fig) => {
+    const pic = fig.querySelector(':scope > svg');
+    if (!pic) return;
+    const wrap = el('div', { class: 'nb-fig' });
+    fig.before(wrap);
+    wrap.appendChild(fig);
+    const cap = fig.querySelector('figcaption');
+    const label = (cap ? cap.textContent : (pic.querySelector('title') || {}).textContent || '図').trim();
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-expand', 'aria-label': '図を拡大表示: ' + label }, ICON.expand + '<span>拡大</span>');
+    btn.addEventListener('click', () => {
+      const f = el('figure', { class: fig.className });
+      f.appendChild(pic.cloneNode(true));
+      lightbox.querySelector('.nb-dialog-head strong').textContent = label;
+      lightbox.appendChild(f);
+      lightbox.showModal();
+    });
+    wrap.appendChild(btn);
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 図は横にスクロールできます（「拡大」で全体表示）→');
+    wrap.after(hint);
+    scrollers.push({ w: fig, hint, mask: false });
+  });
+  const updateScroller = (s) => {
+    const max = s.w.scrollWidth - s.w.clientWidth;
+    const can = max > 4;
+    s.hint.classList.toggle('is-shown', can);
+    if (s.mask) {
+      s.w.classList.toggle('nb-more-right', can && s.w.scrollLeft < max - 4);
+      s.w.classList.toggle('nb-more-left', can && s.w.scrollLeft > 4);
+    }
+  };
+  scrollers.forEach((s) => s.w.addEventListener('scroll', () => updateScroller(s), { passive: true }));
+  const updateScrollers = () => scrollers.forEach(updateScroller);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(updateScrollers);
+    scrollers.forEach((s) => ro.observe(s.w));
+  } else addEventListener('resize', updateScrollers);
+
+  /* ---- コードのコピー ---- */
+  main.querySelectorAll('pre').forEach((pre) => {
+    const wrap = el('div', { class: 'nb-code' });
+    pre.before(wrap);
+    wrap.appendChild(pre);
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-copy', 'aria-label': 'コードをコピー' }, ICON.copy + '<span>コピー</span>');
+    btn.addEventListener('click', () => {
+      copyText(pre.innerText.replace(/\n$/, '')).then(() => {
+        btn.innerHTML = ICON.check + '<span>コピー済み</span>';
+        say('コードをコピーしました');
+        setTimeout(() => { btn.innerHTML = ICON.copy + '<span>コピー</span>'; }, 1600);
+      }, () => say('コピーできませんでした'));
+    });
+    wrap.appendChild(btn);
+  });
+
+  /* ---- 確認問題: 答えの一括表示 ---- */
+  const quizzes = [...main.querySelectorAll('.quiz')];
+  const answers = [...main.querySelectorAll('details.quiz, .quiz details')];
+  if (answers.length >= 2) {
+    const tools = el('div', { class: 'nb-quiz-tools' },
+      '<span>全' + quizzes.length + '問。問題を押すと答えが開きます</span><button type="button" class="nb-btn"></button>');
+    const tbtn = tools.querySelector('button');
+    const render = () => {
+      const allOpen = answers.every((x) => x.open);
+      tbtn.textContent = allOpen ? '答えをすべて隠す' : '答えをすべて表示';
+      tbtn.setAttribute('aria-pressed', String(allOpen));
+    };
+    tbtn.addEventListener('click', () => {
+      const open = !answers.every((x) => x.open);
+      answers.forEach((x) => { x.open = open; });
+      render();
+    });
+    answers.forEach((x) => x.addEventListener('toggle', render));
+    quizzes[0].before(tools);
+    render();
+  }
+
+  /* ---- 印刷時は答えも含めてすべて開く ---- */
+  let closedForPrint = [];
+  addEventListener('beforeprint', () => {
+    closedForPrint = [...d.querySelectorAll('details:not([open])')];
+    closedForPrint.forEach((x) => { x.open = true; });
+  });
+  addEventListener('afterprint', () => { closedForPrint.forEach((x) => { x.open = false; }); closedForPrint = []; });
+
+  /* ---- シリーズの前後移動・関連ノート ----
+     トップページ（index.html）の一覧を台帳として読み込み、
+     同じシリーズ（data-series / data-order）と同じ分野（data-topic）のノートへのリンクを末尾に出す。
+     ファイルを直接開いた場合（file://）は読み込めないので何も出さない */
+  const TOPIC = { ai: 'AI', infra: 'インフラ', security: 'セキュリティ', dev: '開発' };
+  const node = (tag, cls, text) => {
+    const n = d.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const item = (n) => {
+    const li = node('li');
+    const a = node('a', '', n.title);
+    a.href = n.url;
+    li.append(node('span', 'm', [n.date, n.topics.map((t) => TOPIC[t] || t).join('・')].filter(Boolean).join('　')), a);
+    if (n.summary) li.appendChild(node('span', 's', n.summary));
+    return li;
+  };
+  const loadRelated = async () => {
+    if (!/^https?:$/.test(location.protocol) || !here) return;
+    const base = new URL(indexHref, location.href);
+    const res = await fetch(base, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const notes = [...doc.querySelectorAll('article.entry')].map((e) => {
+      const a = e.querySelector('h3 a');
+      if (!a) return null;
+      const url = new URL(a.getAttribute('href'), base);
+      return {
+        url: url.href,
+        file: decodeURIComponent(url.pathname.split('/').pop()),
+        title: a.textContent.trim(),
+        summary: ((e.querySelector('p') || {}).textContent || '').trim(),
+        topics: (e.dataset.topic || '').split(/\s+/).filter(Boolean),
+        date: e.dataset.date || '',
+        series: (e.dataset.series || '').trim(),
+        order: Number(e.dataset.order) || 0,
+      };
+    }).filter(Boolean);
+    const me = notes.find((n) => n.file === here);
+    if (!me) return;
+
+    const aside = node('aside', 'nb-related');
+    aside.setAttribute('aria-label', '次に読む');
+    let members = [];
+    if (me.series) {
+      members = notes.filter((n) => n.series === me.series)
+        .sort((a, b) => (a.order - b.order) || a.date.localeCompare(b.date));
+      const i = members.indexOf(me);
+      const seriesUrl = new URL(base);
+      seriesUrl.searchParams.set('series', me.series);
+      if (meta) {
+        const li = node('li');
+        const a = node('a', '', 'シリーズ「' + me.series + '」 ' + (i + 1) + '/' + members.length);
+        a.href = seriesUrl.href;
+        li.appendChild(a);
+        meta.prepend(li);
+      }
+      const box = node('section', 'nb-series');
+      const ol = node('ol');
+      members.forEach((n) => {
+        const li = node('li');
+        if (n === me) {
+          li.appendChild(node('span', 'is-current', n.title + '（このページ）'));
+          li.firstChild.setAttribute('aria-current', 'page');
+        } else {
+          const a = node('a', '', n.title);
+          a.href = n.url;
+          li.appendChild(a);
+        }
+        ol.appendChild(li);
+      });
+      box.append(node('h2', '', 'シリーズ「' + me.series + '」'), ol);
+      const pn = node('div', 'nb-pn');
+      [[members[i - 1], '← 前の回: ', 'is-prev'], [members[i + 1], '次の回: ', 'is-next']].forEach(([n, label, cls]) => {
+        if (!n) return;
+        const a = node('a', cls, label + n.title + (cls === 'is-next' ? ' →' : ''));
+        a.href = n.url;
+        pn.appendChild(a);
+      });
+      if (pn.children.length) box.appendChild(pn);
+      aside.appendChild(box);
+    }
+
+    // 関連ノート: 分野が重なるものを、重なりの多い順・新しい順に最大4件（シリーズの回は除く）
+    const mine = new Set(me.topics);
+    const related = notes
+      .filter((n) => n !== me && !members.includes(n))
+      .map((n) => ({ n, score: n.topics.filter((t) => mine.has(t)).length }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => (b.score - a.score) || b.n.date.localeCompare(a.n.date))
+      .slice(0, 4)
+      .map((x) => x.n);
+    if (related.length) {
+      const box = node('section', 'nb-also');
+      const ul = node('ul', 'nb-list');
+      related.forEach((n) => ul.appendChild(item(n)));
+      box.append(node('h2', '', '関連ノート'), ul);
+      aside.appendChild(box);
+    }
+    if (!aside.children.length) return;
+    const footer = sheet.querySelector(':scope > footer');
+    footer ? footer.before(aside) : sheet.appendChild(aside);
+    onScroll();
+  };
+  loadRelated().catch(() => {});
+
+  // #付きURLで開いたとき、上部バーの追加やフォント読み込みで見出しの位置がずれるので合わせ直す
+  const realignHash = () => {
+    if (userMoved || !location.hash) return;
+    let t = null;
+    try { t = d.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (t) t.scrollIntoView({ behavior: 'instant' });
+  };
+
+  realignHash();
+  update();
+  updateScrollers();
+  if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { realignHash(); onScroll(); updateScrollers(); });
+  addEventListener('load', () => { realignHash(); onScroll(); }, { once: true });
+})();
+</script>
+<!-- notebook-ui-js:end -->
 </body>
 </html>
