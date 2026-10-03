@@ -503,7 +503,7 @@
       <ol>
         <li>システムを止めない・処理をさばき切るための工夫として、複数の機器を組み合わせる<mark>「構成方式」と「クラスタリング」</mark>、1台の物理機器を柔軟に使い分ける「仮想化」がある。</li>
         <li>システムの信頼性は<mark>「稼働率」</mark>という数値で表され、MTBF（平均故障間隔）とMTTR（平均修復時間）から計算できる。装置を直列に組むと稼働率は下がり、並列に組むと稼働率は上がる。</li>
-        <li>システムの良し悪しは信頼性だけでなく<mark>「性能」</mark>でも評価され、スループット・レスポンスタイム・ターンアラウンドタイムといった指標や、将来の負荷を見越すキャパシティプランニングの考え方が土台になる。</li>
+        <li>システムの良し悪しは信頼性だけでなく<mark>「性能」</mark>でも評価され、スループット・レスポンスタイム・ターンアラウンドタイムといった指標や、将来の負荷を見越すキャパシティプランニングの考え方が基本になる。</li>
       </ol>
     </div>
 
@@ -552,7 +552,7 @@
     </div>
     <div class="with-memo">
       <p>
-      デュプレックスシステムは「主系と副系で役割が違う（普段は副系が働かない）」のに対し、デュアルシステムは「2系統がまったく同じ処理を常に行い、結果を照合する」点が本質的な違いである。試験でもこの2つの混同がよく問われる。
+      デュプレックスシステムは「主系と副系で役割が違う（普段は副系が働かない）」のに対し、デュアルシステムは「2系統がまったく同じ処理を常に行い、結果を照合する」点がいちばん大きな違いである。試験でもこの2つの混同がよく問われる。
       </p>
       <aside class="memo">デュアル＝2系統が同じ処理をして照合</aside>
     </div>
@@ -627,7 +627,7 @@
     </div>
     <div class="with-memo">
       <p>
-      HAクラスタの障害検知には、ノード同士が定期的にやり取りする「<mark><strong>ハートビート</strong></mark>」という信号を使う。アクティブ系からの信号が一定時間途絶えると、スタンバイ系が障害と判断し、仮想IPアドレスなどを引き継いで新たなアクティブ系として処理を継続する。この切り替え動作を<strong>フェイルオーバー</strong>と呼ぶ。
+      HAクラスタの障害検知には、ノード同士が定期的にやり取りする「<mark>ハートビート</mark>」という信号を使う。アクティブ系からの信号が一定時間途絶えると、スタンバイ系が障害と判断し、仮想IPアドレスなどを引き継いで新たなアクティブ系として処理を継続する。この切り替え動作をフェイルオーバーと呼ぶ。
       </p>
       <aside class="memo">ハートビートが途絶えたら切り替え</aside>
     </div>
@@ -707,12 +707,12 @@
     </div>
     <div class="with-memo">
       <p>
-      ここで押さえておきたいのが用語の関係である。<strong>ハイパーバイザ</strong>は仮想化を実現するソフトウェアそのもの、<strong>VM（仮想マシン）</strong>はハイパーバイザ型・ホスト型が作り出す「ソフトウェア的なコンピュータ」で独立したゲストOSを持つ。
+      ここで押さえておきたいのが用語の関係である。ハイパーバイザは仮想化を実現するソフトウェアそのもの、VM（仮想マシン）はハイパーバイザ型・ホスト型が作り出す「ソフトウェア的なコンピュータ」で独立したゲストOSを持つ。
       </p>
       <aside class="memo">コンテナはゲストOSを持たない</aside>
     </div>
     <p>
-    一方<strong>コンテナ</strong>はゲストOSを持たず、ホストOSのカーネルを共有しながらアプリケーションの実行環境だけを分離する、より軽量な単位である。
+    一方コンテナはゲストOSを持たず、ホストOSのカーネルを共有しながらアプリケーションの実行環境だけを分離する、より軽量な単位である。
     </p>
 
     <figure>
@@ -942,7 +942,7 @@
 
     <div class="callout note">
       <span class="label">計算例4　直列と並列の組み合わせ</span>
-      <p>装置A（稼働率0.9）に、稼働率0.8の装置Bと装置Cを並列にしたユニットが直列に接続されているシステムを考える。このような複合構成では、<strong>並列部分を先に1つの装置とみなして計算し、その結果を直列の式に当てはめる</strong>のが基本の手順である。</p>
+      <p>装置A（稼働率0.9）に、稼働率0.8の装置Bと装置Cを並列にしたユニットが直列に接続されているシステムを考える。このような複合構成では、並列部分を先に1つの装置とみなして計算し、その結果を直列の式に当てはめるのが基本の手順である。</p>
       <pre><code>① B・Cの並列部分の稼働率を求める
    = 1 − (1 − 0.8) × (1 − 0.8)
    = 1 − 0.2 × 0.2
@@ -1016,7 +1016,7 @@
     </p>
     <div class="with-memo">
       <p>
-      処理能力を高める代表的な手段として、サーバの台数を増やす「<strong>スケールアウト</strong>」と、個々のサーバの性能（CPU・メモリなど）を強化する「<strong>スケールアップ</strong>」があり、負荷分散クラスタはスケールアウトの典型的な実現手段でもある。
+      処理能力を高める代表的な手段として、サーバの台数を増やす「スケールアウト」と、個々のサーバの性能（CPU・メモリなど）を強化する「スケールアップ」があり、負荷分散クラスタはスケールアウトの典型的な実現手段でもある。
       </p>
       <aside class="memo">台数を増やす＝アウト、性能を上げる＝アップ</aside>
     </div>
@@ -1044,18 +1044,18 @@
     <div class="callout caution">
       <span class="label">よくある誤解（構成方式・クラスタ・仮想化）</span>
       <ul>
-        <li><strong><mark>デュプレックスシステムとデュアルシステムを混同しやすい。</mark></strong> — デュプレックスは「主系だけが働き、副系は待機」、デュアルは「2系統が常に同じ処理を行い結果を照合」という違いがある。「2台構成」という共通点だけで覚えると区別を誤る。</li>
-        <li><strong>「クラスタ＝可用性を高めるもの」とは限らない。</strong> — 負荷分散クラスタは主に処理能力（スケールアウト）が目的であり、可用性を主目的とするのはHAクラスタである。両者の狙いを混同しないよう注意する。</li>
-        <li><strong>コンテナは「軽量な仮想マシン」ではない。</strong> — VMはゲストOSごと仮想化するのに対し、コンテナはホストOSのカーネルを共有し、アプリの実行環境だけを分離する仕組みであり、原理がそもそも異なる。</li>
+        <li><strong><mark>デュプレックスシステムとデュアルシステムを混同しやすい。</mark></strong>デュプレックスは「主系だけが働き、副系は待機」、デュアルは「2系統が常に同じ処理を行い結果を照合」という違いがある。「2台構成」という共通点だけで覚えると区別を誤る。</li>
+        <li><strong>「クラスタ＝可用性を高めるもの」とは限らない。</strong>負荷分散クラスタは主に処理能力（スケールアウト）が目的であり、可用性を主目的とするのはHAクラスタである。両者の狙いを混同しないよう注意する。</li>
+        <li><strong>コンテナは「軽量な仮想マシン」ではない。</strong>VMはゲストOSごと仮想化するのに対し、コンテナはホストOSのカーネルを共有し、アプリの実行環境だけを分離する仕組みであり、原理がそもそも異なる。</li>
       </ul>
     </div>
     <div class="callout caution">
       <span class="label">よくある誤解（稼働率計算・性能指標）</span>
       <ul>
-        <li><strong>MTBFとMTTRを同じ比率で伸縮させても稼働率は変わらない。</strong> — 稼働率はMTBFとMTTRの「比」で決まるため、「両方を2倍にしたから稼働率も上がった」と誤解しないよう注意する。稼働率を上げるにはMTBFだけを伸ばすか、MTTRだけを縮める必要がある。</li>
-        <li><strong>直列・並列の式を逆に覚えやすい。</strong> — 直列は「両方必要」なので掛け算（値は下がる）、並列は「どちらかでよい」ので「両方とも壊れている確率」を1から引く（値は上がる）、という対応を混同しないこと。</li>
-        <li><strong>複合構成の計算順序を間違えやすい。</strong> — 直列と並列が混在する構成では、必ず並列部分を先にまとめて1つの稼働率とみなし、その後で直列の掛け算を行う。全体をいきなり1つの式に詰め込もうとすると誤りやすい。</li>
-        <li><strong>レスポンスタイムとターンアラウンドタイムを混同しやすい。</strong> — レスポンスタイムは「最初の応答が返り始めるまで」、ターンアラウンドタイムは「すべての処理が完了するまで」であり、対象とする終点が異なる。</li>
+        <li><strong>MTBFとMTTRを同じ比率で伸縮させても稼働率は変わらない。</strong>稼働率はMTBFとMTTRの「比」で決まるため、「両方を2倍にしたから稼働率も上がった」と誤解しないよう注意する。稼働率を上げるにはMTBFだけを伸ばすか、MTTRだけを縮める必要がある。</li>
+        <li><strong>直列・並列の式を逆に覚えやすい。</strong>直列は「両方必要」なので掛け算（値は下がる）、並列は「どちらかでよい」ので「両方とも壊れている確率」を1から引く（値は上がる）、という対応を混同しないこと。</li>
+        <li><strong>複合構成の計算順序を間違えやすい。</strong>直列と並列が混在する構成では、必ず並列部分を先にまとめて1つの稼働率とみなし、その後で直列の掛け算を行う。全体をいきなり1つの式に詰め込もうとすると誤りやすい。</li>
+        <li><strong>レスポンスタイムとターンアラウンドタイムを混同しやすい。</strong>レスポンスタイムは「最初の応答が返り始めるまで」、ターンアラウンドタイムは「すべての処理が完了するまで」であり、対象とする終点が異なる。</li>
       </ul>
     </div>
 
@@ -1077,10 +1077,10 @@
     </details>
 
     <details class="quiz">
-      <summary>Q4. 次の2問に答えよ。(1) 稼働率0.9の装置を3台直列に接続したときのシステム全体の稼働率を求めよ。(2) 稼働率0.8の装置を2台並列に接続したときのシステム全体の稼働率を求めよ。</summary>
+      <summary>Q4. 次の2問に答えよ。(1)稼働率0.9の装置を3台直列に接続したときのシステム全体の稼働率を求めよ。(2)稼働率0.8の装置を2台並列に接続したときのシステム全体の稼働率を求めよ。</summary>
       <div class="answer">
-        <p>(1) 直列は各装置の稼働率を掛け合わせる。<br><code>0.9 × 0.9 × 0.9 = 0.9³ = 0.729</code></p>
-        <p>(2) 並列は「両方とも故障している確率」を1から引く。<br><code>1 − (1 − 0.8) × (1 − 0.8) = 1 − 0.2 × 0.2 = 1 − 0.04 = 0.96</code></p>
+        <p>(1)直列は各装置の稼働率を掛け合わせる。<br><code>0.9 × 0.9 × 0.9 = 0.9³ = 0.729</code></p>
+        <p>(2)並列は「両方とも故障している確率」を1から引く。<br><code>1 − (1 − 0.8) × (1 − 0.8) = 1 − 0.2 × 0.2 = 1 − 0.04 = 0.96</code></p>
       </div>
     </details>
 
@@ -1095,18 +1095,18 @@
       <li><a href="https://itmanabi.com/duplex-dual-system/" target="_blank" rel="noopener">デュプレックスシステムとデュアルシステムはどんなもの？｜ITの学び</a></li>
       <li><a href="https://hnavi.co.jp/knowledge/blog/dualsystem/" target="_blank" rel="noopener">デュアルシステムとは？基礎知識とデュプレックスシステムとの違い｜発注ラウンジ</a></li>
       <li><a href="https://www.fs.com/jp/blog/server-cluster-and-futanbunsan-ha-4688.html" target="_blank" rel="noopener">サーバのクラスタ構成とは？負荷分散とHAクラスタを解説｜FS.com</a></li>
-      <li><a href="https://jpn.nec.com/clusterpro/blog/20170515.html" target="_blank" rel="noopener">HAクラスター入門 ～複数のサーバーでクラスタリング？～｜NEC</a></li>
-      <li><a href="https://e-words.jp/w/HA%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%BF.html" target="_blank" rel="noopener">HAクラスタ（高可用性クラスタ）とは｜IT用語辞典 e-Words</a></li>
+      <li><a href="https://jpn.nec.com/clusterpro/blog/20170515.html" target="_blank" rel="noopener">HAクラスター入門～複数のサーバーでクラスタリング？～｜NEC</a></li>
+      <li><a href="https://e-words.jp/w/HA%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%BF.html" target="_blank" rel="noopener">HAクラスタ（高可用性クラスタ）とは｜IT用語辞典e-Words</a></li>
       <li><a href="https://kouoboe.com/2023/10/24/kurasuta/" target="_blank" rel="noopener">イメージで覚える！負荷分散型クラスタ、フェールオーバ型クラスタ｜easy memo</a></li>
       <li><a href="https://knowledge.cpi.ad.jp/basic-knowledge/277/" target="_blank" rel="noopener">サーバーの仮想化とは？仮想化を支える技術とメリット、デメリット｜レンタルサーバーナレッジ</a></li>
       <li><a href="https://it-infomation.com/virtualization-differences-hosted-hypervisor-container/" target="_blank" rel="noopener">【仮想化】ホスト型・ハイパーバイザー型・コンテナ型の違い｜IT Information</a></li>
       <li><a href="https://qiita.com/_lvyuu/items/fe5bd33a49c6e8d9ae2a" target="_blank" rel="noopener">【仮想化】ハイパーバイザー型／ホスト型／コンテナ型｜Qiita</a></li>
-      <li><a href="https://www.seplus.jp/dokushuzemi/ec/fe/fenavi/easy_calc/availability/" target="_blank" rel="noopener">稼働率の計算方法がわかる｜かんたん計算問題｜基本情報技術者試験 受験ナビ</a></li>
+      <li><a href="https://www.seplus.jp/dokushuzemi/ec/fe/fenavi/easy_calc/availability/" target="_blank" rel="noopener">稼働率の計算方法がわかる｜かんたん計算問題｜基本情報技術者試験受験ナビ</a></li>
       <li><a href="https://hackson.jp/availability-rate-mtbf-mttr/" target="_blank" rel="noopener">稼働率とは？MTBF・MTTRの計算式と求め方を図解で完全解説｜hackson</a></li>
-      <li><a href="https://note.com/yuran_learning/n/ncbd23810482f" target="_blank" rel="noopener">【応用情報】稼働率の計算 完全攻略｜直列・並列システムを一発で理解｜応用情報技術者試験ch</a></li>
+      <li><a href="https://note.com/yuran_learning/n/ncbd23810482f" target="_blank" rel="noopener">【応用情報】稼働率の計算完全攻略｜直列・並列システムを一発で理解｜応用情報技術者試験ch</a></li>
       <li><a href="https://sakitoo.com/kadouritsu-keisan/" target="_blank" rel="noopener">稼働率の計算方法を分かりやすく簡単に解説！【直列・並列・早見表・練習問題つき】｜サキトの花</a></li>
       <li><a href="https://note.com/turupin1118/n/nc495e3dcc438" target="_blank" rel="noopener">①スループット②レスポンスタイム③ターンアラウンドタイム｜note</a></li>
-      <li><a href="https://45kaku.com/itpassport_text_44-01/" target="_blank" rel="noopener">ベンチマーク/ターンアラウンド・レスポンスタイム/スループットとは？｜ITパスポート試験無料教材 ぽんぱす</a></li>
+      <li><a href="https://45kaku.com/itpassport_text_44-01/" target="_blank" rel="noopener">ベンチマーク/ターンアラウンド・レスポンスタイム/スループットとは？｜ITパスポート試験無料教材ぽんぱす</a></li>
       <li><a href="http://software-engineering-lab.com/system/capacityplanning.html" target="_blank" rel="noopener">キャパシティプランニング｜Software Engineering Lab</a></li>
     </ul>
 

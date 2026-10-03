@@ -503,13 +503,13 @@
     <div class="callout summary">
       <span class="label">3行でいうと</span>
       <ol>
-        <li>LLM は<mark>「命令」と「データ」を構造的に区別できず</mark>、SQLインジェクションにおけるプレースホルダのようなクリーンな解決策が存在しないため、プロンプトインジェクションなどの脆弱性は<strong>現在の生成AIに内在するもの</strong>とされている。</li>
-        <li>AIセキュリティのリスクは、データ層・モデル層・アプリ層・エージェント層・運用や人の層という<mark><strong>レイヤー</strong>で捉える</mark>と整理しやすく、対策は「モデルの命令境界はいずれ突破される」という前提で、モデルに許す行為とその出力が到達できる先を周囲のアーキテクチャで制約する発想が中心になる。</li>
-        <li>OWASP・NIST・MITRE・総務省/経済産業省・IPA といった一次資料をもとに、代表的なリスク（プロンプトインジェクション、情報漏えい、過剰なエージェンシー、サプライチェーン、ポイズニング、幻覚など）と、<mark>開発者・利用者・組織それぞれの実務対策</mark>を整理する。</li>
+        <li>LLMは<mark>「命令」と「データ」を構造的に区別できず</mark>、SQLインジェクションにおけるプレースホルダのようなクリーンな解決策が存在しないため、プロンプトインジェクションなどの脆弱性は現在の生成AIに内在するものとされている。</li>
+        <li>AIセキュリティのリスクは、データ層・モデル層・アプリ層・エージェント層・運用や人の層という<mark>レイヤーで捉える</mark>と整理しやすく、対策は「モデルの命令境界はいずれ突破される」という前提で、モデルに許す行為とその出力が到達できる先を周囲のアーキテクチャで制約する発想が中心になる。</li>
+        <li>OWASP・NIST・MITRE・総務省/経済産業省・IPAといった一次資料をもとに、代表的なリスク（プロンプトインジェクション、情報漏えい、過剰なエージェンシー、サプライチェーン、ポイズニング、幻覚など）と、<mark>開発者・利用者・組織それぞれの実務対策</mark>を整理する。</li>
       </ol>
     </div>
 
-    <p>生成AIを業務や日常で使うとき、何が危なくて、何をすれば安全に近づけるのか。OWASP・NIST・MITRE・総務省/経済産業省・IPA といった一次資料をたどりながら、リスクの全体像から実務チェックリストまでを整理しました。攻撃の再現手順は扱わず、あくまで「守る側」の視点でまとめています。</p>
+    <p>生成AIを業務や日常で使うとき、何が危なくて、何をすれば安全に近づけるのか。OWASP・NIST・MITRE・総務省/経済産業省・IPAといった一次資料をたどりながら、リスクの全体像から実務チェックリストまでを整理しました。攻撃の再現手順は扱わず、あくまで「守る側」の視点でまとめています。</p>
 
     <h3>このドキュメントについて</h3>
 
@@ -517,7 +517,7 @@
       <table>
         <tbody>
           <tr><th scope="row">作成日</th><td>2026年9月15日</td></tr>
-          <tr><th scope="row">調査期間</th><td>2026年9月15日（同日中に実施。すべての URL の参照日も同日）</td></tr>
+          <tr><th scope="row">調査期間</th><td>2026年9月15日（同日中に実施。すべてのURLの参照日も同日）</td></tr>
           <tr><th scope="row">対象読者</th><td>初学者〜中級者。AIを使う人／AIを組み込んだシステムを作る人の両方</td></tr>
           <tr><th scope="row">視点</th><td>守る側（ディフェンダー）。攻撃手法は概念と防御の理解に必要な範囲にとどめ、再現手順やペイロード集は記載しない</td></tr>
           <tr><th scope="row">利用目的</th><td>個人の学習用</td></tr>
@@ -534,13 +534,13 @@
           <tr><td>OWASP GenAI Security Project</td><td>Top 10 for Agentic Applications（ASI）</td><td>2026年版（2025年12月9日発表）</td></tr>
           <tr><td>NIST（米国国立標準技術研究所）</td><td>AI RMF 1.0（NIST AI 100-1）</td><td>2023年1月26日（現在改訂作業中）</td></tr>
           <tr><td>NIST</td><td>Generative AI Profile（NIST AI 600-1）</td><td>2024年7月</td></tr>
-          <tr><td>NIST</td><td>Adversarial Machine Learning 分類体系（NIST AI 100-2 E2025）</td><td>2025年3月</td></tr>
-          <tr><td>MITRE</td><td>ATLAS（AIシステム向け敵対的脅威ナレッジベース）</td><td>データリリース v2026.08（2026年9月1日）</td></tr>
+          <tr><td>NIST</td><td>Adversarial Machine Learning分類体系（NIST AI 100-2 E2025）</td><td>2025年3月</td></tr>
+          <tr><td>MITRE</td><td>ATLAS（AIシステム向け敵対的脅威ナレッジベース）</td><td>データリリースv2026.08（2026年9月1日）</td></tr>
           <tr><td>Model Context Protocol</td><td>Security Best Practices（仕様付属文書）</td><td>2026年9月15日時点の最新版</td></tr>
           <tr><td>総務省・経済産業省</td><td>AI事業者ガイドライン</td><td>第1.2版（令和8年＝2026年3月31日）</td></tr>
-          <tr><td>IPA 産業サイバーセキュリティセンター</td><td>テキスト生成AIの導入・運用ガイドライン</td><td>2024年7月</td></tr>
+          <tr><td>IPA産業サイバーセキュリティセンター</td><td>テキスト生成AIの導入・運用ガイドライン</td><td>2024年7月</td></tr>
           <tr><td>個人情報保護委員会</td><td>生成AIサービスの利用に関する注意喚起等について</td><td>2023年6月2日</td></tr>
-          <tr><td>CISA・英国NCSC ほか23機関</td><td>Guidelines for Secure AI System Development</td><td>2023年11月</td></tr>
+          <tr><td>CISA・英国NCSCほか23機関</td><td>Guidelines for Secure AI System Development</td><td>2023年11月</td></tr>
           <tr><td>ISO/IEC</td><td>ISO/IEC 42001（AIマネジメントシステム）</td><td>2023年12月</td></tr>
         </tbody>
       </table>
@@ -548,7 +548,7 @@
 
     <div class="callout note">
       <span class="label">本文の読み方について</span>
-      <p>各章は「<strong>概要 → なぜ危険か → 具体例 → 対策 → 参考リンク</strong>」の順で統一しています。事実として出典で確認できた記述は本文中で直接引用し、筆者（Claude）による整理・解釈は「筆者の整理」として区別しています。出典が古い資料には、本文中でその旨を明記しました。</p>
+      <p>各章は「概要 → なぜ危険か → 具体例 → 対策 → 参考リンク」の順で統一しています。事実として出典で確認できた記述は本文中で直接引用し、筆者（Claude）による整理・解釈は「筆者の整理」として区別しています。出典が古い資料には、本文中でその旨を明記しました。</p>
     </div>
 
     <div class="callout caution">
@@ -563,28 +563,28 @@
     <p>大きく分けると、AIをめぐるセキュリティの議論には3つの方向があります。</p>
 
     <ul>
-      <li><strong>① AIを守る（Security for AI）</strong> — AIモデルやAIを組み込んだアプリケーション自体が攻撃対象になる話。プロンプトインジェクション、データポイズニング、モデルの窃取などが含まれます。<strong>本ドキュメントの主題はここ</strong>です。</li>
-      <li><strong>② AIで守る（AI for Security）</strong> — AIを防御側の道具として使う話。ログ分析、脅威検知、脆弱性発見の自動化など。本ドキュメントでは扱いません。</li>
-      <li><strong>③ AIが攻撃に使われる（Offensive use of AI）</strong> — 攻撃者がAIを使って攻撃を効率化する話。フィッシング文面の量産、マルウェア作成の敷居低下など。NIST AI 600-1 が「Information Security」リスクの一側面として挙げています。</li>
+      <li><strong>① AIを守る（Security for AI）</strong>。AIモデルやAIを組み込んだアプリケーション自体が攻撃対象になる話。プロンプトインジェクション、データポイズニング、モデルの窃取などが含まれます。本ドキュメントの主題はここです。</li>
+      <li><strong>② AIで守る（AI for Security）</strong>。AIを防御側の道具として使う話。ログ分析、脅威検知、脆弱性発見の自動化など。本ドキュメントでは扱いません。</li>
+      <li><strong>③ AIが攻撃に使われる（Offensive use of AI）</strong>。攻撃者がAIを使って攻撃を効率化する話。フィッシング文面の量産、マルウェア作成の敷居低下など。NIST AI 600-1が「Information Security」リスクの一側面として挙げています。</li>
     </ul>
 
     <h4>なぜ従来のセキュリティの延長では足りないのか</h4>
 
-    <p>従来のソフトウェアセキュリティと決定的に違うのは、<strong>LLM が「命令」と「データ」を構造的に区別しない</strong>ことです。OWASP の2026年版はこの点を明確に書いています。</p>
+    <p>従来のソフトウェアセキュリティと決定的に違うのは、LLMが「命令」と「データ」を構造的に区別しないことです。OWASPの2026年版はこの点を明確に書いています。</p>
 
     <div class="callout">
-      <p>「LLM は『命令』と『データ』のアーキテクチャ上の区別をしない（どちらも同じトークンストリーム上のトークンである）。したがって、パラメータ化クエリ（prepared statement）に相当するきれいな解決策は存在しない。」</p>
+      <p>「LLMは『命令』と『データ』のアーキテクチャ上の区別をしない（どちらも同じトークンストリーム上のトークンである）。したがって、パラメータ化クエリ（prepared statement）に相当するきれいな解決策は存在しない。」</p>
       <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM01:2026 Prompt Injection（2026年8月）</small></p>
     </div>
 
-    <p>SQLインジェクションであれば、値を「値」として渡すプレースホルダという構造的な解決策があります。しかしLLMには、それに相当する仕組みが<strong>今のところ存在しません</strong>。これが、AIセキュリティが従来型の延長では扱いきれない最大の理由です。</p>
+    <p>SQLインジェクションであれば、値を「値」として渡すプレースホルダという構造的な解決策があります。しかしLLMには、それに相当する仕組みが今のところ存在しません。これが、AIセキュリティが従来型の延長では扱いきれない最大の理由です。</p>
 
-    <p>OWASP は同じ文書の中で、デプロイ時の3つの性質が問題をさらに悪化させると整理しています。</p>
+    <p>OWASPは同じ文書の中で、デプロイ時の3つの性質が問題をさらに悪化させると整理しています。</p>
 
     <ul>
-      <li><strong>コンテキストウィンドウのプーリング（context-window pooling）</strong> — システムプロンプト、ユーザー入力、検索してきた文書、ツールの出力、会話履歴、メモリが、<strong>すべて同じひとつのトークン列</strong>として扱われる。信頼境界が強制されていない。</li>
-      <li><strong>メモリの永続性（memory persistence）</strong> — 長期メモリ、RAGコーパス、ベクトルストアに書き込まれた注入は、<strong>それ以降のすべてのセッション</strong>を汚染する。</li>
-      <li><strong>エージェント的実行（agentic execution）</strong> — モデルの出力がツール呼び出し（ファイルシステム、シェル、メール、クラウドAPI、MCPサーバー、サブエージェント）を駆動すると、被害範囲がチャット画面から<strong>エージェントのツールが届く範囲すべて</strong>に広がる。</li>
+      <li><strong>コンテキストウィンドウのプーリング（context-window pooling）</strong>。システムプロンプト、ユーザー入力、検索してきた文書、ツールの出力、会話履歴、メモリが、すべて同じひとつのトークン列として扱われる。信頼境界が強制されていない。</li>
+      <li><strong>メモリの永続性（memory persistence）</strong>。長期メモリ、RAGコーパス、ベクトルストアに書き込まれた注入は、それ以降のすべてのセッションを汚染する。</li>
+      <li><strong>エージェント的実行（agentic execution）</strong>。モデルの出力がツール呼び出し（ファイルシステム、シェル、メール、クラウドAPI、MCPサーバー、サブエージェント）を駆動すると、被害範囲がチャット画面からエージェントのツールが届く範囲すべてに広がる。</li>
     </ul>
     <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM01:2026（2026年8月）</small></p>
 
@@ -601,7 +601,7 @@
         <thead><tr><th>枠組み</th><th>視点</th><th>粒度</th><th>こんなときに使う</th></tr></thead>
         <tbody>
           <tr><td>OWASP Top 10 for LLM / Agentic Applications</td><td>アプリケーション開発者</td><td>リスク10項目＋緩和策</td><td>自分が作るAIアプリの設計レビュー</td></tr>
-          <tr><td>NIST AI RMF ＋ Generative AI Profile</td><td>組織のガバナンス</td><td>4機能（統治・マップ・測定・管理）＋12リスク</td><td>社内ルールやリスク管理プロセスの設計</td></tr>
+          <tr><td>NIST AI RMF＋Generative AI Profile</td><td>組織のガバナンス</td><td>4機能（統治・マップ・測定・管理）＋12リスク</td><td>社内ルールやリスク管理プロセスの設計</td></tr>
           <tr><td>MITRE ATLAS</td><td>攻撃者の行動</td><td>16戦術・197技術・72事例</td><td>脅威モデリング、レッドチーム演習の設計</td></tr>
         </tbody>
       </table>
@@ -611,7 +611,7 @@
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>上記の枠組みは互いに重なり合っていて、初学者には「結局どこを守ればいいのか」が見えにくくなりがちです。筆者としては、<mark><strong>守るべき対象をレイヤーで分ける</strong></mark>のが実務上いちばん扱いやすいと考えます。以下は各出典のリスク項目を、筆者の判断でレイヤー別に並べ替えたものです（この表自体は特定の出典によるものではありません）。</p>
+      <p>上記の枠組みは互いに重なり合っていて、初学者には「結局どこを守ればいいのか」が見えにくくなりがちです。筆者としては、<mark>守るべき対象をレイヤーで分ける</mark>のが実務上いちばん扱いやすいと考えます。以下は各出典のリスク項目を、筆者の判断でレイヤー別に並べ替えたものです（この表自体は特定の出典によるものではありません）。</p>
     </div>
 
     <div class="table-wrap">
@@ -629,13 +629,13 @@
 
     <div class="callout note">
       <span class="label">ひとつだけ覚えるなら</span>
-      <p>OWASP 2026年版は、プロンプトインジェクションの緩和策の冒頭でこう述べています ――「<strong>防御はインターセプト（途中で止めること）ではなくアーキテクチャの問題である。モデルの命令境界はいずれ突破されるという前提で周囲のシステムを設計し、モデルに許す行為と、その出力が到達できる先を制約せよ</strong>」。AIセキュリティ全体を貫く考え方です。</p>
+      <p>OWASP 2026年版は、プロンプトインジェクションの緩和策の冒頭で「防御はインターセプト（途中で止めること）ではなくアーキテクチャの問題である。モデルの命令境界はいずれ突破されるという前提で周囲のシステムを設計し、モデルに許す行為と、その出力が到達できる先を制約せよ」と述べています。AIセキュリティ全体に通じる考え方です。</p>
     </div>
 
     <ul class="refs">
-      <li>OWASP Top 10 for LLM Applications 2026 — <a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日 2026-09-15）</li>
-      <li>NIST AI Risk Management Framework — <a href="https://www.nist.gov/itl/ai-risk-management-framework">https://www.nist.gov/itl/ai-risk-management-framework</a>（参照日 2026-09-15）</li>
-      <li>MITRE ATLAS — <a href="https://atlas.mitre.org/">https://atlas.mitre.org/</a>（参照日 2026-09-15）</li>
+      <li>OWASP Top 10 for LLM Applications 2026：<a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日2026-09-15）</li>
+      <li>NIST AI Risk Management Framework：<a href="https://www.nist.gov/itl/ai-risk-management-framework">https://www.nist.gov/itl/ai-risk-management-framework</a>（参照日2026-09-15）</li>
+      <li>MITRE ATLAS：<a href="https://atlas.mitre.org/">https://atlas.mitre.org/</a>（参照日2026-09-15）</li>
     </ul>
 
     <h2 id="s3">仕組み・全体像</h2>
@@ -644,34 +644,34 @@
 
     <h3 id="injection">プロンプトインジェクション（直接・間接）</h3>
 
-    <p><strong>プロンプトインジェクション</strong>（prompt injection）とは、LLMへの入力が、アプリケーション開発者の意図しない形でモデルの振る舞いを変えてしまう脆弱性です。OWASP の LLM Top 10 で、2025年版・2026年版ともに<strong>第1位</strong>に位置づけられています。</p>
+    <p><strong>プロンプトインジェクション</strong>（prompt injection）とは、LLMへの入力が、アプリケーション開発者の意図しない形でモデルの振る舞いを変えてしまう脆弱性です。OWASPのLLM Top 10で、2025年版・2026年版ともに第1位に位置づけられています。</p>
 
     <div class="callout">
-      <p>「プロンプトインジェクション脆弱性とは、LLM への入力 ―― 直接のユーザー入力、検索されたコンテンツ、ツールの出力、画像・音声・動画コンテンツ、中間推論、永続メモリのいずれであれ ―― が、アプリケーション開発者が意図しなかった形でモデルの挙動を変えることをいう。入力は人間が読める形である必要も、ユーザーから直接届く必要も、描画された画面上で見える必要もない。」</p>
+      <p>「プロンプトインジェクション脆弱性とは、LLMへの入力（直接のユーザー入力、検索されたコンテンツ、ツールの出力、画像・音声・動画コンテンツ、中間推論、永続メモリのいずれであれ）が、アプリケーション開発者が意図しなかった形でモデルの挙動を変えることをいう。入力は人間が読める形である必要も、ユーザーから直接届く必要も、描画された画面上で見える必要もない。」</p>
       <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM01:2026 Prompt Injection（2026年8月）</small></p>
     </div>
 
     <h4>直接と間接の違い</h4>
     <ul>
-      <li><strong>直接プロンプトインジェクション（Direct）</strong> — ユーザー（または利用者の入力経路を持つ攻撃者）が、モデルの振る舞いを変える入力を自分で与えるもの。<strong>意図的</strong>な場合（ジェイルブレイクを狙う）もあれば、<strong>非意図的</strong>な場合（正当な利用者が、たまたま命令文を含む文章を貼り付けてしまう）もあります。</li>
-      <li><strong>間接プロンプトインジェクション（Indirect）</strong> — モデルが外部から取り込んだコンテンツ ―― Webページ、文書、メール、ツールの応答、RAGで検索された一節、画像、MCPサーバーの出力、データベースの行、課題管理システムのタイトル ―― に命令として作用するデータが含まれているもの。<strong>ユーザーはその命令を入力していないし、目にしてもいない</strong>のが特徴です。</li>
+      <li><strong>直接プロンプトインジェクション（Direct）</strong>。ユーザー（または利用者の入力経路を持つ攻撃者）が、モデルの振る舞いを変える入力を自分で与えるもの。意図的な場合（ジェイルブレイクを狙う）もあれば、非意図的な場合（正当な利用者が、たまたま命令文を含む文章を貼り付けてしまう）もあります。</li>
+      <li><strong>間接プロンプトインジェクション（Indirect）</strong>。モデルが外部から取り込んだコンテンツ（Webページ、文書、メール、ツールの応答、RAGで検索された一節、画像、MCPサーバーの出力、データベースの行、課題管理システムのタイトル）に命令として作用するデータが含まれているもの。ユーザーはその命令を入力していないし、目にしてもいないのが特徴です。</li>
     </ul>
 
     <p>OWASP 2026年版は、間接注入について「配送元の信頼プロファイルによって現実的な防御策が決まる」として、次の区別を置いています。</p>
     <ul>
       <li><strong>信頼できない面</strong>（untrusted surfaces）：公開Webページ、見知らぬ送信者からのメール、検索結果。すべて疑わしいものとして扱う。</li>
-      <li><strong>準信頼の面</strong>（semi-trusted surfaces）：公開バグトラッカーの課題タイトル、パッケージのREADMEやCHANGELOG、サードパーティAPIの応答など、<strong>ユーザーが取得することは選んだが、書いたのは他人</strong>であるコンテンツ。プラットフォームは信頼していても、個々の投稿者は信頼していない。</li>
+      <li><strong>準信頼の面</strong>（semi-trusted surfaces）：公開バグトラッカーの課題タイトル、パッケージのREADMEやCHANGELOG、サードパーティAPIの応答など、ユーザーが取得することは選んだが、書いたのは他人であるコンテンツ。プラットフォームは信頼していても、個々の投稿者は信頼していない。</li>
     </ul>
     <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM01:2026</small></p>
 
     <h4>なぜ危険か</h4>
-    <p>危険さの本質は、<strong>注入が成功したとき、モデルは「ユーザーの権限で」動いている</strong>という点にあります。OWASP は起こりうる結果を次のように列挙しています。</p>
+    <p>危険さの本質は、注入が成功したとき、モデルは「ユーザーの権限で」動いているという点にあります。OWASPは起こりうる結果を次のように列挙しています。</p>
     <ul>
       <li>機密情報、システムプロンプトの内容、取得した非公開文書、インフラ情報の漏えい</li>
       <li>下流のシステムや人間が実際に行動してしまうような、偏った／有害な／攻撃者の望む出力の生成</li>
       <li>エージェントが呼べるツールの無断実行。シェル・ファイルシステム・クラウドAPIへのアクセスがある場合は任意コマンド実行や破壊的操作にまで至る</li>
       <li>画像URLチャネル、描画出力に紛れ込ませた不可視Unicode文字、ツールログの隠れ側チャネルを使ったデータの持ち出し</li>
-      <li>メモリやRAGコーパスの汚染による、<strong>セッションをまたいだ永続的な侵害</strong></li>
+      <li>メモリやRAGコーパスの汚染による、セッションをまたいだ永続的な侵害</li>
     </ul>
     <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM01:2026</small></p>
 
@@ -679,52 +679,52 @@
     <p>間接プロンプトインジェクションが実際の製品で成立した、公開された代表例です。</p>
 
     <div class="callout">
-      <p><strong>CVE-2025-32711 / 「M365 Copilot Information Disclosure Vulnerability」</strong></p>
+      <p><strong>CVE-2025-32711 /「M365 Copilot Information Disclosure Vulnerability」</strong></p>
       <ul>
         <li>採番・公開：Microsoft、2025年6月11日</li>
-        <li>公式説明：「M365 Copilot における AI コマンドインジェクションにより、権限のない攻撃者がネットワーク経由で情報を開示させることができる」</li>
+        <li>公式説明：「M365 CopilotにおけるAIコマンドインジェクションにより、権限のない攻撃者がネットワーク経由で情報を開示させることができる」</li>
         <li>CWE-74（下流コンポーネントで使われる出力中の特殊要素の不適切な無害化＝インジェクション）</li>
-        <li>CVSS v3.1：<strong>9.3（CRITICAL）</strong>／ベクター <code>AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:L/A:N/E:U/RL:O/RC:C</code></li>
+        <li>CVSS v3.1：9.3（CRITICAL）／ベクター<code>AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:L/A:N/E:U/RL:O/RC:C</code></li>
         <li>タグ：<code>exclusively-hosted-service</code>（＝サービス側で修正済み。利用者側の対応は不要）</li>
-        <li>CISA による補足評価：Exploitation=none（悪用実績の確認なし）、Automatable=yes、Technical Impact=total</li>
+        <li>CISAによる補足評価：Exploitation=none（悪用実績の確認なし）、Automatable=yes、Technical Impact=total</li>
       </ul>
-      <p><small>出典：CVE Program 公式レコード（cveawg.mitre.org/api/cve/CVE-2025-32711、参照日 2026-09-15）。発見者 Aim Labs のレポート（aim.security）が参照リンクとして登録されているが、本まとめではレポート本文は未確認。</small></p>
+      <p><small>出典：CVE Program公式レコード（cveawg.mitre.org/api/cve/CVE-2025-32711、参照日2026-09-15）。発見者Aim Labsのレポート（aim.security）が参照リンクとして登録されているが、本まとめではレポート本文は未確認。</small></p>
     </div>
 
     <div class="with-memo">
-      <p>注目すべきは CVSS ベクターの <code>UI:N</code>（ユーザーの操作が不要）と <code>PR:N</code>（権限が不要）です。攻撃者が細工したメールを送るだけで ―― 受信者がそれを開かなくても ―― Copilot がそのメールを取り込んだ時点で成立しうる、という構造を示しています。<strong>「ユーザーが騙されなければ安全」というフィッシング的な発想が通用しない</strong>のが、間接注入の恐ろしさです。</p>
+      <p>注目すべきはCVSSベクターの<code>UI:N</code>（ユーザーの操作が不要）と<code>PR:N</code>（権限が不要）です。攻撃者が細工したメールを送るだけで、受信者がそれを開かなくても、Copilotがそのメールを取り込んだ時点で成立しうる、という構造を示しています。「ユーザーが騙されなければ安全」というフィッシング的な発想が通用しないのが、間接注入の恐ろしさです。</p>
       <aside class="memo">間接注入は「騙されなければ安全」が通じない</aside>
     </div>
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>CVSSのベクターには <code>E:U</code>（Exploit Code Maturity: Unproven）と <code>RL:O</code>（Remediation Level: Official Fix）も含まれ、CISA の評価も「悪用実績なし」です。つまり<strong>実害が広く出た事件ではありません</strong>。それでも学習価値が高いのは、「誰も操作していないのに情報が出ていく」という経路が実在しうることを、CVE として公式に記録した事例だからです。</p>
+      <p>CVSSのベクターには<code>E:U</code>（Exploit Code Maturity: Unproven）と<code>RL:O</code>（Remediation Level: Official Fix）も含まれ、CISAの評価も「悪用実績なし」です。つまり実害が広く出た事件ではありません。それでも学習価値が高いのは、「誰も操作していないのに情報が出ていく」という経路が実在しうることを、CVEとして公式に記録した事例だからです。</p>
     </div>
 
     <h4>対策</h4>
     <p>OWASP 2026年版は、緩和策の前提として厳しい認識を明示しています。</p>
     <div class="callout">
-      <p>「プロンプトインジェクションは現在の生成AIに内在するものである。LLM は命令とデータをアーキテクチャ上区別せず、その振る舞いは確率的であるため、<strong>今日の時点で信頼できる防止メカニズムは存在しない</strong>。これは NIST（2025）、NCSC（2025）、Debenedetti ら（2025）と一致する立場である。したがって防御はインターセプト型ではなくアーキテクチャ型となる。」</p>
+      <p>「プロンプトインジェクションは現在の生成AIに内在するものである。LLMは命令とデータをアーキテクチャ上区別せず、その振る舞いは確率的であるため、今日の時点で信頼できる防止メカニズムは存在しない。これはNIST（2025）、NCSC（2025）、Debenedettiら（2025）と一致する立場である。したがって防御はインターセプト型ではなくアーキテクチャ型となる。」</p>
       <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM01:2026</small></p>
     </div>
 
-    <p>そのうえで、以下の11項目を<strong>多層防御として組み合わせる</strong>ことが推奨されています（要約。丸数字は原文の番号）。</p>
+    <p>そのうえで、以下の11項目を多層防御として組み合わせることが推奨されています（要約。丸数字は原文の番号）。</p>
 
     <div class="table-wrap">
       <table>
         <thead><tr><th>#</th><th>対策</th><th>原文が明示している限界</th></tr></thead>
         <tbody>
           <tr><td>1</td><td>システムプロンプトでモデルの役割と能力を制約する（宣言的な許可／拒否の記述を使い、無制限な権限付与をしない）</td><td>部分的な対策にすぎない。プロンプトを推測できた攻撃者は回避できる</td></tr>
-          <tr><td>2</td><td>厳格な出力スキーマを定義し、下流が動く前に<strong>信頼できるアプリ側コード</strong>で構造検証する（2回目のLLM呼び出しではなく）</td><td>形式違反は捕まえるが意味的な操作は捕まえられない。スキーマに適合した悪意あるSQLやメール本文は通る</td></tr>
-          <tr><td>3</td><td>テキストだけでなく<strong>すべてのモダリティ境界</strong>でフィルタする（画像はOCR、音声は文字起こししてからテキストフィルタ）</td><td>言い換えやエンコードで回避可能。低リソース言語や混在言語で精度が落ちる</td></tr>
+          <tr><td>2</td><td>厳格な出力スキーマを定義し、下流が動く前に信頼できるアプリ側コードで構造検証する（2回目のLLM呼び出しではなく）</td><td>形式違反は捕まえるが意味的な操作は捕まえられない。スキーマに適合した悪意あるSQLやメール本文は通る</td></tr>
+          <tr><td>3</td><td>テキストだけでなくすべてのモダリティ境界でフィルタする（画像はOCR、音声は文字起こししてからテキストフィルタ）</td><td>言い換えやエンコードで回避可能。低リソース言語や混在言語で精度が落ちる</td></tr>
           <tr><td>4</td><td><strong>資格情報と状態変更能力をモデルではなくアプリ側コードが持つ</strong>。特権的な呼び出しは決定論的なポリシーエンジンを通し、実行時に意図と引数を再検証する</td><td>利便性のための広い権限や、マルチエージェントの中継でリスクが下流に再導入される</td></tr>
-          <tr><td>5</td><td>不可視文字（タグブロック U+E0000〜E007F、異体字セレクタ U+FE00〜FE0F、ゼロ幅文字 U+200B/200C/200D/2060）を取り込み時と描画時の両方で除去する</td><td>目に見えるテキストの攻撃や将来のステガノグラフィ手法は止まらない</td></tr>
-          <tr><td>6</td><td>外部コンテンツを<strong>構造的に分離した、来歴ラベル付きのチャネル</strong>で渡し、モデルがデータと命令を区別できるようにする</td><td>非適応的なテストでのみ成功率が下がる。マーキング方式を知る攻撃者は模倣できる</td></tr>
-          <tr><td>7</td><td>特権的・不可逆的・外部から見える操作の前に<strong>人間の明示的な確認</strong>を求める。要約ではなく実際に実行される内容をそのまま提示する</td><td>不可視文字により表示と実行内容が食い違いうる。承認疲れで判断が劣化する</td></tr>
-          <tr><td>8</td><td>エージェントの能力を予算管理する（Meta の Rule of Two を下限として）。(A) 信頼できない入力、(B) 機密データ、(C) 状態変更または外部通信 ―― の<strong>3つ同時</strong>は高リスクとみなし、操作ごとの人間承認を必須とする</td><td>自律性の深さについては何も規定していない</td></tr>
+          <tr><td>5</td><td>不可視文字（タグブロックU+E0000〜E007F、異体字セレクタU+FE00〜FE0F、ゼロ幅文字U+200B/200C/200D/2060）を取り込み時と描画時の両方で除去する</td><td>目に見えるテキストの攻撃や将来のステガノグラフィ手法は止まらない</td></tr>
+          <tr><td>6</td><td>外部コンテンツを構造的に分離した、来歴ラベル付きのチャネルで渡し、モデルがデータと命令を区別できるようにする</td><td>非適応的なテストでのみ成功率が下がる。マーキング方式を知る攻撃者は模倣できる</td></tr>
+          <tr><td>7</td><td>特権的・不可逆的・外部から見える操作の前に人間の明示的な確認を求める。要約ではなく実際に実行される内容をそのまま提示する</td><td>不可視文字により表示と実行内容が食い違いうる。承認疲れで判断が劣化する</td></tr>
+          <tr><td>8</td><td>エージェントの能力を予算管理する（MetaのRule of Twoを下限として）。(A)信頼できない入力、(B)機密データ、(C)状態変更または外部通信の3つが同時に揃う構成は高リスクとみなし、操作ごとの人間承認を必須とする</td><td>自律性の深さについては何も規定していない</td></tr>
           <tr><td>9</td><td><strong>エージェントのメモリ書き込みを特権操作として扱う</strong>。原因となったプロンプトをログし、命令や役割変更を含む書き込みを分類し、永続化前に承認を求める</td><td>事実の記述が命令に変質しうる。小刻みな書き込みは1件ごとの分類を回避しうる</td></tr>
-          <tr><td>10</td><td>すべてのMCPサーバーとサードパーティツールを<strong>ピン留め・署名・検証</strong>し、ツール説明文に隠れた命令がないか監査する</td><td>ピン留めしたバージョン自体に含まれる攻撃や、バージョンを変えないツール説明文の汚染は止まらない</td></tr>
-          <tr><td>11</td><td><strong>防御内容を知っている適応的攻撃者</strong>でテストする。静的なテストのみの成功率主張は拒否する</td><td>―（Nasr ら 2025 は、最近の12の防御について静的攻撃の成功率がほぼ0でも、適応的攻撃では大半が90%超だったと報告）</td></tr>
+          <tr><td>10</td><td>すべてのMCPサーバーとサードパーティツールをピン留め・署名・検証し、ツール説明文に隠れた命令がないか監査する</td><td>ピン留めしたバージョン自体に含まれる攻撃や、バージョンを変えないツール説明文の汚染は止まらない</td></tr>
+          <tr><td>11</td><td><strong>防御内容を知っている適応的攻撃者</strong>でテストする。静的なテストのみの成功率主張は拒否する</td><td>―（Nasrら2025は、最近の12の防御について静的攻撃の成功率がほぼ0でも、適応的攻撃では大半が90%超だったと報告）</td></tr>
         </tbody>
       </table>
     </div>
@@ -732,14 +732,14 @@
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>この表で最も実務的に効くのは <strong>#4 と #8</strong> だと考えます。1〜3・5・6 は「注入の成功率を下げる」対策で、OWASP 自身が「適応的攻撃者には劣化する」と書いています。一方 #4・#7・#8 は「注入が成功した後の被害範囲を縛る」対策で、攻撃者が防御内容を知っていても効き続けます。<mark><strong>入口を塞ぐ努力より、出口と権限を縛る設計のほうが投資対効果が高い</strong></mark>、というのがOWASPの含意です。</p>
+      <p>この表で最も実務的に効くのは#4と#8だと考えます。1〜3・5・6は「注入の成功率を下げる」対策で、OWASP自身が「適応的攻撃者には劣化する」と書いています。一方#4・#7・#8は「注入が成功した後の被害範囲を縛る」対策で、攻撃者が防御内容を知っていても効き続けます。<mark>入口を塞ぐ努力より、出口と権限を縛る設計のほうが投資対効果が高い</mark>、というのがOWASPの含意です。</p>
     </div>
 
     <ul class="refs">
-      <li>OWASP LLM01:2026 Prompt Injection（2026年版PDFに収録）— <a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日 2026-09-15）</li>
-      <li>CVE-2025-32711 公式レコード — <a href="https://cveawg.mitre.org/api/cve/CVE-2025-32711">https://cveawg.mitre.org/api/cve/CVE-2025-32711</a>（参照日 2026-09-15）</li>
-      <li>Microsoft MSRC アドバイザリ — <a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711">https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711</a>（ページがJavaScript描画のため本文は<strong>未確認</strong>）</li>
-      <li>NIST AI 600-1 §2.9 Information Security（直接・間接プロンプトインジェクションの記述）— <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（2024年7月・参照日 2026-09-15）</li>
+      <li>OWASP LLM01:2026 Prompt Injection（2026年版PDFに収録）：<a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日2026-09-15）</li>
+      <li>CVE-2025-32711公式レコード：<a href="https://cveawg.mitre.org/api/cve/CVE-2025-32711">https://cveawg.mitre.org/api/cve/CVE-2025-32711</a>（参照日2026-09-15）</li>
+      <li>Microsoft MSRCアドバイザリ：<a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711">https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711</a>（ページがJavaScript描画のため本文は未確認）</li>
+      <li>NIST AI 600-1 §2.9 Information Security（直接・間接プロンプトインジェクションの記述）：<a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（2024年7月・参照日2026-09-15）</li>
     </ul>
 
     <h3 id="jailbreak">ジェイルブレイクと安全ガードレール</h3>
@@ -747,47 +747,47 @@
     <p><strong>ジェイルブレイク</strong>（jailbreak、脱獄）は、モデルに安全上の制約を破らせることを目的とした、プロンプトインジェクションの一部分です。OWASP 2026年版は次のように位置づけています。</p>
 
     <div class="callout">
-      <p>「ジェイルブレイクとは、攻撃者の目的がモデルに安全プロトコルを違反させることにある、プロンプトインジェクションの<strong>部分集合</strong>である。アプリケーションレベルの安全装置は封じ込めに役立つが、効果的な予防にはモデルの訓練と安全機構の継続的な更新が必要である。」</p>
+      <p>「ジェイルブレイクとは、攻撃者の目的がモデルに安全プロトコルを違反させることにある、プロンプトインジェクションの部分集合である。アプリケーションレベルの安全装置は封じ込めに役立つが、効果的な予防にはモデルの訓練と安全機構の継続的な更新が必要である。」</p>
       <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM01:2026</small></p>
     </div>
 
     <div class="with-memo">
-      <p>ここには重要な役割分担があります。<strong>ジェイルブレイクの根本的な防止はモデル提供者側の責任領域</strong>であり、アプリケーション開発者側でできるのは「破られたときの被害の封じ込め」だ、という整理です。</p>
+      <p>ここには重要な役割分担があります。ジェイルブレイクの根本的な防止はモデル提供者側の責任領域であり、アプリケーション開発者側でできるのは「破られたときの被害の封じ込め」だ、という整理です。</p>
       <aside class="memo">ガードレールは確率を下げるだけ。ゼロにはならない</aside>
     </div>
 
     <h4>ガードレールとは何か</h4>
     <p><strong>ガードレール</strong>（guardrail）は、モデル本体の訓練とは別に、入出力を監視してポリシー違反を検出・遮断する仕組みの総称です。実装としては、入力分類器・出力分類器・ポリシーエンジン・ルールベースのフィルタなどがあります。</p>
 
-    <h4>なぜ危険か ―― ガードレールの限界を正しく知る</h4>
+    <h4>なぜ危険か：ガードレールの限界を正しく知る</h4>
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>ジェイルブレイクの本当の危険は「有害な文章が出力されること」そのものより、<strong>ガードレールの効果を過大評価してしまうこと</strong>にあると考えます。「フィルタを入れたから安全」という理解でエージェントに強い権限を与えると、<a href="#agent">「AIエージェント・ツール連携」</a>の節で扱う被害に直結します。だからこそ、実測値でガードレールの限界を知っておく価値があります。</p>
+      <p>ジェイルブレイクの本当の危険は「有害な文章が出力されること」そのものより、ガードレールの効果を過大評価してしまうことにあると考えます。「フィルタを入れたから安全」という理解でエージェントに強い権限を与えると、<a href="#agent">「AIエージェント・ツール連携」</a>の節で扱う被害に直結します。だからこそ、実測値でガードレールの限界を知っておく価値があります。</p>
     </div>
 
-    <h4>具体例：Constitutional Classifiers の実測</h4>
-    <p>ガードレールの効果と限界が数値で公開されている数少ない例として、Anthropic の Constitutional Classifiers（憲法分類器）の研究があります。</p>
+    <h4>具体例：Constitutional Classifiersの実測</h4>
+    <p>ガードレールの効果と限界が数値で公開されている数少ない例として、AnthropicのConstitutional Classifiers（憲法分類器）の研究があります。</p>
 
     <div class="callout">
       <p><strong>Constitutional Classifiers（Anthropic、2025年2月3日公開）</strong></p>
       <ul>
-        <li>仕組み：「憲法」（モデルが従うべき原則のリスト）を定め、そこから許可・禁止カテゴリにまたがる合成プロンプトと応答を大量生成。言語翻訳やジェイルブレイク風の変換で拡張し、<strong>入力分類器と出力分類器</strong>を訓練する。誤検知を抑えるため良性クエリでも訓練する。</li>
-        <li>プロトタイプの人手レッドチーム：183名が3,000時間超を費やし、1万5,000ドルの賞金がかかっていたが<strong>汎用ジェイルブレイクの成立はゼロ</strong>。</li>
-        <li>自動評価：ジェイルブレイク成功率が<strong>ベースライン86% → 分類器あり4.4%</strong>（95%以上を遮断）。</li>
-        <li>コスト：拒否率の増加は<strong>+0.38%</strong>（統計的に有意でない）、計算オーバーヘッドは<strong>+23.7%</strong>。</li>
-        <li>公開デモ（2025年2月3日〜10日）：339名の熟練ジェイルブレイカーが30万回超のやりとり・延べ3,700時間を投入。<strong>4名が全8レベルを突破し、うち1名が汎用ジェイルブレイクを達成</strong>。</li>
-        <li>Anthropic 自身の但し書き：「本システムは<strong>すべての汎用ジェイルブレイクを防げるとは限らない</strong>」「新しい攻撃手法が現れうる」「補完的な防御手段と組み合わせることを推奨する」。</li>
+        <li>仕組み：「憲法」（モデルが従うべき原則のリスト）を定め、そこから許可・禁止カテゴリにまたがる合成プロンプトと応答を大量生成。言語翻訳やジェイルブレイク風の変換で拡張し、入力分類器と出力分類器を訓練する。誤検知を抑えるため良性クエリでも訓練する。</li>
+        <li>プロトタイプの人手レッドチーム：183名が3,000時間超を費やし、1万5,000ドルの賞金がかかっていたが汎用ジェイルブレイクの成立はゼロ。</li>
+        <li>自動評価：ジェイルブレイク成功率がベースライン86% → 分類器あり4.4%（95%以上を遮断）。</li>
+        <li>コスト：拒否率の増加は+0.38%（統計的に有意でない）、計算オーバーヘッドは+23.7%。</li>
+        <li>公開デモ（2025年2月3日〜10日）：339名の熟練ジェイルブレイカーが30万回超のやりとり・延べ3,700時間を投入。4名が全8レベルを突破し、うち1名が汎用ジェイルブレイクを達成。</li>
+        <li>Anthropic自身の但し書き：「本システムはすべての汎用ジェイルブレイクを防げるとは限らない」「新しい攻撃手法が現れうる」「補完的な防御手段と組み合わせることを推奨する」。</li>
       </ul>
-      <p><small>出典：Anthropic「Constitutional Classifiers: Defending against universal jailbreaks」2025年2月3日（参照日 2026-09-15）。論文は arXiv:2501.18837（本まとめでは論文本文は未確認）。</small></p>
+      <p><small>出典：Anthropic「Constitutional Classifiers: Defending against universal jailbreaks」2025年2月3日（参照日2026-09-15）。論文はarXiv:2501.18837（本まとめでは論文本文は未確認）。</small></p>
     </div>
 
     <h4>対策</h4>
     <ul>
-      <li><strong>ガードレールは「確率を下げる仕組み」と理解する。</strong> 上の例では86%→4.4%と大きく下がりましたが、ゼロにはなりませんでした。公開デモでは実際に突破者が出ています。<strong>「ガードレールがあるから危険な権限を与えてよい」という推論は成り立ちません</strong>。</li>
-      <li><strong>入力側と出力側の両方に置く。</strong> 入力分類器だけでは、モデルが内部で危険な内容を生成して出力してしまう経路が残ります。</li>
-      <li><strong>ポリシーを文書として持ち、更新できるようにする。</strong> Constitutional Classifiers の「憲法」のように、何を許可し何を禁止するかを明文化しておくと、新しい攻撃類型が現れたときに<strong>再訓練ではなくポリシー更新で追従</strong>できます。</li>
-      <li><strong>適応的な攻撃者を想定して評価する。</strong> <a href="#injection">「プロンプトインジェクション」</a>の対策#11 と同じで、防御の中身を知らない攻撃者だけでテストした数字は実態を反映しません。</li>
-      <li><strong>モデル提供者側の更新に依存する部分を認識する。</strong> 利用者・アプリ開発者は、モデル提供者がどのような安全機構を持ち、どの頻度で更新しているかを調達時の評価項目に入れるべきです（AI事業者ガイドラインの「セキュリティ確保」でも、その時点の技術水準に照らした合理的な対策が求められています。<a href="#japan">「日本国内のガイドライン」</a>の節を参照）。</li>
+      <li><strong>ガードレールは「確率を下げる仕組み」と理解する。</strong>上の例では86%→4.4%と大きく下がりましたが、ゼロにはなりませんでした。公開デモでは実際に突破者が出ています。「ガードレールがあるから危険な権限を与えてよい」という推論は成り立ちません。</li>
+      <li><strong>入力側と出力側の両方に置く。</strong>入力分類器だけでは、モデルが内部で危険な内容を生成して出力してしまう経路が残ります。</li>
+      <li><strong>ポリシーを文書として持ち、更新できるようにする。</strong>Constitutional Classifiersの「憲法」のように、何を許可し何を禁止するかを明文化しておくと、新しい攻撃類型が現れたときに再訓練ではなくポリシー更新で追従できます。</li>
+      <li><strong>適応的な攻撃者を想定して評価する。</strong><a href="#injection">「プロンプトインジェクション」</a>の対策#11と同じで、防御の中身を知らない攻撃者だけでテストした数字は実態を反映しません。</li>
+      <li><strong>モデル提供者側の更新に依存する部分を認識する。</strong>利用者・アプリ開発者は、モデル提供者がどのような安全機構を持ち、どの頻度で更新しているかを調達時の評価項目に入れるべきです（AI事業者ガイドラインの「セキュリティ確保」でも、その時点の技術水準に照らした合理的な対策が求められています。<a href="#japan">「日本国内のガイドライン」</a>の節を参照）。</li>
     </ul>
 
     <div class="callout caution">
@@ -796,14 +796,14 @@
     </div>
 
     <ul class="refs">
-      <li>Anthropic「Constitutional Classifiers」— <a href="https://www.anthropic.com/research/constitutional-classifiers">https://www.anthropic.com/research/constitutional-classifiers</a>（2025-02-03・参照日 2026-09-15）</li>
-      <li>arXiv:2501.18837（論文本文は<strong>未確認</strong>）— <a href="https://arxiv.org/abs/2501.18837">https://arxiv.org/abs/2501.18837</a></li>
-      <li>OWASP LLM01:2026（ジェイルブレイクの位置づけ）— <a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日 2026-09-15）</li>
+      <li>Anthropic「Constitutional Classifiers」：<a href="https://www.anthropic.com/research/constitutional-classifiers">https://www.anthropic.com/research/constitutional-classifiers</a>（2025-02-03・参照日2026-09-15）</li>
+      <li>arXiv:2501.18837（論文本文は未確認）：<a href="https://arxiv.org/abs/2501.18837">https://arxiv.org/abs/2501.18837</a></li>
+      <li>OWASP LLM01:2026（ジェイルブレイクの位置づけ）：<a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日2026-09-15）</li>
     </ul>
 
     <h3 id="leak">機密情報・個人情報の漏えい</h3>
 
-    <p>OWASP の LLM Top 10 で、2025年版・2026年版を通じて<strong>第2位</strong>を保っている項目です。2026年版は「上位のうち、実務家の実感と実際のインシデント記録が単純に一致する唯一の場所であり、我々の確信度が最も高い」と述べています。</p>
+    <p>OWASPのLLM Top 10で、2025年版・2026年版を通じて第2位を保っている項目です。2026年版は「上位のうち、実務家の実感と実際のインシデント記録が単純に一致する唯一の場所であり、我々の確信度が最も高い」と述べています。</p>
 
     <div class="with-memo">
       <p>漏えいの経路は大きく3つに分けて考えると整理しやすくなります。</p>
@@ -811,13 +811,13 @@
     </div>
 
     <ul>
-      <li><strong>① 入力経由</strong> — 利用者がプロンプトに機密情報や個人データを入力し、それがサービス提供者側に保存される／学習に使われる経路。<strong>最も頻度が高く、最も対策しやすい</strong>経路です。</li>
-      <li><strong>② 学習データ経由</strong> — モデルの訓練・ファインチューニングに使われたデータが、出力として再現されてしまう経路（記憶＝memorization）。訓練データ抽出攻撃、メンバーシップ推論攻撃などが該当します。</li>
-      <li><strong>③ 出力・経路経由</strong> — RAGで取得した他人の文書がそのまま出力される、推論過程（reasoning trace）が漏れる、ログや監視基盤に機密が流れ込む、といった経路。テナント間の混線もここに含まれます。</li>
+      <li><strong>① 入力経由</strong>。利用者がプロンプトに機密情報や個人データを入力し、それがサービス提供者側に保存される／学習に使われる経路。最も頻度が高く、最も対策しやすい経路です。</li>
+      <li><strong>② 学習データ経由</strong>。モデルの訓練・ファインチューニングに使われたデータが、出力として再現されてしまう経路（記憶＝memorization）。訓練データ抽出攻撃、メンバーシップ推論攻撃などが該当します。</li>
+      <li><strong>③ 出力・経路経由</strong>。RAGで取得した他人の文書がそのまま出力される、推論過程（reasoning trace）が漏れる、ログや監視基盤に機密が流れ込む、といった経路。テナント間の混線もここに含まれます。</li>
     </ul>
 
     <h4>何が対象になるのか</h4>
-    <p>OWASP LLM02 は、保護すべき情報として次を列挙しています。</p>
+    <p>OWASP LLM02は、保護すべき情報として次を列挙しています。</p>
     <ul>
       <li>個人識別情報（PII）</li>
       <li>金融情報</li>
@@ -827,64 +827,64 @@
       <li>法務文書・契約</li>
       <li>モデルに関する専有情報（訓練手法・ソースコード）</li>
     </ul>
-    <p><small>出典：OWASP LLM02:2025 Sensitive Information Disclosure（参照日 2026-09-15）</small></p>
+    <p><small>出典：OWASP LLM02:2025 Sensitive Information Disclosure（参照日2026-09-15）</small></p>
 
     <h4>なぜ危険か</h4>
-    <p>技術的な被害に加えて、<strong>日本の法令に触れうる</strong>点が重要です。個人情報保護委員会は2023年6月2日に注意喚起を出しています。</p>
+    <p>技術的な被害に加えて、日本の法令に触れうる点が重要です。個人情報保護委員会は2023年6月2日に注意喚起を出しています。</p>
 
     <div class="callout">
       <p><strong>「生成AIサービスの利用に関する注意喚起等について」（個人情報保護委員会、2023年6月2日）</strong></p>
       <ul>
-        <li>OpenAI, L.L.C. および OpenAI OpCo, LLC に対する注意喚起と、利用者（行政機関等を含む）に対する注意喚起の2本立て。</li>
-        <li>要旨：個人情報取扱事業者が<strong>あらかじめ本人の同意を得ることなく</strong>、個人データを含むプロンプトを生成AIサービスに入力し、当該個人データが機械学習に利用される場合、<strong>個人情報保護法の規定に違反する可能性がある</strong>。</li>
+        <li>OpenAI, L.L.C. およびOpenAI OpCo, LLCに対する注意喚起と、利用者（行政機関等を含む）に対する注意喚起の2本立て。</li>
+        <li>要旨：個人情報取扱事業者があらかじめ本人の同意を得ることなく、個人データを含むプロンプトを生成AIサービスに入力し、当該個人データが機械学習に利用される場合、個人情報保護法の規定に違反する可能性がある。</li>
       </ul>
-      <p><small>出典：個人情報保護委員会 掲載ページ（参照日 2026-09-15）。添付PDF本体は日本語テキストが抽出できず<strong>本文未確認</strong>のため、記述は掲載ページの範囲にとどめている。</small></p>
+      <p><small>出典：個人情報保護委員会掲載ページ（参照日2026-09-15）。添付PDF本体は日本語テキストが抽出できず本文未確認のため、記述は掲載ページの範囲にとどめている。</small></p>
     </div>
 
     <h4>具体例：サムスン電子の社内ソースコード流出</h4>
     <div class="callout">
-      <p>IPA のガイドライン（2024年7月）は、生成AI関連のセキュリティインシデント事例として次を挙げています。</p>
-      <p><strong>「サムスン電子社の ChatGPT への情報流出」</strong>：あるエンジニアが社内機密のソースコードを ChatGPT に誤ってアップロードしたことが発覚。同社は生成AIに伴う機密情報の流出リスクを懸念し、従業員による使用を禁止した。IPA は原因を「生成AIのデータ管理の仕組みと、それに対するユーザの認識不足」と整理し、<strong>ChatGPT がデフォルトでチャット履歴を保存し、モデルの訓練に使用する設定になっていた</strong>ことも要因のひとつと考えられる、としている。</p>
-      <p><small>出典：IPA「テキスト生成AIの導入・運用ガイドライン」2024年7月、5.1節。<strong>本まとめでは一次報道は未確認</strong>で、公的資料であるIPAガイドラインの記述を引用している。</small></p>
+      <p>IPAのガイドライン（2024年7月）は、生成AI関連のセキュリティインシデント事例として次を挙げています。</p>
+      <p><strong>「サムスン電子社のChatGPTへの情報流出」</strong>：あるエンジニアが社内機密のソースコードをChatGPTに誤ってアップロードしたことが発覚。同社は生成AIに伴う機密情報の流出リスクを懸念し、従業員による使用を禁止した。IPAは原因を「生成AIのデータ管理の仕組みと、それに対するユーザの認識不足」と整理し、ChatGPTがデフォルトでチャット履歴を保存し、モデルの訓練に使用する設定になっていたことも要因のひとつと考えられる、としている。</p>
+      <p><small>出典：IPA「テキスト生成AIの導入・運用ガイドライン」2024年7月、5.1節。本まとめでは一次報道は未確認で、公的資料であるIPAガイドラインの記述を引用している。</small></p>
     </div>
 
     <div class="callout note">
       <span class="label">この事例で本当に学ぶべきこと</span>
-      <p>「従業員が悪かった」ではありません。<strong>既定値（デフォルト）が学習利用オンだった</strong>こと、そして<strong>利用者がその既定値を知らなかった</strong>ことの組み合わせが事故を生みました。対策の第一歩は、使うサービスのデータ取り扱い設定を組織として確認し、明示的に設定することです。</p>
+      <p>「従業員が悪かった」ではありません。既定値（デフォルト）が学習利用オンだったこと、そして利用者がその既定値を知らなかったことの組み合わせが事故を生みました。対策の第一歩は、使うサービスのデータ取り扱い設定を組織として確認し、明示的に設定することです。</p>
     </div>
 
     <h4>対策</h4>
 
     <p><strong>利用者・組織としての対策</strong></p>
     <ul>
-      <li><strong>学習利用のオプトアウト／no-train 設定を確認し、技術的に強制する。</strong> OWASP 2026年版は「ポリシー文書だけでなく、no-train / no-retain を<strong>技術的に強制</strong>せよ」と明記しています。契約書に書いてあるだけでは不十分、という指摘です。</li>
-      <li><strong>入力してよい情報の線引きを文書化する。</strong> IPA ガイドラインは「利活用ガイドラインの策定」を運用の中心に据えています（第4章）。</li>
-      <li><strong>個人データの入力には本人同意の要否を確認する。</strong> 個人情報保護委員会の注意喚起のとおりです。</li>
-      <li><strong>教育する。</strong> IPA ガイドラインは「ユーザへの教育」を独立した節（4.2）として扱っています。</li>
+      <li><strong>学習利用のオプトアウト／no-train設定を確認し、技術的に強制する。</strong>OWASP 2026年版は「ポリシー文書だけでなく、no-train / no-retainを技術的に強制せよ」と明記しています。契約書に書いてあるだけでは不十分、という指摘です。</li>
+      <li><strong>入力してよい情報の線引きを文書化する。</strong>IPAガイドラインは「利活用ガイドラインの策定」を運用の中心に据えています（第4章）。</li>
+      <li><strong>個人データの入力には本人同意の要否を確認する。</strong>個人情報保護委員会の注意喚起のとおりです。</li>
+      <li><strong>教育する。</strong>IPAガイドラインは「ユーザへの教育」を独立した節（4.2）として扱っています。</li>
     </ul>
 
-    <p><strong>開発者としての対策（OWASP 2026年版の Tier 1：すべてのデプロイに適用）</strong></p>
+    <p><strong>開発者としての対策（OWASP 2026年版のTier 1：すべてのデプロイに適用）</strong></p>
     <ol>
       <li><strong>コーパスを統治する</strong>：来歴・分類・重複排除（近似重複、翻字、フォーマット違いを含む）。取り込み時にPIIをスクラブする。重複排除は記憶を減らすが根絶はしない。</li>
       <li><strong>コンテキストを最小化する</strong>：外部プロバイダにはタスクに必要なフィールドのみ送る。顧客情報の全件付加のような自動コンテキストは、テンプレートごとに正当化されない限り無効にする。</li>
-      <li><strong>検索の前に認可する</strong>：文書単位・チャンク単位の認可を、アプリ層で検索後に行うのではなく<strong>インデックスのクエリの中で</strong>強制する。機微なワークロードはテナントごとにインデックスを分離する。</li>
+      <li><strong>検索の前に認可する</strong>：文書単位・チャンク単位の認可を、アプリ層で検索後に行うのではなくインデックスのクエリの中で強制する。機微なワークロードはテナントごとにインデックスを分離する。</li>
       <li><strong>システムプロンプトの衛生</strong>：秘密情報・資格情報・規制対象データをシステムプロンプトに置かない。</li>
       <li><strong>正規表現だけでなく分類器で無害化する</strong>：パターンマッチ＋固有表現抽出（NER）＋訓練済み分類器。正規表現はエンコードや多言語出力で破綻する。</li>
       <li><strong>クエリを予算管理する</strong>：機微なエンドポイントでユーザー単位・セッション単位に上限を設け、列挙やメンバーシップ推定を妨げる。</li>
       <li><strong>運用上の衛生</strong>：ログとトレースを制限・スクラブしてから監視基盤に送る。転送時・保管時に暗号化する。</li>
     </ol>
-    <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM02:2026 Sensitive Information Disclosure（Tier 1 部分の要約）</small></p>
+    <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM02:2026 Sensitive Information Disclosure（Tier 1部分の要約）</small></p>
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>OWASP 2026年版が Tier 2（規制対象・高機微）で挙げる項目のうち、初学者にも意外性があるのは「<strong>推論トレース（reasoning trace）を第一級の出力として分類・秘匿せよ</strong>」「生のトレースを無制限な可観測性基盤に決してログしない」という指摘です。思考過程を表示するモデルが一般化したことで、<strong>最終出力ではフィルタされた情報が、途中の推論に残っている</strong>という新しい漏えい経路が生まれています。</p>
+      <p>OWASP 2026年版がTier 2（規制対象・高機微）で挙げる項目のうち、初学者にも意外性があるのは「推論トレース（reasoning trace）を第一級の出力として分類・秘匿せよ」「生のトレースを無制限な可観測性基盤に決してログしない」という指摘です。思考過程を表示するモデルが一般化したことで、最終出力ではフィルタされた情報が、途中の推論に残っているという新しい漏えい経路が生まれています。</p>
     </div>
 
     <ul class="refs">
-      <li>OWASP LLM02:2025 Sensitive Information Disclosure — <a href="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/">https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/</a>（参照日 2026-09-15）</li>
-      <li>個人情報保護委員会「生成AIサービスの利用に関する注意喚起等について」（2023-06-02）— <a href="https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/">https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/</a>（参照日 2026-09-15）</li>
-      <li>IPA「テキスト生成AIの導入・運用ガイドライン」（2024年7月）— <a href="https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html">https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html</a>（参照日 2026-09-15）</li>
-      <li>NIST AI 600-1「2.4 Data Privacy」（2024年7月）— <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（参照日 2026-09-15）</li>
+      <li>OWASP LLM02:2025 Sensitive Information Disclosure：<a href="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/">https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/</a>（参照日2026-09-15）</li>
+      <li>個人情報保護委員会「生成AIサービスの利用に関する注意喚起等について」（2023-06-02）：<a href="https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/">https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/</a>（参照日2026-09-15）</li>
+      <li>IPA「テキスト生成AIの導入・運用ガイドライン」（2024年7月）：<a href="https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html">https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html</a>（参照日2026-09-15）</li>
+      <li>NIST AI 600-1「2.4 Data Privacy」（2024年7月）：<a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（参照日2026-09-15）</li>
     </ul>
 
     <h3 id="agent">AIエージェント・ツール連携（MCP等）に固有のリスク</h3>
@@ -892,17 +892,17 @@
     <p>モデルが「アプリの部品」から「行動する主体」に変わった瞬間、リスクの性質が変わります。OWASP 2026年版は、この境界を明示的に引いています。</p>
 
     <div class="callout">
-      <p>「このリスト（LLM Top 10）は、<strong>モデルがアプリケーション内の一部品であるとき</strong>のリスクを扱う。そのモデルが、呼び出せるツールを持ち、セッションをまたいで運ぶメモリを持ち、下流に影響を及ぼす結果を動かす<strong>アクターになった瞬間、リスクは OWASP Agentic Top 10 に移る</strong>。（中略）モデルが自ら行動し始めたら両方のリストを併用せよ。どちらか一方では、その領域をカバーできない。」</p>
+      <p>「このリスト（LLM Top 10）は、モデルがアプリケーション内の一部品であるときのリスクを扱う。そのモデルが、呼び出せるツールを持ち、セッションをまたいで運ぶメモリを持ち、下流に影響を及ぼす結果を動かすアクターになった瞬間、リスクはOWASP Agentic Top 10に移る。（中略）モデルが自ら行動し始めたら両方のリストを併用せよ。どちらか一方では、その領域をカバーできない。」</p>
       <p><small>出典：OWASP Top 10 for LLM Applications 2026「What's New in the 2026 Top 10」</small></p>
     </div>
 
     <div class="with-memo">
-      <p>2026年版で <strong>Excessive Agency（過剰なエージェンシー）が6位から3位へ上昇</strong>したのは、「投票と記録の双方が、エージェント的な導入こそが実害の出ている場所だと一致している」ためだ、と OWASP は説明しています。</p>
+      <p>2026年版でExcessive Agency（過剰なエージェンシー）が6位から3位へ上昇したのは、「投票と記録の双方が、エージェント的な導入こそが実害の出ている場所だと一致している」ためだ、とOWASPは説明しています。</p>
       <aside class="memo">判断の目安：A・B・Cが同時に揃ったら人間の承認</aside>
     </div>
 
     <h4>致命的な三要素（lethal trifecta）</h4>
-    <p>エージェントのリスクを一言で説明する枠組みとして、Simon Willison が2025年6月16日に提唱した「<strong>lethal trifecta</strong>（致命的な三要素）」があります。OWASP 2026年版も緩和策の中でこれを明示的に引用しています。</p>
+    <p>エージェントのリスクを一言で説明する枠組みとして、Simon Willisonが2025年6月16日に提唱した「lethal trifecta（致命的な三要素）」があります。OWASP 2026年版も緩和策の中でこれを明示的に引用しています。</p>
 
     <div class="callout">
       <p><strong>致命的な三要素</strong>（Simon Willison, 2025年6月16日）</p>
@@ -911,17 +911,17 @@
         <li><strong>B. 信頼できないコンテンツへの露出</strong>（悪意あるテキストや画像がLLMに届きうる）</li>
         <li><strong>C. 外部への通信能力</strong>（システムの外にデータを送り出せる）</li>
       </ul>
-      <p>この3つが<strong>同時に揃ったとき</strong>、高影響の攻撃が成立する条件が整う。根本原因は「LLM が命令の出所を確実に区別できない」ことにある。著者曰く「LLM はコンテンツ中の命令に従う。それこそが有用である理由だ。問題は、<strong>“我々の”命令だけに従うわけではない</strong>ということだ」。完璧な解決策はないが、<mark><strong>3つのうちどれか1本を外せば条件は崩れる</strong></mark>。</p>
-      <p><small>出典：Simon Willison「The lethal trifecta for AI agents」2025-06-16（参照日 2026-09-15）。OWASP LLM01:2026 の緩和策#8 が Meta の "Rule of Two" とともに同じ構造を引用している。</small></p>
+      <p>この3つが同時に揃ったとき、高影響の攻撃が成立する条件が整う。根本原因は「LLMが命令の出所を確実に区別できない」ことにある。著者曰く「LLMはコンテンツ中の命令に従う。それこそが有用である理由だ。問題は、“我々の”命令だけに従うわけではないということだ」。完璧な解決策はないが、<mark>3つのうちどれか1本を外せば条件は崩れる</mark>。</p>
+      <p><small>出典：Simon Willison「The lethal trifecta for AI agents」2025-06-16（参照日2026-09-15）。OWASP LLM01:2026の緩和策#8がMetaの"Rule of Two"とともに同じ構造を引用している。</small></p>
     </div>
 
     <div class="callout note">
       <span class="label">使い方</span>
-      <p>エージェントを設計・導入するとき、最初に問う質問はこれです。「<strong>このエージェントは A・B・C を同時に持っているか？</strong>」持っているなら、操作ごとの人間承認が必要です。A・B だけ、あるいは A・C だけの構成でも、OWASP は「明示的な残余リスク評価が必要」としています。</p>
+      <p>エージェントを設計・導入するとき、最初に問う質問はこれです。「このエージェントはA・B・Cを同時に持っているか？」持っているなら、操作ごとの人間承認が必要です。A・Bだけ、あるいはA・Cだけの構成でも、OWASPは「明示的な残余リスク評価が必要」としています。</p>
     </div>
 
     <h4>OWASP Top 10 for Agentic Applications（ASI）</h4>
-    <p>2025年12月9日に発表されたエージェント向けの Top 10 です。IDと名称は OWASP の2026年版 LLM Top 10 PDF に収録されたマッピング表から確認しました。</p>
+    <p>2025年12月9日に発表されたエージェント向けのTop 10です。IDと名称はOWASPの2026年版LLM Top 10 PDFに収録されたマッピング表から確認しました。</p>
 
     <div class="table-wrap">
       <table>
@@ -940,10 +940,10 @@
         </tbody>
       </table>
     </div>
-    <p><small>出典：OWASP Top 10 for Agentic Applications (ASI) 2026（2025年12月9日発表）。ID・名称は OWASP Top 10 for LLM Applications 2026 の「Related Framework Mappings」から確認（参照日 2026-09-15）。</small></p>
+    <p><small>出典：OWASP Top 10 for Agentic Applications (ASI) 2026（2025年12月9日発表）。ID・名称はOWASP Top 10 for LLM Applications 2026の「Related Framework Mappings」から確認（参照日2026-09-15）。</small></p>
 
     <h4>MCP（Model Context Protocol）固有のリスク</h4>
-    <p><strong>MCP</strong> は、AIアプリケーションが外部のツールやデータソースに接続するための標準プロトコルです。公式仕様には独立した「Security Best Practices」文書があり、具体的な攻撃と対策が <code>MUST</code> / <code>SHOULD</code> の強さで規定されています。以下は主要なものです。</p>
+    <p><strong>MCP</strong>は、AIアプリケーションが外部のツールやデータソースに接続するための標準プロトコルです。公式仕様には独立した「Security Best Practices」文書があり、具体的な攻撃と対策が<code>MUST</code> / <code>SHOULD</code>の強さで規定されています。以下は主要なものです。</p>
 
     <div class="table-wrap">
       <table>
@@ -951,109 +951,109 @@
         <tbody>
           <tr>
             <td><strong>Confused Deputy</strong>（混乱した代理人）</td>
-            <td>MCPプロキシサーバーが第三者APIに対して静的なクライアントIDを使い、かつMCPクライアントの動的登録を許していると、第三者認可サーバーの同意Cookieを利用して<strong>ユーザーの同意画面を飛ばして</strong>認可コードを攻撃者に送らせられる</td>
-            <td><strong>MUST</strong>：クライアントごとの同意をサーバー側に保存し、第三者への認可フローを開始する<strong>前に</strong>確認する／同意画面でクライアント名・要求スコープ・リダイレクト先を明示しCSRF対策を実装／リダイレクトURIは<strong>完全一致</strong>で検証（ワイルドカード不可）／<code>state</code> は暗号学的に安全な乱数で、<strong>同意承認後に</strong>保存し、コールバックで厳密に照合、使い捨てかつ短期失効</td>
+            <td>MCPプロキシサーバーが第三者APIに対して静的なクライアントIDを使い、かつMCPクライアントの動的登録を許していると、第三者認可サーバーの同意Cookieを利用してユーザーの同意画面を飛ばして認可コードを攻撃者に送らせられる</td>
+            <td><strong>MUST</strong>：クライアントごとの同意をサーバー側に保存し、第三者への認可フローを開始する前に確認する／同意画面でクライアント名・要求スコープ・リダイレクト先を明示しCSRF対策を実装／リダイレクトURIは完全一致で検証（ワイルドカード不可）／<code>state</code>は暗号学的に安全な乱数で、同意承認後に保存し、コールバックで厳密に照合、使い捨てかつ短期失効</td>
           </tr>
           <tr>
             <td><strong>Token Passthrough</strong>（トークンの素通し）</td>
             <td>MCPサーバーが「自分宛てに発行されたものか」を検証せずトークンを受け入れ、下流APIにそのまま転送する。レート制限などの統制の迂回、監査証跡の断絶、信頼境界の破壊を招く</td>
-            <td><strong>MUST NOT</strong>：MCPサーバーは、自分宛てに明示的に発行されたものでないトークンを<strong>一切受け入れてはならない</strong>（audience クレームの検証）</td>
+            <td><strong>MUST NOT</strong>：MCPサーバーは、自分宛てに明示的に発行されたものでないトークンを一切受け入れてはならない（audienceクレームの検証）</td>
           </tr>
           <tr>
             <td><strong>SSRF</strong>（サーバーサイドリクエストフォージェリ）</td>
             <td>悪意あるMCPサーバーが、OAuthメタデータ探索用のURLに内部アドレスやクラウドメタデータエンドポイント（<code>169.254.169.254</code>）を仕込み、クライアントに取得させて資格情報を抜く</td>
-            <td><strong>SHOULD</strong>：本番ではOAuth関連URLにHTTPSを要求／プライベートIP範囲（10.0.0.0/8、172.16.0.0/12、192.168.0.0/16、127.0.0.0/8、169.254.0.0/16、fc00::/7、fe80::/10）をブロック／リダイレクト先にも同じ検証を適用／エグレスプロキシの利用を検討。<strong>IP検証を自前実装するのは避ける</strong>（8進・16進・IPv4射影IPv6などのエンコード技法を自作パーサは取りこぼす）</td>
+            <td><strong>SHOULD</strong>：本番ではOAuth関連URLにHTTPSを要求／プライベートIP範囲（10.0.0.0/8、172.16.0.0/12、192.168.0.0/16、127.0.0.0/8、169.254.0.0/16、fc00::/7、fe80::/10）をブロック／リダイレクト先にも同じ検証を適用／エグレスプロキシの利用を検討。IP検証を自前実装するのは避ける（8進・16進・IPv4射影IPv6などのエンコード技法を自作パーサは取りこぼす）</td>
           </tr>
           <tr>
             <td><strong>State Handle Hijacking</strong>（状態ハンドルの乗っ取り）</td>
             <td>MCPはステートレスで、状態はツール引数として渡されるハンドルで持つ。ハンドルを推測・入手した第三者が他人の状態を操作できる</td>
-            <td><strong>MUST</strong>：認可を実装するMCPサーバーはすべての受信リクエストを検証／<strong>ハンドルの所持を認証とみなしてはならない</strong>。<strong>SHOULD</strong>：安全な乱数による非決定的ハンドル、失効、<code>&lt;user_id&gt;:&lt;handle&gt;</code> のようにサーバー側でユーザーに束縛</td>
+            <td><strong>MUST</strong>：認可を実装するMCPサーバーはすべての受信リクエストを検証／ハンドルの所持を認証とみなしてはならない。SHOULD：安全な乱数による非決定的ハンドル、失効、<code>&lt;user_id&gt;:&lt;handle&gt;</code>のようにサーバー側でユーザーに束縛</td>
           </tr>
           <tr>
             <td><strong>Local MCP Server Compromise</strong>（ローカルMCPサーバーの侵害）</td>
             <td>ワンクリック設定で悪意ある起動コマンドが実行される／サーバー本体に悪意あるペイロードが同梱される／localhostに残ったサーバーがDNSリバインディングで狙われる</td>
-            <td><strong>MUST</strong>：ワンクリック設定に対応するクライアントは、実行前に<strong>省略なしの完全なコマンド</strong>を表示し、危険な操作であることを明示し、明示的な承認を求め、キャンセル可能にする。<strong>SHOULD</strong>：<code>sudo</code>・<code>rm -rf</code>・SSH鍵やホームディレクトリへのアクセスなど危険なパターンを強調表示／サンドボックスで最小権限実行／stdio トランスポートでアクセス範囲を絞る</td>
+            <td><strong>MUST</strong>：ワンクリック設定に対応するクライアントは、実行前に省略なしの完全なコマンドを表示し、危険な操作であることを明示し、明示的な承認を求め、キャンセル可能にする。SHOULD：<code>sudo</code>・<code>rm -rf</code>・SSH鍵やホームディレクトリへのアクセスなど危険なパターンを強調表示／サンドボックスで最小権限実行／stdioトランスポートでアクセス範囲を絞る</td>
           </tr>
           <tr>
             <td><strong>OAuth認可URLの検証不備</strong></td>
-            <td>悪意あるMCPサーバーが <code>javascript:</code> URLを認可エンドポイントとして返し、クライアントがそのまま <code>window.open()</code> に渡してXSSが成立する。シェル経由でURLを開いていればコマンドインジェクションに至る</td>
-            <td><strong>MUST</strong>：<code>http://</code>（ループバックの開発時のみ）と <code>https://</code> のみ許可／<code>javascript:</code> <code>data:</code> <code>file:</code> <code>vbscript:</code> 等を拒否／<strong>URLを開くのにシェルコマンドを使ってはならない</strong>。<strong>SHOULD</strong>：ブロックリストでなく<strong>許可リスト</strong>方式で検証</td>
+            <td>悪意あるMCPサーバーが<code>javascript:</code> URLを認可エンドポイントとして返し、クライアントがそのまま<code>window.open()</code>に渡してXSSが成立する。シェル経由でURLを開いていればコマンドインジェクションに至る</td>
+            <td><strong>MUST</strong>：<code>http://</code>（ループバックの開発時のみ）と<code>https://</code>のみ許可／<code>javascript:</code> <code>data:</code> <code>file:</code> <code>vbscript:</code>等を拒否／URLを開くのにシェルコマンドを使ってはならない。SHOULD：ブロックリストでなく許可リスト方式で検証</td>
           </tr>
           <tr>
             <td><strong>スコープ最小化の欠如</strong></td>
-            <td><code>files:*</code> <code>db:*</code> <code>admin:*</code> のような広いスコープのトークンが漏れると、横展開・権限連鎖が容易になり、失効も全業務に影響する</td>
-            <td><strong>SHOULD</strong>：最小の初期スコープ（低リスクな探索・読み取りのみ）から始め、特権操作が初めて必要になった時点で <code>WWW-Authenticate</code> の <code>scope</code> チャレンジで段階的に昇格。<strong>避けるべき</strong>：全スコープの公開、<code>*</code> / <code>all</code> / <code>full-access</code> のような包括スコープ、無関係な権限の抱き合わせ</td>
+            <td><code>files:*</code> <code>db:*</code> <code>admin:*</code>のような広いスコープのトークンが漏れると、横展開・権限連鎖が容易になり、失効も全業務に影響する</td>
+            <td><strong>SHOULD</strong>：最小の初期スコープ（低リスクな探索・読み取りのみ）から始め、特権操作が初めて必要になった時点で<code>WWW-Authenticate</code>の<code>scope</code>チャレンジで段階的に昇格。避けるべき：全スコープの公開、<code>*</code> / <code>all</code> / <code>full-access</code>のような包括スコープ、無関係な権限の抱き合わせ</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p><small>出典：Model Context Protocol「Security Best Practices」公式仕様付属文書（参照日 2026-09-15）</small></p>
+    <p><small>出典：Model Context Protocol「Security Best Practices」公式仕様付属文書（参照日2026-09-15）</small></p>
 
     <div class="callout note">
       <span class="label">「ツール汚染」（tool poisoning）について</span>
-      <p>MCPサーバーに登録されたツールの<strong>説明文やメタデータ</strong>に隠れた命令を仕込む攻撃類型が指摘されています。ツール説明文もモデルのコンテキストに入るため、間接プロンプトインジェクションの配送面になります。OWASP 2026年版の緩和策#10 も「ツール説明文に隠れた命令がないか監査せよ」「<strong>バージョンを変えないツール説明文の汚染はピン留めでは止まらない</strong>」と明記しています。</p>
+      <p>MCPサーバーに登録されたツールの説明文やメタデータに隠れた命令を仕込む攻撃類型が指摘されています。ツール説明文もモデルのコンテキストに入るため、間接プロンプトインジェクションの配送面になります。OWASP 2026年版の緩和策#10も「ツール説明文に隠れた命令がないか監査せよ」「バージョンを変えないツール説明文の汚染はピン留めでは止まらない」と明記しています。</p>
     </div>
 
     <h4>具体例：外部コンテンツからの指示混入と意図しない操作</h4>
-    <p><a href="#injection">「プロンプトインジェクション」</a>の節で扱った EchoLeak（CVE-2025-32711）は、まさにこの類型です。「メールを読む権限（A: 非公開データ）」「外部から届くメール本文（B: 信頼できないコンテンツ）」「外部へデータを送れる描画経路（C: 外部通信）」が揃っていました。</p>
+    <p><a href="#injection">「プロンプトインジェクション」</a>の節で扱ったEchoLeak（CVE-2025-32711）は、この類型にあたります。「メールを読む権限（A: 非公開データ）」「外部から届くメール本文（B: 信頼できないコンテンツ）」「外部へデータを送れる描画経路（C: 外部通信）」が揃っていました。</p>
 
-    <p>OWASP 2026年版は、LLM01 の緩和策の中でこう総括しています ――「記録に残る高影響のプロンプトインジェクション事案の大半が深刻化したのは、注入が<strong>ツール・スコープ・出力描画能力によって、侵害されたモデルがユーザーの権限で攻撃者の代理として行動できるシステム</strong>の内側に着弾したからである」。</p>
+    <p>OWASP 2026年版は、LLM01の緩和策の中で「記録に残る高影響のプロンプトインジェクション事案の大半が深刻化したのは、注入がツール・スコープ・出力描画能力によって、侵害されたモデルがユーザーの権限で攻撃者の代理として行動できるシステムの内側に着弾したからである」と総括しています。</p>
 
     <h4>対策</h4>
-    <p>OWASP LLM03:2026（Excessive Agency）の緩和策を、原文の番号どおりに整理します。<strong>エージェントを扱う人が最初に読むべき7項目</strong>です。</p>
+    <p>OWASP LLM03:2026（Excessive Agency）の緩和策を、原文の番号どおりに整理します。エージェントを扱う人が最初に読むべき7項目です。</p>
     <ol>
       <li><strong>ツールを最小化する</strong>：エージェントが呼べるツールを必要最小限に限る。URLの中身を取得する必要がないなら、そのツールを提供しない。</li>
       <li><strong>ツールの機能を最小化する</strong>：メールを要約するツールが読み取りしか要らないなら、削除や送信の機能を含めない。</li>
-      <li><strong>オープンエンドなツールを避ける</strong>：「シェルコマンドを実行する」「URLを取得する」のような汎用ツールを避け、粒度の細かいツールを使う。ファイルに書き出したいなら、シェル実行ではなく<strong>ファイル書き込み専用ツール</strong>を作る。入力パラメータには厳格なスキーマを定義し、使用前に内容を検証する。</li>
-      <li><strong>ツールの権限を最小化する</strong>：商品推薦のために <code>products</code> テーブルの読み取りだけが必要なら、他テーブルへのアクセスも INSERT/UPDATE/DELETE も与えない。<strong>これはDB側の権限設定で強制する</strong>。</li>
-      <li><strong>ユーザーのコンテキストで実行する</strong>：ユーザーの認可とセキュリティスコープを追跡し、下流システムでの操作をそのユーザーの文脈・最小権限で実行する。<strong>委譲やマルチエージェントの連鎖でも、呼び出し元エージェントやサービスIDの権限に頼らず、元のユーザーコンテキストと認可スコープを引き継ぐ</strong>。</li>
+      <li><strong>オープンエンドなツールを避ける</strong>：「シェルコマンドを実行する」「URLを取得する」のような汎用ツールを避け、粒度の細かいツールを使う。ファイルに書き出したいなら、シェル実行ではなくファイル書き込み専用ツールを作る。入力パラメータには厳格なスキーマを定義し、使用前に内容を検証する。</li>
+      <li><strong>ツールの権限を最小化する</strong>：商品推薦のために<code>products</code>テーブルの読み取りだけが必要なら、他テーブルへのアクセスもINSERT/UPDATE/DELETEも与えない。これはDB側の権限設定で強制する。</li>
+      <li><strong>ユーザーのコンテキストで実行する</strong>：ユーザーの認可とセキュリティスコープを追跡し、下流システムでの操作をそのユーザーの文脈・最小権限で実行する。委譲やマルチエージェントの連鎖でも、呼び出し元エージェントやサービスIDの権限に頼らず、元のユーザーコンテキストと認可スコープを引き継ぐ。</li>
       <li><strong>ユーザーの承認を求める</strong>：影響の大きい操作の前に人間の承認を挟む（human-in-the-loop）。</li>
-      <li><strong>完全な媒介（complete mediation）</strong>：「この操作は許されるか」の判断を<strong>LLMに委ねず、ロジックで実装する</strong>。下流システムへのすべての要求を、ツール自身か、ツールと下流システムの間の独立した実行前ポリシー判断点か、下流システム自身がセキュリティポリシーに照らして検証する。</li>
+      <li><strong>完全な媒介（complete mediation）</strong>：「この操作は許されるか」の判断をLLMに委ねず、ロジックで実装する。下流システムへのすべての要求を、ツール自身か、ツールと下流システムの間の独立した実行前ポリシー判断点か、下流システム自身がセキュリティポリシーに照らして検証する。</li>
     </ol>
     <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM03:2026 Excessive Agency（要約）</small></p>
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>7項目のうち、初学者が最も見落としやすいのが <strong>#7「完全な媒介」</strong>だと考えます。「システムプロンプトに『この操作はしないで』と書いた」は認可ではありません。認可は<strong>モデルの外側の決定論的なコードで</strong>実装し、モデルが何を言おうとポリシーが最終判断を持つ構造にする必要があります。#5 の「マルチエージェントの連鎖でユーザーコンテキストを引き継ぐ」も、実装が複雑になりやすく事故が起きやすい箇所です。</p>
+      <p>7項目のうち、初学者が最も見落としやすいのが#7「完全な媒介」だと考えます。「システムプロンプトに『この操作はしないで』と書いた」は認可ではありません。認可はモデルの外側の決定論的なコードで実装し、モデルが何を言おうとポリシーが最終判断を持つ構造にする必要があります。#5の「マルチエージェントの連鎖でユーザーコンテキストを引き継ぐ」も、実装が複雑になりやすく事故が起きやすい箇所です。</p>
     </div>
 
     <ul class="refs">
-      <li>MCP Security Best Practices（公式）— <a href="https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices">https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices</a>（参照日 2026-09-15）</li>
-      <li>OWASP Top 10 for Agentic Applications 2026 — <a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/">https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/</a>（2025-12-09発表・参照日 2026-09-15）</li>
-      <li>OWASP LLM06:2025 Excessive Agency — <a href="https://genai.owasp.org/llmrisk/llm062025-excessive-agency/">https://genai.owasp.org/llmrisk/llm062025-excessive-agency/</a>（参照日 2026-09-15）</li>
-      <li>Simon Willison「The lethal trifecta for AI agents」— <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/">https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/</a>（2025-06-16・参照日 2026-09-15）</li>
+      <li>MCP Security Best Practices（公式）：<a href="https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices">https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices</a>（参照日2026-09-15）</li>
+      <li>OWASP Top 10 for Agentic Applications 2026：<a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/">https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/</a>（2025-12-09発表・参照日2026-09-15）</li>
+      <li>OWASP LLM06:2025 Excessive Agency：<a href="https://genai.owasp.org/llmrisk/llm062025-excessive-agency/">https://genai.owasp.org/llmrisk/llm062025-excessive-agency/</a>（参照日2026-09-15）</li>
+      <li>Simon Willison「The lethal trifecta for AI agents」：<a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/">https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/</a>（2025-06-16・参照日2026-09-15）</li>
     </ul>
 
     <h3 id="rag">RAG・ベクトルDB・学習データへのポイズニング</h3>
 
-    <p><strong>ポイズニング</strong>（poisoning、汚染）は、モデルが参照するデータを操作して、出力をコントロールしたり性能を劣化させたりする<strong>完全性（integrity）への攻撃</strong>です。学習データに対するものと、RAGの知識ベースに対するものがあります。</p>
+    <p><strong>ポイズニング</strong>（poisoning、汚染）は、モデルが参照するデータを操作して、出力をコントロールしたり性能を劣化させたりする完全性（integrity）への攻撃です。学習データに対するものと、RAGの知識ベースに対するものがあります。</p>
 
-    <p><strong>RAG</strong>（Retrieval-Augmented Generation、検索拡張生成）は、質問に関連する文書を検索してからモデルに渡す仕組みで、幻覚対策として広く使われます。ただし OWASP が指摘するように、<strong>知識ベースという新しい攻撃面を増やす</strong>側面があります。</p>
+    <p><strong>RAG</strong>（Retrieval-Augmented Generation、検索拡張生成）は、質問に関連する文書を検索してからモデルに渡す仕組みで、幻覚対策として広く使われます。ただしOWASPが指摘するように、知識ベースという新しい攻撃面を増やす側面があります。</p>
 
     <h4>影響するライフサイクル段階</h4>
-    <p>OWASP LLM04 は、汚染されうる段階を3つ挙げています。</p>
+    <p>OWASP LLM04は、汚染されうる段階を3つ挙げています。</p>
     <ul>
-      <li><strong>事前学習（pre-training）</strong> — 一般的な知識を学ぶ段階。公開データセットに依存するため外部リスクが高い。</li>
-      <li><strong>ファインチューニング（fine-tuning）</strong> — 特定タスク向けの調整段階。2026年版では「<strong>ファインチューニングの転覆</strong>（fine-tuning subversion）」がこの項目に統合されました。</li>
-      <li><strong>埋め込み（embedding）</strong> — テキストを数値ベクトルに変換する段階。RAGのインデックス構築がここに当たります。</li>
+      <li><strong>事前学習（pre-training）</strong>。一般的な知識を学ぶ段階。公開データセットに依存するため外部リスクが高い。</li>
+      <li><strong>ファインチューニング（fine-tuning）</strong>。特定タスク向けの調整段階。2026年版では「ファインチューニングの転覆（fine-tuning subversion）」がこの項目に統合されました。</li>
+      <li><strong>埋め込み（embedding）</strong>。テキストを数値ベクトルに変換する段階。RAGのインデックス構築がここに当たります。</li>
     </ul>
-    <p><small>出典：OWASP LLM04:2025 Data and Model Poisoning／2026年版の統合については LLM Top 10 2026「What's New」</small></p>
+    <p><small>出典：OWASP LLM04:2025 Data and Model Poisoning／2026年版の統合についてはLLM Top 10 2026「What's New」</small></p>
 
     <h4>なぜ危険か</h4>
 
     <p><strong>① 少量の汚染で高い成功率が出る</strong></p>
     <div class="callout">
-      <p><strong>PoisonedRAG</strong>（Zou, Geng, Wang, Jia／arXiv:2402.07867、2024年2月12日投稿、USENIX Security 2025）<br>RAGの知識データベースに対する初の知識汚染攻撃を提案。<strong>攻撃者が選んだ質問に対して、攻撃者が選んだ答えをLLMに生成させる</strong>ことを目的とする。</p>
-      <p>結果：<strong>数百万件のテキストを持つ知識データベースに対し、対象質問ごとにわずか5件の悪意あるテキストを注入することで、攻撃成功率90%を達成</strong>。評価は Natural Questions / HotpotQA / MS-MARCO の各データセット、8種のLLM（GPT-4、LLaMA-2 など）、および実世界の3アプリケーション（先進的なRAG方式、Wikipediaベースのチャットボット、LLMエージェント）で実施。</p>
-      <p><small>出典：arXiv:2402.07867 アブストラクト（参照日 2026-09-15）</small></p>
+      <p><strong>PoisonedRAG</strong>（Zou, Geng, Wang, Jia／arXiv:2402.07867、2024年2月12日投稿、USENIX Security 2025）<br>RAGの知識データベースに対する初の知識汚染攻撃を提案。攻撃者が選んだ質問に対して、攻撃者が選んだ答えをLLMに生成させることを目的とする。</p>
+      <p>結果：数百万件のテキストを持つ知識データベースに対し、対象質問ごとにわずか5件の悪意あるテキストを注入することで、攻撃成功率90%を達成。評価はNatural Questions / HotpotQA / MS-MARCOの各データセット、8種のLLM（GPT-4、LLaMA-2など）、および実世界の3アプリケーション（先進的なRAG方式、Wikipediaベースのチャットボット、LLMエージェント）で実施。</p>
+      <p><small>出典：arXiv:2402.07867アブストラクト（参照日2026-09-15）</small></p>
     </div>
     <div class="with-memo">
-      <p>「数百万件に対して5件」という比率が、この攻撃の本質です。<mark><strong>汚染は物量勝負ではなく、検索でヒットさせるための最適化の問題</strong></mark>だということを示しています。</p>
+      <p>「数百万件に対して5件」という比率が、この攻撃の本質です。<mark>汚染は物量勝負ではなく、検索でヒットさせるための最適化の問題</mark>だということを示しています。</p>
       <aside class="memo">5件で90%。量より「検索に当たるか」</aside>
     </div>
 
     <p><strong>② バックドアは「普段は正常」なので見つけにくい</strong></p>
-    <p>OWASP LLM04 は、ポイズニングによって仕込まれるバックドアについてこう述べています ――「通常のモデル挙動をそのまま残したまま隠れたバックドアを実装できる。この設計により検出が難しくなり、実質的にモデルは<strong>特定の条件で起動されるまでスリーパーエージェント</strong>として機能しうる」。認証のバイパス、データの窃取、密かなコマンド実行につながる可能性があります。</p>
+    <p>OWASP LLM04は、ポイズニングによって仕込まれるバックドアについて「通常のモデル挙動をそのまま残したまま隠れたバックドアを実装できる。この設計により検出が難しくなり、実質的にモデルは特定の条件で起動されるまでスリーパーエージェントとして機能しうる」と述べています。認証のバイパス、データの窃取、密かなコマンド実行につながる可能性があります。</p>
 
     <p><strong>③ ベクトルDB固有の問題</strong></p>
     <p>OWASP LLM08（Vector and Embedding Weaknesses）は、RAG構成に特有のリスクを挙げています。</p>
@@ -1064,64 +1064,64 @@
       <li><strong>データポイズニング</strong>：外部の未検証ソースや、内部関係者経由で汚染データが混入する。</li>
       <li><strong>挙動の変化</strong>：RAG導入で事実正確性は上がる一方、共感性のような性質が損なわれることがある。</li>
     </ul>
-    <p><small>出典：OWASP LLM08:2025 Vector and Embedding Weaknesses（参照日 2026-09-15）</small></p>
+    <p><small>出典：OWASP LLM08:2025 Vector and Embedding Weaknesses（参照日2026-09-15）</small></p>
 
     <h4>具体例：履歴書に仕込まれた隠しテキスト</h4>
     <div class="callout">
-      <p>OWASP LLM08 が挙げる攻撃シナリオ：<strong>履歴書に隠されたテキストが、選考基準を回避するようシステムに指示する</strong>。結果として、要件を満たさない候補者が推薦されてしまう。緩和には、隠しコンテンツを検出できるテキスト抽出ツールと、RAGシステムに文書を追加する前の事前検証が必要になる。</p>
+      <p>OWASP LLM08が挙げる攻撃シナリオ：履歴書に隠されたテキストが、選考基準を回避するようシステムに指示する。結果として、要件を満たさない候補者が推薦されてしまう。緩和には、隠しコンテンツを検出できるテキスト抽出ツールと、RAGシステムに文書を追加する前の事前検証が必要になる。</p>
       <p><small>出典：OWASP LLM08:2025 Vector and Embedding Weaknesses, Attack Scenarios</small></p>
     </div>
 
     <div class="callout note">
       <span class="label">この例が良い教材である理由</span>
-      <p>攻撃者は特別なツールも脆弱性も使っていません。<strong>「システムが読み込む文書に文字を書いただけ」</strong>です。RAGの知識ベースに入るあらゆる文書が攻撃面になる、ということが直感的に理解できます。</p>
+      <p>攻撃者は特別なツールも脆弱性も使っていません。「システムが読み込む文書に文字を書いただけ」です。RAGの知識ベースに入るあらゆる文書が攻撃面になる、ということが直感的に理解できます。</p>
     </div>
 
     <h4>対策</h4>
 
     <p><strong>学習データ・モデルの汚染に対して（OWASP LLM04）</strong></p>
     <ul>
-      <li>OWASP CycloneDX や ML-BOM といったツールで<strong>データの出所を追跡する</strong>。</li>
+      <li>OWASP CycloneDXやML-BOMといったツールでデータの出所を追跡する。</li>
       <li>データ提供元を厳格に審査し、出力を検証する。</li>
       <li>未検証のソースにはサンドボックスと異常検知を適用する。</li>
       <li>データのバージョン管理（DVC）で改変を検出できるようにする。</li>
-      <li>ユーザー提供の情報はベクトルDBに保存し、<strong>再学習なしに調整できる</strong>ようにする。</li>
+      <li>ユーザー提供の情報はベクトルDBに保存し、再学習なしに調整できるようにする。</li>
       <li>レッドチーム演習と敵対的テストを実施する。</li>
       <li><strong>訓練損失を監視</strong>し、汚染の兆候を見る。</li>
       <li>推論時にRAGとグラウンディング技法を組み合わせる。</li>
     </ul>
 
-    <p><strong>RAG・ベクトルDBに対して（OWASP LLM08 ＋ LLM02:2026）</strong></p>
+    <p><strong>RAG・ベクトルDBに対して（OWASP LLM08＋LLM02:2026）</strong></p>
     <ul>
-      <li><strong>権限を認識するベクトルDB</strong>と細粒度のアクセス制御を実装する。文書単位・チャンク単位の認可を、アプリ層で検索後に行うのではなく<strong>インデックスのクエリの中で強制する</strong>。</li>
-      <li>機微なワークロードは<strong>テナントごとにインデックスを分離</strong>する。</li>
+      <li><strong>権限を認識するベクトルDB</strong>と細粒度のアクセス制御を実装する。文書単位・チャンク単位の認可を、アプリ層で検索後に行うのではなくインデックスのクエリの中で強制する。</li>
+      <li>機微なワークロードはテナントごとにインデックスを分離する。</li>
       <li>知識ベースのコンテンツをアクセスレベルで分類・タグ付けする。</li>
       <li>信頼できるソースのデータのみを厳格に検証して投入する。</li>
-      <li>検索活動の<strong>不変（immutable）なログ</strong>を残し、異常検知に使う。</li>
-      <li>ベクトルストアの保護：暗号化、<strong>文書のACLとは別のACL</strong>、エクスポートAPIの制限、k-NN検索のスコープ最小化、埋め込み空間の探索検知。</li>
+      <li>検索活動の不変（immutable）なログを残し、異常検知に使う。</li>
+      <li>ベクトルストアの保護：暗号化、文書のACLとは別のACL、エクスポートAPIの制限、k-NN検索のスコープ最小化、埋め込み空間の探索検知。</li>
       <li><strong>エージェントのメモリ書き込みを特権操作として扱う</strong>（<a href="#agent">「AIエージェント・ツール連携」</a>の節を参照）。RAGコーパスやメモリへの汚染は、セッションをまたいで永続化する点で単発の注入より深刻です。</li>
     </ul>
     <p><small>出典：OWASP LLM04:2025／LLM08:2025／LLM02:2026（Tier 1・Tier 2）</small></p>
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>RAGを「幻覚対策」として導入する組織は多いのですが、<strong>RAG は幻覚を減らす代わりに攻撃面を増やす</strong>というトレードオフがあります。導入時に検討すべき問いは3つです。①このコーパスに文書を入れられるのは誰か。②その文書は誰が書いたか（準信頼の面か、信頼できない面か）。③検索結果に対するアクセス制御は、インデックスの中で効いているか、アプリ層の後付けか。</p>
+      <p>RAGを「幻覚対策」として導入する組織は多いのですが、RAGは幻覚を減らす代わりに攻撃面を増やすというトレードオフがあります。導入時に検討すべき問いは3つです。①このコーパスに文書を入れられるのは誰か。②その文書は誰が書いたか（準信頼の面か、信頼できない面か）。③検索結果に対するアクセス制御は、インデックスの中で効いているか、アプリ層の後付けか。</p>
     </div>
 
     <ul class="refs">
-      <li>OWASP LLM04:2025 Data and Model Poisoning — <a href="https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/">https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/</a>（参照日 2026-09-15）</li>
-      <li>OWASP LLM08:2025 Vector and Embedding Weaknesses — <a href="https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/">https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/</a>（参照日 2026-09-15）</li>
-      <li>PoisonedRAG（arXiv:2402.07867 / USENIX Security 2025）— <a href="https://arxiv.org/abs/2402.07867">https://arxiv.org/abs/2402.07867</a>（参照日 2026-09-15）</li>
-      <li>USENIX 掲載ページ — <a href="https://www.usenix.org/conference/usenixsecurity25/presentation/zou-poisonedrag">https://www.usenix.org/conference/usenixsecurity25/presentation/zou-poisonedrag</a>（参照日 2026-09-15）</li>
-      <li>NIST AI 100-2 E2025（敵対的機械学習の分類体系、2025年3月）— <a href="https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom">https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom</a>（PDF本文は<strong>未確認</strong>）</li>
+      <li>OWASP LLM04:2025 Data and Model Poisoning：<a href="https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/">https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/</a>（参照日2026-09-15）</li>
+      <li>OWASP LLM08:2025 Vector and Embedding Weaknesses：<a href="https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/">https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/</a>（参照日2026-09-15）</li>
+      <li>PoisonedRAG（arXiv:2402.07867 / USENIX Security 2025）：<a href="https://arxiv.org/abs/2402.07867">https://arxiv.org/abs/2402.07867</a>（参照日2026-09-15）</li>
+      <li>USENIX掲載ページ：<a href="https://www.usenix.org/conference/usenixsecurity25/presentation/zou-poisonedrag">https://www.usenix.org/conference/usenixsecurity25/presentation/zou-poisonedrag</a>（参照日2026-09-15）</li>
+      <li>NIST AI 100-2 E2025（敵対的機械学習の分類体系、2025年3月）：<a href="https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom">https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom</a>（PDF本文は未確認）</li>
     </ul>
 
     <h3 id="supplychain">サプライチェーン（モデル・ライブラリ・プラグイン）</h3>
 
-    <p>AIシステムのサプライチェーンは、従来のソフトウェアサプライチェーン（ライブラリ・依存関係）に加えて、<strong>モデルそのもの・データセット・ファインチューニング用アダプタ・プラグイン・MCPサーバー</strong>が加わります。OWASP 2026年版では第4位（2025年版では第3位）です。</p>
+    <p>AIシステムのサプライチェーンは、従来のソフトウェアサプライチェーン（ライブラリ・依存関係）に加えて、モデルそのもの・データセット・ファインチューニング用アダプタ・プラグイン・MCPサーバーが加わります。OWASP 2026年版では第4位（2025年版では第3位）です。</p>
 
     <h4>何がリスク源になるか</h4>
-    <p>OWASP LLM03 は、次の9つを挙げています。</p>
+    <p>OWASP LLM03は、次の9つを挙げています。</p>
 
     <div class="table-wrap">
       <table>
@@ -1130,63 +1130,63 @@
           <tr><td>1</td><td>従来型の依存関係</td><td>古い・脆弱なコンポーネント。モデル開発やファインチューニング中に悪用される</td></tr>
           <tr><td>2</td><td>ライセンスの複雑さ</td><td>OSSと商用ライセンスが混在。データセットの制限が商用利用を禁じている場合がある</td></tr>
           <tr><td>3</td><td>保守終了モデル</td><td>メンテナンスされていないモデルは未修正の問題を抱え込む</td></tr>
-          <tr><td>4</td><td>侵害された事前学習済みモデル</td><td>バイナリのブラックボックスに<strong>隠れたバイアス、バックドア、その他の悪意ある機能</strong>が含まれうる。標準的な評価では検出できない</td></tr>
-          <tr><td>5</td><td>モデル来歴の脆弱さ</td><td>出所を強く検証する手段が存在しない。攻撃者は供給元アカウントの侵害や、ソーシャルエンジニアリングによる<strong>そっくりさんアカウント</strong>の作成が可能</td></tr>
-          <tr><td>6</td><td>脆弱な LoRA アダプタ</td><td>ファインチューニング用モジュールがベースモデルの完全性を損ないうる</td></tr>
+          <tr><td>4</td><td>侵害された事前学習済みモデル</td><td>バイナリのブラックボックスに隠れたバイアス、バックドア、その他の悪意ある機能が含まれうる。標準的な評価では検出できない</td></tr>
+          <tr><td>5</td><td>モデル来歴の脆弱さ</td><td>出所を強く検証する手段が存在しない。攻撃者は供給元アカウントの侵害や、ソーシャルエンジニアリングによるそっくりさんアカウントの作成が可能</td></tr>
+          <tr><td>6</td><td>脆弱なLoRAアダプタ</td><td>ファインチューニング用モジュールがベースモデルの完全性を損ないうる</td></tr>
           <tr><td>7</td><td>共同開発環境の悪用</td><td>モデルマージサービスやフォーマット変換ツールが、セキュリティレビューを迂回して脆弱性を注入しうる</td></tr>
           <tr><td>8</td><td>オンデバイスモデル</td><td>製造時の侵害、OS/ファームウェアの脆弱性、リバースエンジニアリング、再パッケージ</td></tr>
           <tr><td>9</td><td>不明瞭な利用規約・プライバシーポリシー</td><td>曖昧な規約が、無許可の学習データ利用や著作物の取り込みを許す</td></tr>
         </tbody>
       </table>
     </div>
-    <p><small>出典：OWASP LLM03:2025 Supply Chain（参照日 2026-09-15）</small></p>
+    <p><small>出典：OWASP LLM03:2025 Supply Chain（参照日2026-09-15）</small></p>
 
     <div class="callout note">
       <span class="label">2026年版での変更</span>
-      <p>OWASP は「Supply Chain は、<strong>宣伝されているモデル成果物が、名乗っているものと違う場合の信頼の失敗</strong>を新たに扱うようになった」としています。モデル配布における「なりすまし」を明示的に取り込んだ形です。</p>
+      <p>OWASPは「Supply Chainは、宣伝されているモデル成果物が、名乗っているものと違う場合の信頼の失敗を新たに扱うようになった」としています。モデル配布における「なりすまし」を明示的に取り込んだ形です。</p>
     </div>
 
     <h4>なぜ危険か：モデルファイルはコードである</h4>
     <div class="with-memo">
-      <p>初学者が最も驚くのが、<strong>「モデルの重みファイルを読み込むだけでコードが実行されうる」</strong>という点です。Python の <code>pickle</code> 形式はオブジェクトの復元時に任意のコードを実行できる仕様で、PyTorch の <code>torch.load()</code> がこの形式を扱います。</p>
+      <p>初学者が最も驚くのが、「モデルの重みファイルを読み込むだけでコードが実行されうる」という点です。Pythonの<code>pickle</code>形式はオブジェクトの復元時に任意のコードを実行できる仕様で、PyTorchの<code>torch.load()</code>がこの形式を扱います。</p>
       <aside class="memo">モデルの重みファイル＝実行されうるコード</aside>
     </div>
 
-    <p>Hugging Face はマルウェアスキャン・pickle スキャン・シークレットスキャンを実装していますが、<strong>pickle 形式のモデルを「unsafe」と表示するだけで、ダウンロードをブロックはしない</strong>点に注意が必要です。対策として同社は、重みだけを保存し実行可能コードを含まない <strong>safetensors</strong> 形式を開発しています。</p>
-    <p><small>出典：NSFOCUS、JFrog のリサーチ記事（いずれも<strong>二次情報</strong>。参照日 2026-09-15）</small></p>
+    <p>Hugging Faceはマルウェアスキャン・pickleスキャン・シークレットスキャンを実装していますが、pickle形式のモデルを「unsafe」と表示するだけで、ダウンロードをブロックはしない点に注意が必要です。対策として同社は、重みだけを保存し実行可能コードを含まないsafetensors形式を開発しています。</p>
+    <p><small>出典：NSFOCUS、JFrogのリサーチ記事（いずれも二次情報。参照日2026-09-15）</small></p>
 
-    <h4>具体例①：PyTorch nightly の依存関係混同（2022年12月）</h4>
+    <h4>具体例①：PyTorch nightlyの依存関係混同（2022年12月）</h4>
     <div class="callout">
-      <p><strong>PyTorch 公式ブログ「Compromised PyTorch-nightly dependency chain between December 25th and December 30th, 2022」</strong></p>
+      <p><strong>PyTorch公式ブログ「Compromised PyTorch-nightly dependency chain between December 25th and December 30th, 2022」</strong></p>
       <ul>
-        <li>対象：<strong>2022年12月25日〜30日に Linux で pip 経由で PyTorch-nightly をインストールした場合のみ</strong>。stable パッケージは影響なし。</li>
-        <li>手口：<strong>依存関係混同</strong>。PyTorch が自前のパッケージインデックスで配布していた <code>torchtriton</code> と<strong>同名のパッケージが PyPI に登録</strong>され、PyPI が優先されるため悪意あるほうがインストールされた。</li>
-        <li>悪意あるバイナリの動作：<code>/etc/resolv.conf</code> のネームサーバー、ホスト名、ユーザー名、カレントディレクトリ名、環境変数を取得し、<code>/etc/hosts</code>、<code>/etc/passwd</code>、<code>$HOME</code> 直下の先頭1,000ファイル、<code>$HOME/.gitconfig</code>、<code>$HOME/.ssh/*</code> を読み取り、これらを<strong>暗号化されたDNSクエリ</strong>で外部ドメインへ送信した。</li>
-        <li>対処：該当パッケージのアンインストールと pip キャッシュの削除、12月30日以降の nightly への更新。PyTorch 側は依存名を <code>pytorch-triton</code> に変更し、PyPI にダミーパッケージを登録して再発を防いだ。</li>
+        <li>対象：2022年12月25日〜30日にLinuxでpip経由でPyTorch-nightlyをインストールした場合のみ。stableパッケージは影響なし。</li>
+        <li>手口：依存関係混同。PyTorchが自前のパッケージインデックスで配布していた<code>torchtriton</code>と同名のパッケージがPyPIに登録され、PyPIが優先されるため悪意あるほうがインストールされた。</li>
+        <li>悪意あるバイナリの動作：<code>/etc/resolv.conf</code>のネームサーバー、ホスト名、ユーザー名、カレントディレクトリ名、環境変数を取得し、<code>/etc/hosts</code>、<code>/etc/passwd</code>、<code>$HOME</code>直下の先頭1,000ファイル、<code>$HOME/.gitconfig</code>、<code>$HOME/.ssh/*</code>を読み取り、これらを暗号化されたDNSクエリで外部ドメインへ送信した。</li>
+        <li>対処：該当パッケージのアンインストールとpipキャッシュの削除、12月30日以降のnightlyへの更新。PyTorch側は依存名を<code>pytorch-triton</code>に変更し、PyPIにダミーパッケージを登録して再発を防いだ。</li>
       </ul>
-      <p><small>出典：pytorch.org 公式ブログ（参照日 2026-09-15）。<strong>2022年12月の事案であり、現在の PyTorch には該当しません。</strong></small></p>
+      <p><small>出典：pytorch.org公式ブログ（参照日2026-09-15）。2022年12月の事案であり、現在のPyTorchには該当しません。</small></p>
     </div>
 
     <div class="callout note">
       <span class="label">この事例のポイント</span>
-      <p>攻撃者は PyTorch を侵害していません。<strong>パッケージの名前空間の優先順位という「仕組みの隙間」</strong>を突いただけです。AI関連のツールチェーンは自前インデックスと公開インデックスを併用することが多く、この構造的リスクは今も残っています。</p>
+      <p>攻撃者はPyTorchを侵害していません。パッケージの名前空間の優先順位という「仕組みの隙間」を突いただけです。AI関連のツールチェーンは自前インデックスと公開インデックスを併用することが多く、この構造的リスクは今も残っています。</p>
     </div>
 
-    <h4>具体例②：Amazon Q Developer 拡張への悪意あるコード混入（2025年7月）</h4>
+    <h4>具体例②：Amazon Q Developer拡張への悪意あるコード混入（2025年7月）</h4>
     <div class="callout">
       <p><strong>AWS Security Bulletin AWS-2025-015（2025年7月23日公開、7月25日更新／CVE-2025-8217）</strong></p>
       <ul>
-        <li>対象：Amazon Q Developer for Visual Studio Code Extension <strong>バージョン 1.84.0</strong>。</li>
-        <li>経緯：攻撃者が拡張機能の CodeBuild 設定にあった「<strong>スコープが不適切なGitHubトークン</strong>」を悪用し、オープンソースのリポジトリに悪意あるコードを注入。そのコードが 1.84.0 のリリースに自動的に取り込まれた。</li>
-        <li>結果：注入されたコードは<strong>構文エラーにより実行に失敗</strong>し、顧客システムへの実害は生じなかった。AWS は問題を特定して資格情報を失効させ、悪意あるコンテンツを削除した。</li>
-        <li>利用者への指示：1.84.0 を直ちに削除し、VS Code の拡張機能パネルから <strong>1.85.0</strong> へ更新すること。1.84.0 は配布チャネルから削除済み。</li>
+        <li>対象：Amazon Q Developer for Visual Studio Code Extensionバージョン1.84.0。</li>
+        <li>経緯：攻撃者が拡張機能のCodeBuild設定にあった「スコープが不適切なGitHubトークン」を悪用し、オープンソースのリポジトリに悪意あるコードを注入。そのコードが1.84.0のリリースに自動的に取り込まれた。</li>
+        <li>結果：注入されたコードは構文エラーにより実行に失敗し、顧客システムへの実害は生じなかった。AWSは問題を特定して資格情報を失効させ、悪意あるコンテンツを削除した。</li>
+        <li>利用者への指示：1.84.0を直ちに削除し、VS Codeの拡張機能パネルから1.85.0へ更新すること。1.84.0は配布チャネルから削除済み。</li>
       </ul>
-      <p><small>出典：AWS Security Bulletins AWS-2025-015（参照日 2026-09-15）</small></p>
+      <p><small>出典：AWS Security Bulletins AWS-2025-015（参照日2026-09-15）</small></p>
     </div>
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>この事例が示すのは、<strong>AIコーディング支援ツール自体がサプライチェーンの一部</strong>だということです。しかも侵入経路は「AI特有の何か」ではなく、<strong>権限が広すぎるCIトークン</strong>という古典的な問題でした。AIセキュリティの多くは、結局のところ従来のセキュリティ衛生（最小権限、シークレット管理、CI/CDの保護）の適用範囲の問題に帰着します。</p>
+      <p>この事例が示すのは、AIコーディング支援ツール自体がサプライチェーンの一部だということです。しかも侵入経路は「AI特有の何か」ではなく、権限が広すぎるCIトークンという古典的な問題でした。AIセキュリティの多くは、結局のところ従来のセキュリティ衛生（最小権限、シークレット管理、CI/CDの保護）の適用範囲の問題に帰着します。</p>
     </div>
 
     <h4>対策</h4>
@@ -1194,83 +1194,83 @@
       <li><strong>供給元を審査する</strong>：信頼できるソースのセキュリティ体制と利用規約を監査する。アクセス制御を定期的に見直す。</li>
       <li><strong>コンポーネント管理</strong>：OWASP A06:2021（脆弱で古いコンポーネント）の統制を適用し、脆弱性スキャンとパッチ適用を実装する。</li>
       <li><strong>レッドチーム演習</strong>：公開ベンチマークを超えた包括的なAI評価を行い、ユースケース固有のリスクをテストする。</li>
-      <li><strong>SBOM / ML-BOM の維持</strong>：署名され改ざんが検知できるソフトウェア／AI部品表を維持する。</li>
+      <li><strong>SBOM / ML-BOMの維持</strong>：署名され改ざんが検知できるソフトウェア／AI部品表を維持する。</li>
       <li><strong>ライセンス監査</strong>：全ライセンスをインベントリ化し、自動監視ツールを使う。</li>
-      <li><strong>モデルの検証</strong>：検証可能な形で入手し、第三者による完全性チェック、<strong>暗号署名、ファイルハッシュ</strong>を使う。</li>
+      <li><strong>モデルの検証</strong>：検証可能な形で入手し、第三者による完全性チェック、暗号署名、ファイルハッシュを使う。</li>
       <li><strong>共同開発環境の監視</strong>：厳格な監査と自動スキャンを実装する。</li>
-      <li><strong>異常検知</strong>：敵対的ロバストネステストを MLOps パイプラインに組み込む。</li>
+      <li><strong>異常検知</strong>：敵対的ロバストネステストをMLOpsパイプラインに組み込む。</li>
       <li><strong>パッチ方針</strong>：保守されているAPI／モデルのバージョンを使う。</li>
       <li><strong>エッジモデルの保護</strong>：デプロイ済みモデルを暗号化し、完全性チェックとベンダーによる証明（attestation）で改ざんを防ぐ。</li>
     </ol>
     <p><small>出典：OWASP LLM03:2025 Supply Chain, Prevention and Mitigation Strategies（要約）</small></p>
 
-    <p>加えて、MCPサーバーやツールについては<a href="#agent">「AIエージェント・ツール連携」</a>の節のMCP対策表と、OWASP LLM01:2026 の緩和策#10（<strong>ピン留め・署名・検証、ツール説明文の監査</strong>）が該当します。</p>
+    <p>加えて、MCPサーバーやツールについては<a href="#agent">「AIエージェント・ツール連携」</a>の節のMCP対策表と、OWASP LLM01:2026の緩和策#10（ピン留め・署名・検証、ツール説明文の監査）が該当します。</p>
 
     <ul class="refs">
-      <li>OWASP LLM03:2025 Supply Chain — <a href="https://genai.owasp.org/llmrisk/llm032025-supply-chain/">https://genai.owasp.org/llmrisk/llm032025-supply-chain/</a>（参照日 2026-09-15）</li>
-      <li>PyTorch「Compromised nightly dependency chain」— <a href="https://pytorch.org/blog/compromised-nightly-dependency/">https://pytorch.org/blog/compromised-nightly-dependency/</a>（2022年12月・参照日 2026-09-15）</li>
-      <li>AWS Security Bulletin AWS-2025-015 — <a href="https://aws.amazon.com/security/security-bulletins/AWS-2025-015/">https://aws.amazon.com/security/security-bulletins/AWS-2025-015/</a>（参照日 2026-09-15）</li>
-      <li>JFrog「Data Scientists Targeted by Malicious Hugging Face ML Models」（二次情報）— <a href="https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/">https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/</a>（参照日 2026-09-15）</li>
+      <li>OWASP LLM03:2025 Supply Chain：<a href="https://genai.owasp.org/llmrisk/llm032025-supply-chain/">https://genai.owasp.org/llmrisk/llm032025-supply-chain/</a>（参照日2026-09-15）</li>
+      <li>PyTorch「Compromised nightly dependency chain」：<a href="https://pytorch.org/blog/compromised-nightly-dependency/">https://pytorch.org/blog/compromised-nightly-dependency/</a>（2022年12月・参照日2026-09-15）</li>
+      <li>AWS Security Bulletin AWS-2025-015：<a href="https://aws.amazon.com/security/security-bulletins/AWS-2025-015/">https://aws.amazon.com/security/security-bulletins/AWS-2025-015/</a>（参照日2026-09-15）</li>
+      <li>JFrog「Data Scientists Targeted by Malicious Hugging Face ML Models」（二次情報）：<a href="https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/">https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/</a>（参照日2026-09-15）</li>
     </ul>
 
     <h3 id="halluc">幻覚・誤情報を業務利用するリスク</h3>
 
-    <p><strong>幻覚</strong>（hallucination）は、モデルが訓練データの隙間を統計的パターンで埋めた結果、<strong>本当らしく聞こえるが根拠のない内容</strong>を生成する現象です。NIST は「擬人化を避ける」という観点から <strong>confabulation（作話）</strong>という用語を使っています。</p>
+    <p><strong>幻覚</strong>（hallucination）は、モデルが訓練データの隙間を統計的パターンで埋めた結果、本当らしく聞こえるが根拠のない内容を生成する現象です。NISTは「擬人化を避ける」という観点からconfabulation（作話）という用語を使っています。</p>
 
     <div class="callout">
-      <p>NIST AI 600-1 のリスク定義：</p>
-      <p><strong>「Confabulation：自信を持って述べられるが誤りや虚偽であるコンテンツ（口語的には "hallucination" や "fabrication" と呼ばれる）の生成。これによりユーザーが誤導され、あるいは欺かれうる。」</strong>（脚注で「"hallucination" や "fabrication" という語は生成AIを擬人化するものであり、それ自体が、非人間の存在に人間の特性を不適切に帰属させうる生成AIシステム関連のリスクである」と注記）</p>
-      <p><small>出典：NIST AI 600-1 Generative AI Profile（2024年7月）§2 のリスク一覧</small></p>
+      <p>NIST AI 600-1のリスク定義は次のとおりです。</p>
+      <p><strong>「Confabulation：自信を持って述べられるが誤りや虚偽であるコンテンツ（口語的には"hallucination"や"fabrication"と呼ばれる）の生成。これによりユーザーが誤導され、あるいは欺かれうる。」</strong>（脚注で「"hallucination"や"fabrication"という語は生成AIを擬人化するものであり、それ自体が、非人間の存在に人間の特性を不適切に帰属させうる生成AIシステム関連のリスクである」と注記）</p>
+      <p><small>出典：NIST AI 600-1 Generative AI Profile（2024年7月）§2のリスク一覧</small></p>
     </div>
 
     <h4>なぜ危険か</h4>
     <p>OWASP LLM09（2025年版）は、危険を2層に分けています。</p>
     <ul>
-      <li><strong>幻覚そのもの</strong> — 「モデルは訓練データの隙間を、真の理解なしに統計的パターンで埋める。結果として<strong>正しく聞こえるが完全に根拠のない</strong>答えを生成する。」</li>
-      <li><strong>過度の信頼（overreliance）</strong> — 「利用者が検証なしにLLMの出力を過度に信頼し、誤情報の影響を重要な意思決定にまで増幅させる。」</li>
+      <li><strong>幻覚そのもの</strong>。「モデルは訓練データの隙間を、真の理解なしに統計的パターンで埋める。結果として正しく聞こえるが完全に根拠のない答えを生成する。」</li>
+      <li><strong>過度の信頼（overreliance）</strong>。「利用者が検証なしにLLMの出力を過度に信頼し、誤情報の影響を重要な意思決定にまで増幅させる。」</li>
     </ul>
 
-    <p>さらに、幻覚が<strong>セキュリティ上の攻撃面に転じる</strong>経路があります。</p>
+    <p>さらに、幻覚がセキュリティ上の攻撃面に転じる経路があります。</p>
 
     <div class="callout">
       <p><strong>パッケージ幻覚（package hallucination）／slopsquatting</strong></p>
-      <p>LLM が存在しないコードライブラリを提案することがある。攻撃者は<strong>頻繁に幻覚されるパッケージ名を特定し、その名前で悪意あるパッケージを主要なリポジトリに公開する</strong>。開発者が気づかずに取り込むと、不正アクセスやバックドアが成立する。</p>
-      <p><small>出典：OWASP LLM09:2025 Misinformation（参照日 2026-09-15）</small></p>
+      <p>LLMが存在しないコードライブラリを提案することがある。攻撃者は頻繁に幻覚されるパッケージ名を特定し、その名前で悪意あるパッケージを主要なリポジトリに公開する。開発者が気づかずに取り込むと、不正アクセスやバックドアが成立する。</p>
+      <p><small>出典：OWASP LLM09:2025 Misinformation（参照日2026-09-15）</small></p>
     </div>
 
     <div class="callout">
       <p><strong>研究データ：「We Have a Package for You! A Comprehensive Analysis of Package Hallucinations by Code Generating LLMs」</strong><br>（Spracklen, Wijewickrama, Sakib, Maiti, Viswanath, Jadliwala／arXiv:2406.10279、2024年6月12日投稿・2025年3月改訂、USENIX Security 2025）</p>
       <ul>
-        <li>評価対象：コード生成向けの主要 LLM <strong>16モデル</strong>、生成コードサンプル <strong>576,000件</strong>、対象言語は <strong>Python と JavaScript の2言語</strong>。</li>
-        <li>結果：<strong>205,474個のユニークな「存在しないパッケージ名」</strong>を確認。幻覚率は<strong>商用モデルで平均5.2%以上、オープンソースモデルで平均21.7%以上</strong>。</li>
-        <li>著者らの評価：「パッケージ幻覚は<strong>新種のパッケージ混同攻撃</strong>であり、ソフトウェアサプライチェーンの完全性に対する重大な脅威となる」。</li>
+        <li>評価対象：コード生成向けの主要LLM 16モデル、生成コードサンプル576,000件、対象言語はPythonとJavaScriptの2言語。</li>
+        <li>結果：205,474個のユニークな「存在しないパッケージ名」を確認。幻覚率は商用モデルで平均5.2%以上、オープンソースモデルで平均21.7%以上。</li>
+        <li>著者らの評価：「パッケージ幻覚は新種のパッケージ混同攻撃であり、ソフトウェアサプライチェーンの完全性に対する重大な脅威となる」。</li>
       </ul>
-      <p><small>出典：arXiv:2406.10279 アブストラクト（参照日 2026-09-15）。なお「slopsquatting」という用語は Seth Larson が提唱し Andrew Nesbitt が広めたとされる（Wikipedia、<strong>二次情報</strong>）。</small></p>
+      <p><small>出典：arXiv:2406.10279アブストラクト（参照日2026-09-15）。なお「slopsquatting」という用語はSeth Larsonが提唱しAndrew Nesbittが広めたとされる（Wikipedia、二次情報）。</small></p>
     </div>
 
-    <h4>具体例①：Mata v. Avianca ―― 存在しない判例で制裁金</h4>
+    <h4>具体例①：存在しない判例で制裁金（Mata v. Avianca）</h4>
     <div class="callout">
-      <p>米国ニューヨーク州南部地区連邦地方裁判所、P. Kevin Castel 判事、<strong>2023年6月22日</strong>決定。</p>
-      <p>原告代理人が ChatGPT を判例調査に用いた結果、準備書面に引用した<strong>6件の判例が完全な捏造</strong>であり、いずれの法律データベースにも存在しなかった。判事は「信頼できるAIツールを補助に使うこと自体に本質的な不適切さはない」としつつ、既存の規則が弁護士に<strong>提出物の正確性を確保するゲートキーパーとしての役割</strong>を課していると述べた。<strong>5,000ドルの制裁金</strong>を科し、捏造された意見に名前が現れた各裁判官への訂正書簡の送付を命じた。</p>
-      <p><small>出典：Mata v. Avianca, Inc., 678 F.Supp.3d 443 (S.D.N.Y. 2023)。OWASP LLM09 も攻撃シナリオとして言及。IPA ガイドライン（2024年7月）も同事案を引用している。</small></p>
+      <p>米国ニューヨーク州南部地区連邦地方裁判所、P. Kevin Castel判事、2023年6月22日決定。</p>
+      <p>原告代理人がChatGPTを判例調査に用いた結果、準備書面に引用した6件の判例が完全な捏造であり、いずれの法律データベースにも存在しなかった。判事は「信頼できるAIツールを補助に使うこと自体に本質的な不適切さはない」としつつ、既存の規則が弁護士に提出物の正確性を確保するゲートキーパーとしての役割を課していると述べた。5,000ドルの制裁金を科し、捏造された意見に名前が現れた各裁判官への訂正書簡の送付を命じた。</p>
+      <p><small>出典：Mata v. Avianca, Inc., 678 F.Supp.3d 443 (S.D.N.Y. 2023)。OWASP LLM09も攻撃シナリオとして言及。IPAガイドライン（2024年7月）も同事案を引用している。</small></p>
     </div>
 
-    <h4>具体例②：Moffatt v. Air Canada ―― チャットボットの説明で企業が賠償責任</h4>
+    <h4>具体例②：チャットボットの説明で企業が賠償責任（Moffatt v. Air Canada）</h4>
     <div class="callout">
-      <p>カナダ・ブリティッシュコロンビア州 Civil Resolution Tribunal、<strong>2024年2月14日</strong>決定（2024 BCCRT 149）。</p>
-      <p>利用者が Air Canada のウェブサイトのチャットボットに遺族割引運賃について問い合わせたところ、<strong>誤った手続きを案内され</strong>、実際の申請は却下された。Tribunal は「サービス提供者と消費者という商業的関係を踏まえれば、Air Canada は注意義務を負っていた」とし、情報の正確性を確保する合理的な注意を怠ったとして<strong>過失による不実表示</strong>を認定。Air Canada は「チャットボットは独立した法的主体であり自らの行為に責任を負う」と主張したが、Tribunal は<strong>静的なページであれチャットボットであれ、自社サイト上のすべての情報について企業が責任を負う</strong>と判断した。損害賠償は650.88カナダドル。</p>
-      <p><small>出典：Moffatt v. Air Canada, 2024 BCCRT 149。OWASP LLM09 も攻撃シナリオとして言及。</small></p>
+      <p>カナダ・ブリティッシュコロンビア州Civil Resolution Tribunal、2024年2月14日決定（2024 BCCRT 149）。</p>
+      <p>利用者がAir Canadaのウェブサイトのチャットボットに遺族割引運賃について問い合わせたところ、誤った手続きを案内され、実際の申請は却下された。Tribunalは「サービス提供者と消費者という商業的関係を踏まえれば、Air Canadaは注意義務を負っていた」とし、情報の正確性を確保する合理的な注意を怠ったとして過失による不実表示を認定。Air Canadaは「チャットボットは独立した法的主体であり自らの行為に責任を負う」と主張したが、Tribunalは静的なページであれチャットボットであれ、自社サイト上のすべての情報について企業が責任を負うと判断した。損害賠償は650.88カナダドル。</p>
+      <p><small>出典：Moffatt v. Air Canada, 2024 BCCRT 149。OWASP LLM09も攻撃シナリオとして言及。</small></p>
     </div>
 
     <div class="callout note">
       <span class="label">2つの事例に共通する教訓</span>
-      <p>どちらも<strong>攻撃者が存在しません</strong>。AIが間違え、人間が確認しなかっただけです。にもかかわらず、金銭的制裁と法的責任が発生しました。「セキュリティ」を狭く「攻撃への対処」と考えていると、この種のリスクを見落とします。</p>
+      <p>どちらも攻撃者が存在しません。AIが間違え、人間が確認しなかっただけです。にもかかわらず、金銭的制裁と法的責任が発生しました。「セキュリティ」を狭く「攻撃への対処」と考えていると、この種のリスクを見落とします。</p>
     </div>
 
     <h4>対策</h4>
-    <p>OWASP LLM09 の緩和策8項目です。</p>
+    <p>OWASP LLM09の緩和策8項目です。</p>
     <ol>
-      <li><strong>RAG の活用</strong>：生成時に検証済みの外部データベースを参照させる。</li>
+      <li><strong>RAGの活用</strong>：生成時に検証済みの外部データベースを参照させる。</li>
       <li><strong>モデルのファインチューニング</strong>：パラメータ効率のよい調整手法などで出力品質を上げる。</li>
       <li><strong>相互検証と人間の監督</strong>：信頼できる情報源でのファクトチェックを必須にする。</li>
       <li><strong>自動検証</strong>：影響の大きい出力には検証ツールを組み込む。</li>
@@ -1279,26 +1279,26 @@
       <li><strong>UI設計</strong>：AI生成コンテンツにラベルを付け、フィルタを組み込み、利用上の制限を明示する。</li>
       <li><strong>教育と訓練</strong>：検証の重要性と批判的思考を強調する。</li>
     </ol>
-    <p><small>出典：OWASP LLM09:2025 Misinformation（参照日 2026-09-15）</small></p>
+    <p><small>出典：OWASP LLM09:2025 Misinformation（参照日2026-09-15）</small></p>
 
     <p><strong>パッケージ幻覚への具体的な対策</strong></p>
     <ul>
-      <li>AIが提案したパッケージ名を、<strong>インストール前に公式レジストリで実在と素性を確認する</strong>（作成日、ダウンロード数、メンテナ、リポジトリの有無）。</li>
-      <li>依存関係を<strong>ロックファイルで固定</strong>し、レビュー対象にする。</li>
-      <li>自前のプライベートレジストリを使う場合、<strong>依存関係混同</strong>（<a href="#supplychain">「サプライチェーン」</a>の節のPyTorch事例）への対策も併せて行う。</li>
+      <li>AIが提案したパッケージ名を、インストール前に公式レジストリで実在と素性を確認する（作成日、ダウンロード数、メンテナ、リポジトリの有無）。</li>
+      <li>依存関係をロックファイルで固定し、レビュー対象にする。</li>
+      <li>自前のプライベートレジストリを使う場合、依存関係混同（<a href="#supplychain">「サプライチェーン」</a>の節のPyTorch事例）への対策も併せて行う。</li>
     </ul>
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>幻覚対策の本丸は技術ではなく<strong>プロセス</strong>だと考えます。Mata v. Avianca で判事が指摘したのは「AIを使うな」ではなく「<strong>提出物の正確性を確保するのは弁護士の役割である</strong>」ということでした。組織として決めるべきなのは、「どの業務で、誰が、どの基準で、AI出力を検証してから使うか」というルールです。IPA ガイドラインが「利活用ガイドラインの策定」を運用の中心に据えているのも同じ理由でしょう。</p>
+      <p>幻覚対策の中心は、技術ではなくプロセスだと考えます。Mata v. Aviancaで判事が指摘したのは「AIを使うな」ではなく「提出物の正確性を確保するのは弁護士の役割である」ということでした。組織として決めるべきなのは、「どの業務で、誰が、どの基準で、AI出力を検証してから使うか」というルールです。IPAガイドラインが「利活用ガイドラインの策定」を運用の中心に据えているのも同じ理由でしょう。</p>
     </div>
 
     <ul class="refs">
-      <li>OWASP LLM09:2025 Misinformation — <a href="https://genai.owasp.org/llmrisk/llm092025-misinformation/">https://genai.owasp.org/llmrisk/llm092025-misinformation/</a>（参照日 2026-09-15）</li>
-      <li>NIST AI 600-1「2.2 Confabulation」— <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（2024年7月・参照日 2026-09-15）</li>
-      <li>「We Have a Package for You!」（arXiv:2406.10279 / USENIX Security 2025）— <a href="https://arxiv.org/abs/2406.10279">https://arxiv.org/abs/2406.10279</a>（参照日 2026-09-15）</li>
-      <li>Mata v. Avianca, Inc.（判決文PDF）— <a href="https://www.law.berkeley.edu/wp-content/uploads/archive/2025/12/Mata-v-Avianca-Inc.pdf">https://www.law.berkeley.edu/wp-content/uploads/archive/2025/12/Mata-v-Avianca-Inc.pdf</a>（参照日 2026-09-15）</li>
-      <li>Moffatt v. Air Canada 解説（CanLII）— <a href="https://www.canlii.org/en/commentary/doc/2025CanLIIDocs1963">https://www.canlii.org/en/commentary/doc/2025CanLIIDocs1963</a>（参照日 2026-09-15）</li>
+      <li>OWASP LLM09:2025 Misinformation：<a href="https://genai.owasp.org/llmrisk/llm092025-misinformation/">https://genai.owasp.org/llmrisk/llm092025-misinformation/</a>（参照日2026-09-15）</li>
+      <li>NIST AI 600-1「2.2 Confabulation」：<a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（2024年7月・参照日2026-09-15）</li>
+      <li>「We Have a Package for You!」（arXiv:2406.10279 / USENIX Security 2025）：<a href="https://arxiv.org/abs/2406.10279">https://arxiv.org/abs/2406.10279</a>（参照日2026-09-15）</li>
+      <li>Mata v. Avianca, Inc.（判決文PDF）：<a href="https://www.law.berkeley.edu/wp-content/uploads/archive/2025/12/Mata-v-Avianca-Inc.pdf">https://www.law.berkeley.edu/wp-content/uploads/archive/2025/12/Mata-v-Avianca-Inc.pdf</a>（参照日2026-09-15）</li>
+      <li>Moffatt v. Air Canada解説（CanLII）：<a href="https://www.canlii.org/en/commentary/doc/2025CanLIIDocs1963">https://www.canlii.org/en/commentary/doc/2025CanLIIDocs1963</a>（参照日2026-09-15）</li>
     </ul>
 
     <h2 id="s4">具体例・使いどころ</h2>
@@ -1307,10 +1307,10 @@
 
     <h3 id="frameworks">主要なフレームワークとガイドライン（国際）</h3>
 
-    <p>ここまでの章で個別に引用してきた枠組みを、あらためて「何のための道具か」という観点で整理します。<strong>どれか1つを選ぶのではなく、目的に応じて使い分ける</strong>のが実務的です。</p>
+    <p>ここまでの章で個別に引用してきた枠組みを、あらためて「何のための道具か」という観点で整理します。どれか1つを選ぶのではなく、目的に応じて使い分けるのが実務的です。</p>
 
     <h4>OWASP Top 10 for LLM Applications</h4>
-    <p>アプリケーション開発者向けの、最も実践的なリスク一覧です。2026年版は<strong>2026年8月にバージョン 2026 として公開</strong>されました（公式リソースページの記載は2026年8月3日。PDF の表紙には発行日のプレースホルダが残っています）。ライセンスは CC BY-SA 4.0 です。</p>
+    <p>アプリケーション開発者向けの、最も実践的なリスク一覧です。2026年版は2026年8月にバージョン2026として公開されました（公式リソースページの記載は2026年8月3日。PDFの表紙には発行日のプレースホルダが残っています）。ライセンスはCC BY-SA 4.0です。</p>
 
     <div class="table-wrap">
       <table>
@@ -1323,41 +1323,41 @@
           <tr><td>LLM05</td><td>Data and Model Poisoning（データとモデルの汚染）</td><td>Improper Output Handling</td><td>4位→5位（ファインチューニングの転覆を統合）</td></tr>
           <tr><td>LLM06</td><td>Unbounded Consumption（無制限な消費）</td><td>Excessive Agency</td><td><strong>10位→6位に上昇</strong></td></tr>
           <tr><td>LLM07</td><td>Misinformation（誤情報）</td><td>System Prompt Leakage</td><td>9位→7位</td></tr>
-          <tr><td>LLM08</td><td>Hidden Context Exposure（隠しコンテキストの露出）</td><td>Vector and Embedding Weaknesses</td><td><strong>System Prompt Leakage を改称・再定義</strong></td></tr>
+          <tr><td>LLM08</td><td>Hidden Context Exposure（隠しコンテキストの露出）</td><td>Vector and Embedding Weaknesses</td><td><strong>System Prompt Leakageを改称・再定義</strong></td></tr>
           <tr><td>LLM09</td><td>Vector and Embedding Weaknesses（ベクトルと埋め込みの弱点）</td><td>Misinformation</td><td>8位→9位</td></tr>
           <tr><td>LLM10</td><td>Improper Output Handling（出力の不適切な取り扱い）</td><td>Unbounded Consumption</td><td><strong>5位→10位（最大の下落）</strong>。ただしAIアシスタントが大量生成する安全でないコードを新たにカバー</td></tr>
         </tbody>
       </table>
     </div>
-    <p><small>出典：OWASP Top 10 for LLM Applications 2026（PDF）および 2025年版の公開ページ（参照日 2026-09-15）</small></p>
+    <p><small>出典：OWASP Top 10 for LLM Applications 2026（PDF）および2025年版の公開ページ（参照日2026-09-15）</small></p>
 
     <div class="callout note">
       <span class="label">順位はどう決まったか</span>
-      <p>2026年版は「<strong>コミュニティ投票75%、インシデント実績データ25%</strong>」の重み付けで決定されたと明記されています。順位変動が大きかったのは、「実務家が恐れているもの」と「実際に被害が出ているもの」のズレを、初めてデータで突き合わせた結果だと OWASP は説明しています。</p>
+      <p>2026年版は「コミュニティ投票75%、インシデント実績データ25%」の重み付けで決定されたと明記されています。順位変動が大きかったのは、「実務家が恐れているもの」と「実際に被害が出ているもの」のズレを、初めてデータで突き合わせた結果だとOWASPは説明しています。</p>
     </div>
 
     <p><strong>Hidden Context Exposure（LLM08:2026）とは</strong></p>
     <div class="callout">
-      <p>「Hidden Context Exposure とは、モデルのコンテキストに置かれた<strong>隠された、ユーザーに見せていないシステム命令や運用上のコンテキスト</strong>の、権限なき抽出・推論・再構成をいう。その隠しコンテキストが、秘密情報、ポリシーロジック、ツール、信頼境界、ワークフローの判断基準、専有的な挙動、その他の機微な実装詳細を含むか明かすとき、それは攻撃者の能力を実質的に高めるものとしてセキュリティ上の意味を持つ。」</p>
+      <p>「Hidden Context Exposureとは、モデルのコンテキストに置かれた隠された、ユーザーに見せていないシステム命令や運用上のコンテキストの、権限なき抽出・推論・再構成をいう。その隠しコンテキストが、秘密情報、ポリシーロジック、ツール、信頼境界、ワークフローの判断基準、専有的な挙動、その他の機微な実装詳細を含むか明かすとき、それは攻撃者の能力を実質的に高めるものとしてセキュリティ上の意味を持つ。」</p>
       <p><small>出典：OWASP Top 10 for LLM Applications 2026, LLM08:2026</small></p>
     </div>
-    <p>従来の「System Prompt Leakage」がシステムプロンプトだけを対象にしていたのに対し、<strong>ユーザーに見えないコンテキスト全般</strong>へ範囲を広げたものです。</p>
+    <p>従来の「System Prompt Leakage」がシステムプロンプトだけを対象にしていたのに対し、ユーザーに見えないコンテキスト全般へ範囲を広げたものです。</p>
 
-    <h4>NIST AI RMF と Generative AI Profile</h4>
+    <h4>NIST AI RMFとGenerative AI Profile</h4>
     <p>組織のリスクマネジメント体制を作るための枠組みです。</p>
 
     <div class="table-wrap">
       <table>
         <thead><tr><th>文書</th><th>番号</th><th>発行</th><th>内容</th></tr></thead>
         <tbody>
-          <tr><td>AI Risk Management Framework 1.0</td><td>NIST AI 100-1</td><td>2023年1月26日</td><td>任意適用の枠組み。<strong>GOVERN（統治）／MAP（マップ）／MEASURE（測定）／MANAGE（管理）</strong>の4機能でAIの信頼性を設計・開発・利用・評価に組み込む</td></tr>
-          <tr><td>Generative AI Profile</td><td>NIST AI 600-1</td><td>2024年7月26日</td><td>生成AIに固有／生成AIによって悪化する<strong>12のリスクカテゴリ</strong>を定義し、4機能に沿った推奨アクションを提示</td></tr>
+          <tr><td>AI Risk Management Framework 1.0</td><td>NIST AI 100-1</td><td>2023年1月26日</td><td>任意適用の枠組み。GOVERN（統治）／MAP（マップ）／MEASURE（測定）／MANAGE（管理）の4機能でAIの信頼性を設計・開発・利用・評価に組み込む</td></tr>
+          <tr><td>Generative AI Profile</td><td>NIST AI 600-1</td><td>2024年7月26日</td><td>生成AIに固有／生成AIによって悪化する12のリスクカテゴリを定義し、4機能に沿った推奨アクションを提示</td></tr>
           <tr><td>Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations</td><td>NIST AI 100-2 E2025</td><td>2025年3月</td><td>敵対的機械学習の用語と分類体系。予測AI（PredAI）と生成AI（GenAI）を区別し、回避・汚染・プライバシー攻撃を整理</td></tr>
         </tbody>
       </table>
     </div>
 
-    <p><strong>NIST AI 600-1 の12リスクカテゴリ</strong></p>
+    <p><strong>NIST AI 600-1の12リスクカテゴリ</strong></p>
     <ol>
       <li><strong>CBRN Information or Capabilities</strong>（化学・生物・放射性物質・核に関する情報や能力への容易なアクセス）</li>
       <li><strong>Confabulation</strong>（作話＝いわゆる幻覚）</li>
@@ -1372,78 +1372,78 @@
       <li><strong>Obscene, Degrading, and/or Abusive Content</strong>（わいせつ・品位を貶める・虐待的なコンテンツ）</li>
       <li><strong>Value Chain and Component Integration</strong>（上流サードパーティ部品の不透明・追跡不能な統合、供給元審査の不備）</li>
     </ol>
-    <p><small>出典：NIST AI 600-1（2024年7月）§2 のリスク一覧（原文からの訳出）</small></p>
+    <p><small>出典：NIST AI 600-1（2024年7月）§2のリスク一覧（原文からの訳出）</small></p>
 
     <div class="callout">
-      <p><strong>§2.9 Information Security の要点（原文より）</strong></p>
-      <p>「生成AIベースのシステムは2つの主要な情報セキュリティリスクを提示する。生成AIは、攻撃能力の自動的行使の敷居を下げることで新たなサイバーセキュリティリスクを発見・可能にしうる。同時に、<strong>生成AI自身がプロンプトインジェクションやデータポイズニングのような攻撃に対して脆弱</strong>であるため、利用可能な攻撃面を拡大する。」</p>
-      <p>「<strong>直接プロンプトインジェクション</strong>では、攻撃者が悪意あるプロンプトを作成して生成AIシステムに直接入力する。<strong>間接プロンプトインジェクション</strong>攻撃は、攻撃者が遠隔から（すなわち直接のインタフェースなしに）、検索されそうなデータにプロンプトを注入することで LLM 統合アプリケーションを悪用するときに発生する。」</p>
+      <p><strong>§2.9 Information Securityの要点（原文より）</strong></p>
+      <p>「生成AIベースのシステムは2つの主要な情報セキュリティリスクを提示する。生成AIは、攻撃能力の自動的行使の敷居を下げることで新たなサイバーセキュリティリスクを発見・可能にしうる。同時に、生成AI自身がプロンプトインジェクションやデータポイズニングのような攻撃に対して脆弱であるため、利用可能な攻撃面を拡大する。」</p>
+      <p>「直接プロンプトインジェクションでは、攻撃者が悪意あるプロンプトを作成して生成AIシステムに直接入力する。間接プロンプトインジェクション攻撃は、攻撃者が遠隔から（すなわち直接のインタフェースなしに）、検索されそうなデータにプロンプトを注入することでLLM統合アプリケーションを悪用するときに発生する。」</p>
       <p><small>出典：NIST AI 600-1（2024年7月）§2.9</small></p>
     </div>
 
     <div class="callout caution">
       <span class="label">版の新しさに注意</span>
-      <p>NIST AI 600-1 は<strong>2024年7月</strong>の文書で、エージェント／MCP が普及する前に書かれています。一方 NIST の公式ページには、AI RMF 1.0 が<strong>現在改訂作業中</strong>であること、および2026年4月7日に重要インフラ向けプロファイルが発表されたことが記載されています。最新動向は NIST のページで確認してください。</p>
+      <p>NIST AI 600-1は2024年7月の文書で、エージェント／MCPが普及する前に書かれています。一方NISTの公式ページには、AI RMF 1.0が現在改訂作業中であること、および2026年4月7日に重要インフラ向けプロファイルが発表されたことが記載されています。最新動向はNISTのページで確認してください。</p>
     </div>
 
     <h4>MITRE ATLAS</h4>
-    <p><strong>ATLAS</strong>（Adversarial Threat Landscape for AI Systems）は、MITRE ATT&amp;CK と同じ構造で<strong>AIシステムに対する攻撃者の戦術と技術</strong>を体系化したナレッジベースです。脅威モデリングやレッドチーム演習の設計に使います。</p>
+    <p><strong>ATLAS</strong>（Adversarial Threat Landscape for AI Systems）は、MITRE ATT&amp;CKと同じ構造でAIシステムに対する攻撃者の戦術と技術を体系化したナレッジベースです。脅威モデリングやレッドチーム演習の設計に使います。</p>
 
     <div class="callout">
-      <p><strong>最新データリリース v2026.08</strong>（2026年9月1日公開、フォーマットバージョン 6.0.0、コレクション更新日 2026年5月27日）の規模：</p>
-      <p><strong>戦術 16／技術 197（うちサブ技術 83）／緩和策 39／ケーススタディ 72</strong></p>
+      <p><strong>最新データリリースv2026.08</strong>（2026年9月1日公開、フォーマットバージョン6.0.0、コレクション更新日2026年5月27日）の規模は次のとおりです。</p>
+      <p><strong>戦術16／技術197（うちサブ技術83）／緩和策39／ケーススタディ72</strong></p>
       <p>戦術の一覧：AI Model Access、AI Attack Adaptation、Reconnaissance（偵察）、Resource Development（リソース開発）、Initial Access（初期アクセス）、Execution（実行）、Persistence（永続化）、Defense Evasion（防御回避）、Discovery（探索）、Collection（収集）、Exfiltration（持ち出し）、Impact（影響）、Privilege Escalation（権限昇格）、Credential Access（認証情報アクセス）、Command and Control（遠隔操作）、Lateral Movement（横展開）</p>
-      <p><small>出典：MITRE ATLAS データリポジトリ <code>mitre-atlas/atlas-data</code> の <code>dist/v6/ATLAS-2026.08.yaml</code> を取得して機械的に集計（参照日 2026-09-15）。なお OWASP 2026年版 LLM Top 10 はひとつ前の v2026.06 を参照している。</small></p>
+      <p><small>出典：MITRE ATLASデータリポジトリ<code>mitre-atlas/atlas-data</code>の<code>dist/v6/ATLAS-2026.08.yaml</code>を取得して機械的に集計（参照日2026-09-15）。なおOWASP 2026年版LLM Top 10はひとつ前のv2026.06を参照している。</small></p>
     </div>
 
     <div class="callout note">
-      <span class="label">ATT&amp;CK との関係</span>
-      <p>ATLAS は ATT&amp;CK をモデルにしており、その TTP（戦術・技術・手順）は ATT&amp;CK のものと<strong>補完関係</strong>にあります。AI固有の戦術（AI Model Access、AI Attack Adaptation）が先頭に置かれ、それ以降は ATT&amp;CK と同じ名前の戦術が並びます。既存のセキュリティチームが持つ ATT&amp;CK の知識をそのまま活かせる設計です。</p>
+      <span class="label">ATT&amp;CKとの関係</span>
+      <p>ATLASはATT&amp;CKをモデルにしており、そのTTP（戦術・技術・手順）はATT&amp;CKのものと補完関係にあります。AI固有の戦術（AI Model Access、AI Attack Adaptation）が先頭に置かれ、それ以降はATT&amp;CKと同じ名前の戦術が並びます。既存のセキュリティチームが持つATT&amp;CKの知識をそのまま活かせる設計です。</p>
     </div>
 
-    <h4>CISA・英国NCSC ほか「Guidelines for Secure AI System Development」</h4>
+    <h4>CISA・英国NCSCほか「Guidelines for Secure AI System Development」</h4>
     <div class="callout">
-      <p>2023年11月、CISA と英国 NCSC が共同で発表し、国内外<strong>23のサイバーセキュリティ機関が共同署名</strong>したガイドライン。AI開発ライフサイクルの<strong>4段階</strong>（secure design／secure development／secure deployment／secure operation and maintenance）ごとにセキュリティ上の考慮点とリスク緩和策を示す。主な対象は AI システムの<strong>提供者</strong>だが、データサイエンティスト、開発者、管理者、意思決定者、リスクオーナーを含むすべての関係者に読むことを促している。NIST の SSDF、CISA の Secure by Design 原則、NCSC の開発・展開ガイダンスと整合するよう作られている。</p>
-      <p><small>出典：CISA のアラートページ（2023年11月26日、参照日 2026-09-15）。<strong>ガイドライン本体のPDFはリンク切れ（404）のため未確認</strong>で、記述はアラートページの範囲にとどめている。</small></p>
+      <p>2023年11月、CISAと英国NCSCが共同で発表し、国内外23のサイバーセキュリティ機関が共同署名したガイドライン。AI開発ライフサイクルの4段階（secure design／secure development／secure deployment／secure operation and maintenance）ごとにセキュリティ上の考慮点とリスク緩和策を示す。主な対象はAIシステムの提供者だが、データサイエンティスト、開発者、管理者、意思決定者、リスクオーナーを含むすべての関係者に読むことを促している。NISTのSSDF、CISAのSecure by Design原則、NCSCの開発・展開ガイダンスと整合するよう作られている。</p>
+      <p><small>出典：CISAのアラートページ（2023年11月26日、参照日2026-09-15）。ガイドライン本体のPDFはリンク切れ（404）のため未確認で、記述はアラートページの範囲にとどめている。</small></p>
     </div>
 
     <h4>ISO/IEC 42001:2023</h4>
     <div class="callout">
-      <p>2023年12月に ISO と IEC が発行した、<strong>AIに関する初の国際マネジメントシステム規格</strong>。AIシステムの設計・開発・展開・利用を組織がどう統治するかについて、方針・プロセス・管理策の体系（AIマネジメントシステム＝AIMS）を定める。透明性、公平性、リスク緩和を重視する。<strong>認証は任意</strong>で、Stage 1 と Stage 2 の審査を経て3年間有効、年次のサーベイランス審査がある。</p>
-      <p><small>出典：ISO 公式解説ページ（参照日 2026-09-15）</small></p>
+      <p>2023年12月にISOとIECが発行した、AIに関する初の国際マネジメントシステム規格。AIシステムの設計・開発・展開・利用を組織がどう統治するかについて、方針・プロセス・管理策の体系（AIマネジメントシステム＝AIMS）を定める。透明性、公平性、リスク緩和を重視する。認証は任意で、Stage 1とStage 2の審査を経て3年間有効、年次のサーベイランス審査がある。</p>
+      <p><small>出典：ISO公式解説ページ（参照日2026-09-15）</small></p>
     </div>
 
     <div class="callout note">
       <span class="label">使い分けの目安</span>
-      <p>①作っているアプリの設計をレビューしたい → OWASP。②組織としてAIリスク管理の体制を作りたい → NIST AI RMF（＋日本なら AI事業者ガイドライン）。③攻撃者視点で脅威モデルを描きたい／レッドチームを設計したい → MITRE ATLAS。④開発ライフサイクル全体の手順書がほしい → CISA/NCSC ガイドライン。⑤第三者に対して統制を証明したい → ISO/IEC 42001。</p>
+      <p>①作っているアプリの設計をレビューしたい → OWASP。②組織としてAIリスク管理の体制を作りたい → NIST AI RMF（＋日本ならAI事業者ガイドライン）。③攻撃者視点で脅威モデルを描きたい／レッドチームを設計したい → MITRE ATLAS。④開発ライフサイクル全体の手順書がほしい → CISA/NCSCガイドライン。⑤第三者に対して統制を証明したい → ISO/IEC 42001。</p>
     </div>
 
     <ul class="refs">
-      <li>OWASP Top 10 for LLM Applications 2026 — <a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日 2026-09-15）</li>
-      <li>OWASP Top 10 for LLM Applications 2025 — <a href="https://genai.owasp.org/llm-top-10/">https://genai.owasp.org/llm-top-10/</a>（参照日 2026-09-15）</li>
-      <li>NIST AI Risk Management Framework — <a href="https://www.nist.gov/itl/ai-risk-management-framework">https://www.nist.gov/itl/ai-risk-management-framework</a>（参照日 2026-09-15）</li>
-      <li>NIST AI 600-1（PDF）— <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（参照日 2026-09-15）</li>
-      <li>NIST AI 100-2 E2025（CSRC お知らせ）— <a href="https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom">https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom</a>（参照日 2026-09-15、<strong>PDF本文は未確認</strong>）</li>
-      <li>MITRE ATLAS — <a href="https://atlas.mitre.org/">https://atlas.mitre.org/</a>／データ <a href="https://github.com/mitre-atlas/atlas-data">https://github.com/mitre-atlas/atlas-data</a>（参照日 2026-09-15）</li>
-      <li>CISA「Guidelines for Secure AI System Development」発表ページ — <a href="https://www.cisa.gov/news-events/alerts/2023/11/26/cisa-and-uk-ncsc-unveil-joint-guidelines-secure-ai-system-development">https://www.cisa.gov/news-events/alerts/2023/11/26/cisa-and-uk-ncsc-unveil-joint-guidelines-secure-ai-system-development</a>（参照日 2026-09-15）</li>
-      <li>ISO/IEC 42001 解説 — <a href="https://www.iso.org/home/insights-news/resources/iso-42001-explained-what-it-is.html">https://www.iso.org/home/insights-news/resources/iso-42001-explained-what-it-is.html</a>（参照日 2026-09-15）</li>
+      <li>OWASP Top 10 for LLM Applications 2026：<a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日2026-09-15）</li>
+      <li>OWASP Top 10 for LLM Applications 2025：<a href="https://genai.owasp.org/llm-top-10/">https://genai.owasp.org/llm-top-10/</a>（参照日2026-09-15）</li>
+      <li>NIST AI Risk Management Framework：<a href="https://www.nist.gov/itl/ai-risk-management-framework">https://www.nist.gov/itl/ai-risk-management-framework</a>（参照日2026-09-15）</li>
+      <li>NIST AI 600-1（PDF）：<a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a>（参照日2026-09-15）</li>
+      <li>NIST AI 100-2 E2025（CSRCお知らせ）：<a href="https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom">https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom</a>（参照日2026-09-15、PDF本文は未確認）</li>
+      <li>MITRE ATLAS：<a href="https://atlas.mitre.org/">https://atlas.mitre.org/</a>／データ<a href="https://github.com/mitre-atlas/atlas-data">https://github.com/mitre-atlas/atlas-data</a>（参照日2026-09-15）</li>
+      <li>CISA「Guidelines for Secure AI System Development」発表ページ：<a href="https://www.cisa.gov/news-events/alerts/2023/11/26/cisa-and-uk-ncsc-unveil-joint-guidelines-secure-ai-system-development">https://www.cisa.gov/news-events/alerts/2023/11/26/cisa-and-uk-ncsc-unveil-joint-guidelines-secure-ai-system-development</a>（参照日2026-09-15）</li>
+      <li>ISO/IEC 42001解説：<a href="https://www.iso.org/home/insights-news/resources/iso-42001-explained-what-it-is.html">https://www.iso.org/home/insights-news/resources/iso-42001-explained-what-it-is.html</a>（参照日2026-09-15）</li>
     </ul>
 
     <h3 id="japan">日本国内のガイドライン</h3>
 
-    <p>日本で生成AIを業務に使う場合、押さえておくべき公的文書は3つです。<strong>AI事業者ガイドライン</strong>（総務省・経済産業省）、<strong>テキスト生成AIの導入・運用ガイドライン</strong>（IPA）、<strong>生成AIサービスの利用に関する注意喚起</strong>（個人情報保護委員会）。いずれも無料で公開されています。</p>
+    <p>日本で生成AIを業務に使う場合、押さえておくべき公的文書は3つです。AI事業者ガイドライン（総務省・経済産業省）、テキスト生成AIの導入・運用ガイドライン（IPA）、生成AIサービスの利用に関する注意喚起（個人情報保護委員会）。いずれも無料で公開されています。</p>
 
     <h4>AI事業者ガイドライン（総務省・経済産業省）</h4>
     <div class="callout">
       <p><strong>最新版：第1.2版（令和8年＝2026年3月31日公表）</strong></p>
-      <p>初版（第1.0版）は2024年4月。第1.2版は2度目の改定にあたる。位置づけは<strong>非拘束的なソフトロー</strong>で、事業者が自主的に検討すべき望ましい行動の考え方を整理したもの。</p>
+      <p>初版（第1.0版）は2024年4月。第1.2版は2度目の改定にあたる。位置づけは非拘束的なソフトローで、事業者が自主的に検討すべき望ましい行動の考え方を整理したもの。</p>
       <p><strong>構成</strong>：本編（「どのような社会を目指すのか（基本理念＝why）」および「どのような取組を行うか（指針＝what）」）と、別添（付属資料。「具体的にどのようなアプローチで取り組むか（実践＝how）」）の2部構成。別添にはチェックリスト・ワークシート（別添7）、図解資料（別添8）などが含まれる。</p>
       <p><strong>主体の区分</strong>：AI開発者（AI Developer）／AI提供者（AI Provider）／AI利用者（AI Business User）の3区分。本編は第1部「AIとは」、第2部「AIにより目指すべき社会及び各主体が取り組む事項」、第3部「AI開発者に関する事項」、第4部「AI提供者に関する事項」、第5部「AI利用者に関する事項」からなる。</p>
-      <p><small>出典：AI事業者ガイドライン（第1.2版）概要、総務省・経済産業省、令和8年3月31日（参照日 2026-09-15）</small></p>
+      <p><small>出典：AI事業者ガイドライン（第1.2版）概要、総務省・経済産業省、令和8年3月31日（参照日2026-09-15）</small></p>
     </div>
 
     <p><strong>10の「共通の指針」</strong></p>
-    <p>ガイドラインの中核です。うち1)〜8) が「各主体が取り組む事項」、9)〜10) が「社会と連携した取組が期待される事項」に分類されます。</p>
+    <p>ガイドラインの中核です。うち1)〜8)が「各主体が取り組む事項」、9)〜10)が「社会と連携した取組が期待される事項」に分類されます。</p>
 
     <div class="table-wrap">
       <table>
@@ -1454,7 +1454,7 @@
           <tr><td>3</td><td><strong>公平性</strong></td><td>人種・性別・国籍・年齢・政治的信念・宗教等を理由とした不当で有害な偏見および差別をなくすよう努める／AIに単独で判断させるだけでなく、適切なタイミングで人間の判断を介在させる利用を検討する</td></tr>
           <tr><td>4</td><td><strong>プライバシー保護</strong></td><td>個人情報保護法等の関連法令の遵守、各主体のプライバシーポリシーの策定・公表により、ステークホルダーのプライバシーが尊重され保護されるよう、その重要性に応じた対応を取る</td></tr>
           <tr><td>5</td><td><strong>セキュリティ確保</strong></td><td><strong>AIシステム・サービスの機密性・完全性・可用性を維持し、常時、AIの安全な活用を確保するため、その時点での技術水準に照らして合理的な対策を講じる</strong>／AIシステム・サービスに対する外部からの攻撃は日々新たな手法が生まれており、これらのリスクに対応するための留意事項を確認する</td></tr>
-          <tr><td>6</td><td><strong>透明性</strong></td><td>AIシステム・サービスの検証可能性を確保しながら、必要かつ技術的に可能な範囲で、ステークホルダーに対し合理的な範囲で適切な情報を提供する（AIを利用しているという事実、活用している範囲、データ収集およびアノテーションの手法、能力、限界、適切／不適切な利用方法 等）</td></tr>
+          <tr><td>6</td><td><strong>透明性</strong></td><td>AIシステム・サービスの検証可能性を確保しながら、必要かつ技術的に可能な範囲で、ステークホルダーに対し合理的な範囲で適切な情報を提供する（AIを利用しているという事実、活用している範囲、データ収集およびアノテーションの手法、能力、限界、適切／不適切な利用方法等）</td></tr>
           <tr><td>7</td><td><strong>アカウンタビリティ</strong></td><td>トレーサビリティの確保や共通の指針の対応状況等について情報の提供と説明を行う／AIガバナンスに関するポリシー、プライバシーポリシー等を策定・公表する／関係する情報を文書化して一定期間保管し、必要なときに参照可能な状態とする</td></tr>
           <tr><td>8</td><td><strong>教育・リテラシー</strong></td><td>AIに関わる者が十分なレベルのAIリテラシーを確保するために必要な措置を講じる／AIの複雑性、誤情報といった特性および意図的な悪用の可能性を勘案し、ステークホルダーに対しても教育を行うことが期待される</td></tr>
           <tr><td>9</td><td><strong>公正競争確保</strong></td><td>（社会と連携した取組が期待される事項）</td></tr>
@@ -1462,79 +1462,79 @@
         </tbody>
       </table>
     </div>
-    <p><small>出典：AI事業者ガイドライン（第1.2版）概要、総務省・経済産業省、令和8年3月31日、pp.15-16（参照日 2026-09-15）</small></p>
+    <p><small>出典：AI事業者ガイドライン（第1.2版）概要、総務省・経済産業省、令和8年3月31日、pp.15-16（参照日2026-09-15）</small></p>
 
     <div class="callout note">
       <span class="label">第1.2版の主な改定ポイント</span>
-      <p>解説によれば、①AI技術の動向反映（<strong>AIエージェント・フィジカルAIの定義を追記</strong>）、②リスク記載の見直し（リスクベースアプローチの実践支援）、③主体区分の整理、④用語の整理（「学習」「推論」などの定義具体化）、⑤ユーザビリティ改善（活用の手引きとチャットボットの公表）、⑥ガバナンス動向の反映、⑦その他（脚注・リンク更新）の7点です。</p>
-      <p><small>出典：PwC Japan「AI事業者ガイドライン（第1.2版）改定のポイントと事業者への期待」（<strong>二次情報＝解説記事</strong>、参照日 2026-09-15）</small></p>
+      <p>解説によれば、①AI技術の動向反映（AIエージェント・フィジカルAIの定義を追記）、②リスク記載の見直し（リスクベースアプローチの実践支援）、③主体区分の整理、④用語の整理（「学習」「推論」などの定義具体化）、⑤ユーザビリティ改善（活用の手引きとチャットボットの公表）、⑥ガバナンス動向の反映、⑦その他（脚注・リンク更新）の7点です。</p>
+      <p><small>出典：PwC Japan「AI事業者ガイドライン（第1.2版）改定のポイントと事業者への期待」（二次情報＝解説記事、参照日2026-09-15）</small></p>
     </div>
 
     <h4>IPA「テキスト生成AIの導入・運用ガイドライン」</h4>
     <div class="callout">
-      <p><strong>2024年7月、独立行政法人情報処理推進機構（IPA）産業サイバーセキュリティセンター 中核人材育成プログラム 7期生「生成AIのセキュリティリスクと対策プロジェクト」</strong>による文書。</p>
-      <p><strong>目的</strong>：「生成AIのセキュリティリスクと適切な対策を示すことで、組織における生成AI利用の不安感を払拭し、安全な導入と運用を促進すること」。IPA はその背景を「組織の生成AIに対する<strong>漠然とした不安感</strong>」と表現している。</p>
-      <p><strong>対象</strong>：企業における「テキスト生成AI」の安全かつ効果的な活用。画像生成AI・動画生成AIは対象外。<strong>RAG を企業で導入することによって新たに発生するセキュリティリスク</strong>についても詳述している。</p>
+      <p><strong>2024年7月、独立行政法人情報処理推進機構（IPA）産業サイバーセキュリティセンター中核人材育成プログラム7期生「生成AIのセキュリティリスクと対策プロジェクト」</strong>による文書。</p>
+      <p><strong>目的</strong>：「生成AIのセキュリティリスクと適切な対策を示すことで、組織における生成AI利用の不安感を払拭し、安全な導入と運用を促進すること」。IPAはその背景を「組織の生成AIに対する漠然とした不安感」と表現している。</p>
+      <p><strong>対象</strong>：企業における「テキスト生成AI」の安全かつ効果的な活用。画像生成AI・動画生成AIは対象外。RAGを企業で導入することによって新たに発生するセキュリティリスクについても詳述している。</p>
       <p><strong>構成</strong>：第2章（本書の活用／生成AIの基礎）、第3章（導入について）、第4章（運用について）、第5章（リスク管理について）、第6章（国内組織の活用実態）、第7章（海外のAI法案の概要）。</p>
-      <p><small>出典：IPA「テキスト生成AIの導入・運用ガイドライン」2024年7月（PDF本文から確認、参照日 2026-09-15）</small></p>
+      <p><small>出典：IPA「テキスト生成AIの導入・運用ガイドライン」2024年7月（PDF本文から確認、参照日2026-09-15）</small></p>
     </div>
 
-    <p><strong>IPA によるリスクの4分類</strong></p>
+    <p><strong>IPAによるリスクの4分類</strong></p>
     <p>ドイツ連邦情報セキュリティ庁（BSI）のレポートの分類をベースに、組織導入の観点を加えた4カテゴリです。内部要因によるものと外部要因によるものに分けられます。</p>
     <ul>
-      <li><strong>① 運用時のリスク</strong> — 機密情報の入力による外部流出、古い情報に基づく回答、ハルシネーション、マルウェア作成への悪用など。</li>
-      <li><strong>② 悪意のある生成AIを利用するリスク</strong> — Webサービスとして存在する生成AIの中に、故意に誤った動作をするものが含まれうる。</li>
-      <li><strong>③ 法的および社会的リスクに関する課題</strong> — 訓練データに第三者の著作物が含まれることによる意図しない著作権侵害、個人情報保護法やGDPRへの抵触、訓練データ由来のバイアス。</li>
-      <li><strong>④ 攻撃に起因するリスク</strong> — LLM を対象とした多種多様なサイバー攻撃。</li>
+      <li><strong>① 運用時のリスク</strong>。機密情報の入力による外部流出、古い情報に基づく回答、ハルシネーション、マルウェア作成への悪用など。</li>
+      <li><strong>② 悪意のある生成AIを利用するリスク</strong>。Webサービスとして存在する生成AIの中に、故意に誤った動作をするものが含まれうる。</li>
+      <li><strong>③ 法的および社会的リスクに関する課題</strong>。訓練データに第三者の著作物が含まれることによる意図しない著作権侵害、個人情報保護法やGDPRへの抵触、訓練データ由来のバイアス。</li>
+      <li><strong>④ 攻撃に起因するリスク</strong>。LLMを対象とした多種多様なサイバー攻撃。</li>
     </ul>
-    <p><small>出典：IPA ガイドライン 2.3.3節（参照日 2026-09-15）</small></p>
+    <p><small>出典：IPAガイドライン2.3.3節（参照日2026-09-15）</small></p>
 
-    <p><strong>IPA が示すリスク管理の4工程</strong></p>
+    <p><strong>IPAが示すリスク管理の4工程</strong></p>
     <ol>
       <li><strong>リスク特定</strong>：組織の所有する資産と、それに紐づくリスクを順に洗い出す。</li>
       <li><strong>リスク分析</strong>：各リスクの「影響度（Impact）」と「発生可能性（Likelihood）」を定量的に分析し、リスクマトリクスで2次元的にマッピングする。</li>
-      <li><strong>リスク評価</strong>：分析結果から対応策を決定する。方向性は<strong>回避・軽減・受容・移転</strong>のいずれか。</li>
+      <li><strong>リスク評価</strong>：分析結果から対応策を決定する。方向性は回避・軽減・受容・移転のいずれか。</li>
       <li><strong>リスク対応</strong>：具体的な対策計画を立て、実施する。</li>
     </ol>
-    <p>実施タイミングとして、IPA は「1サイクル目の<strong>要件定義</strong>時に必ず実施」「運用・評価時に定期的に実施」「2サイクル目以降も改修時の要件定義で再実施」を推奨しています。また「リスク評価は意思決定の工程であるため、<strong>経営層をはじめとした意思決定者の協力</strong>を得ることが重要」と明記されています。</p>
-    <p><small>出典：IPA ガイドライン 5.2節（参照日 2026-09-15）</small></p>
+    <p>実施タイミングとして、IPAは「1サイクル目の要件定義時に必ず実施」「運用・評価時に定期的に実施」「2サイクル目以降も改修時の要件定義で再実施」を推奨しています。また「リスク評価は意思決定の工程であるため、経営層をはじめとした意思決定者の協力を得ることが重要」と明記されています。</p>
+    <p><small>出典：IPAガイドライン5.2節（参照日2026-09-15）</small></p>
 
-    <p><strong>IPA が挙げる国内のインシデント事例</strong></p>
+    <p><strong>IPAが挙げる国内のインシデント事例</strong></p>
     <div class="callout">
-      <p><strong>対話型生成AIのサイバー犯罪への利用</strong>：2024年5月27日、警視庁は川崎市の男性を不正指令電磁的記録作成の容疑で逮捕した。対話型生成AIを使用してマルウェアを作成した<strong>国内初の事例</strong>。報道によれば作成されたマルウェアは暗号化や暗号資産の要求といったランサムウェアに類似した機能を持ち、容疑者は特別なIT専門知識を持たず、複数の生成AIサービスを利用してプログラムを作成したとされる。</p>
-      <p><small>出典：IPA「テキスト生成AIの導入・運用ガイドライン」2024年7月、5.1節（参照日 2026-09-15）</small></p>
+      <p><strong>対話型生成AIのサイバー犯罪への利用</strong>：2024年5月27日、警視庁は川崎市の男性を不正指令電磁的記録作成の容疑で逮捕した。対話型生成AIを使用してマルウェアを作成した国内初の事例。報道によれば作成されたマルウェアは暗号化や暗号資産の要求といったランサムウェアに類似した機能を持ち、容疑者は特別なIT専門知識を持たず、複数の生成AIサービスを利用してプログラムを作成したとされる。</p>
+      <p><small>出典：IPA「テキスト生成AIの導入・運用ガイドライン」2024年7月、5.1節（参照日2026-09-15）</small></p>
     </div>
 
     <div class="callout caution">
       <span class="label">版の新しさに注意</span>
-      <p>IPA ガイドラインは<strong>2024年7月</strong>の文書で、本文中にも「2024年6月時点では、生成AIの技術は発展途上です。そのため、今後もセキュリティインシデント事例は増加していくことが予想されます」と記されています。引用されている OWASP Top 10 for LLM も<strong>ver. 1.1（2023年）</strong>であり、本ドキュメントで扱った2026年版とは項目が異なります。<strong>リスク管理のプロセス設計として読む価値は高い一方、リスク項目の一覧としては最新ではありません。</strong></p>
+      <p>IPAガイドラインは2024年7月の文書で、本文中にも「2024年6月時点では、生成AIの技術は発展途上です。そのため、今後もセキュリティインシデント事例は増加していくことが予想されます」と記されています。引用されているOWASP Top 10 for LLMもver. 1.1（2023年）であり、本ドキュメントで扱った2026年版とは項目が異なります。リスク管理のプロセス設計として読む価値は高い一方、リスク項目の一覧としては最新ではありません。</p>
     </div>
 
     <h4>個人情報保護委員会の注意喚起</h4>
-    <p><a href="#leak">「機密情報・個人情報の漏えい」</a>の節で扱ったとおりです。2023年6月2日公表、OpenAI 向けと利用者向けの2本立て。<strong>本人の同意なく個人データを含むプロンプトを入力し、それが機械学習に利用される場合、個人情報保護法違反の可能性がある</strong>という点が要点です。</p>
+    <p><a href="#leak">「機密情報・個人情報の漏えい」</a>の節で扱ったとおりです。2023年6月2日公表、OpenAI向けと利用者向けの2本立て。本人の同意なく個人データを含むプロンプトを入力し、それが機械学習に利用される場合、個人情報保護法違反の可能性があるという点が要点です。</p>
 
     <ul class="refs">
-      <li>総務省「AI事業者ガイドライン」掲載ページ — <a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a>（参照日 2026-09-15）</li>
-      <li>AI事業者ガイドライン（第1.2版）本編 PDF — <a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_1.pdf">https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_1.pdf</a>（参照日 2026-09-15）</li>
-      <li>AI事業者ガイドライン（第1.2版）概要 PDF — <a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_2.pdf">https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_2.pdf</a>（参照日 2026-09-15）</li>
-      <li>IPA「テキスト生成AIの導入・運用ガイドライン」— <a href="https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html">https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html</a>（参照日 2026-09-15）</li>
-      <li>個人情報保護委員会「生成AIサービスの利用に関する注意喚起等について」— <a href="https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/">https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/</a>（参照日 2026-09-15）</li>
+      <li>総務省「AI事業者ガイドライン」掲載ページ：<a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a>（参照日2026-09-15）</li>
+      <li>AI事業者ガイドライン（第1.2版）本編PDF：<a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_1.pdf">https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_1.pdf</a>（参照日2026-09-15）</li>
+      <li>AI事業者ガイドライン（第1.2版）概要PDF：<a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_2.pdf">https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_2.pdf</a>（参照日2026-09-15）</li>
+      <li>IPA「テキスト生成AIの導入・運用ガイドライン」：<a href="https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html">https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html</a>（参照日2026-09-15）</li>
+      <li>個人情報保護委員会「生成AIサービスの利用に関する注意喚起等について」：<a href="https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/">https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/</a>（参照日2026-09-15）</li>
     </ul>
 
     <h3 id="checklist">実務チェックリスト</h3>
 
     <div class="callout note">
       <span class="label">筆者の整理</span>
-      <p>以下のチェックリストは、本ドキュメントで引用した各出典の推奨事項を、筆者が用途別に再編成したものです。<strong>チェックリストという形式自体は特定の出典によるものではありません</strong>。各項目の根拠となる出典は末尾に示しています。実際に使う際は、各出典の原文（特に AI事業者ガイドライン別添7のチェックリスト・ワークシート）も併せて確認してください。</p>
+      <p>以下のチェックリストは、本ドキュメントで引用した各出典の推奨事項を、筆者が用途別に再編成したものです。チェックリストという形式自体は特定の出典によるものではありません。各項目の根拠となる出典は末尾に示しています。実際に使う際は、各出典の原文（特にAI事業者ガイドライン別添7のチェックリスト・ワークシート）も併せて確認してください。</p>
     </div>
 
     <h4>A. 利用者向け（AIを業務で「使う」人）</h4>
 
     <p><strong>A-1. 使い始める前に</strong></p>
     <ul>
-      <li>□ 使うサービスの<strong>データ取り扱い設定</strong>（入力が学習に使われるか、履歴が保存されるか）を確認し、明示的に設定した</li>
+      <li>□ 使うサービスのデータ取り扱い設定（入力が学習に使われるか、履歴が保存されるか）を確認し、明示的に設定した</li>
       <li>□ 利用規約とプライバシーポリシーで、入力データの保存期間と保存場所（リージョン）を確認した</li>
-      <li>□ 組織の<strong>利活用ガイドライン</strong>を読んだ／存在しない場合は策定を提案した</li>
+      <li>□ 組織の利活用ガイドラインを読んだ／存在しない場合は策定を提案した</li>
       <li>□ 入力してよい情報／入力してはいけない情報の線引きを理解している</li>
     </ul>
 
@@ -1542,24 +1542,24 @@
     <ul>
       <li>□ <strong>個人データ</strong>を入力しようとしていないか。する場合、本人の同意は必要か確認した</li>
       <li>□ 顧客情報・営業秘密・ソースコード・認証情報（APIキー、パスワード）を含んでいないか確認した</li>
-      <li>□ 貼り付けようとしている外部文書に、<strong>意図しない命令文が紛れていないか</strong>（間接プロンプトインジェクション）を意識している</li>
+      <li>□ 貼り付けようとしている外部文書に、意図しない命令文が紛れていないか（間接プロンプトインジェクション）を意識している</li>
       <li>□ ファイルをアップロードする場合、そのファイルに含まれる他人の情報を確認した</li>
     </ul>
 
     <p><strong>A-3. 出力を使うとき</strong></p>
     <ul>
-      <li>□ 事実として使う情報を、<strong>信頼できる一次情報で裏取り</strong>した</li>
-      <li>□ 引用された出典（URL、判例、論文、統計）が<strong>実在すること</strong>を確認した</li>
+      <li>□ 事実として使う情報を、信頼できる一次情報で裏取りした</li>
+      <li>□ 引用された出典（URL、判例、論文、統計）が実在することを確認した</li>
       <li>□ AIが提案したパッケージ・ライブラリ名を、インストール前に公式レジストリで実在と素性を確認した</li>
-      <li>□ 対外的に出す文書・顧客への回答に使う場合、<strong>責任の所在</strong>（最終確認者）が明確になっている</li>
+      <li>□ 対外的に出す文書・顧客への回答に使う場合、責任の所在（最終確認者）が明確になっている</li>
       <li>□ AI生成であることを明示すべき場面か検討した</li>
     </ul>
 
     <p><strong>A-4. エージェント・ツール連携を使うとき</strong></p>
     <ul>
-      <li>□ このエージェントは<strong>致命的な三要素</strong>（非公開データへのアクセス／信頼できないコンテンツへの露出／外部通信）を同時に持っていないか確認した</li>
-      <li>□ 持っている場合、<strong>操作ごとの人間承認</strong>が有効になっている</li>
-      <li>□ 導入するMCPサーバー／拡張機能の<strong>提供元</strong>を確認した。ワンクリック設定時に表示された<strong>実行コマンドの全文</strong>を読んだ</li>
+      <li>□ このエージェントは致命的な三要素（非公開データへのアクセス／信頼できないコンテンツへの露出／外部通信）を同時に持っていないか確認した</li>
+      <li>□ 持っている場合、操作ごとの人間承認が有効になっている</li>
+      <li>□ 導入するMCPサーバー／拡張機能の提供元を確認した。ワンクリック設定時に表示された実行コマンドの全文を読んだ</li>
       <li>□ エージェントに渡している権限（ファイル、メール、クラウド、DB）を把握しており、必要最小限になっている</li>
       <li>□ エージェントのメモリに何が保存されているか把握しており、定期的に確認している</li>
     </ul>
@@ -1570,7 +1570,7 @@
     <ul>
       <li>□ <strong>「モデルの命令境界はいずれ突破される」</strong>という前提で周囲のシステムを設計した</li>
       <li>□ 信頼境界を図に描き、どこから信頼できないコンテンツが入ってくるかを特定した（Webページ／メール／RAG文書／ツール出力／課題タイトル／MCPサーバー出力）</li>
-      <li>□ MITRE ATLAS を使って脅威モデリングを行った</li>
+      <li>□ MITRE ATLASを使って脅威モデリングを行った</li>
       <li>□ OWASP LLM Top 10（2026年版）の10項目それぞれについて、自システムでの該当有無を検討した</li>
       <li>□ エージェント機能がある場合、OWASP Agentic Top 10（ASI01〜ASI10）も併せて確認した</li>
     </ul>
@@ -1578,51 +1578,51 @@
     <p><strong>B-2. 権限と認可（最重要）</strong></p>
     <ul>
       <li>□ <strong>資格情報と状態変更能力をモデルではなくアプリ側コードが保持</strong>している</li>
-      <li>□ 認可判断を<strong>LLMに委ねず、決定論的なポリシーエンジンで実装</strong>している（complete mediation）</li>
+      <li>□ 認可判断をLLMに委ねず、決定論的なポリシーエンジンで実装している（complete mediation）</li>
       <li>□ ツールの数と機能を最小化した。オープンエンドなツール（シェル実行、任意URL取得）を避けた</li>
-      <li>□ ツールの権限を<strong>下流システム側（DB権限、OAuthスコープ）で強制</strong>している</li>
-      <li>□ 委譲・マルチエージェントの連鎖で、<strong>元のユーザーコンテキストと認可スコープを引き継いでいる</strong></li>
+      <li>□ ツールの権限を下流システム側（DB権限、OAuthスコープ）で強制している</li>
+      <li>□ 委譲・マルチエージェントの連鎖で、元のユーザーコンテキストと認可スコープを引き継いでいる</li>
       <li>□ 特権的・不可逆的・外部から見える操作の前に、人間の承認を挟んでいる（要約でなく実際の内容を提示）</li>
       <li>□ レート制限を重要操作にかけ、拡張機能の活動を監視している</li>
     </ul>
 
     <p><strong>B-3. 入力側</strong></p>
     <ul>
-      <li>□ 外部コンテンツを<strong>来歴ラベル付きの構造的に分離したチャネル</strong>で渡している</li>
-      <li>□ 不可視文字（タグブロック U+E0000〜E007F、異体字セレクタ U+FE00〜FE0F、ゼロ幅文字）を<strong>取り込み時と描画時の両方</strong>で除去している</li>
+      <li>□ 外部コンテンツを来歴ラベル付きの構造的に分離したチャネルで渡している</li>
+      <li>□ 不可視文字（タグブロックU+E0000〜E007F、異体字セレクタU+FE00〜FE0F、ゼロ幅文字）を取り込み時と描画時の両方で除去している</li>
       <li>□ 画像・音声を扱う場合、OCR／文字起こし後にテキストフィルタを適用している</li>
-      <li>□ システムプロンプトに<strong>秘密情報・資格情報・規制対象データを置いていない</strong></li>
+      <li>□ システムプロンプトに秘密情報・資格情報・規制対象データを置いていない</li>
     </ul>
 
     <p><strong>B-4. 出力側</strong></p>
     <ul>
-      <li>□ LLMの出力を<strong>信頼できないユーザー入力と同じ扱い</strong>（ゼロトラスト）にしている</li>
-      <li>□ 厳格な出力スキーマを定義し、下流が動く前に<strong>アプリ側コードで構造検証</strong>している（2回目のLLM呼び出しではなく）</li>
+      <li>□ LLMの出力を信頼できないユーザー入力と同じ扱い（ゼロトラスト）にしている</li>
+      <li>□ 厳格な出力スキーマを定義し、下流が動く前にアプリ側コードで構造検証している（2回目のLLM呼び出しではなく）</li>
       <li>□ コンテキストに応じた出力エンコーディング（HTML／SQL／JavaScript）を実装している</li>
       <li>□ DB操作にパラメータ化クエリを使っている</li>
-      <li>□ 厳格な Content Security Policy を設定している</li>
-      <li>□ LLM出力を <code>exec()</code> やシェルに直接渡していない</li>
+      <li>□ 厳格なContent Security Policyを設定している</li>
+      <li>□ LLM出力を<code>exec()</code>やシェルに直接渡していない</li>
     </ul>
 
     <p><strong>B-5. データとRAG</strong></p>
     <ul>
-      <li>□ 文書単位・チャンク単位の認可を<strong>インデックスのクエリの中で</strong>強制している（アプリ層での後付けフィルタではない）</li>
+      <li>□ 文書単位・チャンク単位の認可をインデックスのクエリの中で強制している（アプリ層での後付けフィルタではない）</li>
       <li>□ 機微なワークロードでテナントごとにインデックスを分離している</li>
-      <li>□ ベクトルストアに、文書のACLとは<strong>別のACL</strong>を設定している</li>
+      <li>□ ベクトルストアに、文書のACLとは別のACLを設定している</li>
       <li>□ 知識ベースに投入する文書を事前検証している（隠しテキストの検出を含む）</li>
-      <li>□ データの来歴を SBOM／ML-BOM や DVC で追跡している</li>
+      <li>□ データの来歴をSBOM／ML-BOMやDVCで追跡している</li>
       <li>□ 検索活動の不変ログを残し、異常検知に使っている</li>
       <li>□ <strong>エージェントのメモリ書き込みを特権操作として扱っている</strong>（原因プロンプトのログ、命令性の分類、永続化前の承認）</li>
     </ul>
 
     <p><strong>B-6. サプライチェーン</strong></p>
     <ul>
-      <li>□ モデルを<strong>暗号署名・ハッシュ</strong>で検証している</li>
-      <li>□ SBOM／ML-BOM を維持している</li>
-      <li>□ MCPサーバーとサードパーティツールを<strong>ピン留め・署名・検証</strong>し、ツール説明文に隠れた命令がないか監査している</li>
-      <li>□ pickle 形式のモデルを扱う場合のリスク（読み込み時のコード実行）を理解し、可能なら safetensors を使っている</li>
-      <li>□ CI/CD のトークンが<strong>最小権限</strong>になっている（Amazon Q の事例）</li>
-      <li>□ 自前レジストリと公開レジストリの併用時、<strong>依存関係混同</strong>への対策をしている（PyTorch の事例）</li>
+      <li>□ モデルを暗号署名・ハッシュで検証している</li>
+      <li>□ SBOM／ML-BOMを維持している</li>
+      <li>□ MCPサーバーとサードパーティツールをピン留め・署名・検証し、ツール説明文に隠れた命令がないか監査している</li>
+      <li>□ pickle形式のモデルを扱う場合のリスク（読み込み時のコード実行）を理解し、可能ならsafetensorsを使っている</li>
+      <li>□ CI/CDのトークンが最小権限になっている（Amazon Qの事例）</li>
+      <li>□ 自前レジストリと公開レジストリの併用時、依存関係混同への対策をしている（PyTorchの事例）</li>
       <li>□ ライセンスをインベントリ化し、自動監視している</li>
     </ul>
 
@@ -1639,39 +1639,39 @@
 
     <h4>C. 組織・ガバナンス向け</h4>
     <ul>
-      <li>□ AI事業者ガイドラインの<strong>10の共通の指針</strong>に照らして自社の取組を点検した（別添7のチェックリスト・ワークシートを利用）</li>
-      <li>□ NIST AI RMF の4機能（GOVERN／MAP／MEASURE／MANAGE）に沿ってリスク管理プロセスを設計した</li>
-      <li>□ IPA が示す<strong>リスク管理の4工程</strong>を、要件定義時と運用・評価時に定期実施する体制がある</li>
-      <li>□ リスク評価に<strong>経営層</strong>が関与している</li>
+      <li>□ AI事業者ガイドラインの10の共通の指針に照らして自社の取組を点検した（別添7のチェックリスト・ワークシートを利用）</li>
+      <li>□ NIST AI RMFの4機能（GOVERN／MAP／MEASURE／MANAGE）に沿ってリスク管理プロセスを設計した</li>
+      <li>□ IPAが示すリスク管理の4工程を、要件定義時と運用・評価時に定期実施する体制がある</li>
+      <li>□ リスク評価に経営層が関与している</li>
       <li>□ 利活用ガイドラインを策定・文書化し、周知している</li>
-      <li>□ 利用者への<strong>教育</strong>を実施している（AI事業者ガイドライン指針8、IPA 4.2節）</li>
+      <li>□ 利用者への教育を実施している（AI事業者ガイドライン指針8、IPA 4.2節）</li>
       <li>□ 個人データの取り扱いについて、個人情報保護法上の適法性を確認している</li>
       <li>□ 調達時に、モデル提供者の安全機構と更新頻度を評価項目に入れている</li>
     </ul>
 
-    <p><small>根拠となった出典：OWASP Top 10 for LLM Applications 2026（LLM01・LLM02・LLM03）／OWASP LLM02・LLM03・LLM04・LLM05・LLM06・LLM08・LLM09:2025／OWASP Top 10 for Agentic Applications 2026／Model Context Protocol Security Best Practices／NIST AI RMF・AI 600-1／MITRE ATLAS／AI事業者ガイドライン第1.2版／IPA テキスト生成AIの導入・運用ガイドライン／個人情報保護委員会 注意喚起／Simon Willison「The lethal trifecta」。いずれも参照日 2026-09-15。</small></p>
+    <p><small>根拠となった出典：OWASP Top 10 for LLM Applications 2026（LLM01・LLM02・LLM03）／OWASP LLM02・LLM03・LLM04・LLM05・LLM06・LLM08・LLM09:2025／OWASP Top 10 for Agentic Applications 2026／Model Context Protocol Security Best Practices／NIST AI RMF・AI 600-1／MITRE ATLAS／AI事業者ガイドライン第1.2版／IPAテキスト生成AIの導入・運用ガイドライン／個人情報保護委員会注意喚起／Simon Willison「The lethal trifecta」。いずれも参照日2026-09-15。</small></p>
 
     <ul class="refs">
-      <li>AI事業者ガイドライン 別添（チェックリスト・ワークシートを含む）— <a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a>（参照日 2026-09-15）</li>
-      <li>OWASP Top 10 for LLM Applications 2026 — <a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日 2026-09-15）</li>
+      <li>AI事業者ガイドライン別添（チェックリスト・ワークシートを含む）：<a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a>（参照日2026-09-15）</li>
+      <li>OWASP Top 10 for LLM Applications 2026：<a href="https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/">https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/</a>（参照日2026-09-15）</li>
     </ul>
 
     <h2 id="s5">注意点・よくある誤解</h2>
 
-    <p>各リスクの章にも個別の注意点を記載していますが、ここでは本ドキュメント全体の<strong>限界とスコープ</strong>について、読み違えを避けるためにまとめておきます。</p>
+    <p>各リスクの章にも個別の注意点を記載していますが、ここでは本ドキュメント全体の限界とスコープについて、読み違えを避けるためにまとめておきます。</p>
 
     <div class="callout caution">
       <span class="label">本ドキュメントで扱わなかったもの</span>
       <ul>
-        <li><strong>OpenAI 2023年3月20日のインシデント報告</strong>（Redis のバグによる他ユーザーのチャット履歴・課金情報の露出）：公式ページ <code>openai.com/index/march-20-chatgpt-outage/</code> が HTTP 403 を返し取得できなかったため、<strong>本文では扱っていません</strong>。</li>
-        <li><strong>Constitutional Classifiers++（次世代版、2026年1月）</strong>：検索結果に存在は現れましたが本文を確認できなかったため、<strong>本文では触れていません</strong>。</li>
-        <li><strong>EU AI Act</strong>：本レポートの調査範囲では一次情報を確認しなかったため、扱っていません（OWASP LLM02:2026 の記述中に Article 73 の言及がある程度）。</li>
+        <li><strong>OpenAI 2023年3月20日のインシデント報告</strong>（Redisのバグによる他ユーザーのチャット履歴・課金情報の露出）：公式ページ<code>openai.com/index/march-20-chatgpt-outage/</code>がHTTP 403を返し取得できなかったため、本文では扱っていません。</li>
+        <li><strong>Constitutional Classifiers++（次世代版、2026年1月）</strong>：検索結果に存在は現れましたが本文を確認できなかったため、本文では触れていません。</li>
+        <li><strong>EU AI Act</strong>：本レポートの調査範囲では一次情報を確認しなかったため、扱っていません（OWASP LLM02:2026の記述中にArticle 73の言及がある程度）。</li>
       </ul>
     </div>
 
     <div class="callout caution">
       <span class="label">書籍・有料講座について</span>
-      <p>検索では AI レッドチーミングに関する書籍や講座が複数見つかりましたが、<strong>本まとめでは内容を実際に確認していないため、具体的な推薦は行いません</strong>。書籍は出版が速い分野の常として陳腐化も速いので、まずは無料の一次資料を読み、そのうえで自分に足りない領域を特定してから選ぶことをおすすめします。</p>
+      <p>検索ではAIレッドチーミングに関する書籍や講座が複数見つかりましたが、本まとめでは内容を実際に確認していないため、具体的な推薦は行いません。書籍は出版が速い分野の常として陳腐化も速いので、まずは無料の一次資料を読み、そのうえで自分に足りない領域を特定してから選ぶことをおすすめします。</p>
     </div>
 
     <h2 id="learn">さらに学ぶための学習リソース</h2>
@@ -1683,26 +1683,26 @@
       <table>
         <thead><tr><th>資料</th><th>言語</th><th>分量の目安</th><th>おすすめの理由</th></tr></thead>
         <tbody>
-          <tr><td><strong>IPA「テキスト生成AIの導入・運用ガイドライン」</strong>（2024年7月）</td><td>日本語</td><td>60ページ超</td><td>日本の組織文脈で書かれた唯一の体系的なセキュリティ文書。導入プロセスとリスク管理の流れがそのまま実務に使える。<strong>ただしリスク項目の一覧は2023年時点の情報</strong></td></tr>
+          <tr><td><strong>IPA「テキスト生成AIの導入・運用ガイドライン」</strong>（2024年7月）</td><td>日本語</td><td>60ページ超</td><td>日本の組織文脈で書かれた唯一の体系的なセキュリティ文書。導入プロセスとリスク管理の流れがそのまま実務に使える。ただしリスク項目の一覧は2023年時点の情報</td></tr>
           <tr><td><strong>AI事業者ガイドライン（第1.2版）概要</strong>（2026年3月）</td><td>日本語</td><td>スライド形式</td><td>まず概要版から。10の共通の指針が1〜2ページで俯瞰できる。詳細を知りたくなったら本編と別添へ</td></tr>
-          <tr><td><strong>OWASP Top 10 for LLM Applications 2026</strong></td><td>英語</td><td>122ページ</td><td>最新かつ最も実践的。各項目に「攻撃シナリオ」と「緩和策」が具体的に書かれており、緩和策には<strong>その限界も明記</strong>されている点が秀逸</td></tr>
+          <tr><td><strong>OWASP Top 10 for LLM Applications 2026</strong></td><td>英語</td><td>122ページ</td><td>最新かつ最も実践的。各項目に「攻撃シナリオ」と「緩和策」が具体的に書かれており、緩和策にはその限界も明記されている点が秀逸</td></tr>
         </tbody>
       </table>
     </div>
 
     <h3>ステップ2：枠組みを体系的に学ぶ</h3>
     <ul>
-      <li><strong>NIST AI 600-1（Generative AI Profile）</strong>（2024年7月、英語）：12のリスクカテゴリの定義が簡潔で、リスクの語彙を身につけるのに最適。§3 には GOVERN/MAP/MEASURE/MANAGE ごとの推奨アクションが並ぶ。</li>
+      <li><strong>NIST AI 600-1（Generative AI Profile）</strong>（2024年7月、英語）：12のリスクカテゴリの定義が簡潔で、リスクの語彙を身につけるのに最適。§3にはGOVERN/MAP/MEASURE/MANAGEごとの推奨アクションが並ぶ。</li>
       <li><strong>NIST AI 100-2 E2025（Adversarial Machine Learning）</strong>（2025年3月、英語）：敵対的機械学習の分類と用語の標準。予測AIと生成AIを分けて整理しており、学術寄りの議論を読むための基礎になる。</li>
-      <li><strong>MITRE ATLAS</strong>（英語、Webサイト）：戦術・技術・ケーススタディを実際にブラウズするのが一番の学習になる。<strong>72件のケーススタディ</strong>は現実の事案に基づいており、読み物としても面白い。</li>
+      <li><strong>MITRE ATLAS</strong>（英語、Webサイト）：戦術・技術・ケーススタディを実際にブラウズするのが一番の学習になる。72件のケーススタディは現実の事案に基づいており、読み物としても面白い。</li>
       <li><strong>CISA/NCSC「Guidelines for Secure AI System Development」</strong>（2023年11月、英語）：開発ライフサイクルに沿った手順書。23機関の共同署名という点で、国際的なコンセンサスの所在がわかる。</li>
     </ul>
 
     <h3>ステップ3：エージェント時代に追いかけるもの</h3>
     <ul>
-      <li><strong>OWASP Top 10 for Agentic Applications（ASI）</strong>（2025年12月発表、英語）：エージェントを扱うなら必読。LLM Top 10 とセットで使う設計になっている。</li>
-      <li><strong>MCP Security Best Practices</strong>（公式仕様付属文書、英語）：MCPを使うなら必読。<code>MUST</code>／<code>SHOULD</code> の粒度で要件が書かれており、実装レビューのチェックリストとしてそのまま使える。</li>
-      <li><strong>OWASP GenAI Security Project の資料一覧</strong>：Agent Control Standard（ACS）、GenAI Data Security Risks &amp; Mitigations、AI Red Teaming ベンダー評価基準など、周辺資料が継続的に追加されている。</li>
+      <li><strong>OWASP Top 10 for Agentic Applications（ASI）</strong>（2025年12月発表、英語）：エージェントを扱うなら必読。LLM Top 10とセットで使う設計になっている。</li>
+      <li><strong>MCP Security Best Practices</strong>（公式仕様付属文書、英語）：MCPを使うなら必読。<code>MUST</code>／<code>SHOULD</code>の粒度で要件が書かれており、実装レビューのチェックリストとしてそのまま使える。</li>
+      <li><strong>OWASP GenAI Security Projectの資料一覧</strong>：Agent Control Standard（ACS）、GenAI Data Security Risks &amp; Mitigations、AI Red Teamingベンダー評価基準など、周辺資料が継続的に追加されている。</li>
     </ul>
 
     <h3>ステップ4：技術的に深掘りする（査読論文）</h3>
@@ -1714,19 +1714,19 @@
 
     <div class="callout note">
       <span class="label">継続的に追いかける場合</span>
-      <p>AIセキュリティは変化が速く、本ドキュメントで扱った OWASP LLM Top 10 も2023年・2025年・2026年と<strong>3回改訂</strong>されています。定点観測するなら、①OWASP GenAI Security Project のリソース一覧、②MITRE ATLAS のデータリリース（月次に近い頻度で更新）、③総務省・経産省および IPA の公表物、の3つを押さえておくと大きな変化を取りこぼしにくくなります。</p>
+      <p>AIセキュリティは変化が速く、本ドキュメントで扱ったOWASP LLM Top 10も2023年・2025年・2026年と3回改訂されています。定点観測するなら、①OWASP GenAI Security Projectのリソース一覧、②MITRE ATLASのデータリリース（月次に近い頻度で更新）、③総務省・経産省およびIPAの公表物、の3つを押さえておくと大きな変化を取りこぼしにくくなります。</p>
     </div>
 
     <ul class="refs">
-      <li>OWASP GenAI Security Project 資料一覧 — <a href="https://genai.owasp.org/resources/">https://genai.owasp.org/resources/</a>（参照日 2026-09-15）</li>
-      <li>MITRE ATLAS — <a href="https://atlas.mitre.org/">https://atlas.mitre.org/</a>（参照日 2026-09-15）</li>
-      <li>IPA ガイドライン — <a href="https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html">https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html</a>（参照日 2026-09-15）</li>
-      <li>総務省 AI事業者ガイドライン — <a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a>（参照日 2026-09-15）</li>
+      <li>OWASP GenAI Security Project資料一覧：<a href="https://genai.owasp.org/resources/">https://genai.owasp.org/resources/</a>（参照日2026-09-15）</li>
+      <li>MITRE ATLAS：<a href="https://atlas.mitre.org/">https://atlas.mitre.org/</a>（参照日2026-09-15）</li>
+      <li>IPAガイドライン：<a href="https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html">https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html</a>（参照日2026-09-15）</li>
+      <li>総務省AI事業者ガイドライン：<a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a>（参照日2026-09-15）</li>
     </ul>
 
     <h2 id="s7">参考リンク</h2>
 
-    <p>すべての参照日は <strong>2026年9月15日</strong> です。「未確認」と記したものは、アクセスできなかった、または本文を取得できなかったものです。各章末の参考リンクに加え、確認した全出典を以下にまとめます。</p>
+    <p>すべての参照日は2026年9月15日です。「未確認」と記したものは、アクセスできなかった、または本文を取得できなかったものです。各章末の参考リンクに加え、確認した全出典を以下にまとめます。</p>
 
     <h3>一次情報</h3>
     <div class="table-wrap">
@@ -1746,18 +1746,18 @@
           <tr><td>NIST</td><td>AI Risk Management Framework（AI 100-1）<br><a href="https://www.nist.gov/itl/ai-risk-management-framework">nist.gov/itl/ai-risk-management-framework</a></td><td>2023年1月26日</td><td>確認</td></tr>
           <tr><td>NIST</td><td>Generative AI Profile（AI 600-1）<br><a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf</a></td><td>2024年7月26日</td><td>PDF全文確認</td></tr>
           <tr><td>NIST</td><td>Adversarial Machine Learning（AI 100-2 E2025）<br><a href="https://csrc.nist.gov/news/2025/nist-ai-100-2-adversarial-machine-learning-taxonom">csrc.nist.gov/news/2025/...</a></td><td>2025年3月</td><td><strong>PDF本文は未確認</strong></td></tr>
-          <tr><td>MITRE</td><td>ATLAS（公式サイト）<br><a href="https://atlas.mitre.org/">atlas.mitre.org</a></td><td>―</td><td>サイト本文は<strong>未確認</strong>（JS描画）</td></tr>
-          <tr><td>MITRE</td><td>ATLAS データ（GitHub, dist/v6/ATLAS-2026.08.yaml）<br><a href="https://github.com/mitre-atlas/atlas-data">github.com/mitre-atlas/atlas-data</a></td><td>リリース v2026.08（2026年9月1日）</td><td>確認・集計</td></tr>
-          <tr><td>CVE Program</td><td>CVE-2025-32711 公式レコード<br><a href="https://cveawg.mitre.org/api/cve/CVE-2025-32711">cveawg.mitre.org/api/cve/CVE-2025-32711</a></td><td>2025年6月11日公開</td><td>確認</td></tr>
-          <tr><td>Microsoft</td><td>MSRC アドバイザリ CVE-2025-32711<br><a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711">msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711</a></td><td>2025年6月11日</td><td><strong>未確認</strong>（JS描画）</td></tr>
-          <tr><td>Aim Security</td><td>Aim Labs EchoLeak レポート<br><a href="https://www.aim.security/lp/aim-labs-echoleak-m365">aim.security/lp/aim-labs-echoleak-m365</a></td><td>2025年6月</td><td><strong>未確認</strong>（CVEレコードの参照リンクとして記載）</td></tr>
+          <tr><td>MITRE</td><td>ATLAS（公式サイト）<br><a href="https://atlas.mitre.org/">atlas.mitre.org</a></td><td>―</td><td>サイト本文は未確認（JS描画）</td></tr>
+          <tr><td>MITRE</td><td>ATLASデータ（GitHub, dist/v6/ATLAS-2026.08.yaml）<br><a href="https://github.com/mitre-atlas/atlas-data">github.com/mitre-atlas/atlas-data</a></td><td>リリースv2026.08（2026年9月1日）</td><td>確認・集計</td></tr>
+          <tr><td>CVE Program</td><td>CVE-2025-32711公式レコード<br><a href="https://cveawg.mitre.org/api/cve/CVE-2025-32711">cveawg.mitre.org/api/cve/CVE-2025-32711</a></td><td>2025年6月11日公開</td><td>確認</td></tr>
+          <tr><td>Microsoft</td><td>MSRCアドバイザリCVE-2025-32711<br><a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711">msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711</a></td><td>2025年6月11日</td><td><strong>未確認</strong>（JS描画）</td></tr>
+          <tr><td>Aim Security</td><td>Aim Labs EchoLeakレポート<br><a href="https://www.aim.security/lp/aim-labs-echoleak-m365">aim.security/lp/aim-labs-echoleak-m365</a></td><td>2025年6月</td><td><strong>未確認</strong>（CVEレコードの参照リンクとして記載）</td></tr>
           <tr><td>Model Context Protocol</td><td>Security Best Practices<br><a href="https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices">modelcontextprotocol.io/docs/tutorials/security/security_best_practices</a></td><td>2026年9月15日時点の最新版</td><td>全文確認</td></tr>
-          <tr><td>総務省・経済産業省</td><td>AI事業者ガイドライン 第1.2版 本編<br><a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_1.pdf">meti.go.jp/.../20260331_1.pdf</a></td><td>令和8年3月31日</td><td>取得済だが<strong>本文抽出不可</strong></td></tr>
-          <tr><td>総務省・経済産業省</td><td>AI事業者ガイドライン 第1.2版 概要<br><a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_2.pdf">meti.go.jp/.../20260331_2.pdf</a></td><td>令和8年3月31日</td><td>PDF全文確認</td></tr>
-          <tr><td>総務省</td><td>AI事業者ガイドライン 掲載ページ<br><a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a></td><td>―</td><td>確認</td></tr>
+          <tr><td>総務省・経済産業省</td><td>AI事業者ガイドライン第1.2版本編<br><a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_1.pdf">meti.go.jp/.../20260331_1.pdf</a></td><td>令和8年3月31日</td><td>取得済だが本文抽出不可</td></tr>
+          <tr><td>総務省・経済産業省</td><td>AI事業者ガイドライン第1.2版概要<br><a href="https://www.meti.go.jp/shingikai/mono_info_service/ai_shakai_jisso/pdf/20260331_2.pdf">meti.go.jp/.../20260331_2.pdf</a></td><td>令和8年3月31日</td><td>PDF全文確認</td></tr>
+          <tr><td>総務省</td><td>AI事業者ガイドライン掲載ページ<br><a href="https://www.soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html">soumu.go.jp/main_sosiki/kenkyu/ai_network/02ryutsu20_04000019.html</a></td><td>―</td><td>確認</td></tr>
           <tr><td>IPA</td><td>テキスト生成AIの導入・運用ガイドライン<br><a href="https://www.ipa.go.jp/jinzai/ics/core_human_resource/final_project/2024/generative-ai-guideline.html">ipa.go.jp/jinzai/ics/.../generative-ai-guideline.html</a></td><td>2024年7月</td><td>PDF全文確認</td></tr>
-          <tr><td>個人情報保護委員会</td><td>生成AIサービスの利用に関する注意喚起等について<br><a href="https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/">ppc.go.jp/news/careful_information/230602_AI_utilize_alert/</a></td><td>2023年6月2日</td><td>掲載ページのみ確認（<strong>添付PDF本文は未確認</strong>）</td></tr>
-          <tr><td>CISA・英国NCSC ほか</td><td>Guidelines for Secure AI System Development（発表ページ）<br><a href="https://www.cisa.gov/news-events/alerts/2023/11/26/cisa-and-uk-ncsc-unveil-joint-guidelines-secure-ai-system-development">cisa.gov/news-events/alerts/2023/11/26/...</a></td><td>2023年11月26日</td><td>発表ページのみ確認（<strong>ガイドライン本体PDFは404で未確認</strong>）</td></tr>
+          <tr><td>個人情報保護委員会</td><td>生成AIサービスの利用に関する注意喚起等について<br><a href="https://www.ppc.go.jp/news/careful_information/230602_AI_utilize_alert/">ppc.go.jp/news/careful_information/230602_AI_utilize_alert/</a></td><td>2023年6月2日</td><td>掲載ページのみ確認（添付PDF本文は未確認）</td></tr>
+          <tr><td>CISA・英国NCSCほか</td><td>Guidelines for Secure AI System Development（発表ページ）<br><a href="https://www.cisa.gov/news-events/alerts/2023/11/26/cisa-and-uk-ncsc-unveil-joint-guidelines-secure-ai-system-development">cisa.gov/news-events/alerts/2023/11/26/...</a></td><td>2023年11月26日</td><td>発表ページのみ確認（ガイドライン本体PDFは404で未確認）</td></tr>
           <tr><td>ISO</td><td>ISO/IEC 42001 explained<br><a href="https://www.iso.org/home/insights-news/resources/iso-42001-explained-what-it-is.html">iso.org/home/insights-news/resources/iso-42001-explained-what-it-is.html</a></td><td>規格は2023年12月発行</td><td>確認</td></tr>
           <tr><td>PyTorch</td><td>Compromised nightly dependency chain<br><a href="https://pytorch.org/blog/compromised-nightly-dependency/">pytorch.org/blog/compromised-nightly-dependency/</a></td><td>2022年12月（最終更新2024年11月14日）</td><td>全文確認</td></tr>
           <tr><td>AWS</td><td>Security Bulletin AWS-2025-015<br><a href="https://aws.amazon.com/security/security-bulletins/AWS-2025-015/">aws.amazon.com/security/security-bulletins/AWS-2025-015/</a></td><td>2025年7月23日（7月25日更新）</td><td>全文確認</td></tr>
@@ -1774,13 +1774,13 @@
 
     <h3>二次情報（解説記事として明示的に区別して使用）</h3>
     <ul class="refs">
-      <li>PwC Japan「AI事業者ガイドライン（第1.2版）改定のポイントと事業者への期待」— <a href="https://www.pwc.com/jp/ja/knowledge/column/ai-governance/ai-guideline-03.html">pwc.com/jp/ja/knowledge/column/ai-governance/ai-guideline-03.html</a></li>
-      <li>Promptfoo「OWASP Top 10 for Agentic Applications」— <a href="https://www.promptfoo.dev/docs/red-team/owasp-agentic-ai/">promptfoo.dev/docs/red-team/owasp-agentic-ai/</a></li>
-      <li>axonbuild「OWASP LLM Top 10 2026: What Changed and What to Test」— <a href="https://axonbuild.com/blog/owasp-ai-top-10">axonbuild.com/blog/owasp-ai-top-10</a></li>
-      <li>JFrog「Data Scientists Targeted by Malicious Hugging Face ML Models」— <a href="https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/">jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/</a></li>
-      <li>NSFOCUS「AI Supply Chain Security: Hugging Face Malicious ML Models」— <a href="https://nsfocusglobal.com/ai-supply-chain-security-hugging-face-malicious-ml-models/">nsfocusglobal.com/ai-supply-chain-security-hugging-face-malicious-ml-models/</a></li>
-      <li>Trend Micro「Slopsquatting: When AI Agents Hallucinate Malicious Packages」— <a href="https://www.trendmicro.com/vinfo/us/security/news/cybercrime-and-digital-threats/slopsquatting-when-ai-agents-hallucinate-malicious-packages">trendmicro.com/vinfo/us/security/news/...</a></li>
-      <li>Wikipedia「Slopsquatting」（用語の由来）— <a href="https://en.wikipedia.org/wiki/Slopsquatting">en.wikipedia.org/wiki/Slopsquatting</a></li>
+      <li>PwC Japan「AI事業者ガイドライン（第1.2版）改定のポイントと事業者への期待」：<a href="https://www.pwc.com/jp/ja/knowledge/column/ai-governance/ai-guideline-03.html">pwc.com/jp/ja/knowledge/column/ai-governance/ai-guideline-03.html</a></li>
+      <li>Promptfoo「OWASP Top 10 for Agentic Applications」：<a href="https://www.promptfoo.dev/docs/red-team/owasp-agentic-ai/">promptfoo.dev/docs/red-team/owasp-agentic-ai/</a></li>
+      <li>axonbuild「OWASP LLM Top 10 2026: What Changed and What to Test」：<a href="https://axonbuild.com/blog/owasp-ai-top-10">axonbuild.com/blog/owasp-ai-top-10</a></li>
+      <li>JFrog「Data Scientists Targeted by Malicious Hugging Face ML Models」：<a href="https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/">jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models/</a></li>
+      <li>NSFOCUS「AI Supply Chain Security: Hugging Face Malicious ML Models」：<a href="https://nsfocusglobal.com/ai-supply-chain-security-hugging-face-malicious-ml-models/">nsfocusglobal.com/ai-supply-chain-security-hugging-face-malicious-ml-models/</a></li>
+      <li>Trend Micro「Slopsquatting: When AI Agents Hallucinate Malicious Packages」：<a href="https://www.trendmicro.com/vinfo/us/security/news/cybercrime-and-digital-threats/slopsquatting-when-ai-agents-hallucinate-malicious-packages">trendmicro.com/vinfo/us/security/news/...</a></li>
+      <li>Wikipedia「Slopsquatting」（用語の由来）：<a href="https://en.wikipedia.org/wiki/Slopsquatting">en.wikipedia.org/wiki/Slopsquatting</a></li>
     </ul>
 
   </main>

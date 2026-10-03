@@ -500,7 +500,7 @@
       <ol>
         <li><strong>ワークフロー</strong>は<mark>事前に決められた手順（コードパス）</mark>に沿ってLLMやツールを動かす仕組みで、入力が同じなら毎回ほぼ同じ道筋をたどる。</li>
         <li><strong>AIエージェント</strong>は<mark>LLM自身が次に何をするか</mark>（どのツールを使うか、いつ終了するか）をループの中で動的に判断する仕組みで、道筋が実行ごとに変わりうる。</li>
-        <li>どちらが優れているという話ではなく、タスクの性質（手順が明確か／曖昧で探索が必要か）に応じて使い分けるべきものであり、実務では<mark>「まずワークフローで十分か」</mark>を検討し、必要な場合のみエージェント化するのが定石とされている。</li>
+        <li>どちらかが優れているわけではなく、タスクの性質（手順が明確か／曖昧で探索が必要か）に応じて使い分けるべきものである。実務では<mark>「まずワークフローで十分か」</mark>を検討し、必要な場合のみエージェント化するのが定石とされている。</li>
       </ol>
     </div>
 
@@ -518,7 +518,7 @@
           </tr>
           <tr>
             <td>AIエージェント<br>（AI Agent）</td>
-            <td>LLMが自分自身のプロセス（次のアクション、使うツール、終了判断）を動的に制御するシステム。あらかじめ決めた手順ではなく、その場の状況に応じてLLMが判断する。</td>
+            <td>LLMが自分自身のプロセス（次のアクション、使うツール、終了判断）を動的に制御するシステム。手順を事前に決めず、その場の状況に応じてLLMが判断する。</td>
           </tr>
           <tr>
             <td>制御フロー<br>（control flow）</td>
@@ -526,11 +526,11 @@
           </tr>
           <tr>
             <td>ツール使用<br>（tool use / function calling）</td>
-            <td>LLMが検索・DB照会・コード実行などの外部機能を呼び出す仕組み。エージェントの自律性の土台になる。</td>
+            <td>LLMが検索・DB照会・コード実行などの外部機能を呼び出す仕組み。エージェントが自律的に動くための前提になる。</td>
           </tr>
           <tr>
             <td>環境フィードバック<br>ループ</td>
-            <td>エージェントがツールを実行して得た結果（「地に足のついた」情報）を見て、次の一手を再評価する繰り返し処理。</td>
+            <td>エージェントがツールを実行して得た実際の結果を見て、次の一手を再評価する繰り返し処理。</td>
           </tr>
           <tr>
             <td>オーケストレーター<br>-ワーカー</td>
@@ -867,10 +867,10 @@
     <div class="callout caution">
       <span class="label">よくある誤解</span>
       <ul>
-        <li><strong>誤解1：エージェントは常にワークフローより高性能</strong> — 実際はツール数や判断ポイントが増えるほど<mark>エラーが複合化しやすく</mark>、単純なタスクではワークフローの方が速く安く安定する場合が多い。</li>
-        <li><strong>誤解2：チャットボット＝エージェント</strong> — 単にLLMと対話するだけの仕組みは、ツールを使って自律的に行動を選んでいなければ「エージェント」ではなく単なる会話インターフェースである。</li>
-        <li><strong>誤解3：エージェント的な自動化は従来の業務自動化（RPA等）の延長にすぎない</strong> — 事前に決めたルールをなぞる従来型自動化と異なり、エージェントは<mark>実行時に判断そのものを行う</mark>点が本質的に異なる。</li>
-        <li><strong>誤解4：エージェントは何でもできる万能な存在</strong> — エージェントの判断は学習データ・プロンプト・与えられたツールの成熟度に依存し、想定外の入力には弱い。過信は禁物。</li>
+        <li><strong>誤解1：エージェントは常にワークフローより高性能</strong>。実際はツール数や判断ポイントが増えるほど<mark>エラーが複合化しやすく</mark>、単純なタスクではワークフローの方が速く安く安定する場合が多い。</li>
+        <li><strong>誤解2：チャットボット＝エージェント</strong>。単にLLMと対話するだけの仕組みは、ツールを使って自律的に行動を選んでいなければ「エージェント」ではなく単なる会話インターフェースである。</li>
+        <li><strong>誤解3：エージェント的な自動化は従来の業務自動化（RPA等）の延長にすぎない</strong>。事前に決めたルールをなぞる従来型自動化と異なり、エージェントは<mark>実行時に判断そのものを行う</mark>点が根本から違う。</li>
+        <li><strong>誤解4：エージェントは何でもできる万能な存在</strong>。エージェントの判断は学習データ・プロンプト・与えられたツールの成熟度に依存し、想定外の入力には弱い。過信は禁物。</li>
       </ul>
     </div>
     <div class="callout caution">
@@ -885,7 +885,7 @@
 
     <h2 id="s6">確認問題</h2>
     <details class="quiz">
-      <summary>問1. 「ワークフロー」と「AIエージェント」の最も本質的な違いを一言で説明すると、どのような違いか。</summary>
+      <summary>問1. 「ワークフロー」と「AIエージェント」のいちばん大きな違いを一言で説明すると、どのような違いか。</summary>
       <div class="answer"><p>制御フロー（次にどう動くか）を誰が決めるかの違い。ワークフローは人間が事前にコードで決め、エージェントはLLM自身が実行時に動的に決める。</p></div>
     </details>
 
@@ -903,7 +903,7 @@
 
     <details class="quiz">
       <summary>問3. エージェントが「環境フィードバックループ」の中で動くとは、具体的にどういう動作を指すか。</summary>
-      <div class="answer"><p>LLMがツールを呼び出して結果（実行結果やデータなど）を取得し、その結果を見て状況を評価し、次に取るべきアクションを再判断する、という繰り返し処理のこと。あらかじめ決めた手順を淡々と実行するのではなく、毎ステップで方針を見直す点が特徴。</p></div>
+      <div class="answer"><p>LLMがツールを呼び出して結果（実行結果やデータなど）を取得し、その結果を見て状況を評価し、次に取るべきアクションを再判断する、という繰り返し処理のこと。あらかじめ決めた手順をそのままなぞらず、毎ステップで方針を見直す点が特徴。</p></div>
     </details>
 
     <details class="quiz">
@@ -918,12 +918,12 @@
 
     <h2 id="s7">参考リンク</h2>
     <ul class="refs">
-      <li><a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building Effective Agents（Anthropic 公式エンジニアリングブログ）</a> — ワークフローとエージェントの定義、代表的なワークフローパターン、設計原則の一次情報。</li>
-      <li><a href="https://www.promptingguide.ai/agents/ai-workflows-vs-ai-agents" target="_blank" rel="noopener">AI Workflows vs. AI Agents（Prompt Engineering Guide）</a> — 両者の制御フローの違いを整理した解説。</li>
-      <li><a href="https://retool.com/resources/ai-workflows-vs-agents" target="_blank" rel="noopener">AI agents vs AI workflows: key differences（Retool）</a> — 実務目線での使い分けの基準。</li>
-      <li><a href="https://orkes.io/blog/agentic-ai-explained-agents-vs-workflows" target="_blank" rel="noopener">Agentic AI Explained: Workflows vs Agents（Orkes）</a> — オーケストレーション観点からの比較。</li>
-      <li><a href="https://zenn.dev/loglass/articles/08a238976938a9" target="_blank" rel="noopener">万能なエージェントより、確実なワークフローを（Zenn / loglass）</a> — 自律型エージェントからワークフロー型への切り替え事例と、その理由。</li>
-      <li><a href="https://zenn.dev/headwaters/articles/07eaa3cd1da745" target="_blank" rel="noopener">AIエージェント - ワークフロー型とエージェント型（Zenn）</a> — 日本語での整理・分類の解説。</li>
+      <li><a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building Effective Agents（Anthropic公式エンジニアリングブログ）</a>：ワークフローとエージェントの定義、代表的なワークフローパターン、設計原則の一次情報。</li>
+      <li><a href="https://www.promptingguide.ai/agents/ai-workflows-vs-ai-agents" target="_blank" rel="noopener">AI Workflows vs. AI Agents（Prompt Engineering Guide）</a>：両者の制御フローの違いを整理した解説。</li>
+      <li><a href="https://retool.com/resources/ai-workflows-vs-agents" target="_blank" rel="noopener">AI agents vs AI workflows: key differences（Retool）</a>：実務目線での使い分けの基準。</li>
+      <li><a href="https://orkes.io/blog/agentic-ai-explained-agents-vs-workflows" target="_blank" rel="noopener">Agentic AI Explained: Workflows vs Agents（Orkes）</a>：オーケストレーション観点からの比較。</li>
+      <li><a href="https://zenn.dev/loglass/articles/08a238976938a9" target="_blank" rel="noopener">万能なエージェントより、確実なワークフローを（Zenn / loglass）</a>：自律型エージェントからワークフロー型への切り替え事例と、その理由。</li>
+      <li><a href="https://zenn.dev/headwaters/articles/07eaa3cd1da745" target="_blank" rel="noopener">AIエージェント-ワークフロー型とエージェント型（Zenn）</a>：日本語での整理・分類の解説。</li>
     </ul>
 
   </main>

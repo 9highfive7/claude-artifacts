@@ -500,7 +500,7 @@
           <tr><td>コンテナ（Container）</td><td>アプリケーションとその実行に必要なライブラリ・設定をまとめて隔離した、実行中の軽量な環境。</td></tr>
           <tr><td>イメージ（Image）</td><td>コンテナを作るための「読み取り専用のひな形」。OSの一部やアプリ、ライブラリなどが層（レイヤー）状に重なって構成される。</td></tr>
           <tr><td>Dockerfile</td><td>イメージの作り方を記述したテキストファイル。「どのベースイメージを使い、何をインストールし、何を実行するか」を命令として並べる。</td></tr>
-          <tr><td>レジストリ（Registry）</td><td>イメージを保存・配布する場所。公開レジストリの代表例が <strong>Docker Hub</strong>。</td></tr>
+          <tr><td>レジストリ（Registry）</td><td>イメージを保存・配布する場所。公開レジストリの代表例がDocker Hub。</td></tr>
           <tr><td>Docker Engine</td><td>コンテナを実際に動かす本体。ユーザーが使う「クライアント（CLI）」と、裏で動く「デーモン（dockerd）」から成る。</td></tr>
           <tr><td>Docker Compose</td><td>複数のコンテナをまとめて定義・起動するためのツール。YAMLファイルで構成を書く。</td></tr>
           <tr><td>ボリューム（Volume）</td><td>コンテナを削除してもデータを残しておくための永続化の仕組み。</td></tr>
@@ -514,10 +514,10 @@
     <p>Dockerの基本的な流れは次のようになる。</p>
     <div class="with-memo">
     <ol>
-      <li>開発者が <code>Dockerfile</code> を書く（「このOSをベースに、このライブラリを入れて、このコマンドで起動する」という手順書）。</li>
-      <li><code>docker build</code> コマンドで Dockerfile から <mark>イメージ</mark> を作成する。</li>
-      <li>イメージを <code>docker run</code> で実行すると、<mark>コンテナ</mark>（実行中のインスタンス）が起動する。</li>
-      <li>作成したイメージは <strong>レジストリ</strong>（Docker Hubなど）に <code>push</code> して保存・共有でき、他の人や別のサーバーはそこから <code>pull</code> して同じ環境を再現できる。</li>
+      <li>開発者が<code>Dockerfile</code>を書く（「このOSをベースに、このライブラリを入れて、このコマンドで起動する」という手順書）。</li>
+      <li><code>docker build</code>コマンドでDockerfileから<mark>イメージ</mark>を作成する。</li>
+      <li>イメージを<code>docker run</code>で実行すると、<mark>コンテナ</mark>（実行中のインスタンス）が起動する。</li>
+      <li>作成したイメージはレジストリ（Docker Hubなど）に<code>push</code>して保存・共有でき、他の人や別のサーバーはそこから<code>pull</code>して同じ環境を再現できる。</li>
     </ol>
     <aside class="memo">Dockerfile→イメージ→コンテナ＝設計図→型→実物</aside>
     </div>
@@ -589,7 +589,7 @@
         <text x="584" y="272" font-size="12.5" text-anchor="middle">別のサーバー /</text>
         <text x="584" y="294" font-size="12.5" text-anchor="middle">他の開発者のPC</text>
       </svg>
-      <figcaption><b>図1</b>　<code>Dockerfile</code>（手順書）を <code>docker build</code> すると<strong>イメージ</strong>ができ、それを <code>docker run</code> すると<strong>コンテナ</strong>が起動する。イメージをレジストリに <code>push</code> しておけば、別のサーバーや他の開発者が <code>pull</code> して同じ環境を再現できる。</figcaption>
+      <figcaption><b>図1</b>　<code>Dockerfile</code>（手順書）を<code>docker build</code>するとイメージができ、それを<code>docker run</code>するとコンテナが起動する。イメージをレジストリに<code>push</code>しておけば、別のサーバーや他の開発者が<code>pull</code>して同じ環境を再現できる。</figcaption>
     </figure>
 
     <h3>3-2. アーキテクチャの主要コンポーネント</h3>
@@ -597,8 +597,8 @@
       <table>
         <thead><tr><th>コンポーネント</th><th>役割</th></tr></thead>
         <tbody>
-          <tr><td>Docker クライアント</td><td>ユーザーが <code>docker run</code> などのコマンドを打ち込むインターフェース。</td></tr>
-          <tr><td>Docker デーモン（dockerd）</td><td>クライアントからの指示を受けて、実際にイメージのビルドやコンテナの起動・管理を行う本体プロセス。</td></tr>
+          <tr><td>Dockerクライアント</td><td>ユーザーが<code>docker run</code>などのコマンドを打ち込むインターフェース。</td></tr>
+          <tr><td>Dockerデーモン（dockerd）</td><td>クライアントからの指示を受けて、実際にイメージのビルドやコンテナの起動・管理を行う本体プロセス。</td></tr>
           <tr><td>レジストリ</td><td>イメージの保管・配布を行う。Docker Hubが代表例。</td></tr>
         </tbody>
       </table>
@@ -637,7 +637,7 @@
         <text x="612" y="134" font-size="13" font-weight="700" text-anchor="middle">レジストリ</text>
         <text x="612" y="200" font-size="12" text-anchor="middle" fill="var(--ink-2)">Docker Hub など</text>
       </svg>
-      <figcaption><b>図2</b>　ユーザーが触るのは<strong>クライアント（CLI）</strong>で、実際の処理は裏で動く<strong>デーモン（dockerd）</strong>が担当する。デーモンはレジストリとの間でイメージの <code>pull</code> / <code>push</code> も行う。</figcaption>
+      <figcaption><b>図2</b>　ユーザーが触るのはクライアント（CLI）で、実際の処理は裏で動くデーモン（dockerd）が担当する。デーモンはレジストリとの間でイメージの<code>pull</code> / <code>push</code>も行う。</figcaption>
     </figure>
 
     <h3>3-3. コンテナと仮想マシン（VM）の違い</h3>
@@ -743,7 +743,7 @@
         <rect x="374" y="364" width="294" height="34" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="1.2"/>
         <text x="521" y="386" font-size="13" text-anchor="middle">インフラ（物理ハードウェア）</text>
       </svg>
-      <figcaption><b>図3</b>　左の仮想マシンはハイパーバイザの上でVMごとに<strong>ゲストOS</strong>を起動する。右のコンテナはホストOSのカーネルを共有し、アプリとライブラリだけを隔離するため、その分だけ軽量で起動も速い。</figcaption>
+      <figcaption><b>図3</b>　左の仮想マシンはハイパーバイザの上でVMごとにゲストOSを起動する。右のコンテナはホストOSのカーネルを共有し、アプリとライブラリだけを隔離するため、その分だけ軽量で起動も速い。</figcaption>
     </figure>
 
     <h2 id="s4">具体例・使いどころ</h2>
@@ -752,7 +752,7 @@
     <p>「自分のPCでは動くのに、他の人のPCやサーバーでは動かない」という問題を防ぐため、Dockerfileに環境構築手順をコード化しておき、チーム全員・本番環境で<mark>同じイメージを使う</mark>、という使い方が代表的。</p>
 
     <h3>4-2. マイクロサービス・複数コンテナの管理</h3>
-    <p>Webサーバー、アプリケーションサーバー、データベースなど役割ごとにコンテナを分け、<mark>Docker Compose</mark> でまとめて起動・停止する構成がよく使われる。</p>
+    <p>Webサーバー、アプリケーションサーバー、データベースなど役割ごとにコンテナを分け、<mark>Docker Compose</mark>でまとめて起動・停止する構成がよく使われる。</p>
     <p>各サービスを独立して開発・デプロイできるマイクロサービス的な設計と相性がよい。</p>
     <pre><code># docker-compose.yml のイメージ例（簡略化）
 services:
@@ -781,11 +781,11 @@ volumes:
     <div class="callout caution">
       <span class="label">よくある誤解・注意点</span>
       <ul>
-        <li><strong>「コンテナ＝軽量な仮想マシン」ではない。</strong> ホストOSのカーネルを共有する仕組みであり、独立したOSを持つVMとは隔離のレベルが異なる。用途に応じて使い分けが必要。</li>
-        <li><strong>コンテナを削除すると<mark>データも消える</mark>。</strong> コンテナ内に保存したファイルはコンテナと一緒に消えるため、データベースなど残したいデータは<strong>ボリューム</strong>を使って永続化する必要がある。</li>
-        <li><strong>「Docker」＝「Docker Desktopの起動」ではない。</strong> Windows/Macでは裏でDocker Desktop（もしくはWSL2など）が動いている必要があり、これが起動していないだけの「動かない」トラブルが非常に多い。</li>
-        <li><strong>ポート衝突・権限エラーに注意。</strong> 指定したポートが既に使われている、LinuxでDockerグループに属していないためpermission deniedになる、といった初心者がつまずきやすいエラーがある。</li>
-        <li><strong>Dockerだけがコンテナランタイムではない。</strong> Kubernetesは v1.24 でDockerを直接のランタイムとして使うのをやめており、OCI（Open Container Initiative）標準に準拠したPodmanなど別のツールも普及しつつある。「コンテナ＝Docker」と決め打ちしない方がよい。</li>
+        <li><strong>「コンテナ＝軽量な仮想マシン」ではない。</strong>ホストOSのカーネルを共有する仕組みであり、独立したOSを持つVMとは隔離のレベルが異なる。用途に応じて使い分けが必要。</li>
+        <li><strong>コンテナを削除すると<mark>データも消える</mark>。</strong>コンテナ内に保存したファイルはコンテナと一緒に消えるため、データベースなど残したいデータはボリュームを使って永続化する必要がある。</li>
+        <li><strong>「Docker」＝「Docker Desktopの起動」ではない。</strong>Windows/Macでは裏でDocker Desktop（もしくはWSL2など）が動いている必要があり、これが起動していないだけの「動かない」トラブルが非常に多い。</li>
+        <li><strong>ポート衝突・権限エラーに注意。</strong>指定したポートが既に使われている、LinuxでDockerグループに属していないためpermission deniedになる、といった初心者がつまずきやすいエラーがある。</li>
+        <li><strong>Dockerだけがコンテナランタイムではない。</strong>Kubernetesはv1.24でDockerを直接のランタイムとして使うのをやめており、OCI（Open Container Initiative）標準に準拠したPodmanなど別のツールも普及しつつある。「コンテナ＝Docker」と決め打ちしない方がよい。</li>
       </ul>
     </div>
 
@@ -800,7 +800,7 @@ volumes:
     </details>
     <details class="quiz">
       <summary>Q3. Dockerfile、イメージ、レジストリの関係を、処理の流れの順に説明してください。</summary>
-      <div class="answer"><p>Dockerfileに環境構築の手順を書き、それを <code>docker build</code> することでイメージが作られる。作成したイメージは <code>docker run</code> でコンテナとして実行できるほか、レジストリ（Docker Hubなど）に push しておくことで、他の環境から pull して同じイメージを再利用できる。</p></div>
+      <div class="answer"><p>Dockerfileに環境構築の手順を書き、それを<code>docker build</code>することでイメージが作られる。作成したイメージは<code>docker run</code>でコンテナとして実行できるほか、レジストリ（Docker Hubなど）にpushしておくことで、他の環境からpullして同じイメージを再利用できる。</p></div>
     </details>
     <details class="quiz">
       <summary>Q4. コンテナ内で作成したデータをコンテナ削除後も残したい場合、どうすればよいですか。</summary>
@@ -813,14 +813,14 @@ volumes:
 
     <h2 id="s7">参考リンク</h2>
     <ul class="refs">
-      <li><a href="https://docs.docker.jp/get-started/overview.html" target="_blank" rel="noopener">Docker 概要 — Docker-docs-ja</a></li>
-      <li><a href="https://docs.docker.jp/registry/introduction.html" target="_blank" rel="noopener">Docker レジストリ の理解 — Docker-docs-ja</a></li>
+      <li><a href="https://docs.docker.jp/get-started/overview.html" target="_blank" rel="noopener">Docker概要 — Docker-docs-ja</a></li>
+      <li><a href="https://docs.docker.jp/registry/introduction.html" target="_blank" rel="noopener">Dockerレジストリの理解 — Docker-docs-ja</a></li>
       <li><a href="https://docs.docker.jp/engine/userguide/storagedriver/imagesandcontainers.html" target="_blank" rel="noopener">イメージ、コンテナ、ストレージ・ドライバについて — Docker-docs-ja</a></li>
-      <li><a href="https://docs.docker.jp/compose/index.html" target="_blank" rel="noopener">Docker Compose 概要 — Docker-docs-ja</a></li>
-      <li><a href="https://learn.microsoft.com/ja-jp/dotnet/architecture/microservices/container-docker-introduction/docker-containers-images-registries" target="_blank" rel="noopener">Docker コンテナー、イメージ、レジストリ - .NET | Microsoft Learn</a></li>
+      <li><a href="https://docs.docker.jp/compose/index.html" target="_blank" rel="noopener">Docker Compose概要 — Docker-docs-ja</a></li>
+      <li><a href="https://learn.microsoft.com/ja-jp/dotnet/architecture/microservices/container-docker-introduction/docker-containers-images-registries" target="_blank" rel="noopener">Dockerコンテナー、イメージ、レジストリ- .NET | Microsoft Learn</a></li>
       <li><a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/containers-vs-vm" target="_blank" rel="noopener">Containers vs. virtual machines | Microsoft Learn</a></li>
       <li><a href="https://www.atlassian.com/microservices/cloud-computing/containers-vs-vms" target="_blank" rel="noopener">Containers vs Virtual Machines | Atlassian</a></li>
-      <li><a href="https://www.kagoya.jp/howto/cloud/container/docker/" target="_blank" rel="noopener">【入門】Dockerとは？概要やメリット、インストール方法をわかりやすく解説 - カゴヤのサーバー研究室</a></li>
+      <li><a href="https://www.kagoya.jp/howto/cloud/container/docker/" target="_blank" rel="noopener">【入門】Dockerとは？概要やメリット、インストール方法をわかりやすく解説-カゴヤのサーバー研究室</a></li>
       <li><a href="https://en.wikipedia.org/wiki/Podman" target="_blank" rel="noopener">Podman - Wikipedia</a></li>
     </ul>
 
