@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code の拡張の全体像：CLAUDE.md・Skill・Hooks・サブエージェント・MCP・プラグイン | 学習ノート</title>
+</head>
+<body>
+<div class="page">
+
+  <nav class="toc" aria-label="目次">
+    <h2>もくじ</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組み・全体像</a>
+        <ul class="sub">
+          <li><a href="#s3-1">拡張の層と読み込みの流れ</a></li>
+          <li><a href="#s3-2">4観点の比較表</a></li>
+          <li><a href="#s3-3">ハーネスと Mods の位置づけ</a></li>
+          <li><a href="#s3-4">やりたいこと別の選び方</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a>
+        <ul class="sub">
+          <li><a href="#s4-1">リポジトリの .claude/ 構成</a></li>
+          <li><a href="#s4-1-3">実例：Hooks と log-usage.js</a></li>
+          <li><a href="#s4-1-6">実例：拡張の連携</a></li>
+          <li><a href="#s4-2">ほかにある拡張</a></li>
+        </ul>
+      </li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <article class="sheet">
+    <header class="cover">
+      <a class="back" href="../index.html">学習ノートに戻る</a>
+      <h1>Claude Code の拡張の全体像：どの仕組みをいつ使うか</h1>
+      <ul class="meta">
+        <li>作成日 2026-10-03</li>
+        <li>確認日 2026-10-03（公式ドキュメント code.claude.com を参照）</li>
+        <li>分野 AI／開発</li>
+      </ul>
+    </header>
+
+    <main class="prose">
+
+      <h2 id="s1">概要</h2>
+      <div class="callout summary">
+        <span class="label">3行でいうと</span>
+        <ol>
+          <li>Claude Codeの拡張は、モデルが読む指示（CLAUDE.md・Skill）、本体が実行する仕組み（Hooks・settings.json）、別の担い手を足す仕組み（サブエージェント・MCP）、それらを束ねる箱（プラグイン）に分けて考えると整理しやすい。</li>
+          <li>「必ず動かしたい」ことはCLAUDE.mdやSkillに書かず、Hooksとsettings.jsonのpermissionsに置く。前者はモデルが解釈する文脈で、後者は本体が強制する。</li>
+          <li>ハーネスは拡張の部品ではなく、モデルを包む層の全体を指す呼び名である。Modsはプラグインの一種として公式に位置づけられている。</li>
+        </ol>
+      </div>
+      <p>この文書の確認日は2026-10-03である。Claude Codeは更新が速いため、機能名や挙動は公式ドキュメントで再確認してほしい。公式ページで確かめられなかった項目は「未確認」と書き、推測では埋めていない。</p>
+      <p>扱うのはCLAUDE.md、Skill、Hooks、サブエージェント、MCP、settings.json、プラグイン、ハーネス、Modsの9項目である。比較は「いつ読み込まれるか」「誰が実行するか」「確実に動くか（決定的か）」「コンテキストを消費するか」の4観点で行う。説明の中で、このリポジトリ（claude-artifacts）の<code>.claude/</code>配下を実例として引用する。</p>
+
+      <h2 id="s2">基本用語</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>用語</th><th>意味</th></tr></thead>
+          <tbody>
+            <tr><td>コンテキスト</td><td>モデルが1回の応答で見る情報の全体。会話履歴、読んだファイル、CLAUDE.md、読み込み済みのSkillなどが入る。大きくなるほど余裕が減る</td></tr>
+            <tr><td>決定的</td><td>同じ条件なら毎回同じ結果になること。ここでは「発火や強制が保証されること」の意味で使う。モデルの解釈を挟むものは決定的ではない</td></tr>
+            <tr><td>CLAUDE.md</td><td>プロジェクトの規約や「いつもこうする」を書くmarkdown。毎セッションの開始時にコンテキストへ読み込まれる</td></tr>
+            <tr><td>Skill</td><td><code>SKILL.md</code>に書いた手順書や参考資料。説明文だけ常に見え、本文は使うときに読み込まれる。<code>/名前</code>で人が呼ぶことも、Claudeが自分で呼ぶこともできる</td></tr>
+            <tr><td>Hook</td><td>ライフサイクルのイベント（ツール実行の前後、セッション開始など）でClaude Code本体が動かす処理。シェルコマンド、HTTP、MCPツール、プロンプト、サブエージェントの5種類がある</td></tr>
+            <tr><td>サブエージェント</td><td>独立したコンテキストで動く作業役。結果の要約だけがメインの会話に戻る</td></tr>
+            <tr><td>MCP</td><td>外部サービスやツールをつなぐオープンな規格。Claude CodeがMCPクライアントになり、MCPサーバーのツールをClaudeが呼ぶ</td></tr>
+            <tr><td>settings.json</td><td>権限（permissions）、hooks、モデルなどを書く設定ファイル。管理者・コマンドライン・ローカル・プロジェクト・ユーザーの5階層がある</td></tr>
+            <tr><td>プラグイン</td><td>Skill、エージェント、Hooks、MCPサーバーなどを1つにまとめてインストールできる単位</td></tr>
+            <tr><td>ハーネス</td><td>モデルにツールを与え、見える情報（コンテキスト）を管理する周辺層の呼び名。公式ドキュメントの「How Claude Code works」に登場する</td></tr>
+            <tr><td>Mods</td><td>JavaScriptやTypeScriptの関数でイベントを処理し、画面の描画なども変えられるプラグイン</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>MCPの仕組みそのものは、既存ノート<a href="what-is-mcp.html">MCP（Model Context Protocol）とは何か</a>にまとまっている。ここではMCPを拡張の一部として位置づけるにとどめる。</p>
+
+      <h2 id="s3">仕組み・全体像</h2>
+
+      <h3 id="s3-1">拡張の層と読み込みの流れ</h3>
+      <p>Claude Codeの中心には、モデルが考えてツールで作業する「エージェントループ」（文脈を集める、行動する、結果を確かめる）がある。公式ドキュメントは、拡張をこのループの別々の場所に差し込む部品として説明している。</p>
+      <ul>
+        <li>常に見える文脈を足す：CLAUDE.md</li>
+        <li>必要なときに知識や手順を足す：Skill</li>
+        <li>外部のツールとデータをつなぐ：MCP</li>
+        <li>別の作業空間で動かす：サブエージェント</li>
+        <li>イベントで本体がスクリプトなどを動かす：Hooks</li>
+        <li>これらを配布用にまとめる：プラグイン</li>
+      </ul>
+      <!-- FIGURE: ここにエージェントループと各拡張の差し込み位置の図（CLAUDE.md=開始時に常駐、Skill=説明だけ常駐し本文は使用時、MCP=ツール名だけ常駐、サブエージェント=別コンテキスト、Hooks=イベント時に本体が実行、をループ図に重ねる） -->
+      <p>settings.jsonはこの部品群のどれとも少し性質が違う。モデルへの指示ではなく、本体の挙動（許可・拒否、フックの登録など）を決める設定である。公式の権限ページには「権限ルールはClaude Codeが強制するもので、モデルが強制するものではない。プロンプトやCLAUDE.mdの指示はClaudeが何を試みるかを左右するが、Claude Codeが何を許可するかは変えない」という趣旨の注記がある。</p>
+
+      <h3 id="s3-2">4観点の比較表</h3>
+      <p>次の表は、公式ドキュメント（Extend Claude Code、メモリ、Hooks、権限、プラグイン、Modsの各ページ）から確認できた内容をまとめたものである。ページに書かれていない欄は「未確認」としている。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>拡張9項目の比較（確認日2026-10-03）</caption>
+          <thead>
+            <tr><th>項目</th><th>いつ読み込まれるか</th><th>誰が実行するか</th><th>確実に動くか（決定的か）</th><th>コンテキストを消費するか</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CLAUDE.md</td>
+              <td>セッション開始時に全文。作業ディレクトリから上位のファイルは起動時、サブディレクトリのものはそこで作業したとき</td>
+              <td>誰も実行しない。モデルが文脈として読む</td>
+              <td>決定的ではない。公式は「文脈であって強制される設定ではない」と明記</td>
+              <td>消費する。全文が毎リクエストに乗る。200行以内が目安</td>
+            </tr>
+            <tr>
+              <td>Skill</td>
+              <td>名前と説明はセッション開始時。本文は<code>/名前</code>で呼ばれたとき、またはClaudeが必要と判断したとき</td>
+              <td>Claudeが本文を読んで従う。起動は人でもClaudeでもよい</td>
+              <td>決定的ではない。「Claudeが指示を解釈し、結果は変わりうる」と公式が説明</td>
+              <td>説明文だけ常時。本文は使用時。<code>disable-model-invocation: true</code>なら呼ぶまで説明も入らない</td>
+            </tr>
+            <tr>
+              <td>Hooks</td>
+              <td>設定ファイルに登録しておき、対応するイベントが起きたとき</td>
+              <td>Claude Code本体が、シェルコマンド・HTTP・MCPツール・プロンプト・サブエージェントのいずれかを動かす</td>
+              <td>発火は保証される。command・http・mcp_tool型は固定ロジックで決定的。prompt・agent型はLLMを使う</td>
+              <td>原則ゼロ。フックが出力を返したときだけ、その分が会話に入る</td>
+            </tr>
+            <tr>
+              <td>サブエージェント</td>
+              <td>人またはClaudeが呼び出したとき。新しい空のコンテキストで始まる</td>
+              <td>別コンテキストで動くClaude。委任するかどうかもClaudeがdescriptionを見て判断する</td>
+              <td>決定的ではない。モデルが判断して動く</td>
+              <td>メインのコンテキストとは分離され、要約だけが戻る。ただし別枠で自分のトークンは使う</td>
+            </tr>
+            <tr>
+              <td>MCP</td>
+              <td>セッション開始時にツール名とサーバーの説明。詳しいスキーマは必要になってから（ツール検索が既定で有効）</td>
+              <td>MCPサーバーのプロセスがツールを実行する。Claudeは呼ぶ側で、コードを直接動かさない</td>
+              <td>呼ぶかどうかはモデルの判断で決定的ではない。呼ばれた後の中身はサーバー側のコードで動く</td>
+              <td>使うまでは少ない。使うと結果がコンテキストに入る</td>
+            </tr>
+            <tr>
+              <td>settings.json</td>
+              <td>起動時に読む。5階層（管理者、コマンドライン、ローカル、プロジェクト、ユーザー）で上位が優先</td>
+              <td>Claude Code本体（モデルではない）</td>
+              <td>権限ルールは本体が強制する。判定順はdeny、ask、allow</td>
+              <td>設定ファイル全体がコンテキストに入るかは未確認。ツール名だけのdenyルールは、そのツールをコンテキストから消す</td>
+            </tr>
+            <tr>
+              <td>プラグイン</td>
+              <td>インストールして有効にした後、セッション起動時（途中なら<code>/reload-plugins</code>）</td>
+              <td>中身による。SkillはClaude、Hooksは本体、MCPサーバーはそのプロセス</td>
+              <td>中身による。プラグイン自体に決定性はない</td>
+              <td>有効な間は、Claudeが自分で呼べるSkill・エージェントの名前と説明が毎ターン入る。本文は使用時</td>
+            </tr>
+            <tr>
+              <td>ハーネス</td>
+              <td>該当しない（拡張の部品ではなく、全体の呼び名）</td>
+              <td>該当しない</td>
+              <td>該当しない</td>
+              <td>該当しない</td>
+            </tr>
+            <tr>
+              <td>Mods</td>
+              <td>プラグインとして有効になったとき（途中なら<code>/reload-plugins</code>）。Claude Code v2.1.287以降で既定で有効</td>
+              <td>Claude Codeのプロセス内で、プラグインに入ったJavaScript・TypeScriptの関数が動く</td>
+              <td>イベントが起きたら、本体が先にその関数を呼ぶ。関数の中身は書いたコード次第。LLMを介するかどうかは書き方による</td>
+              <td>未確認。公式の概要ページに一律の記載はない。プロンプトを書き換える処理は可能と書かれている</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout note">
+        <span class="label">補足</span>
+        <p>「決定的」の意味は欄によって少し違う。Hooksでは「イベントが起きたら必ず動く」という発火の保証を指す。settings.jsonのpermissionsでは「本体が必ず強制する」を指す。CLAUDE.mdとSkillは、どちらもモデルが読んで従うかどうかを決めるため、この意味では保証がない。</p>
+      </div>
+
+      <h3 id="s3-3">ハーネスとModsの位置づけ</h3>
+      <p>定義があいまいな2項目は、公式ドキュメントでの扱いを先に確認した。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>用語</th><th>公式での位置づけ</th><th>確認できたこと</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>ハーネス</td>
+              <td>全体の呼び名。拡張の部品ではない</td>
+              <td>「How Claude Code works」に、Claude Codeはツールを提供しモデルの見る情報を管理する周辺層であり、この層をagentic harnessと呼ぶ、という趣旨の記述がある。専用の解説ページはllms.txtの目次に見当たらない。Anthropic以外の解説記事でも同様の意味で使われているが、一次情報ではないので定義には採用していない</td>
+            </tr>
+            <tr>
+              <td>Mods</td>
+              <td>プラグインの一種（拡張の部品）</td>
+              <td>「modは、Claude Codeの見た目と振る舞いを変えるプラグイン」と定義されている。イベントハンドラをJavaScript・TypeScriptで書き、Claude Code自身のプロセス内で動く。画面のペイン描画、ツール呼び出しへの介入、独自の<code>/コマンド</code>の追加ができる。プレビュー等の表記は取得した本文に見当たらない（未確認）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>ModsとHooksは名前が紛らわしい。Modsのページは、Claude Codeが両方をhooksと呼ぶと断ったうえで、設定ファイルに書くものを「settings hook」、modの関数を「hook」と区別している。settings hookは外部のスクリプトを動かし、modは本体の内側で動く。そのためmodには画面を描くことができるが、settings hookにはできない。</p>
+      <p>Modsはユーザーの権限で動くコードで、サンドボックスの外で子プロセスを起動できる。公式は信頼できる作者と配布元のものだけを入れるよう警告している。この種のリスクは<a href="ai-security.html">AIセキュリティ入門 — 守る側のための教科書</a>が扱うエージェントやサプライチェーンの話と同じ筋にある。</p>
+
+      <h3 id="s3-4">やりたいこと別の選び方</h3>
+      <p>公式の「Extend Claude Code」には、困りごとのきっかけから追加する拡張を選ぶ表がある。それを元に、判断の順序を次の表にした。上から順に当てはめる。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>やりたいこと</th><th>使うもの</th><th>理由</th></tr></thead>
+          <tbody>
+            <tr><td>毎回知っておいてほしい規約・コマンド・構成を伝える</td><td>CLAUDE.md</td><td>毎セッション自動で読まれる。公式は「同じ間違いを2回したら足す」を目安にしている</td></tr>
+            <tr><td>これだけは必ず守らせたい禁止事項（例: force push禁止）</td><td>settings.jsonのpermissions（deny）、またはPreToolUseのHook</td><td>本体が強制する。CLAUDE.mdへの一文は「お願い」にとどまる</td></tr>
+            <tr><td>編集のたびに整形する、実行のたびに記録する、のように毎回必ず動かす</td><td>Hooks</td><td>イベントで確実に発火し、判断が要らない処理に向く</td></tr>
+            <tr><td>同じ手順書を毎回貼っている、<code>/名前</code>で始めたい</td><td>Skill</td><td>必要なときだけ本文が入る。手順の適用はClaudeが考える</td></tr>
+            <tr><td>大量のファイルを読む調べ物で、結果の要約だけがほしい</td><td>サブエージェント</td><td>作業がメインのコンテキストを汚さない</td></tr>
+            <tr><td>外部サービスのデータや操作が必要（DB、Slack、ブラウザなど）</td><td>MCP</td><td>接続と認証をサーバー側が担う。使い方の知識はSkillと組み合わせる</td></tr>
+            <tr><td>数十から数百のエージェントを動かし、結果を相互検証したい</td><td>Dynamic workflows</td><td>進行をスクリプトが握る。詳細は下の「ほかにある拡張」</td></tr>
+            <tr><td>別のリポジトリや他の人にも同じ設定を配りたい</td><td>プラグイン</td><td>Skill・エージェント・Hooks・MCPを1単位で配布できる</td></tr>
+            <tr><td>画面に自作のパネルを出す、ツール呼び出しやプロンプトを書き換える</td><td>Mods</td><td>本体の内側で動くので、外側の仕組みでは届かない領域を扱える</td></tr>
+            <tr><td>応答の口調・長さ・形式を変えたい</td><td>Output style</td><td>公式の機能一覧にある。CLAUDE.mdは「何を知るか」、Output styleは「どう答えるか」</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- FIGURE: やりたいこと別の判断フロー（起点は「やりたいこと」。分岐1=毎回必ず起きなければならないか→はい: 本体が強制する Hooks / permissions、いいえ→分岐2へ。分岐2=外部サービスが要るか→はい: MCP。分岐3=作業の途中経過でコンテキストが膨らむか→はい: サブエージェント。分岐4=手順書や参考資料か→はい: Skill、毎回知っておく規約なら CLAUDE.md。最後に、複数リポジトリへ配るなら全体をプラグインで包む） -->
+      <p>図の元になる考え方は2つの問いに絞れる。1つ目は「モデルが守らなくても必ず起きなければならないか」で、はいならHooksかpermissionsを選ぶ。2つ目は「常に必要か、ときどき必要か」で、常にならCLAUDE.md、ときどきならSkillを選ぶ。そのうえで、外部につなぐならMCP、作業を分離するならサブエージェント、配るならプラグインを足す。</p>
+      <p>確実性が高いものほど融通が利かず、融通が利くものほど確実性が下がる。確実さが必要な処理はHooksとpermissionsに、判断が必要な処理はSkillとサブエージェントに任せる、という分担になる。この「手順をコードで固定するか、モデルに任せるか」の軸は、既存ノート<a href="ai-agents-vs-workflows.html">AIエージェントとワークフローの違い</a>の整理とほぼ同じ構図である。</p>
+
+      <h2 id="s4">具体例・使いどころ</h2>
+
+      <h3 id="s4-1">リポジトリの .claude/構成</h3>
+      <p>このリポジトリは、学習レポートをHTMLにしてGitHub Pagesで公開するためのものである。次の対応表のとおり、拡張の多くを実際に使っている。なお<code>.mcp.json</code>、<code>.claude/rules/</code>、<code>.claude/workflows/</code>、<code>.claude/commands/</code>、<code>settings.local.json</code>は見つからなかった（2026-10-03時点）。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>拡張</th><th>このリポジトリでの実体</th><th>使い方</th></tr></thead>
+          <tbody>
+            <tr><td>CLAUDE.md</td><td>リポジトリ直下の<code>CLAUDE.md</code></td><td>構成とルールを書いている</td></tr>
+            <tr><td>settings.json</td><td><code>.claude/settings.json</code></td><td>permissionsとhooksを定義している</td></tr>
+            <tr><td>Hooks</td><td><code>.claude/hooks/log-usage.js</code></td><td>git pushの直後にコストを記録する</td></tr>
+            <tr><td>サブエージェント</td><td><code>.claude/agents/researcher.md</code>、<code>designer.md</code></td><td>調査・初稿と、デザイン仕上げを分担する</td></tr>
+            <tr><td>Skill</td><td><code>.claude/skills/</code>のreport、readable-html-layout、yomiyasu</td><td>作業手順と、レイアウトや文章の基準を持つ</td></tr>
+            <tr><td>MCP</td><td>なし（<code>.mcp.json</code>が存在しない）</td><td>このリポジトリでは使っていない</td></tr>
+            <tr><td>プラグイン・Mods</td><td>settings.jsonに有効化の記載なし</td><td>使っていない</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s4-1-1">実例：CLAUDE.md</h3>
+      <p>CLAUDE.mdには「出力・報告はすべて日本語」「ファイル名は<code>reports/&lt;英小文字とハイフンのスラッグ&gt;.html</code>」「<code>git push --force</code>は絶対に使わない」などが書かれている。これらは毎セッションの文脈として読まれる。</p>
+      <p>注目点はforce pushの扱いである。CLAUDE.mdの一文だけでは「お願い」だが、このリポジトリはsettings.jsonのdenyにも同じ禁止を重ねている。確実に止めたい項目を二重にしている例である。</p>
+
+      <h3 id="s4-1-2">実例：settings.jsonのpermissions</h3>
+      <p><code>.claude/settings.json</code>の<code>permissions</code>は次のとおりである（抜粋）。</p>
+      <pre><code>"allow": [ "WebSearch", "WebFetch", "Read",
+           "Edit(reports/**)", "Edit(index.html)",
+           "Bash(git status)", "Bash(git add:*)", "Bash(git commit:*)",
+           "Bash(git push origin main)", "Bash(git log:*)", ... ],
+"deny":  [ "Bash(git push --force:*)", "Bash(git push -f:*)" ]</code></pre>
+      <p>編集は<code>reports/</code>配下と<code>index.html</code>に限り、pushは<code>origin main</code>だけを許している。公式の判定順はdeny、ask、allowの順で、最初に当たったものが結果になる。denyに当たるforce pushは、allowに似たルールがあっても止まる。この強制は本体が行うので、モデルの気分に左右されない。</p>
+
+      <h3 id="s4-1-3">実例：Hooksとlog-usage.js</h3>
+      <p>同じsettings.jsonの<code>hooks</code>では、<code>PostToolUse</code>に<code>"matcher": "Bash|PowerShell"</code>を指定し、<code>node ".../.claude/hooks/log-usage.js"</code>を<code>timeout: 40</code>で動かしている。</p>
+      <p>matcherはBashツールの実行ごとに当たるため、フックはgit以外のコマンドでも毎回起動する。絞り込みはスクリプト側の正規表現（<code>/\bgit\s+push\b/</code>）が担っている。pushが失敗していたら記録せず、成功していれば会話ログからトークン数を集計し、<code>reports/usage-log.csv</code>に追記して自分でcommitとpushを行う。末尾の<code>process.exit(0)</code>により、失敗してもメインの作業を止めない。</p>
+      <p>PostToolUseはツールがすでに動いた後なので、止める用途には使えない。このリポジトリのフックは「記録する」だけで、判断をモデルに任せる必要がない。Hooksが得意とする処理にあたる。フックの中のpushはClaudeのBashツールを通らず、スクリプトが直接gitを呼んでいるので、フック自身をもう一度起動する構造にはなっていない。</p>
+
+      <h3 id="s4-1-4">実例：サブエージェントの定義</h3>
+      <p><code>.claude/agents/</code>の2つは、frontmatterの書き方が違う。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>researcher.md</th><th>designer.md</th></tr></thead>
+          <tbody>
+            <tr><td>description</td><td>学習テーマをWebで調べ、reports/にHTMLの初稿を作る。/reportスキルの調査工程で使う</td><td>researcherが作ったHTMLを「書き込みノート」デザインで仕上げる。/reportスキルの仕上げ工程で使う</td></tr>
+            <tr><td>tools</td><td>WebSearch, WebFetch, Read, Write, Glob</td><td>記載なし（省略時の既定の扱いは今回確認できず、未確認）</td></tr>
+            <tr><td>model</td><td><code>claude-sonnet-5-5</code></td><td><code>claude-opus-5-5</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>researcherはtoolsを明示してBashやEditを持たせず、調査と書き出しに必要な道具だけを渡している。モデルはフルIDで固定している。reportスキルには「別名のsonnetを渡すと版が変わることがあるので、定義のIDをそのまま使う」という趣旨の注意がある。公式ドキュメントでは、modelに<code>sonnet</code>などの別名とフルIDの両方を書けるとされている。</p>
+      <p>この2つは、スキルから順番に呼ばれる分業役である。委任するかどうかはdescriptionを読んだClaudeが決める仕組みなので、descriptionには「どの工程で使うか」まで書いてある。</p>
+
+      <h3 id="s4-1-5">実例：Skillの定義</h3>
+      <p><code>.claude/skills/</code>には3つのSkillがあり、それぞれ<code>SKILL.md</code>のfrontmatterにnameとdescriptionを持つ。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Skill</th><th>役割</th><th>frontmatterの特徴</th></tr></thead>
+          <tbody>
+            <tr><td>report</td><td>テーマを受け取り、調査、HTML作成、デザイン、index更新、push、報告まで一括で行う</td><td><code>argument-hint: &lt;学びたいテーマ&gt;</code>を持つ。<code>/report</code>で呼べる。「〇〇をレポートにして」と頼んでも使われる</td></tr>
+            <tr><td>readable-html-layout</td><td>読みやすいHTMLレイアウトの数値基準と判断の目安</td><td>descriptionが長く、使う場面を細かく列挙している。Claudeが自動で選ぶための手がかり</td></tr>
+            <tr><td>yomiyasu</td><td>AIっぽい日本語を自然な文章に直す</td><td><code>license: MIT</code>と<code>argument-hint</code>を持つ。plugin形式のファイル（<code>.claude-plugin/</code>）も同梱されているが、このリポジトリでは<code>.claude/skills/</code>に置いている</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>reportのSKILL.mdは、調査をresearcher、仕上げをdesignerに渡し、間にyomiyasuを挟む手順書である。つまりSkillが全体の段取りを持ち、サブエージェントが作業を担い、フックが最後に記録する。拡張同士を組み合わせた典型例で、公式の「Skill + Subagent」「Hook +外部処理」の型に近い。</p>
+      <p>reportは<code>.claude/skills/report/extract_text.py</code>という補助スクリプトも持つ。Skillはフォルダ単位で、SKILL.mdのほかに実行用のファイルを置ける。</p>
+
+      <h3 id="s4-1-6">実例：拡張の連携</h3>
+      <p>ここまでの流れを1本にすると、次のようになる。</p>
+      <ol>
+        <li>人が<code>/report テーマ</code>を実行する。Skill（report）の本文が読み込まれる。</li>
+        <li>Skillの手順に従い、Claudeがresearcher、次にdesignerを呼ぶ（サブエージェント）。</li>
+        <li>各工程で、settings.jsonのpermissionsが許可・拒否を判定する。</li>
+        <li>最後に<code>git push origin main</code>が成功すると、PostToolUseのフックが動き、コストを記録する。</li>
+      </ol>
+      <!-- FIGURE: ここに /report 実行時の流れの図（人 → Skill → サブエージェント2種 → permissions の判定 → git push → Hook の順で、どこがモデルの判断でどこが本体の強制かを色分けせず枠線の種類で区別する） -->
+      <p>このうち1と2はモデルが解釈する部分で、3と4は本体が確実に動かす部分である。確実性の高い処理が後ろに寄っているので、途中のモデルの揺れが記録や権限を壊しにくい。</p>
+
+      <h3 id="s4-2">ほかにある拡張</h3>
+      <p>公式ドキュメントの目次（2026-10-03時点）には、主題の9項目以外にも次の機能がある。名前の紹介にとどめる。</p>
+      <ul>
+        <li><strong>Dynamic workflows</strong>：Claudeが書いたJavaScriptのスクリプトが多数のサブエージェントを動かし、最終結果だけを返す。次に何を動かすかを決めるのがモデルではなくスクリプトである点が、サブエージェント単体との違い。詳しくは<a href="dynamic-workflows.html">Dynamic Workflows 実践ガイド — Claude Code</a>を参照。</li>
+        <li><strong>Routines</strong>：保存したプロンプト・リポジトリ・コネクタを、スケジュール、API呼び出し、GitHubイベントでAnthropicのクラウド上で自動実行する。公式ページには「research preview」と明記されており、挙動や上限が変わる可能性がある。</li>
+        <li><strong>Output styles</strong>：役割・口調・応答形式をセッション単位で切り替える。</li>
+        <li><strong>Cross-session messaging、Agent teams、Artifacts</strong>：セッション間の連絡、複数セッションの協調、出力の共有ページ化。詳細は今回未確認。</li>
+      </ul>
+
+      <h2 id="s5">注意点・よくある誤解</h2>
+      <div class="callout caution">
+        <span class="label">よくある誤解1</span>
+        <p>「CLAUDE.mdに書けば必ず守られる」は誤り。公式はCLAUDE.mdを文脈として扱い、強制される設定ではないと明記している。書き方が具体的で短いほど守られやすいが、保証にはならない。必ず守らせたいことはHooksかpermissionsに置く。</p>
+      </div>
+      <div class="callout caution">
+        <span class="label">よくある誤解2</span>
+        <p>「Skillは呼ばれたら確実に同じ手順で動く」も誤り。SkillはClaudeが読んで従う指示で、結果は変わりうる。また、会話が長くなって圧縮されると内容が削られることがあり、公式は「必ず守らせたいルールはHookにする」と案内している。</p>
+      </div>
+      <div class="callout caution">
+        <span class="label">よくある誤解3</span>
+        <p>「Hooksは何でも止められる」とは限らない。止められるかはイベントで決まる。PreToolUseは実行前に止められるが、このリポジトリで使っているPostToolUseはツールがすでに動いた後なので止められない。用途が違う。</p>
+      </div>
+      <div class="callout caution">
+        <span class="label">よくある誤解4</span>
+        <p>「ハーネスはClaude Codeの機能の1つ」ではない。公式ドキュメントの使い方では、Claude Codeが提供するツールとコンテキスト管理の層全体を指す呼び名である。SkillやHooksと並べて「どれを選ぶか」を考える対象ではない。</p>
+      </div>
+      <div class="callout caution">
+        <span class="label">よくある誤解5</span>
+        <p>「ModsはHooksの新しい呼び名」でもない。Modsはプラグインの一種で、本体の内側で動く関数である。設定ファイルに書くHooksは外側で動くスクリプトで、画面は描けない。公式はどちらもhookと呼ぶと断っているため、文書を読むときは「settings hook」か「modのhook」かを確かめる。</p>
+      </div>
+      <div class="callout note">
+        <span class="label">補足：入れすぎにも注意</span>
+        <p>公式は、拡張を足すほどコンテキストを消費し、Skillが正しく選ばれなくなったり、規約を見失ったりしうると述べている。プラグインは有効にしている間、使わないセッションでもSkillやエージェントの名前と説明がコンテキストに入る。最初から全部を入れず、困りごとが出てから1つずつ足す方針が公式でも勧められている。</p>
+      </div>
+      <div class="callout note">
+        <span class="label">補足：信頼できるものだけを入れる</span>
+        <p>プラグイン、Mods、MCPサーバーは、自分の権限で動くコードや、外部の内容を持ち込む入口になる。公式も、信頼できる配布元のものだけを入れ、MCPは接続前にサーバーを確認するよう警告している。プロンプトインジェクションの観点は<a href="ai-security.html">AIセキュリティ入門 — 守る側のための教科書</a>を参照。プラグインの概念は<a href="claude-cowork-guide.html">Claude Cowork でできること — はじめての人のための活用ガイド</a>にも出てくる。</p>
+      </div>
+
+      <h2 id="s6">確認問題</h2>
+      <details class="quiz">
+        <summary>Q1. 「このファイルは絶対に編集させない」を実現したい。CLAUDE.mdへの一文と、settings.jsonのdenyルールやPreToolUseのHookでは、何が違うか。</summary>
+        <div class="answer"><p>CLAUDE.mdは文脈であり、モデルが従うかどうかは保証されない。denyルールやPreToolUseのHookはClaude Code本体が実行前に判定して止めるので、モデルの判断に関わらず強制される。確実さが必要なら後者を使う。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q2. SkillとCLAUDE.mdの読み込みタイミングの違いを説明せよ。</summary>
+        <div class="answer"><p>CLAUDE.mdはセッション開始時に全文が読み込まれ、毎リクエストに乗る。Skillは名前と説明だけが開始時に入り、本文は呼ばれたとき（人が<code>/名前</code>と打つか、Claudeが必要と判断したとき）に読み込まれる。「毎回必要」ならCLAUDE.md、「ときどき必要」ならSkillが向く。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q3. このリポジトリのlog-usage.jsがPostToolUseのHookで適しているのはなぜか。</summary>
+        <div class="answer"><p>やることが「git pushの成功後にコストを記録する」という固定の処理で、モデルの判断が要らないため。Hooksは対応イベントで確実に発火し、フックの出力を返さない限りコンテキストを消費しない。ツールの実行後に動くPostToolUseなので、止める用途ではなく記録の用途に合っている。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q4. ハーネスとModsは、9項目の比較表の中でそれぞれどう扱われるか。</summary>
+        <div class="answer"><p>ハーネスは拡張の部品ではなく、モデルにツールを与えコンテキストを管理する周辺層（Claude Codeそのもの）の呼び名なので、4観点は該当しない。Modsは公式にプラグインの一種とされ、Claude Codeのプロセス内でJavaScript・TypeScriptの関数としてイベントを処理する。コンテキスト消費については公式の一律の記載が未確認である。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q5. 大量のファイルを読んで調べ物をさせたいが、メインの会話を汚したくない。どの拡張を選び、何が会話に戻るか。</summary>
+        <div class="answer"><p>サブエージェントを選ぶ。独立したコンテキストで作業し、メインの会話には結果の要約だけが戻る。規模がさらに大きくなり、数十以上のエージェントを動かしたいならDynamic workflowsを検討する。</p></div>
+      </details>
+
+      <h2 id="s7">参考リンク</h2>
+      <p>確認日はすべて2026-10-03。</p>
+      <ul class="refs">
+        <li><a href="https://code.claude.com/docs/en/features-overview">Extend Claude Code</a>（拡張の全体比較、コンテキストコスト、組み合わせ方。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/how-claude-code-works">How Claude Code works</a>（エージェントループ、ハーネスという語の使われ方。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/memory">How Claude remembers your project</a>（CLAUDE.mdは文脈であり強制ではない。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/skills">Extend Claude with skills</a>（SKILL.mdの書式と置き場所。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/sub-agents">Create custom subagents</a>（frontmatter、委任の仕組み。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/hooks">Hooks reference</a>（イベント、ハンドラの種類、終了コード。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/mcp">Connect Claude Code to tools via MCP</a>（スコープ、ツール検索、セキュリティ警告。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/settings">Settings files and precedence</a>（5階層の優先順位。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/permissions">Configure permissions</a>（deny、ask、allowの判定順と本体による強制。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/plugins/overview">Plugins overview</a>（プラグインの構成と、有効時にコンテキストへ加わるもの。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/plugins/mods/overview">Mods overview</a>（Modsはプラグインの一種。Hooksとの違い。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/workflows">Orchestrate subagents at scale with dynamic workflows</a>（確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/en/routines">Automate work with routines</a>（research previewの記載あり。確認日2026-10-03）</li>
+        <li><a href="https://code.claude.com/docs/llms.txt">Claude Codeドキュメント目次（llms.txt）</a>（ページ一覧。確認日2026-10-03）</li>
+      </ul>
+
+    </main>
+
+    <footer>
+      <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+    </footer>
+  </article>
+</div>
+</body>
+</html>
