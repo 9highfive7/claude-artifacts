@@ -26,6 +26,7 @@ researcher サブエージェントを呼び出す。model は指定しない（
    python3 .claude/skills/report/extract_text.py reports/<slug>.html /tmp/<slug>.md
    python3 .claude/skills/yomiyasu/scripts/yomiyasu_lint.py /tmp/<slug>.md
    ```
+   Windows では `python3` が使えない（Microsoft Store の空のスタブになる）。`python` か `py` に読み替え、出力先も `$env:TEMP\<slug>.md` にする。`python3` が失敗したら、Python を入れずに手作業へ進まず、まず `python` と `py` を試す
    `bold_not_rendered`（太字の記号）は Markdown 向けの指摘で、HTML では関係ないので無視する。「装置」のように技術用語として正しい語の指摘も無視する
 3. 候補と本文全体を見て、HTML の該当箇所を直接書き直す。直すのは主に次のもの
    - 不要な「AではなくB」（否定しても主張が変わらないもの）。誤解を正す否定は残す
