@@ -451,6 +451,18 @@
 <!-- notebook-ui:end -->
 <style>
   /* このレポートだけで使うスタイル（必要なときだけ書く。色は上の CSS 変数を使う） */
+  /* やさしく図解（試作）: 大きな絵と少ない言葉。縦長の図にして、スマホでも図の文字を12px前後に保つ */
+  .eli5 { max-width: 440px; margin: var(--sp-4) auto; }
+  .eli5 .nb-fig, .eli5 figure { margin: 0; }
+  .prose :is(h2, h3, h4) + .eli5 { margin-top: 0; }
+  .eli5-label {
+    display: inline-block; margin: 0 0 var(--sp-2); padding: 0 12px;
+    font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.6; letter-spacing: 0;
+    color: var(--blue-ink); border: 1.5px dashed var(--blue-ink); border-radius: 10px;
+  }
+  @media (max-width: 600px) {
+    .eli5 figure > svg { padding: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -652,6 +664,42 @@
     </div>
 
     <h4>直接と間接の違い</h4>
+
+    <div class="eli5">
+      <span class="eli5-label">やさしく図解</span>
+      <figure>
+        <svg viewBox="0 0 360 430" role="img" aria-label="AIが読み込んだメールの中に命令が隠れていると、AIはその命令にも従い、データが外へ送られる。あなたにはそれが見えない。">
+          <title>間接プロンプトインジェクションの流れ</title>
+          <defs><marker id="e1-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <line x1="22" y1="79" x2="22" y2="185" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+          <line x1="22" y1="217" x2="22" y2="323" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+          <circle cx="22" cy="62" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="68" text-anchor="middle" font-size="16" font-weight="700">1</text>
+          <g transform="translate(84 66)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+          <text x="84" y="108" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+          <line x1="114" y1="62" x2="238" y2="62" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+          <text x="176" y="46" text-anchor="middle" font-size="16">「要約して」</text>
+          <g transform="translate(270 66)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+          <text x="270" y="108" text-anchor="middle" font-size="16" font-weight="700">AI</text>
+          <circle cx="22" cy="200" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="206" text-anchor="middle" font-size="16" font-weight="700">2</text>
+          <text x="84" y="164" text-anchor="middle" font-size="16" font-weight="700">メール</text>
+          <g transform="translate(84 196)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-16" width="48" height="32" rx="4"/><path d="M-24 -16 L0 4 L24 -16"/></g>
+          <rect x="34" y="226" width="100" height="32" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="84" y="248" text-anchor="middle" font-size="16" font-weight="700">隠れた命令</text>
+          <line x1="114" y1="196" x2="238" y2="196" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+          <text x="176" y="180" text-anchor="middle" font-size="16">読み込む</text>
+          <g transform="translate(270 200)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+          <circle cx="22" cy="338" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="344" text-anchor="middle" font-size="16" font-weight="700">3</text>
+          <g transform="translate(84 342)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+          <line x1="114" y1="338" x2="238" y2="338" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+          <text x="176" y="322" text-anchor="middle" font-size="16">従ってしまう</text>
+          <rect x="244" y="308" width="108" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="298" y="334" text-anchor="middle" font-size="16">データが外へ</text>
+          <text x="298" y="354" text-anchor="middle" font-size="16">送られる</text>
+          <text x="180" y="410" text-anchor="middle" font-size="16" font-weight="700">あなたには見えない</text>
+        </svg>
+        <figcaption><b>図1</b>間接プロンプトインジェクションの流れ（イメージ）。読み込んだ文章の中に命令が隠れていると、AIはそれにも従ってしまう。あなた自身が悪い指示を入力する場合は「直接」にあたる。</figcaption>
+      </figure>
+    </div>
     <ul>
       <li><strong>直接プロンプトインジェクション（Direct）</strong>。ユーザー（または利用者の入力経路を持つ攻撃者）が、モデルの振る舞いを変える入力を自分で与えるもの。意図的な場合（ジェイルブレイクを狙う）もあれば、非意図的な場合（正当な利用者が、たまたま命令文を含む文章を貼り付けてしまう）もあります。</li>
       <li><strong>間接プロンプトインジェクション（Indirect）</strong>。モデルが外部から取り込んだコンテンツ（Webページ、文書、メール、ツールの応答、RAGで検索された一節、画像、MCPサーバーの出力、データベースの行、課題管理システムのタイトル）に命令として作用するデータが含まれているもの。ユーザーはその命令を入力していないし、目にしてもいないのが特徴です。</li>
@@ -904,6 +952,31 @@
     <h4>致命的な三要素（lethal trifecta）</h4>
     <p>エージェントのリスクを一言で説明する枠組みとして、Simon Willisonが2025年6月16日に提唱した「lethal trifecta（致命的な三要素）」があります。OWASP 2026年版も緩和策の中でこれを明示的に引用しています。</p>
 
+    <div class="eli5">
+      <span class="eli5-label">やさしく図解</span>
+      <figure>
+        <svg viewBox="0 0 360 390" role="img" aria-label="3つの円A、B、Cが重なる図。Aは非公開データを見られること、Bは信頼できない入力を読むこと、Cは外へデータを送れること。3つが同時に重なる中心が危険。">
+          <title>致命的な三要素</title>
+          <circle cx="125" cy="105" r="70" fill="currentColor" fill-opacity="0.07" stroke="currentColor" stroke-width="2"/>
+          <circle cx="235" cy="105" r="70" fill="currentColor" fill-opacity="0.07" stroke="currentColor" stroke-width="2"/>
+          <circle cx="180" cy="200" r="70" fill="currentColor" fill-opacity="0.07" stroke="currentColor" stroke-width="2"/>
+          <text x="92" y="96" text-anchor="middle" font-size="28" font-weight="700">A</text>
+          <text x="268" y="96" text-anchor="middle" font-size="28" font-weight="700">B</text>
+          <text x="180" y="246" text-anchor="middle" font-size="28" font-weight="700">C</text>
+          <circle cx="180" cy="138" r="27" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+          <text x="180" y="138" text-anchor="middle" font-size="16" font-weight="700">3つ</text>
+          <text x="180" y="156" text-anchor="middle" font-size="16" font-weight="700">同時</text>
+          <text x="24" y="306" text-anchor="start" font-size="18" font-weight="700">A</text>
+          <text x="54" y="306" text-anchor="start" font-size="16">非公開データを見られる</text>
+          <text x="24" y="336" text-anchor="start" font-size="18" font-weight="700">B</text>
+          <text x="54" y="336" text-anchor="start" font-size="16">信頼できない入力を読む</text>
+          <text x="24" y="366" text-anchor="start" font-size="18" font-weight="700">C</text>
+          <text x="54" y="366" text-anchor="start" font-size="16">外へデータを送れる</text>
+        </svg>
+        <figcaption><b>図2</b>致命的な三要素。A・B・Cが同時に揃うと高リスクになる。どれか1つを外せば、この条件は崩れる。</figcaption>
+      </figure>
+    </div>
+
     <div class="callout">
       <p><strong>致命的な三要素</strong>（Simon Willison, 2025年6月16日）</p>
       <ul>
@@ -1029,6 +1102,44 @@
     <p><strong>ポイズニング</strong>（poisoning、汚染）は、モデルが参照するデータを操作して、出力をコントロールしたり性能を劣化させたりする完全性（integrity）への攻撃です。学習データに対するものと、RAGの知識ベースに対するものがあります。</p>
 
     <p><strong>RAG</strong>（Retrieval-Augmented Generation、検索拡張生成）は、質問に関連する文書を検索してからモデルに渡す仕組みで、幻覚対策として広く使われます。ただしOWASPが指摘するように、知識ベースという新しい攻撃面を増やす側面があります。</p>
+
+    <div class="eli5">
+      <span class="eli5-label">やさしく図解</span>
+      <figure>
+        <svg viewBox="0 0 360 410" role="img" aria-label="攻撃者が知識ベースに細工した文書を紛れ込ませる。あなたが質問すると、AIは検索でその文書を拾い、攻撃者が選んだ答えを返す。">
+          <title>RAGの知識ベースが汚染される流れ</title>
+          <defs><marker id="e3-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <line x1="22" y1="87" x2="22" y2="195" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+          <line x1="22" y1="233" x2="22" y2="321" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+          <circle cx="22" cy="70" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="76" text-anchor="middle" font-size="16" font-weight="700">1</text>
+          <g transform="translate(84 74)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+          <text x="84" y="112" text-anchor="middle" font-size="16" font-weight="700">攻撃者</text>
+          <line x1="114" y1="70" x2="246" y2="70" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+          <text x="180" y="54" text-anchor="middle" font-size="16">細工した文書</text>
+          <g transform="translate(290 74)" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M-26 -20 V16 A26 8 0 0 0 26 16 V-20"/><ellipse cx="0" cy="-20" rx="26" ry="8"/><path d="M-26 -2 A26 8 0 0 0 26 -2" fill="none"/></g>
+          <text x="290" y="114" text-anchor="middle" font-size="16" font-weight="700">知識ベース</text>
+          <circle cx="22" cy="215" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="221" text-anchor="middle" font-size="16" font-weight="700">2</text>
+          <g transform="translate(84 219)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+          <text x="84" y="257" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+          <line x1="114" y1="215" x2="252" y2="215" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+          <text x="183" y="199" text-anchor="middle" font-size="16">質問</text>
+          <g transform="translate(290 219)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+          <line x1="290" y1="126" x2="290" y2="176" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+          <text x="278" y="156" text-anchor="end" font-size="16">検索で拾われる</text>
+          <circle cx="22" cy="350" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="356" text-anchor="middle" font-size="16" font-weight="700">3</text>
+          <line x1="290" y1="250" x2="290" y2="308" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+          <text x="278" y="284" text-anchor="end" font-size="16">答える</text>
+          <rect x="226" y="314" width="126" height="62" rx="8" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="289" y="340" text-anchor="middle" font-size="16">攻撃者が選んだ</text>
+          <text x="289" y="362" text-anchor="middle" font-size="16">答え</text>
+          <line x1="218" y1="345" x2="120" y2="345" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+          <text x="169" y="329" text-anchor="middle" font-size="16">返ってくる</text>
+          <g transform="translate(84 350)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+          <text x="84" y="392" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+        </svg>
+        <figcaption><b>図3</b>RAGの知識ベースが汚染される流れ（イメージ）。細工した文書が検索で拾われると、攻撃者が選んだ答えが返る。</figcaption>
+      </figure>
+    </div>
 
     <h4>影響するライフサイクル段階</h4>
     <p>OWASP LLM04は、汚染されうる段階を3つ挙げています。</p>
