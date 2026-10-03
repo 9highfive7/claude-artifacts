@@ -11,7 +11,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push origin main)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(python3 .claude/skills/report/extract_text.py:*)",
+      "Bash(python3 .claude/skills/yomiyasu/scripts/yomiyasu_lint.py:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
