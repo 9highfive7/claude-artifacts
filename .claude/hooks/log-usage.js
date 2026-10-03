@@ -14,6 +14,10 @@ const { execFileSync } = require('child_process');
 
 // $ / 1M tokens。cacheWrite = 入力単価×1.25（5分キャッシュ）、cacheRead = 入力単価×0.1
 const PRICING = {
+  // 5.5 世代（2026-10-03 追加）。出典は第三者サイトの料金表（株式会社ripla）。公式ページでの確認は未了。
+  // opus-5-5 は dashboard_config.json の値とも一致する
+  'claude-opus-5-5':   { input: 4.00, output: 20.00 },
+  'claude-sonnet-5-5': { input: 2.00, output: 10.00 },
   'claude-opus-5':   { input: 5.00, output: 25.00 },
   'claude-sonnet-5': { input: 2.00, output: 10.00 }, // 要確認: $3/$15 とする情報もある
   'claude-haiku-4-5-20251001': { input: 1.00, output: 5.00 },
