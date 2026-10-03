@@ -565,7 +565,7 @@
       <li><strong>命令実行</strong>：ALUが演算を行い、結果をレジスタや主記憶に書き戻す。</li>
     </ol>
     <p>
-    素朴な実装では1つの命令の5ステップがすべて終わってから次の命令のフェッチを始めるため、各回路が遊んでいる時間が多い。そこで、工場の流れ作業のように、複数の命令の異なるステップを同時並行で処理する<strong>パイプライン処理</strong>が使われる。
+    素朴な実装では1つの命令の5ステップがすべて終わってから次の命令のフェッチを始めるため、各回路が遊んでいる時間が多い。そこで、工場の流れ作業のように、複数の命令の異なるステップを同時並行で処理するパイプライン処理が使われる。
     </p>
     <div class="with-memo">
       <p>
@@ -662,7 +662,7 @@
     同じ設計のCPUであれば周波数が高いほど1秒あたりの処理回数は増えるが、2000年代半ば以降は周波数を上げるほど消費電力・発熱が急増する物理的な壁にぶつかり、単純な高周波数化による性能向上は頭打ちになった。
     </p>
     <p>
-    そこで主流になったのが<strong>マルチコア化</strong>である。1つのチップに演算コアを複数搭載し、コアごとの動作周波数は抑えつつ、複数の処理を並列に実行することで、消費電力を抑えながら全体の処理能力を高める設計へとシフトした。ただし、マルチコアの恩恵を受けるには、ソフトウェア側が処理を複数のコアに分けられるように作られている必要がある。
+    そこで主流になったのがマルチコア化である。1つのチップに演算コアを複数搭載し、コアごとの動作周波数は抑えつつ、複数の処理を並列に実行することで、消費電力を抑えながら全体の処理能力を高める設計へとシフトした。ただし、マルチコアの恩恵を受けるには、ソフトウェア側が処理を複数のコアに分けられるように作られている必要がある。
     </p>
     <div class="with-memo">
       <p>
@@ -689,7 +689,7 @@
     CPUの処理速度は年々向上してきたが、主記憶（DRAM）のアクセス速度はそれほど速くなっておらず、CPUと主記憶の間には大きな速度差がある。CPUが命令やデータを取りに行くたびに主記憶へアクセスしていては、せっかくの高速なCPUが待たされてばかりになってしまう。
     </p>
     <p>
-    この速度差を埋めるために置かれる、小容量・超高速な記憶装置が<strong>キャッシュメモリ</strong>である。
+    この速度差を埋めるために置かれる、小容量・超高速な記憶装置がキャッシュメモリである。
     </p>
     <p>
     キャッシュメモリはCPUに近いほど高速・小容量、遠いほど低速・大容量という段階（L1・L2・L3）に分けて構成されるのが一般的である。
@@ -805,7 +805,7 @@
     </table>
     </div>
     <p>
-    一方<strong>補助記憶（外部記憶）</strong>は、SSDやHDDのように電源を切ってもデータが消えない「不揮発性」の記憶装置で、主記憶よりも低速だが大容量・低コストであり、OSやアプリケーション、ファイルなどを長期的に保存する役割を担う。プログラムを実行するときは、補助記憶に保存されているデータを一旦主記憶へ読み込んでからCPUが処理する、という流れになる。
+    一方補助記憶（外部記憶）は、SSDやHDDのように電源を切ってもデータが消えない「不揮発性」の記憶装置で、主記憶よりも低速だが大容量・低コストであり、OSやアプリケーション、ファイルなどを長期的に保存する役割を担う。プログラムを実行するときは、補助記憶に保存されているデータを一旦主記憶へ読み込んでからCPUが処理する、という流れになる。
     </p>
     <div class="callout summary">
       <span class="label">記憶階層のポイント</span>
@@ -931,7 +931,7 @@
     </p>
     <div class="with-memo">
       <p>
-      もし周辺機器とのデータ転送を、CPUが1バイトずつ自分で読み書きして行っていたら、CPUはその間ずっと転送作業に拘束されてしまう。そこで使われるのが<strong>DMA（Direct Memory Access）</strong>である。DMAでは、CPUの代わりに「DMAコントローラ（DMAC）」という専用回路が、周辺機器と主記憶の間のデータ転送を代行する。
+      もし周辺機器とのデータ転送を、CPUが1バイトずつ自分で読み書きして行っていたら、CPUはその間ずっと転送作業に拘束されてしまう。そこで使われるのがDMA（Direct Memory Access）である。DMAでは、CPUの代わりに「DMAコントローラ（DMAC）」という専用回路が、周辺機器と主記憶の間のデータ転送を代行する。
       </p>
       <aside class="memo">DMAでも完了の通知は割り込み</aside>
     </div>
@@ -1010,13 +1010,13 @@
     <div class="callout caution">
       <span class="label">よくある誤解</span>
       <ul>
-        <li><strong>「クロック周波数が高い＝CPUが速い」とは限らない。</strong> — 1クロックあたりに処理できる命令数（IPC）やコア数、命令セットの効率によって実際の性能は変わるため、周波数だけで単純比較はできない。</li>
-        <li><strong>「キャッシュを増やせば増やすほど無限に速くなる」わけではない。</strong> — プログラムがアクセスするデータには偏り（局所性）があり、ヒット率の向上には限界がある。またキャッシュを大きくするほど1回あたりのアクセス時間自体は延びる傾向があり、単純な大容量化が常に得とは限らない。</li>
-        <li><strong>SRAMとDRAMの用途を逆に覚えやすい。</strong> — 「高速だが高コストなSRAM＝キャッシュ」「大容量・低コストだがやや低速なDRAM＝主記憶」という対応を混同しないよう注意する。</li>
-        <li><strong><mark>RAIDはバックアップの代わりではない。</mark></strong> — RAIDが守るのは「ディスク故障による可用性の低下」であり、誤削除・ランサムウェア・火災などデータそのものが失われるリスクには対応できない。別途バックアップが必須。</li>
-        <li><strong>RAID0は「RAID」という名前でも冗長性がない。</strong> — 高速化だけが目的で、1台でも故障すると全データを失う点を初学者は見落としやすい。</li>
-        <li><strong>RAID5・6は書き込み時にパリティ計算のオーバーヘッドが発生し、単純なストライピングより書き込みが遅くなる（ライトペナルティ）。</strong> — 「冗長性があるのに速度は落ちない」という誤解に注意。</li>
-        <li><strong>DMAを使っても割り込みが完全になくなるわけではない。</strong> — 転送中はCPUを介さないが、転送完了の通知には結局割り込みを使う。「DMA＝割り込みゼロ」という誤解に注意。</li>
+        <li><strong>「クロック周波数が高い＝CPUが速い」とは限らない。</strong>1クロックあたりに処理できる命令数（IPC）やコア数、命令セットの効率によって実際の性能は変わるため、周波数だけで単純比較はできない。</li>
+        <li><strong>「キャッシュを増やせば増やすほど無限に速くなる」わけではない。</strong>プログラムがアクセスするデータには偏り（局所性）があり、ヒット率の向上には限界がある。またキャッシュを大きくするほど1回あたりのアクセス時間自体は延びる傾向があり、単純な大容量化が常に得とは限らない。</li>
+        <li><strong>SRAMとDRAMの用途を逆に覚えやすい。</strong>「高速だが高コストなSRAM＝キャッシュ」「大容量・低コストだがやや低速なDRAM＝主記憶」という対応を混同しないよう注意する。</li>
+        <li><strong><mark>RAIDはバックアップの代わりではない。</mark></strong>RAIDが守るのは「ディスク故障による可用性の低下」であり、誤削除・ランサムウェア・火災などデータそのものが失われるリスクには対応できない。別途バックアップが必須。</li>
+        <li><strong>RAID0は「RAID」という名前でも冗長性がない。</strong>高速化だけが目的で、1台でも故障すると全データを失う点を初学者は見落としやすい。</li>
+        <li><strong>RAID5・6は書き込み時にパリティ計算のオーバーヘッドが発生し、単純なストライピングより書き込みが遅くなる（ライトペナルティ）。</strong>「冗長性があるのに速度は落ちない」という誤解に注意。</li>
+        <li><strong>DMAを使っても割り込みが完全になくなるわけではない。</strong>転送中はCPUを介さないが、転送完了の通知には結局割り込みを使う。「DMA＝割り込みゼロ」という誤解に注意。</li>
       </ul>
     </div>
 
@@ -1056,15 +1056,15 @@
       <li><a href="https://itmanabi.com/write-through-back/" target="_blank" rel="noopener">ライトスルーとライトバックの違いを調べよう！｜ITの学び</a></li>
       <li><a href="https://itmanabi.com/cisc-risc/" target="_blank" rel="noopener">CISC（シスク）とRISC（リスク）の違いは？｜ITの学び</a></li>
       <li><a href="https://isabou.net/Convenience/Tool/gpu/gpu14.asp" target="_blank" rel="noopener">動作周波数からマルチコアへ｜いさぼうネット</a></li>
-      <li><a href="https://breezegroup.co.jp/202403/dram-sram/" target="_blank" rel="noopener">メモリの種類 DRAMとSRAMの仕組みと違い｜BREEZE</a></li>
-      <li><a href="https://ja.wikipedia.org/wiki/%E4%B8%BB%E8%A8%98%E6%86%B6%E8%A3%85%E7%BD%AE" target="_blank" rel="noopener">主記憶装置 - Wikipedia</a></li>
+      <li><a href="https://breezegroup.co.jp/202403/dram-sram/" target="_blank" rel="noopener">メモリの種類DRAMとSRAMの仕組みと違い｜BREEZE</a></li>
+      <li><a href="https://ja.wikipedia.org/wiki/%E4%B8%BB%E8%A8%98%E6%86%B6%E8%A3%85%E7%BD%AE" target="_blank" rel="noopener">主記憶装置- Wikipedia</a></li>
       <li><a href="https://www.fs.com/jp/blog/different-raid-levels-explained-raid-01103456-13743.html" target="_blank" rel="noopener">RAIDレベルの違いを解説（RAID 0/1/10/3/4/5/6）｜FS.com</a></li>
       <li><a href="https://www.issoh.co.jp/tech/details/13465/" target="_blank" rel="noopener">RAIDとは？RAID0/1/5/6/10の違いと構成・企業のディスク冗長化設計を実装目線で解説</a></li>
       <li><a href="https://buralog.jp/raid-config-pitfalls/" target="_blank" rel="noopener">RAID構成別の落とし穴：RAID1/RAID5/RAID6で起きる誤解</a></li>
       <li><a href="https://johostudy.com/bus-and-interface/" target="_blank" rel="noopener">バスと入出力インタフェースの基礎まとめ【USB・SATA・Bluetooth】｜情報処理シンプルまとめ</a></li>
       <li><a href="https://www.ramxeed.com/jp/tech-column/dma-basics-and-embedded-applications/" target="_blank" rel="noopener">DMA（ダイレクトメモリアクセス）とは？基本から組み込み・高速化の課題解決まで｜RAMXEED</a></li>
-      <li><a href="https://e-words.jp/w/%E5%A4%96%E9%83%A8%E5%89%B2%E3%82%8A%E8%BE%BC%E3%81%BF.html" target="_blank" rel="noopener">外部割り込み（ハードウェア割り込み）とは｜IT用語辞典 e-Words</a></li>
-      <li><a href="https://e-words.jp/w/%E5%86%85%E9%83%A8%E5%89%B2%E3%82%8A%E8%BE%BC%E3%81%BF.html" target="_blank" rel="noopener">内部割り込み（ソフトウェア割り込み）とは｜IT用語辞典 e-Words</a></li>
+      <li><a href="https://e-words.jp/w/%E5%A4%96%E9%83%A8%E5%89%B2%E3%82%8A%E8%BE%BC%E3%81%BF.html" target="_blank" rel="noopener">外部割り込み（ハードウェア割り込み）とは｜IT用語辞典e-Words</a></li>
+      <li><a href="https://e-words.jp/w/%E5%86%85%E9%83%A8%E5%89%B2%E3%82%8A%E8%BE%BC%E3%81%BF.html" target="_blank" rel="noopener">内部割り込み（ソフトウェア割り込み）とは｜IT用語辞典e-Words</a></li>
     </ul>
 
   </main>

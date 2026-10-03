@@ -517,42 +517,42 @@
     <div class="callout summary">
       <span class="label">3行でいうと</span>
       <ol>
-        <li>Dynamic workflow は、Claude が書いた JavaScript スクリプトがループ・分岐・中間結果を保持しながら最大数百のサブエージェントを動かす仕組みで、<mark>タスク専用のハーネスをその場で生成</mark>できる。</li>
-        <li>長時間・大規模・敵対的なタスクを1つのコンテキストで進めると起きる失敗モード（<em>agentic laziness</em>・<em>self-preferential bias</em>・<em>goal drift</em>）を、<mark>別々のコンテキストを持つ Claude に分割</mark>することで構造的に防げる。</li>
-        <li><code>/deep-research &lt;質問&gt;</code> や <code>ultracode</code> キーワード（「ワークフローを使って」でも可）ですぐ試せる。履歴書ランキングなど非技術タスクにも強いが、<mark>トークン消費が大きい</mark>ので、まず小さな範囲で <code>「10k tokens まで」</code>のような予算指定から始める。</li>
+        <li>Dynamic workflowは、Claudeが書いたJavaScriptスクリプトがループ・分岐・中間結果を保持しながら最大数百のサブエージェントを動かす仕組みで、<mark>タスク専用のハーネスをその場で生成</mark>できる。</li>
+        <li>長時間・大規模・敵対的なタスクを1つのコンテキストで進めると起きる失敗モード（<em>agentic laziness</em>・<em>self-preferential bias</em>・<em>goal drift</em>）を、<mark>別々のコンテキストを持つClaudeに分割</mark>することで構造的に防げる。</li>
+        <li><code>/deep-research &lt;質問&gt;</code>や<code>ultracode</code>キーワード（「ワークフローを使って」でも可）ですぐ試せる。履歴書ランキングなど非技術タスクにも強いが、<mark>トークン消費が大きい</mark>ので、まず小さな範囲で<code>「10k tokens まで」</code>のような予算指定から始める。</li>
       </ol>
     </div>
-    <p>Dynamic workflow は、Claude がその場でタスク専用の<strong>ハーネス（harness）</strong>を書き、多数のサブエージェントをオーケストレーションする仕組みです。本ガイドは公式リファレンスに加え、実例プロンプト・設計パターン・ユースケース・運用Tipsをまとめています。</p>
+    <p>Dynamic workflowは、Claudeがその場でタスク専用のハーネス（harness）を書き、多数のサブエージェントをオーケストレーションする仕組みです。本ガイドは公式リファレンスに加え、実例プロンプト・設計パターン・ユースケース・運用Tipsをまとめています。</p>
     <div class="callout note">
       <span class="label">補足</span>
-      <p>本ガイドは公式リファレンスに加え、Anthropic の「A harness for every task」記事の実践的知見を統合したものです。ベストプラクティスは現在も発展途上です。</p>
+      <p>本ガイドは公式リファレンスに加え、Anthropicの「A harness for every task」記事の実践的知見を統合したものです。ベストプラクティスは現在も発展途上です。</p>
     </div>
 
     <h2 id="s2">基本用語</h2>
 
-    <h3 id="s2-1">Dynamic workflow と static workflow</h3>
+    <h3 id="s2-1">Dynamic workflowとstatic workflow</h3>
     <div class="with-memo">
-      <p>以前から Claude Agent SDK や <code>claude -p</code> で複数の Claude Code を協調させる static workflow を作れました。違いは「事前に汎用的に書く」か「その場で専用に書かせる」かです。</p>
+      <p>以前からClaude Agent SDKや<code>claude -p</code>で複数のClaude Codeを協調させるstatic workflowを作れました。違いは「事前に汎用的に書く」か「その場で専用に書かせる」かです。</p>
       <aside class="memo">違いは「事前に書く」か「その場で書く」か</aside>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th></th><th>Static workflow</th><th>Dynamic workflow</th></tr></thead>
         <tbody>
-          <tr><td>作る人</td><td>人間が事前にコード化（SDK / <code>claude -p</code>）</td><td>Claude がその場でタスク専用に生成</td></tr>
-          <tr><td>汎用性</td><td>全エッジケース対応のため汎用的・冗長になりがち</td><td>ユースケースに合わせ tailor-made</td></tr>
-          <tr><td>前提</td><td>—</td><td>Claude Opus 4.8 級の知能で初めて実用的に</td></tr>
+          <tr><td>作る人</td><td>人間が事前にコード化（SDK / <code>claude -p</code>）</td><td>Claudeがその場でタスク専用に生成</td></tr>
+          <tr><td>汎用性</td><td>全エッジケース対応のため汎用的・冗長になりがち</td><td>ユースケースに合わせtailor-made</td></tr>
+          <tr><td>前提</td><td>—</td><td>Claude Opus 4.8級の知能で初めて実用的に</td></tr>
           <tr><td>調整</td><td>コードを書き直す</td><td>プロンプトでナッジ、保存後に編集</td></tr>
         </tbody>
       </table>
     </div>
     <div class="callout note">
       <span class="label">補足</span>
-      <p>workflow は数十行の特殊関数で subagent を spawn・coordinate する JavaScript ファイルです。<code>JSON</code>・<code>Math</code>・<code>Array</code> など標準関数も使え、各エージェントが使うモデルや worktree で隔離するかをスクリプトが決められます。中断されても、セッション再開で続きから再開します。</p>
+      <p>workflowは数十行の特殊関数でsubagentをspawn・coordinateするJavaScriptファイルです。<code>JSON</code>・<code>Math</code>・<code>Array</code>など標準関数も使え、各エージェントが使うモデルやworktreeで隔離するかをスクリプトが決められます。中断されても、セッション再開で続きから再開します。</p>
     </div>
 
     <h3 id="s2-2">オーケストレーション手段の比較</h3>
-    <p>subagents・skills・agent teams・workflows の違いは<mark>「<strong>誰がプランを保持するか</strong>」</mark>です。</p>
+    <p>subagents・skills・agent teams・workflowsの違いは<mark>「誰がプランを保持するか」</mark>です。</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th></th><th>Subagents</th><th>Skills</th><th>Agent teams</th><th>Workflows</th></tr></thead>
@@ -571,7 +571,7 @@
     <h3 id="s3-1">なぜdynamic workflowsが必要か</h3>
     <p>デフォルトのハーネスは、計画と実行を同じコンテキストウィンドウで行います。多くのコーディングタスクでは有効ですが、長時間・大規模並列・高度に構造化された敵対的タスクでは破綻することがあります。</p>
     <div class="with-memo">
-      <p>同一コンテキストで複雑なタスクに長く取り組むほど、Claude は次の特定の失敗モードに陥りやすくなります。ワークフローは、<mark>それぞれ独立したコンテキストウィンドウ</mark>と焦点を絞った隔離されたゴールを持つ複数の Claude をオーケストレーションすることで、これらに対抗します。</p>
+      <p>同一コンテキストで複雑なタスクに長く取り組むほど、Claudeは次の特定の失敗モードに陥りやすくなります。ワークフローは、<mark>それぞれ独立したコンテキストウィンドウ</mark>と焦点を絞った隔離されたゴールを持つ複数のClaudeをオーケストレーションすることで、これらに対抗します。</p>
       <aside class="memo">長い作業ほど1つの文脈で抱えない</aside>
     </div>
     <div class="table-wrap">
@@ -590,7 +590,7 @@
           </tr>
           <tr>
             <td><strong>Goal drift</strong>（目標のずれ）</td>
-            <td>多数のターン、特に compaction（要約圧縮）後に、当初の目的への忠実度が徐々に失われる。「Xをするな」のような制約やエッジケース要件が欠落しやすい。</td>
+            <td>多数のターン、特にcompaction（要約圧縮）後に、当初の目的への忠実度が徐々に失われる。「Xをするな」のような制約やエッジケース要件が欠落しやすい。</td>
             <td>各エージェントに焦点を絞った固定ゴールを与え、スクリプトが原典の目標を保持する。</td>
           </tr>
         </tbody>
@@ -599,14 +599,14 @@
 
     <h3 id="s3-2">実行の仕組みと制限</h3>
     <p>ランタイムは会話と別の隔離環境でスクリプトを実行。中間結果はスクリプト変数に残ります。</p>
-    <p>各実行はスクリプトを <code>~/.claude/projects/</code> 配下に書き出し、開始時に Claude がパスを受け取ります。読んだり、過去実行と diff したり、編集して再起動を頼めます。ランタイムが各エージェントの結果を追跡するため、同一セッション内で再開可能です。</p>
+    <p>各実行はスクリプトを<code>~/.claude/projects/</code>配下に書き出し、開始時にClaudeがパスを受け取ります。読んだり、過去実行とdiffしたり、編集して再起動を頼めます。ランタイムが各エージェントの結果を追跡するため、同一セッション内で再開可能です。</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>制約</th><th>理由</th></tr></thead>
         <tbody>
           <tr><td>実行中のユーザー入力なし</td><td>停止できるのはエージェントの権限プロンプトのみ。段階承認が必要なら各段を別ワークフローに</td></tr>
-          <tr><td>ワークフロー自体からの FS／シェル直接アクセスなし</td><td>読み書き・実行はエージェント。スクリプトは調整役</td></tr>
-          <tr><td>同時実行 最大16エージェント（低コア機ではより少）</td><td>ローカルリソース抑制</td></tr>
+          <tr><td>ワークフロー自体からのFS／シェル直接アクセスなし</td><td>読み書き・実行はエージェント。スクリプトは調整役</td></tr>
+          <tr><td>同時実行最大16エージェント（低コア機ではより少）</td><td>ローカルリソース抑制</td></tr>
           <tr><td>1実行あたり合計1,000エージェント</td><td>暴走ループ防止</td></tr>
         </tbody>
       </table>
@@ -621,8 +621,8 @@
         <thead><tr><th>シーン</th><th>プロンプト例</th></tr></thead>
         <tbody>
           <tr><td>フレーキーテスト</td><td>This test fails maybe 1 in 50 runs. Set up a workflow to reproduce it, form theories and adversarially test them in worktrees. /goal don't stop until one theory works.</td></tr>
-          <tr><td>CLAUDE.md 自動生成</td><td>Using a workflow, go through my last 50 sessions and mine them for corrections I keep making and turn the recurring ones into CLAUDE.md rules.</td></tr>
-          <tr><td>Slack 根本原因調査</td><td>Use a workflow to dig through #incidents in Slack for the past six months and find recurring root causes where nobody has filed a ticket.</td></tr>
+          <tr><td>CLAUDE.md自動生成</td><td>Using a workflow, go through my last 50 sessions and mine them for corrections I keep making and turn the recurring ones into CLAUDE.md rules.</td></tr>
+          <tr><td>Slack根本原因調査</td><td>Use a workflow to dig through #incidents in Slack for the past six months and find recurring root causes where nobody has filed a ticket.</td></tr>
           <tr><td>事業計画の多角レビュー</td><td>Take my business plan and run a workflow where different agents tear it apart from an investor's, a customer's, and a competitor's perspective.</td></tr>
           <tr><td>履歴書ランキング</td><td>Here's a folder of 80 resumes, use a workflow to rank them for the backend role and double-check the top ten. Interview me using the AskUserQuestion tool for a rubric.</td></tr>
           <tr><td>命名トーナメント</td><td>I need a name for this CLI tool. Use a workflow to brainstorm a bunch of options and run a tournament to pick the top 3.</td></tr>
@@ -633,7 +633,7 @@
     </div>
 
     <h3 id="s4-2">設計パターン6種</h3>
-    <p>Claude がワークフロー構築時に使い、組み合わせる代表的なパターンです。</p>
+    <p>Claudeがワークフロー構築時に使い、組み合わせる代表的なパターンです。</p>
 
     <figure>
       <svg viewBox="0 0 240 60" role="img" aria-label="Classify-and-act の図">
@@ -643,7 +643,7 @@
         <g stroke="currentColor" fill="none"><line x1="52" y1="31" x2="170" y2="14"/><line x1="52" y1="31" x2="170" y2="31"/><line x1="52" y1="31" x2="170" y2="48"/></g>
         <g fill="none" stroke="currentColor"><rect x="170" y="5" width="44" height="18" rx="4"/><rect x="170" y="22" width="44" height="18" rx="4"/><rect x="170" y="39" width="44" height="18" rx="4"/></g>
       </svg>
-      <figcaption><strong>Classify-and-act</strong> — 分類エージェントがタスク種別を判定し、種別ごとに別エージェント／挙動へルーティング。最後に分類で出力を決めることも。</figcaption>
+      <figcaption>Classify-and-act。分類エージェントがタスク種別を判定し、種別ごとに別エージェント／挙動へルーティング。最後に分類で出力を決めることも。</figcaption>
     </figure>
 
     <figure>
@@ -654,7 +654,7 @@
         <g stroke="currentColor" fill="none"><line x1="40" y1="31" x2="90" y2="11"/><line x1="40" y1="31" x2="90" y2="30"/><line x1="40" y1="31" x2="90" y2="49"/><line x1="120" y1="11" x2="180" y2="31"/><line x1="120" y1="30" x2="180" y2="31"/><line x1="120" y1="49" x2="180" y2="31"/></g>
         <rect x="180" y="20" width="50" height="22" rx="5" fill="none" stroke="var(--link)"/><text x="205" y="35" font-size="12" text-anchor="middle" fill="var(--link)">synth</text>
       </svg>
-      <figcaption><strong>Fan-out-and-synthesize</strong> — タスクを多数の小ステップに分割し、各ステップを別エージェントで実行。すべて待ってから（barrier）構造化出力を1つに統合。</figcaption>
+      <figcaption>Fan-out-and-synthesize。タスクを多数の小ステップに分割し、各ステップを別エージェントで実行。すべて待ってから（barrier）構造化出力を1つに統合。</figcaption>
     </figure>
 
     <figure>
@@ -665,7 +665,7 @@
         <rect x="150" y="20" width="68" height="22" rx="5" fill="none" stroke="var(--link)"/><text x="184" y="35" font-size="12" text-anchor="middle" fill="var(--link)">verifier</text>
         <defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--link)"/></marker></defs>
       </svg>
-      <figcaption><strong>Adversarial verification</strong> — 生成エージェントごとに、別の検証エージェントを立て、ルーブリックや基準に対して敵対的に出力を検証する。</figcaption>
+      <figcaption>Adversarial verification。生成エージェントごとに、別の検証エージェントを立て、ルーブリックや基準に対して敵対的に出力を検証する。</figcaption>
     </figure>
 
     <figure>
@@ -675,7 +675,7 @@
         <path d="M80,12 L130,25 L130,35 L80,48 Z" fill="none" stroke="var(--link)"/><text x="105" y="33" font-size="12" text-anchor="middle" fill="var(--link)">filter</text>
         <g fill="none" stroke="var(--ink-2)"><circle cx="180" cy="25" r="8"/><circle cx="205" cy="35" r="8"/></g>
       </svg>
-      <figcaption><strong>Generate-and-filter</strong> — 多数のアイデアを生成し、ルーブリックや検証でフィルタ、重複を除去し、最高品質で検証済みのものだけを返す。</figcaption>
+      <figcaption>Generate-and-filter。多数のアイデアを生成し、ルーブリックや検証でフィルタ、重複を除去し、最高品質で検証済みのものだけを返す。</figcaption>
     </figure>
 
     <figure>
@@ -687,7 +687,7 @@
         <rect x="170" y="24" width="50" height="16" rx="4" fill="none" stroke="var(--ink-2)"/><text x="195" y="36" font-size="12" text-anchor="middle" fill="var(--ink-2)">winner</text>
         <line x1="124" y1="21" x2="170" y2="31" stroke="currentColor"/><line x1="124" y1="43" x2="170" y2="33" stroke="currentColor"/>
       </svg>
-      <figcaption><strong>Tournament</strong> — 分割せず競争させる。N体が異なるアプローチで同じタスクに挑み、判定エージェントがペアワイズに比較して勝者を決める。</figcaption>
+      <figcaption>Tournament。分割せず競争させる。N体が異なるアプローチで同じタスクに挑み、判定エージェントがペアワイズに比較して勝者を決める。</figcaption>
     </figure>
 
     <figure>
@@ -699,11 +699,11 @@
         <text x="120" y="14" font-size="12" text-anchor="middle" fill="var(--ink-2)">stop? no → repeat</text>
         <defs><marker id="ar2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="currentColor"/></marker></defs>
       </svg>
-      <figcaption><strong>Loop until done</strong> — 作業量が未知のタスクで、停止条件（新たな発見なし／ログにエラーなし）を満たすまでエージェントを spawn し続ける。</figcaption>
+      <figcaption>Loop until done。作業量が未知のタスクで、停止条件（新たな発見なし／ログにエラーなし）を満たすまでエージェントをspawnし続ける。</figcaption>
     </figure>
 
     <h3 id="s4-3">プロンプトビルダーの仕組み</h3>
-    <p>上のパターンを選び、タスクを入力すると、ワークフロー起動用プロンプトの叩き台を生成するツールです（例: 「src/routes/ 配下の全APIエンドポイントの認証チェック漏れを監査」）。「トークン予算を付ける（10k tokens まで）」のチェックも選べます。パターンごとの一言ガイドは次のとおりです。</p>
+    <p>上のパターンを選び、タスクを入力すると、ワークフロー起動用プロンプトの叩き台を生成するツールです（例: 「src/routes/配下の全APIエンドポイントの認証チェック漏れを監査」）。「トークン予算を付ける（10k tokensまで）」のチェックも選べます。パターンごとの一言ガイドは次のとおりです。</p>
     <ul>
       <li><strong>Classify-and-act:</strong> 分類エージェントでタスク種別を判定し、種別ごとに別エージェントへルーティングする。</li>
       <li><strong>Fan-out-and-synthesize:</strong> タスクを小ステップに分割して各々を別エージェントで実行し、全完了を待ってから結果を統合する（fan-out-and-synthesize）。</li>
@@ -726,38 +726,38 @@ use 10k tokens.</code></pre>
       <table>
         <thead><tr><th>領域</th><th>やり方の要点</th><th>主なパターン</th></tr></thead>
         <tbody>
-          <tr><td><strong>マイグレーション／リファクタ</strong></td><td>callsite・失敗テスト・モジュール等の単位に分解。修正ごとに worktree でサブエージェントを起動→別エージェントが敵対的レビュー→マージ。並列を最大化するため、エージェントに高負荷コマンドを避けるよう指示すると安全。（Bun の Zig→Rust 書き換えで使用）</td><td>fan-out / adversarial</td></tr>
-          <tr><td><strong>Deep research</strong></td><td><code>/deep-research</code> は Web 検索をファンアウト→ソース取得→主張を敵対的検証→引用付きレポートを合成。Web に限らず Slack の状況報告や、コードベース深掘りでの「機能の仕組み」調査にも応用可。</td><td>fan-out / adversarial</td></tr>
+          <tr><td><strong>マイグレーション／リファクタ</strong></td><td>callsite・失敗テスト・モジュール等の単位に分解。修正ごとにworktreeでサブエージェントを起動→別エージェントが敵対的レビュー→マージ。並列を最大化するため、エージェントに高負荷コマンドを避けるよう指示すると安全。（BunのZig→Rust書き換えで使用）</td><td>fan-out / adversarial</td></tr>
+          <tr><td><strong>Deep research</strong></td><td><code>/deep-research</code>はWeb検索をファンアウト→ソース取得→主張を敵対的検証→引用付きレポートを合成。Webに限らずSlackの状況報告や、コードベース深掘りでの「機能の仕組み」調査にも応用可。</td><td>fan-out / adversarial</td></tr>
           <tr><td><strong>Deep verification</strong></td><td>1エージェントが全ての事実主張を抽出し、主張ごとにサブエージェントを立てて詳細検証。さらに検証エージェントがソースの質を点検。ブログ草稿の技術的主張をコードベースに照合する等。</td><td>fan-out / adversarial</td></tr>
           <tr><td><strong>ソート</strong></td><td>1000行超を1プロンプトで並べると品質劣化＆コンテキスト超過。代わりにトーナメント（ペアワイズ比較は絶対採点より信頼性が高い）やバケットランクを並列実行してマージ。決定論的ループがブラケットを保持し、走査順だけがコンテキストに残る。</td><td>tournament</td></tr>
-          <tr><td><strong>メモリ／ルール遵守</strong></td><td>CLAUDE.md に入れても守られないルールは、ルール1つにつき検証エージェント1体で点検。誤検知を減らすため懐疑役（skeptic）ペルソナでルールを精査。逆向きに、過去セッションやレビューコメントから繰り返す修正を抽出→クラスタリング→敵対的検証→CLAUDE.md に蒸留も有効。</td><td>fan-out / adversarial</td></tr>
-          <tr><td><strong>根本原因調査</strong></td><td>独立した複数仮説を立てて検証するのがデバッグの定石。logs・files・data など互いに素な証拠から仮説を生成するエージェントを立て、各仮説を検証者・反証者のパネルにかける。コードに限らず、売上分析やデータパイプラインの post-mortem にも。</td><td>generate-and-filter / adversarial</td></tr>
-          <tr><td><strong>大規模トリアージ</strong></td><td>各項目を分類→既存追跡分とdedupe→アクション（修正試行 or 人へエスカレーション）。<em>quarantine</em> パターン: 信頼できない公開コンテンツを読むエージェントには高権限アクションを禁じ、行動は別エージェントが担う。<code>/loop</code> と組み合わせて継続実行。</td><td>classify / loop</td></tr>
+          <tr><td><strong>メモリ／ルール遵守</strong></td><td>CLAUDE.mdに入れても守られないルールは、ルール1つにつき検証エージェント1体で点検。誤検知を減らすため懐疑役（skeptic）ペルソナでルールを精査。逆向きに、過去セッションやレビューコメントから繰り返す修正を抽出→クラスタリング→敵対的検証→CLAUDE.mdに蒸留も有効。</td><td>fan-out / adversarial</td></tr>
+          <tr><td><strong>根本原因調査</strong></td><td>独立した複数仮説を立てて検証するのがデバッグの定石。logs・files・dataなど互いに素な証拠から仮説を生成するエージェントを立て、各仮説を検証者・反証者のパネルにかける。コードに限らず、売上分析やデータパイプラインのpost-mortemにも。</td><td>generate-and-filter / adversarial</td></tr>
+          <tr><td><strong>大規模トリアージ</strong></td><td>各項目を分類→既存追跡分とdedupe→アクション（修正試行or人へエスカレーション）。<em>quarantine</em>パターン: 信頼できない公開コンテンツを読むエージェントには高権限アクションを禁じ、行動は別エージェントが担う。<code>/loop</code>と組み合わせて継続実行。</td><td>classify / loop</td></tr>
           <tr><td><strong>探索とテイスト</strong></td><td>デザインや命名などテイストに依る課題で、多数の案を探索しレビューエージェントにルーブリックを与える。基準を満たした時点で完了。トーナメントで順位付け・選定も。</td><td>generate-and-filter / tournament</td></tr>
-          <tr><td><strong>Evals</strong></td><td>worktree で別エージェントを起動し、比較エージェントがルーブリックに対して採点。作成した skill を特定基準で評価・改善する等の軽量 eval に。</td><td>tournament / adversarial</td></tr>
-          <tr><td><strong>モデル／知能ルーティング</strong></td><td>タスクに合わせた分類エージェントが、事前リサーチで最適モデルを判定。例: 「auth モジュールの仕組み説明」は対象ファイル数と構造に応じて Sonnet か Opus にルーティング。</td><td>classify</td></tr>
+          <tr><td><strong>Evals</strong></td><td>worktreeで別エージェントを起動し、比較エージェントがルーブリックに対して採点。作成したskillを特定基準で評価・改善する等の軽量evalに。</td><td>tournament / adversarial</td></tr>
+          <tr><td><strong>モデル／知能ルーティング</strong></td><td>タスクに合わせた分類エージェントが、事前リサーチで最適モデルを判定。例: 「authモジュールの仕組み説明」は対象ファイル数と構造に応じてSonnetかOpusにルーティング。</td><td>classify</td></tr>
         </tbody>
       </table>
     </div>
 
     <h3 id="s4-5">同梱ワークフローを実行する</h3>
-    <p>最短で動きを確認するなら <code>/deep-research</code>。質問を多角的に調べ、ソースを相互検証して引用付きレポートを返します。</p>
+    <p>最短で動きを確認するなら<code>/deep-research</code>。質問を多角的に調べ、ソースを相互検証して引用付きレポートを返します。</p>
     <ol>
-      <li><strong>ワークフローを実行する。</strong> 調べたい質問とともに実行。複数角度に Web 検索をファンアウトし、ソースを取得・相互検証し、引用付きレポートを合成します。
+      <li><strong>ワークフローを実行する。</strong>調べたい質問とともに実行。複数角度にWeb検索をファンアウトし、ソースを取得・相互検証し、引用付きレポートを合成します。
         <pre><code>/deep-research What changed in the Node.js permission model between v20 and v22?</code></pre>
       </li>
-      <li><strong>ワークフローを許可する。</strong> Claude Code が可否を尋ねます。<strong>Yes</strong> を選択（プロンプトは権限モードによる、後述の「実行前にプランを承認する」を参照）。</li>
-      <li><strong>進捗を見る。</strong> バックグラウンドで実行され、セッションは空いたまま。<code>/workflows</code> で実行を選び Enter で進捗ビュー（フェーズごとのエージェント数・トークン・経過時間）。
+      <li><strong>ワークフローを許可する。</strong>Claude Codeが可否を尋ねます。Yesを選択（プロンプトは権限モードによる、後述の「実行前にプランを承認する」を参照）。</li>
+      <li><strong>進捗を見る。</strong>バックグラウンドで実行され、セッションは空いたまま。<code>/workflows</code>で実行を選びEnterで進捗ビュー（フェーズごとのエージェント数・トークン・経過時間）。
         <pre><code>/workflows</code></pre>
       </li>
-      <li><strong>レポートを読む。</strong> 完了するとレポートが届きます。出典が引用され、相互検証を生き残らなかった主張は除外済みです。</li>
+      <li><strong>レポートを読む。</strong>完了するとレポートが届きます。出典が引用され、相互検証を生き残らなかった主張は除外済みです。</li>
     </ol>
 
     <p><strong>同梱ワークフロー</strong></p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>コマンド</th><th>内容</th></tr></thead>
-        <tbody><tr><td><code>/deep-research &lt;question&gt;</code></td><td>質問を複数角度に Web 検索でファンアウトし、ソースを取得・相互検証、各主張を投票で評価し、検証を生き残った主張だけの引用付きレポートを返す。<strong>WebSearch ツール</strong>が必要。</td></tr></tbody>
+        <tbody><tr><td><code>/deep-research &lt;question&gt;</code></td><td>質問を複数角度にWeb検索でファンアウトし、ソースを取得・相互検証、各主張を投票で評価し、検証を生き残った主張だけの引用付きレポートを返す。WebSearchツールが必要。</td></tr></tbody>
       </table>
     </div>
 
@@ -779,24 +779,24 @@ use 10k tokens.</code></pre>
     </div>
 
     <h3 id="s4-6">プロンプトで依頼する</h3>
-    <p>effort を変えずに単一タスクをワークフロー化するには <code>ultracode</code> を含めます。「ワークフローを使って」など自然言語でも同じオプトインです。</p>
+    <p>effortを変えずに単一タスクをワークフロー化するには<code>ultracode</code>を含めます。「ワークフローを使って」など自然言語でも同じオプトインです。</p>
     <pre><code>ultracode: audit every API endpoint under src/routes/ for missing auth checks</code></pre>
     <div class="callout note">
       <span class="label">バージョン差分</span>
-      <p>v2.1.160 より前のリテラルトリガーは <code>workflow</code>。自然言語の依頼は両バージョンで動作。誤起動は macOS <code>Option+W</code> / Win・Linux <code>Alt+W</code> で解除、または <code>/config</code> でトリガーをオフ。</p>
+      <p>v2.1.160より前のリテラルトリガーは<code>workflow</code>。自然言語の依頼は両バージョンで動作。誤起動はmacOS <code>Option+W</code> / Win・Linux <code>Alt+W</code>で解除、または<code>/config</code>でトリガーをオフ。</p>
     </div>
 
-    <h3 id="s4-7">ultracode で Claude に任せる</h3>
-    <p><code>xhigh</code> reasoning effort と自動オーケストレーションを組み合わせた設定。実質的な各タスクごとに Claude がワークフローを計画します。</p>
+    <h3 id="s4-7">ultracodeでClaudeに任せる</h3>
+    <p><code>xhigh</code> reasoning effortと自動オーケストレーションを組み合わせた設定。実質的な各タスクごとにClaudeがワークフローを計画します。</p>
     <pre><code>/effort ultracode</code></pre>
     <div class="callout note">
       <span class="label">補足</span>
-      <p>現在のセッションのみ有効でリセットされます。通常作業は <code>/effort high</code> に戻します。<code>xhigh</code> 対応モデルでのみ利用可。</p>
+      <p>現在のセッションのみ有効でリセットされます。通常作業は<code>/effort high</code>に戻します。<code>xhigh</code>対応モデルでのみ利用可。</p>
     </div>
 
     <h3 id="s4-8">実行前にプランを承認する</h3>
     <div class="with-memo">
-      <p>CLI のプロンプトは計画フェーズと選択肢（<strong>Yes, run it</strong> / <strong>Yes, and don't ask again…</strong> / <strong>View raw script</strong> / <strong>No</strong>）を表示。<code>Ctrl+G</code> でエディタに開き、<code>Tab</code> でプロンプト調整。</p>
+      <p>CLIのプロンプトは計画フェーズと選択肢（Yes, run it / Yes, and don't ask again… / View raw script / No）を表示。<code>Ctrl+G</code>でエディタに開き、<code>Tab</code>でプロンプト調整。</p>
       <aside class="memo">サブエージェントは常にacceptEdits</aside>
     </div>
     <div class="table-wrap">
@@ -804,71 +804,71 @@ use 10k tokens.</code></pre>
         <thead><tr><th>権限モード</th><th>プロンプトが出るタイミング</th></tr></thead>
         <tbody>
           <tr><td>Default / accept edits</td><td>毎回（「don't ask again」選択時を除く）</td></tr>
-          <tr><td>Auto</td><td>初回のみ。以後は同意を記録し無確認。ultracode 時はスキップ</td></tr>
+          <tr><td>Auto</td><td>初回のみ。以後は同意を記録し無確認。ultracode時はスキップ</td></tr>
           <tr><td>Bypass / <code>claude -p</code> / Agent SDK</td><td>尋ねず即開始</td></tr>
         </tbody>
       </table>
     </div>
     <div class="callout caution">
       <span class="label">重要</span>
-      <p>生成されるサブエージェントは常に <code>acceptEdits</code> で動作し、ツール許可リストを継承。allowlist 外のシェル・Web フェッチ・MCP は途中で確認することあり。長い実行では事前に allowlist へ追加を。</p>
+      <p>生成されるサブエージェントは常に<code>acceptEdits</code>で動作し、ツール許可リストを継承。allowlist外のシェル・Webフェッチ・MCPは途中で確認することあり。長い実行では事前にallowlistへ追加を。</p>
     </div>
 
     <h3 id="s4-9">保存して再利用する</h3>
-    <p><code>/workflows</code> で実行を選び <code>s</code>。<code>Tab</code> で保存先を切り替え（<code>.claude/workflows/</code>=プロジェクト共有 / <code>~/.claude/workflows/</code>=自分専用）。Enter で保存し <code>/&lt;名前&gt;</code> として実行。同名はプロジェクト側が優先。</p>
-    <p><strong>入力を渡す（args）。</strong> 保存ワークフローは <code>args</code> グローバルで入力を受け取れます。構造化データで渡されるため配列・オブジェクトメソッドを直接呼べます。省略時は <code>undefined</code>。</p>
+    <p><code>/workflows</code>で実行を選び<code>s</code>。<code>Tab</code>で保存先を切り替え（<code>.claude/workflows/</code>=プロジェクト共有/ <code>~/.claude/workflows/</code>=自分専用）。Enterで保存し<code>/&lt;名前&gt;</code>として実行。同名はプロジェクト側が優先。</p>
+    <p><strong>入力を渡す（args）。</strong>保存ワークフローは<code>args</code>グローバルで入力を受け取れます。構造化データで渡されるため配列・オブジェクトメソッドを直接呼べます。省略時は<code>undefined</code>。</p>
     <pre><code>&gt; Run /triage-issues on issues 1024, 1025, and 1030</code></pre>
 
     <h3 id="s4-10">構築のTips</h3>
-    <p><strong>プロンプティング。</strong> 上記パターンの用語を使った詳細なプロンプトが最良の結果を生みます。ワークフローは大きなタスク専用ではなく、「quick workflow」も指定できます（例: ある前提の素早い敵対的レビュー）。</p>
-    <p><strong>/goal と /loop を組み合わせる。</strong> トリアージ・リサーチ・検証など繰り返せるワークフローは、<code>/loop</code> で定期実行し、<code>/goal</code> で「これを満たすまで止まるな」という強い完了条件を設定すると効果的です。</p>
+    <p><strong>プロンプティング。</strong>上記パターンの用語を使った詳細なプロンプトが最良の結果を生みます。ワークフローは大きなタスク専用ではなく、「quick workflow」も指定できます（例: ある前提の素早い敵対的レビュー）。</p>
+    <p><strong>/goalと/loopを組み合わせる。</strong>トリアージ・リサーチ・検証など繰り返せるワークフローは、<code>/loop</code>で定期実行し、<code>/goal</code>で「これを満たすまで止まるな」という強い完了条件を設定すると効果的です。</p>
     <div class="with-memo">
-      <p><strong>トークン予算。</strong> <code>「use 10k tokens」</code> のように明示すると上限が設定され、暴走を抑えられます。</p>
+      <p><strong>トークン予算。</strong><code>「use 10k tokens」</code>のように明示すると上限が設定され、暴走を抑えられます。</p>
       <aside class="memo">予算は「10k tokensまで」と明示する</aside>
     </div>
-    <p><strong>保存と共有。</strong> ワークフローメニューで <code>s</code> を押して保存し、<code>~/.claude/workflows</code> にチェックインするか、skill として配布できます。skill 経由で共有するには、JavaScript ファイルを skill フォルダに置き SKILL.md から参照します。柔軟性のため、skill 内のワークフローは「逐語実行するスクリプト」ではなく<strong>テンプレート</strong>として扱うよう Claude に促すとよいでしょう。</p>
+    <p><strong>保存と共有。</strong>ワークフローメニューで<code>s</code>を押して保存し、<code>~/.claude/workflows</code>にチェックインするか、skillとして配布できます。skill経由で共有するには、JavaScriptファイルをskillフォルダに置きSKILL.mdから参照します。柔軟性のため、skill内のワークフローは「逐語実行するスクリプト」ではなくテンプレートとして扱うようClaudeに促すとよいでしょう。</p>
 
     <h2 id="s5">注意点・よくある誤解</h2>
 
     <h3 id="s5-1">使わない方がよい時</h3>
     <div class="callout caution">
       <span class="label">よくある誤解</span>
-      <p><mark><strong>すべてのタスクに必要なわけではありません。</strong></mark> ワークフローは大きな成果を生む場面が多い一方、不要なタスクでは大幅にトークンを浪費します。通常のコーディングタスクでは「本当に追加の compute が必要か？」を自問してください。多くの伝統的なコーディングタスクに、5人のレビュアーのパネルは要りません。</p>
+      <p><mark><strong>すべてのタスクに必要なわけではありません。</strong></mark>ワークフローは大きな成果を生む場面が多い一方、不要なタスクでは大幅にトークンを浪費します。通常のコーディングタスクでは「本当に追加のcomputeが必要か？」を自問してください。多くの伝統的なコーディングタスクに、5人のレビュアーのパネルは要りません。</p>
     </div>
-    <p>ワークフローは、これまでできなかった方向に Claude Code を押し広げるために創造的に使うのが最良です。</p>
+    <p>ワークフローは、これまでできなかった方向にClaude Codeを押し広げるために創造的に使うのが最良です。</p>
 
     <h3 id="s5-2">実行の管理とコスト</h3>
-    <p><strong>一時停止後の再開。</strong> 停止後も再開可能。完了済みはキャッシュ結果を返し、残りはライブ実行。<code>/workflows</code> で選び <code>p</code>、または再起動を Claude に依頼。<strong>同一セッション内のみ</strong>で、Claude Code 終了後の次セッションは最初からになります。</p>
+    <p><strong>一時停止後の再開。</strong>停止後も再開可能。完了済みはキャッシュ結果を返し、残りはライブ実行。<code>/workflows</code>で選び<code>p</code>、または再起動をClaudeに依頼。同一セッション内のみで、Claude Code終了後の次セッションは最初からになります。</p>
     <p><strong>コスト。</strong></p>
     <ul>
-      <li><strong>まず小さく試す:</strong> 1ディレクトリ／狭い質問で。<code>/workflows</code> が各エージェントのトークンを表示、完了分を失わず停止可。</li>
+      <li><strong>まず小さく試す:</strong> 1ディレクトリ／狭い質問で。<code>/workflows</code>が各エージェントのトークンを表示、完了分を失わず停止可。</li>
       <li><strong>上限が歯止め:</strong> エージェント上限が暴走コストを抑制。</li>
-      <li><strong>モデル確認:</strong> 大きな実行前に <code>/model</code>。不要なステージは小さいモデルを Claude に指定。予算は <code>「10k tokens まで」</code>のように指定。</li>
+      <li><strong>モデル確認:</strong> 大きな実行前に<code>/model</code>。不要なステージは小さいモデルをClaudeに指定。予算は<code>「10k tokens まで」</code>のように指定。</li>
     </ul>
-    <p><strong>無効化。</strong> 自分用は <code>/config</code> のトグル、<code>~/.claude/settings.json</code> の <code>"disableWorkflows": true</code>、または <code>CLAUDE_CODE_DISABLE_WORKFLOWS=1</code>。組織用は managed settings か管理設定ページのトグル。無効時は同梱コマンド不可、<code>ultracode</code> 起動なし、<code>/effort</code> から ultracode が消えます。</p>
+    <p><strong>無効化。</strong>自分用は<code>/config</code>のトグル、<code>~/.claude/settings.json</code>の<code>"disableWorkflows": true</code>、または<code>CLAUDE_CODE_DISABLE_WORKFLOWS=1</code>。組織用はmanaged settingsか管理設定ページのトグル。無効時は同梱コマンド不可、<code>ultracode</code>起動なし、<code>/effort</code>からultracodeが消えます。</p>
 
     <h2 id="s6">確認問題</h2>
     <details class="quiz">
-      <summary>Q1. 自分のタスクに subagents / skills / agent teams / workflows のどれを使うべきか、どう判断すればよい？</summary>
+      <summary>Q1. 自分のタスクにsubagents / skills / agent teams / workflowsのどれを使うべきか、どう判断すればよい？</summary>
       <div class="answer">
         <p>次の3つの問いで判断します。</p>
         <ul>
-          <li>Q1. 必要なエージェントの規模は？ → 数件で足りる / 数十〜数百体</li>
-          <li>Q2. このオーケストレーションを繰り返し再実行したい？ → 今回限り / 毎回まわしたい（コード化したい）</li>
-          <li>Q3. 結果を相互検証・敵対的レビューで担保したい？ → 単一パスでよい / 独立レビュー／多角的検討が欲しい</li>
+          <li>Q1. 必要なエージェントの規模は？ → 数件で足りる/数十〜数百体</li>
+          <li>Q2. このオーケストレーションを繰り返し再実行したい？ → 今回限り/毎回まわしたい（コード化したい）</li>
+          <li>Q3. 結果を相互検証・敵対的レビューで担保したい？ → 単一パスでよい/独立レビュー／多角的検討が欲しい</li>
         </ul>
         <p>判定ロジックは次のとおりです。</p>
         <ul>
-          <li>規模が「数十〜数百体」、または品質担保で「独立レビュー／多角的検討が欲しい」を選んだ場合: <strong>Workflows</strong> ── 多数のエージェントが必要、または相互検証・敵対的レビューで品質を担保したい場合は、スクリプトがプランを保持するワークフローが最適です。</li>
-          <li>再利用が「毎回まわしたい（コード化したい）」の場合: <strong>Workflows（保存して再利用）</strong> ── オーケストレーションをコード化して繰り返したいなら、ワークフローを書いて /workflows から保存しましょう。</li>
-          <li>規模が「数件で足りる」の場合: <strong>Subagents / Skills</strong> ── 数件のタスクをターンごとに委譲するだけなら、Claude がオーケストレーターとなる subagents や skills で十分です。</li>
+          <li>規模が「数十〜数百体」、または品質担保で「独立レビュー／多角的検討が欲しい」を選んだ場合: Workflows ── 多数のエージェントが必要、または相互検証・敵対的レビューで品質を担保したい場合は、スクリプトがプランを保持するワークフローが最適です。</li>
+          <li>再利用が「毎回まわしたい（コード化したい）」の場合: Workflows（保存して再利用） ── オーケストレーションをコード化して繰り返したいなら、ワークフローを書いて/workflowsから保存しましょう。</li>
+          <li>規模が「数件で足りる」の場合: Subagents / Skills ── 数件のタスクをターンごとに委譲するだけなら、Claudeがオーケストレーターとなるsubagentsやskillsで十分です。</li>
         </ul>
       </div>
     </details>
 
     <h2 id="s7">参考リンク</h2>
     <ul class="refs">
-      <li><a href="https://code.claude.com/docs/en/workflows">公式ドキュメント</a>（Claude Code の dynamic workflows 公式リファレンス「Orchestrate subagents at scale with dynamic workflows」、および Anthropic の解説記事「A harness for every task: dynamic workflows in Claude Code」の内容をもとに構成）</li>
+      <li><a href="https://code.claude.com/docs/en/workflows">公式ドキュメント</a>（Claude Codeのdynamic workflows公式リファレンス「Orchestrate subagents at scale with dynamic workflows」、およびAnthropicの解説記事「A harness for every task: dynamic workflows in Claude Code」の内容をもとに構成）</li>
     </ul>
 
   </main>

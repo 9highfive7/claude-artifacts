@@ -500,7 +500,7 @@
       <ol>
         <li>Gitのブランチは、ファイルのコピーではなく<mark>「特定のコミットを指す軽量なポインタ（矢印）」</mark>にすぎない。</li>
         <li>ブランチを使うことで、<mark>本番用のコードに影響を与えずに</mark>、機能追加やバグ修正を独立した作業として進められる。</li>
-        <li>作業が終わったら <code>merge</code> や <code>rebase</code> で元のブランチに取り込むが、両者は<mark>履歴の残り方が異なる</mark>ため使い分けが必要。</li>
+        <li>作業が終わったら<code>merge</code>や<code>rebase</code>で元のブランチに取り込むが、両者は<mark>履歴の残り方が異なる</mark>ため使い分けが必要。</li>
       </ol>
     </div>
     <p>
@@ -516,7 +516,7 @@
           <tr><td><code>commit</code></td><td>変更内容のスナップショットを記録した履歴の1単位。前のコミットへの参照（親）を持つ。</td></tr>
           <tr><td>ブランチ</td><td>あるコミットを指す軽量なポインタ。コミットするたびに自動的に最新コミットへ移動する。</td></tr>
           <tr><td><code>HEAD</code></td><td>「今どのブランチ（またはコミット）にいるか」を示す特殊なポインタ。通常は現在のブランチを指している。</td></tr>
-          <tr><td><code>main</code> / <code>master</code></td><td>リポジトリ作成時に自動的にできる既定のブランチ名。近年は <code>main</code> が主流。</td></tr>
+          <tr><td><code>main</code> / <code>master</code></td><td>リポジトリ作成時に自動的にできる既定のブランチ名。近年は<code>main</code>が主流。</td></tr>
           <tr><td>fast-forward</td><td>マージ先のブランチが、マージ元の直系の祖先である場合に、新しいコミットを作らずポインタを単純に前へ進めるマージ方式。</td></tr>
           <tr><td>マージコミット</td><td>2つの履歴を統合したときにできる、親を2つ持つ特別なコミット。</td></tr>
           <tr><td>detached HEAD</td><td><code>HEAD</code>がブランチではなく、特定のコミットを直接指してしまっている状態。</td></tr>
@@ -593,7 +593,7 @@
         <text x="24" y="34" font-size="13" style="fill:var(--ink-2)">ポインタはコミットを指すだけ（コピーではない）</text>
         <text x="24" y="240" font-size="13" style="fill:var(--ink-2)">C2 までは共通の履歴。分岐後はそれぞれ別のコミットを積んでいく。</text>
       </svg>
-      <figcaption><strong>図1</strong>　コミット履歴を横に並べた図に、<code>main</code>・<code>feature</code>といったラベルの付いた矢印（ポインタ）がそれぞれ異なるコミットを指している様子。<code>HEAD</code>は、いま作業しているブランチ（ここでは<code>feature</code>）を指している。</figcaption>
+      <figcaption>図1　コミット履歴を横に並べた図に、<code>main</code>・<code>feature</code>といったラベルの付いた矢印（ポインタ）がそれぞれ異なるコミットを指している様子。<code>HEAD</code>は、いま作業しているブランチ（ここでは<code>feature</code>）を指している。</figcaption>
     </figure>
 
     <h3 id="s3-2">3-2. HEADは「今いる場所」を示す</h3>
@@ -604,7 +604,7 @@
     </p>
     <div class="with-memo">
       <p>
-        なお、コミットハッシュを直接指定して <code>checkout</code> すると、<code>HEAD</code>がブランチではなくコミットを直接指す「detached HEAD（分離HEAD）」状態になります。
+        なお、コミットハッシュを直接指定して<code>checkout</code>すると、<code>HEAD</code>がブランチではなくコミットを直接指す「detached HEAD（分離HEAD）」状態になります。
         この状態のまま新しいコミットを作ると、あとでどのブランチからも参照されない<mark>「迷子コミット」</mark>になりやすいため注意が必要です（詳しくは5章）。
       </p>
       <aside class="memo">作業前にブランチ上にいるか確認</aside>
@@ -642,7 +642,7 @@
         <text x="350" y="167" font-size="13" style="fill:var(--ink-2)">ブランチを介さずコミットを直接指している</text>
         <text x="350" y="188" font-size="13" style="fill:var(--ink-2)">→ ここでのコミットは迷子になりやすい</text>
       </svg>
-      <figcaption><strong>図2</strong>　通常は <code>HEAD</code> → ブランチ → コミットの順に参照が連なる。コミットを直接<code>checkout</code>すると、間のブランチが抜けて<code>HEAD</code>がコミットを直接指す（detached HEAD）。</figcaption>
+      <figcaption>図2　通常は<code>HEAD</code> → ブランチ → コミットの順に参照が連なる。コミットを直接<code>checkout</code>すると、間のブランチが抜けて<code>HEAD</code>がコミットを直接指す（detached HEAD）。</figcaption>
     </figure>
 
     <h3 id="s3-3">3-3. 基本コマンド</h3>
@@ -668,12 +668,12 @@ git merge feature/login
 # 不要になったブランチを削除する
 git branch -d feature/login</code></pre>
     <p>
-      Git 2.23（2019年公開）以降は、ブランチ切り替え専用の <code>git switch</code> と、ファイルを元に戻す専用の <code>git restore</code> が追加されました。
+      Git 2.23（2019年公開）以降は、ブランチ切り替え専用の<code>git switch</code>と、ファイルを元に戻す専用の<code>git restore</code>が追加されました。
     </p>
     <div class="with-memo">
       <p>
-        従来の <code>git checkout</code> はブランチ切り替え・コミットのチェックアウト・ファイルの復元まで何でもこなす万能コマンドで便利な反面、
-        意図しないdetached HEADを招きやすいという弱点がありました。初心者にはより安全な <code>git switch</code> / <code>git restore</code> の利用が推奨されています。
+        従来の<code>git checkout</code>はブランチ切り替え・コミットのチェックアウト・ファイルの復元まで何でもこなす万能コマンドで便利な反面、
+        意図しないdetached HEADを招きやすいという弱点がありました。初心者にはより安全な<code>git switch</code> / <code>git restore</code>の利用が推奨されています。
       </p>
       <aside class="memo">切り替えはswitch、戻すのはrestore</aside>
     </div>
@@ -681,7 +681,7 @@ git branch -d feature/login</code></pre>
     <h3 id="s3-4">3-4. マージとrebaseの違い</h3>
     <div class="with-memo">
       <p>
-        枝分かれしたブランチを1本に統合する方法には、主に <code>merge</code> と <code>rebase</code> の2種類があります。
+        枝分かれしたブランチを1本に統合する方法には、主に<code>merge</code>と<code>rebase</code>の2種類があります。
       </p>
       <aside class="memo">共有済みのブランチはrebaseしない</aside>
     </div>
@@ -694,7 +694,7 @@ git branch -d feature/login</code></pre>
           <tr>
             <td><strong>履歴</strong></td>
             <td>そのまま残す（非破壊的）</td>
-            <td>コミットを別の土台の上に「再適用」し、履歴を書き換える</td>
+            <td>コミットを別の起点の上に「再適用」し、履歴を書き換える</td>
           </tr>
           <tr>
             <td><strong>結果の形</strong></td>
@@ -777,12 +777,12 @@ git branch -d feature/login</code></pre>
         <path d="M522,380 H568" stroke="var(--ink-2)" stroke-width="2" fill="none" marker-end="url(#ptr4)"/>
         <text x="20" y="418" font-size="12.5" style="fill:var(--ink-2)">F1'・F2' は内容は同じでもハッシュが変わった「別のコミット」</text>
       </svg>
-      <figcaption><strong>図3</strong>　<code>merge</code>は分岐した2本の履歴を合流させ、親を2つ持つマージコミットを作る。<code>rebase</code>は作業コミットを<code>main</code>の先端に再適用するため、履歴は直線になるがコミットは作り直される（ハッシュが変わる）。</figcaption>
+      <figcaption>図3　<code>merge</code>は分岐した2本の履歴を合流させ、親を2つ持つマージコミットを作る。<code>rebase</code>は作業コミットを<code>main</code>の先端に再適用するため、履歴は直線になるがコミットは作り直される（ハッシュが変わる）。</figcaption>
     </figure>
 
     <div class="callout caution">
       <span class="label">注意</span>
-      <p>すでにリモートで他の人と共有しているブランチに対して <code>rebase</code> を行うと、コミット履歴（ハッシュ値）が書き換わってしまい、他の人のローカル履歴と食い違いが生じます。共有ブランチのrebaseは避けるのが原則です。</p>
+      <p>すでにリモートで他の人と共有しているブランチに対して<code>rebase</code>を行うと、コミット履歴（ハッシュ値）が書き換わってしまい、他の人のローカル履歴と食い違いが生じます。共有ブランチのrebaseは避けるのが原則です。</p>
     </div>
 
     <h2 id="s4">具体例・使いどころ</h2>
@@ -849,7 +849,7 @@ git branch -d feature/login</code></pre>
 
     <div class="callout note">
       <span class="label">コンフリクトは「異常」ではない</span>
-      <p>複数人が同じ箇所を変更すれば当然起こり得るものです。エディタ上に表示される <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> / <code>=======</code> / <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> の記号で挟まれた部分を確認し、どちらの内容を残すか（あるいは両方を組み合わせるか）を決めて保存し直せば解決できます。</p>
+      <p>複数人が同じ箇所を変更すれば当然起こり得るものです。エディタ上に表示される<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> / <code>=======</code> / <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>の記号で挟まれた部分を確認し、どちらの内容を残すか（あるいは両方を組み合わせるか）を決めて保存し直せば解決できます。</p>
     </div>
 
     <figure>
@@ -891,7 +891,7 @@ git branch -d feature/login</code></pre>
         <text x="406" y="200" font-size="12" style="fill:var(--ink-2)">&gt;&gt;&gt;&gt;&gt;&gt;&gt;）はすべて取り除く</text>
         <text x="406" y="228" font-size="12" style="fill:var(--ink-2)">→ 保存して add / commit すれば完了</text>
       </svg>
-      <figcaption><strong>図4</strong>　コンフリクトが発生したファイルの中身（マーカー付き）と、手動で解決した後のファイルを並べて比較した図。どちらを残すか（あるいは両方を組み合わせるか）を決め、マーカーを消して保存する。</figcaption>
+      <figcaption>図4　コンフリクトが発生したファイルの中身（マーカー付き）と、手動で解決した後のファイルを並べて比較した図。どちらを残すか（あるいは両方を組み合わせるか）を決め、マーカーを消して保存する。</figcaption>
     </figure>
 
     <h2 id="s6">確認問題</h2>
@@ -909,7 +909,7 @@ git branch -d feature/login</code></pre>
     <details class="quiz">
       <summary>Q3. <code>git merge</code>と<code>git rebase</code>の違いを説明せよ。</summary>
       <div class="answer"><p><code>merge</code>は元の履歴をそのまま残し、2つの履歴をつなぐマージコミットを新しく作る（非破壊的、履歴は枝分かれした形になる）。
-      <code>rebase</code>はコミットを別の土台の上に再適用することで履歴を直線的に書き換える（破壊的、共有済みブランチには使わない方がよい）。</p></div>
+      <code>rebase</code>はコミットを別の起点の上に再適用することで履歴を直線的に書き換える（破壊的、共有済みブランチには使わない方がよい）。</p></div>
     </details>
 
     <details class="quiz">
@@ -924,7 +924,7 @@ git branch -d feature/login</code></pre>
 
     <h2 id="s7">参考リンク</h2>
     <ul class="refs">
-      <li><a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell" target="_blank" rel="noopener">Git Book – Branches in a Nutshell（公式ドキュメント / 英語）</a></li>
+      <li><a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell" target="_blank" rel="noopener">Git Book – Branches in a Nutshell（公式ドキュメント/英語）</a></li>
       <li><a href="https://git-scm.com/book/ja/v2/Git-%E3%81%AE%E3%83%96%E3%83%A9%E3%83%B3%E3%83%81%E6%A9%9F%E8%83%BD-%E3%83%96%E3%83%A9%E3%83%B3%E3%83%81%E3%81%A8%E3%83%9E%E3%83%BC%E3%82%B8%E3%81%AE%E5%9F%BA%E6%9C%AC" target="_blank" rel="noopener">Git Book（日本語訳）– ブランチとマージの基本</a></li>
       <li><a href="https://www.atlassian.com/git/tutorials/using-branches" target="_blank" rel="noopener">Atlassian Git Tutorial – Using Branches</a></li>
       <li><a href="https://www.atlassian.com/git/tutorials/merging-vs-rebasing" target="_blank" rel="noopener">Atlassian Git Tutorial – Merging vs. Rebasing</a></li>
