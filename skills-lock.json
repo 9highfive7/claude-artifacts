@@ -1,6 +1,13 @@
 {
   "version": 1,
   "skills": {
+    "eli5": {
+      "source": "anthropics/claude-plugins-community",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "eli5/skills/eli5/SKILL.md",
+      "computedHash": "6c626392eca359b7408fc25073ccd47ca07c7442ab5548df79e43bafc85a1818"
+    },
     "yomiyasu": {
       "source": "nanaism/yomiyasu",
       "sourceType": "github",
