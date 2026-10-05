@@ -14,8 +14,11 @@
     --gold: #d4a84b;
     --gold-dim: #7a672f;
     --sonnet: #6fa8dc;
+    --sonnet-55: #3f7cc9;
     --opus: #d4a84b;
+    --opus-55: #e0773a;
     --haiku: #7ec99a;
+    --unknown: #888;
   }
   * { box-sizing: border-box; }
   body {
@@ -99,7 +102,7 @@
     white-space: nowrap;
   }
 
-  .legend { display: flex; gap: 18px; font-size: 0.78rem; color: var(--ink-dim); margin-bottom: 18px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.78rem; color: var(--ink-dim); margin-bottom: 18px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .dot { width: 9px; height: 9px; display: inline-block; }
 
@@ -151,11 +154,7 @@
 
   <section>
     <h2>レポートごとの内訳</h2>
-    <div class="legend">
-      <span><i class="dot" style="background:var(--sonnet)"></i>Sonnet 5</span>
-      <span><i class="dot" style="background:var(--opus)"></i>Opus 5</span>
-      <span><i class="dot" style="background:var(--haiku)"></i>Haiku 4.5</span>
-    </div>
+    <div class="legend" id="legend"></div>
     <div class="bars" id="bars"></div>
   </section>
 
@@ -184,16 +183,17 @@
 </div>
 
 <script>
-const MODEL_COLOR = {
-  'claude-sonnet-5': 'var(--sonnet)',
-  'claude-opus-5': 'var(--opus)',
-  'claude-haiku-4-5-20251001': 'var(--haiku)',
+// 新しいモデルを使い始めたら、ここに色とラベルを足す（log-usage.js の PRICING にも料金を足す）
+// 凡例はこの順で、CSV に出てくるモデルだけを表示する
+const MODELS = {
+  'claude-sonnet-5':   { color: 'var(--sonnet)',    label: 'Sonnet 5' },
+  'claude-sonnet-5-5': { color: 'var(--sonnet-55)', label: 'Sonnet 5.5' },
+  'claude-opus-5':     { color: 'var(--opus)',      label: 'Opus 5' },
+  'claude-opus-5-5':   { color: 'var(--opus-55)',   label: 'Opus 5.5' },
+  'claude-haiku-4-5-20251001': { color: 'var(--haiku)', label: 'Haiku 4.5' },
 };
-const MODEL_LABEL = {
-  'claude-sonnet-5': 'Sonnet 5',
-  'claude-opus-5': 'Opus 5',
-  'claude-haiku-4-5-20251001': 'Haiku 4.5',
-};
+const modelColor = m => (MODELS[m] && MODELS[m].color) || 'var(--unknown)';
+const modelLabel = m => (MODELS[m] && MODELS[m].label) || m;
 
 function parseCSV(text) {
   const lines = text.replace(/\r/g, '').trim().split('\n');
@@ -247,6 +247,12 @@ async function load() {
     return;
   }
 
+  // 凡例: 登録済みモデルは MODELS の順、未登録のモデルはその後ろに灰色で出す
+  const used = new Set(rows.map(r => r.model).filter(Boolean));
+  const legendModels = [...Object.keys(MODELS).filter(m => used.has(m)), ...[...used].filter(m => !MODELS[m])];
+  document.getElementById('legend').innerHTML = legendModels
+    .map(m => `<span><i class="dot" style="background:${modelColor(m)}"></i>${esc(modelLabel(m))}</span>`).join('');
+
   // グループ化: file(なければtheme)ごとにまとめる
   const groups = {};
   for (const r of rows) {
@@ -277,11 +283,13 @@ async function load() {
   // 棒グラフ
   const maxCost = Math.max(...groupList.map(g => Object.values(g.models).reduce((s, m) => s + m.cost, 0)));
   const barsHtml = groupList.map(g => {
-    const modelCosts = Object.entries(g.models);
+    const order = Object.keys(MODELS);
+    const rank = m => (order.indexOf(m) + 1) || order.length + 1;
+    const modelCosts = Object.entries(g.models).sort(([a], [b]) => rank(a) - rank(b));
     const gcost = modelCosts.reduce((s, [, m]) => s + m.cost, 0);
     const segs = modelCosts.map(([model, m]) => {
       const pct = maxCost ? (m.cost / maxCost) * 100 : 0;
-      return `<div class="bar-seg" style="width:${pct}%;background:${MODEL_COLOR[model] || '#888'}"></div>`;
+      return `<div class="bar-seg" style="width:${pct}%;background:${modelColor(model)}"></div>`;
     }).join('');
     const link = g.file ? `<a href="${esc(g.file)}">${esc(g.theme)}</a>` : esc(g.theme);
     return `
@@ -300,7 +308,7 @@ async function load() {
     <tr>
       <td>${(r.timestamp || '').replace('T', ' ').slice(0, 16)}</td>
       <td class="theme-cell">${esc(r.theme)}</td>
-      <td>${MODEL_LABEL[r.model] || esc(r.model)}</td>
+      <td>${esc(modelLabel(r.model))}</td>
       <td class="num">${fmtInt(r.input_tokens)}</td>
       <td class="num">${fmtInt(r.output_tokens)}</td>
       <td class="num">${fmtUSD(Number(r.cost_usd) || 0)}</td>
