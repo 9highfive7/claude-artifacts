@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude CodeのModとは何か：画面と挙動を関数で書き換える拡張|学習ノート</title>
+<!-- notebook-ui:start （全レポート共通の見た目と操作部品。このブロックは編集しない） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Klee+One:wght@600&family=Zen+Kaku+Gothic+New:wght@700&display=swap" rel="stylesheet">
+<style id="nb-style">
+  /* =====================================================================
+     学習ノート「書き込みノート」デザイン（全レポート共通）
+     白い紙のノートに、蛍光ペン（重要語）と赤ペン（要点メモ）だけで書き込んだ見た目。
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文 17px・行間 1.9・字間 0.02em・1行 40字（max-width: 40em）
+     - 文字サイズは タイトル34px／h2 26px／h3 19px／本文17px
+     - 余白は 8px ベース。見出しは前のセクションから離し、直後の本文に近づける
+     - 強調は <mark>（蛍光ペン）と .memo（赤ペン）の2種類だけ
+     ===================================================================== */
+  :root {
+    --desk: #F3F5F7;
+    --grid-line: rgba(42, 75, 141, .06);
+    --sheet: #FFFFFF;
+    --ink: #22262B;
+    --ink-sub: #46505B;
+    --ink-muted: #4C5560;
+    --rule: #B9C2CC;
+    --marker: #FFE24A;
+    --hl: #FFE24A;                 /* 文字に引く蛍光ペン */
+    --marker-fill: #FFE24A;        /* 図の中で1か所だけ塗る蛍光ペン */
+    --red-pen: #C8332A;
+    --blue-ink: #2A4B8D;
+    --link: #1F5BB5;
+    --code-bg: #F3F5F7;
+    --sheet-shadow: 0 1px 2px rgba(30, 40, 55, .08), 0 8px 24px rgba(30, 40, 55, .06);
+    /* 旧デザインの変数名（既存の図・レポート固有スタイルとの互換用） */
+    --paper: var(--sheet); --paper-2: var(--code-bg); --ink-2: var(--ink-sub);
+    --marker-ink: #22262B;
+    --note: #E3EBF7; --caution: #FBE6E3;   /* 図の中で「種類」を塗り分ける淡い色（強調には使わない） */
+    --surface: var(--sheet); --radius: 10px; --shadow: var(--sheet-shadow); --focus: var(--link);
+
+    --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    --font-title: "Zen Kaku Gothic New", "BIZ UDPGothic", "Hiragino Sans", sans-serif;
+    --font-hand: "Klee One", "BIZ UDPGothic", cursive;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --font-display: var(--font-title);
+
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+    --topbar-h: 64px;
+    --toc-w: 230px;
+    --sheet-w: 940px;
+    /* 文字サイズ（17px = 1rem） */
+    --fs-title: 2rem;              /* 34px */
+    --fs-h2: calc(26rem / 17);     /* 26px */
+    --fs-h3: calc(19rem / 17);     /* 19px */
+    --fs-small: calc(15rem / 17);  /* 15px キャプション・目次・メモ */
+    --fs-meta: calc(14rem / 17);   /* 14px メタ情報 */
+    color-scheme: light;
+    interpolate-size: allow-keywords;
+  }
+  /* ---- 夜のノート（ダーク）: 端末の設定に合わせる＋手動切替 ---- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+      --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+      --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+      --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+      --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+      --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+    --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+    --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+    --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+    --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+    --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+    color-scheme: dark;
+  }
+  /* 文字サイズ切替（rem 基準なので本文・見出しが一緒に拡大する） */
+  html { font-size: 106.25%; }
+  :root[data-fs="l"] { font-size: 118.75%; }
+  :root[data-fs="xl"] { font-size: 131.25%; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + var(--sp-2)); }
+  body {
+    margin: 0; color: var(--ink);
+    background-color: var(--desk);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--font-body); font-size: 1rem; line-height: 1.9; letter-spacing: 0.02em;
+    text-align: left; -webkit-font-smoothing: antialiased; text-size-adjust: 100%;
+  }
+  a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :where(a, button, summary, input, [tabindex]):focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+  em, i, cite { font-style: normal; font-weight: 700; }
+  strong, b { font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+  ::selection { background: var(--hl); color: inherit; }
+
+  /* ---- 蛍光ペン（その節で一番大事な語句だけ） ---- */
+  mark { background: linear-gradient(transparent 60%, var(--hl) 60%); color: inherit; padding: 0 0.08em; }
+
+  /* ---- ページの骨組み: 左に目次、右に本文の紙 ---- */
+  .page {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2);
+    margin: 0 auto; padding: var(--sp-4) var(--sp-3) var(--sp-5);
+    display: grid; grid-template-columns: var(--toc-w) minmax(0, var(--sheet-w));
+    column-gap: var(--sp-4); align-items: start; justify-content: center;
+  }
+  .sheet {
+    grid-column: 2; min-width: 0;
+    background: var(--sheet); padding: 48px 56px 64px;
+    box-shadow: var(--sheet-shadow);
+  }
+
+  /* ---- 表紙 ---- */
+  .cover { margin: 0 0 var(--sp-4); padding: 0 0 var(--sp-3); border-bottom: 1.5px dashed var(--rule); }
+  .cover .back { display: inline-block; margin-bottom: var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+  .nb-js .cover .back { display: none; }
+  .cover h1 {
+    margin: 0 0 var(--sp-2); font-family: var(--font-title); font-weight: 700;
+    font-size: var(--fs-title); line-height: 1.4; letter-spacing: 0;
+  }
+  .cover h1 span { background: none; }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); font-size: var(--fs-meta); line-height: 1.7; color: var(--ink-muted); }
+  .cover .meta a { color: inherit; }
+
+  /* ---- 目次（左に固定。読み終えた章に赤ペンのチェック） ---- */
+  .toc {
+    grid-column: 1; grid-row: 1 / span 2;
+    position: sticky; top: calc(var(--topbar-h) + var(--sp-3));
+    max-height: calc(100vh - var(--topbar-h) - var(--sp-5)); overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) 0; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    scrollbar-width: thin;
+  }
+  .toc h2 { margin: 0 0 12px; font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); line-height: 1.4; color: var(--ink); }
+  .toc ol, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol > li > a { padding-left: 30px; }
+  .toc ol > li > a, .nb-row a { display: block; padding-top: 4px; padding-bottom: 4px; }
+  .toc .sub { padding-left: 30px; margin: 0 0 6px; }
+  .toc .sub a { display: block; padding: 2px 0; color: var(--ink-sub); font-size: var(--fs-meta); }
+  .toc a.is-active { font-weight: 700; }
+  .toc a.is-active .t, .nb-drawer a.is-active .t { background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-row { display: flex; align-items: flex-start; gap: 8px; }
+  .nb-row a { flex: 1; min-width: 0; }
+  .nb-check {
+    flex: none; width: 22px; height: 22px; margin-top: 5px; padding: 0;
+    background: none; border: 0; color: var(--ink-sub); cursor: pointer;
+  }
+  .nb-check svg { display: block; width: 22px; height: 22px; overflow: visible; }
+  .nb-tick { stroke: var(--red-pen); stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .35s ease-out; }
+  .is-read > .nb-row .nb-tick, .nb-check[aria-pressed="true"] .nb-tick { stroke-dashoffset: 0; }
+  .nb-toc-note { margin: var(--sp-2) 0 0; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 本文 ---- */
+  .prose { overflow-wrap: break-word; }   /* 長い英単語・URLが狭い画面からはみ出さないように */
+  .prose > :first-child { margin-top: 0; }
+  .prose p, .prose ul, .prose ol { max-width: var(--measure); }
+  .prose p { margin: 0 0 1.5em; }
+  .prose ul, .prose ol { margin: 0 0 1.5em; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: 0.4em; }
+  .prose li > ul, .prose li > ol { margin: 0.4em 0 0; }
+  .prose h2 {
+    position: relative; width: fit-content; max-width: 100%;
+    margin: 80px 0 var(--sp-3); padding-bottom: 12px;
+    font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: 0;
+  }
+  /* 蛍光ペンで引いたような、少しゆがんだ下線（h2だけ） */
+  .prose h2::after {
+    content: ""; position: absolute; left: -4px; right: -6px; bottom: 0; height: 10px;
+    background: var(--hl);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  }
+  .prose h3 { margin: 56px 0 12px; font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .prose h4 { margin: 40px 0 8px; padding: 0; border: 0; font-size: 1rem; font-weight: 700; line-height: 1.6; letter-spacing: 0; color: var(--ink); }
+  .prose h2 + h3 { margin-top: var(--sp-3); }
+  .prose :is(h2, h3, h4) + :is(p, ul, ol, .with-memo, .callout, .table-wrap, figure, .nb-fig, pre, .nb-code, details, .nb-quiz-tools) { margin-top: 0; }
+
+  /* ---- 赤ペンのメモ（本文の右余白。狭い画面では段落の下へ回り込む） ---- */
+  .with-memo { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 32px; margin: 0 0 1.5em; }
+  .with-memo > :not(.memo) { flex: 1 1 22em; min-width: 0; margin-bottom: 0; }
+  .memo {
+    flex: 0 1 190px; margin: 4px 0 0; padding: 0;
+    font-family: var(--font-hand); font-weight: 600; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    color: var(--red-pen); transform: rotate(-1.5deg); transform-origin: 0 0;
+  }
+  .memo p { margin: 0; }
+
+  /* ---- 3行でいうと（青インクの破線枠＋手書きラベル） ---- */
+  .callout {
+    position: relative; max-width: var(--measure); margin: var(--sp-4) 0;
+    padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; background: none;
+  }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout p + p { margin-top: 0; }
+  .callout ul, .callout ol { margin-bottom: 0; }
+  .callout .label { display: block; margin-bottom: 4px; font-size: var(--fs-small); font-weight: 700; color: var(--ink-sub); letter-spacing: 0; }
+  .callout.caution .label { font-family: var(--font-hand); font-weight: 600; font-size: 1rem; color: var(--red-pen); }
+  .callout.note .label { color: var(--blue-ink); }
+  .callout.summary { margin: var(--sp-4) 0 var(--sp-5); padding: 28px var(--sp-3) 20px; border-color: var(--blue-ink); }
+  .callout.summary .label {
+    position: absolute; top: 0; left: 18px; transform: translateY(-55%); margin: 0; padding: 0 10px;
+    background: var(--sheet); font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.4; color: var(--blue-ink);
+  }
+  .callout.summary :is(ul, ol) { list-style: decimal; padding-inline-start: 1.6em; }
+  .callout.summary li::marker { font-family: var(--font-hand); font-weight: 600; color: var(--blue-ink); }
+
+  /* ---- 表（ヘッダー下は実線、行の区切りは破線） ---- */
+  .table-wrap { overflow-x: auto; margin: var(--sp-4) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: calc(16rem / 17); line-height: 1.7; letter-spacing: 0.01em; }
+  caption { caption-side: top; text-align: left; padding: 0 0 var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); }
+  th, td { padding: 10px var(--sp-2) 10px 0; text-align: left; vertical-align: top; border-bottom: 1px dashed var(--rule); }
+  :is(th, td):last-child { padding-right: 0; }
+  thead th { border-bottom: 2px solid var(--ink); font-weight: 700; white-space: nowrap; }
+  tbody th { font-weight: 700; }
+  table.nb-term tbody tr > :first-child { font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- コード ---- */
+  pre {
+    margin: var(--sp-4) 0; padding: var(--sp-2) 20px; overflow-x: auto;
+    background: var(--code-bg); border-radius: 8px;
+    font-size: var(--fs-small); line-height: 1.7; letter-spacing: 0;
+  }
+  code { font-family: var(--font-mono); }
+  pre code { font-size: inherit; }
+  :not(pre) > code { padding: 0.1em 0.35em; background: var(--code-bg); border-radius: 4px; font-size: 0.88em; letter-spacing: 0; overflow-wrap: anywhere; }
+
+  /* ---- 図（実線の枠に入れたインラインSVG。キャプションは図の直下） ---- */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg {
+    display: block; width: 100%; height: auto; padding: 20px;
+    border: 1.5px solid var(--ink); border-radius: 12px; color: var(--ink); background: var(--sheet);
+  }
+  figure svg text { font-family: var(--font-body); fill: currentColor; letter-spacing: 0; }
+  figcaption { margin-top: var(--sp-1); font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  figcaption b:first-child { color: var(--ink); margin-right: 0.3em; }
+
+  /* ---- やさしく図解（大きな絵と少ない言葉。縦長の図にして、スマホでも図の文字を12px前後に保つ） ---- */
+  .eli5 { max-width: 440px; margin: var(--sp-4) auto; }
+  .eli5 .nb-fig, .eli5 figure { margin: 0; }
+  .prose :is(h2, h3, h4) + .eli5 { margin-top: 0; }
+  .eli5-label {
+    display: inline-block; margin: 0 0 var(--sp-2); padding: 0 12px;
+    font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.6; letter-spacing: 0;
+    color: var(--blue-ink); border: 1.5px dashed var(--blue-ink); border-radius: 10px;
+  }
+
+  /* ---- 確認問題 ---- */
+  .quiz { max-width: var(--measure); margin: 0; border: 0; border-bottom: 1px dashed var(--rule); border-radius: 0; background: none; }
+  :not(.quiz) + .quiz { border-top: 1px dashed var(--rule); }
+  .quiz summary, .more summary { position: relative; padding: 14px 40px 14px 0; cursor: pointer; font-weight: 700; list-style: none; }
+  .quiz summary::-webkit-details-marker, .more summary::-webkit-details-marker { display: none; }
+  .quiz summary::after, .more summary::after {
+    content: ""; position: absolute; right: 8px; top: calc(14px + 0.45em); width: 18px; height: 18px;
+    background: var(--ink-sub); transition: transform .2s;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  details[open] > summary::after { transform: rotate(180deg); }
+  .quiz summary:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+  .quiz .answer { padding: 0 0 var(--sp-2); border: 0; }
+  .quiz .answer::before { content: "答え"; display: block; font-family: var(--font-hand); font-weight: 600; color: var(--red-pen); line-height: 1.6; }
+  .quiz .answer > :last-child { margin-bottom: 0; }
+  .quiz .question { margin: var(--sp-2) 0 4px; font-weight: 700; }
+  .quiz .choices { margin: 0 0 4px; }
+  .quiz details { margin: 0; border: 0; }
+  .quiz details summary { padding-top: 4px; padding-bottom: 8px; font-weight: 400; color: var(--link); }
+  .quiz details summary::after { top: calc(4px + 0.45em); }
+  details::details-content { transition: block-size .25s ease, content-visibility .25s allow-discrete; overflow: clip; block-size: 0; }
+  details[open]::details-content { block-size: auto; }
+  .more { max-width: var(--measure); margin: var(--sp-3) 0; padding: 0 var(--sp-2); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .more summary { color: var(--link); }
+  .more .inner { padding: 0 0 var(--sp-2); border: 0; }
+
+  /* ---- 参考リンク・フッター ---- */
+  .refs { max-width: var(--measure); }
+  .refs li { overflow-wrap: anywhere; }
+  .sheet > footer, .page > footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1.5px dashed var(--rule); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .sheet > footer p { margin: 0; }
+  .sheet > footer p + p { margin-top: var(--sp-1); }
+
+  /* ---- 上部バー ---- */
+  .nb-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); border-radius: 8px; }
+  .nb-skip:focus { top: var(--sp-1); }
+  .nb-topbar {
+    position: sticky; top: 0; z-index: 50; height: var(--topbar-h);
+    background: color-mix(in srgb, var(--desk) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+    letter-spacing: 0;
+  }
+  .nb-topbar-inner {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2); height: 100%;
+    margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2);
+  }
+  .nb-home {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; min-height: 44px; padding: 0 10px 0 4px; margin-left: -4px;
+    color: var(--ink); text-decoration: none; font-weight: 700; border-radius: 8px;
+  }
+  .nb-home:hover { background: color-mix(in srgb, var(--rule) 25%, transparent); text-decoration: none; }
+  .nb-home svg { width: 20px; height: 20px; }
+  .nb-where { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); opacity: 0; transition: opacity .2s; }
+  .nb-where.is-shown { opacity: 1; }
+  .nb-where .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-where .t-page { flex: 0 1 auto; max-width: 50%; }
+  .nb-where .sep { flex-shrink: 0; }
+  .nb-where .t-sec { flex: 0 1 auto; color: var(--ink); font-weight: 700; }
+  .nb-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; margin-left: auto; }
+  .nb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-width: 44px; min-height: 44px; padding: 0 14px;
+    font: inherit; font-size: var(--fs-small); line-height: 1; color: var(--ink);
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer;
+  }
+  .nb-btn:hover { border-color: var(--ink-sub); }
+  .nb-btn[aria-pressed="true"] { border-color: var(--ink); font-weight: 700; }
+  .nb-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nb-toc-btn { display: none; }
+  .nb-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--blue-ink); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* ---- 引き出し式の目次（900px以下） ---- */
+  .nb-drawer {
+    margin: 0 auto 0 0; height: 100%; max-height: 100dvh; width: min(340px, 88vw); max-width: none;
+    padding: 0; border: 0; background: var(--sheet); color: var(--ink); box-shadow: var(--sheet-shadow);
+    font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+  }
+  .nb-drawer::backdrop { background: rgb(10 14 20 / 0.45); }
+  .nb-drawer[open] { animation: nb-slide .22s ease-out; }
+  @keyframes nb-slide { from { transform: translateX(-24px); opacity: 0; } }
+  .nb-dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3); background: var(--sheet); border-bottom: 1px dashed var(--rule); }
+  .nb-dialog-head strong { font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); }
+  .nb-drawer nav { padding: var(--sp-2) var(--sp-3) var(--sp-4); }
+  .nb-drawer ol, .nb-drawer ul { list-style: none; margin: 0; padding: 0; }
+  .nb-drawer a { color: var(--ink); text-decoration: none; }
+  .nb-drawer ol > li > a { display: block; padding: 6px 0 6px 30px; }
+  .nb-drawer .nb-row a { padding: 6px 0; }
+  .nb-drawer .nb-check { margin-top: 7px; }
+  .nb-drawer .sub { padding-left: 30px; margin: 0 0 6px; }
+  .nb-drawer .sub a { display: block; padding: 6px 0; color: var(--ink-sub); }
+  .nb-drawer a.is-active { font-weight: 700; }
+
+  /* ---- 見出しのリンク ---- */
+  .nb-anchor { margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.75em; font-weight: 400; color: var(--ink-sub); text-decoration: none; opacity: 0; transition: opacity .15s; }
+  :is(h2, h3, h4):hover > .nb-anchor, .nb-anchor:focus-visible { opacity: 1; }
+  @media (hover: none) { .nb-anchor { display: none; } }
+
+  /* ---- 表・図の横スクロールの案内 ---- */
+  .nb-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+  .nb-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+  .nb-more-left.nb-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+  .nb-scroll-hint { display: none; margin: calc(var(--sp-3) * -1) 0 var(--sp-3); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .nb-scroll-hint.is-shown { display: block; }
+
+  /* ---- 図の拡大 ---- */
+  .nb-fig { position: relative; margin: var(--sp-4) 0; }
+  .nb-fig > figure { margin: 0; }
+  .nb-expand {
+    position: absolute; top: -14px; right: var(--sp-2); z-index: 1;
+    min-height: 28px; min-width: 28px; padding: 0 10px; font-size: var(--fs-meta);
+    color: var(--ink-sub); background: var(--sheet);
+  }
+  .nb-expand svg { width: 14px; height: 14px; }
+  .nb-lightbox {
+    width: min(1200px, 96vw); max-width: none; max-height: 92dvh; padding: 0;
+    border: 1.5px solid var(--ink); border-radius: 12px; background: var(--sheet); color: var(--ink);
+  }
+  .nb-lightbox::backdrop { background: rgb(10 14 20 / 0.6); }
+  .nb-lightbox .nb-dialog-head strong { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-small); color: var(--ink-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-lightbox figure { margin: 0; padding: var(--sp-3); overflow: auto; }
+  .nb-lightbox figure > svg { min-width: 760px; border: 0; padding: 0; }
+
+  /* ---- コードのコピー ---- */
+  .nb-code { position: relative; margin: var(--sp-4) 0; }
+  .nb-code > pre { margin: 0; padding-right: 96px; }
+  .nb-copy { position: absolute; top: var(--sp-1); right: var(--sp-1); min-height: 32px; padding: 0 10px; font-size: var(--fs-meta); color: var(--ink-sub); }
+  .nb-copy svg { width: 16px; height: 16px; }
+
+  /* ---- 確認問題の一括表示 ---- */
+  .nb-quiz-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-1) var(--sp-2); max-width: var(--measure); margin: 0 0 var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+
+  /* ---- シリーズ・関連ノート（トップページの一覧から自動で作る） ---- */
+  .nb-related { margin-top: var(--sp-5); }
+  .nb-related h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .nb-related > section + section { margin-top: var(--sp-4); }
+  .nb-series { padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .nb-series ol { margin: 0; padding-left: 1.6em; }
+  .nb-series li + li { margin-top: 4px; }
+  .nb-series .is-current { font-weight: 700; background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-pn { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-1) var(--sp-3); margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px dashed var(--rule); }
+  .nb-pn .is-next { margin-left: auto; text-align: right; }
+  .nb-list { list-style: none; margin: 0; padding: 0; }
+  .nb-list li { padding: 12px 0; border-bottom: 1px dashed var(--rule); }
+  .nb-list li:first-child { border-top: 1px dashed var(--rule); }
+  .nb-list a { font-weight: 700; }
+  .nb-list .s { display: block; margin-top: 2px; font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  .nb-list .m { display: block; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 先頭へ・通知 ---- */
+  .nb-fab {
+    position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40; width: 48px; height: 48px; padding: 0;
+    box-shadow: var(--sheet-shadow); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .nb-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+  .nb-toast {
+    position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    padding: var(--sp-1) var(--sp-2); border-radius: 8px; background: var(--ink); color: var(--sheet); font-size: var(--fs-small); letter-spacing: 0;
+    transition: opacity .2s, transform .2s;
+  }
+  .nb-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---- 900px以下: 目次はヘッダーから開く ---- */
+  @media (max-width: 900px) {
+    .page { display: block; max-width: calc(var(--sheet-w) + var(--sp-3) * 2); padding: var(--sp-3) var(--sp-2) var(--sp-5); }
+    .toc { position: static; max-height: none; overflow: visible; margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--sheet); }
+    .nb-js .page > .toc { display: none; }
+    .nb-toc-btn { display: inline-flex; }
+    .sheet { padding: 40px 32px 56px; }
+  }
+  @media (max-width: 600px) {
+    :root { --topbar-h: 56px; }
+    .page { padding: var(--sp-2) 10px var(--sp-4); }
+    .sheet { padding: 32px 20px 48px; }
+    .nb-topbar-inner { padding: 0 var(--sp-1) 0 var(--sp-2); gap: var(--sp-1); }
+    .nb-where, .nb-btn .label-wide { display: none; }
+    .nb-actions { gap: 6px; }
+    .nb-btn { padding: 0 10px; }
+    .prose h2 { margin-top: 64px; }
+    .memo { flex-basis: 100%; padding-left: 1em; }
+    table.nb-term tbody tr > :first-child { white-space: normal; min-width: 7em; }
+    .table-wrap :is(th, td) { min-width: 5em; }
+    .eli5 figure > svg { padding: 12px; }
+    .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after, ::details-content { transition: none !important; animation: none !important; }
+  }
+  @media print {
+    body { background: #fff; }
+    .nb-topbar, .nb-fab, .nb-toast, .nb-anchor, .nb-copy, .nb-expand, .nb-quiz-tools, .nb-scroll-hint, .nb-skip, .page > .toc, .nb-toc-note { display: none !important; }
+    .page { display: block; max-width: none; padding: 0; }
+    .sheet { box-shadow: none; padding: 0; }
+    .nb-more-left, .nb-more-right { -webkit-mask-image: none; mask-image: none; }
+    figure, .quiz, .table-wrap, .callout { break-inside: avoid; }
+  }
+</style>
+<script>try{var t=localStorage.getItem('ln-theme'),f=localStorage.getItem('ln-fs'),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);if(f==='l'||f==='xl')r.setAttribute('data-fs',f);}catch(e){}</script>
+<!-- notebook-ui:end -->
+<style>
+  /* このレポートだけで使うスタイル（必要なときだけ書く。色は上の CSS 変数を使う） */
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="toc" aria-label="目次">
+    <h2>もくじ</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組みと全体像</a>
+        <ul class="sub">
+          <li><a href="#s3-files">Modの構成ファイル</a></li>
+          <li><a href="#s3-hooks">フックが取れる3つの態度</a></li>
+          <li><a href="#s3-api">できること（mods API）</a></li>
+          <li><a href="#s3-env">動作環境</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例と使いどころ</a></li>
+      <li><a href="#s5">注意点・よくある誤解</a></li>
+      <li><a href="#s6">確認問題</a></li>
+      <li><a href="#s7">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <article class="sheet">
+    <header class="cover">
+      <a class="back" href="../index.html">学習ノートに戻る</a>
+      <h1>Claude CodeのModとは何か：画面と挙動を関数で書き換える拡張</h1>
+      <ul class="meta">
+        <li>作成日 2026-10-05</li>
+        <li>分野 AI／開発</li>
+      </ul>
+    </header>
+
+    <main class="prose">
+
+      <h2 id="s1">概要</h2>
+      <div class="callout summary">
+        <span class="label">3行でいうと</span>
+        <ol>
+          <li>Claude Codeの「Mod」は、JavaScript/TypeScriptの<mark>関数（フック）を並べたプラグイン</mark>で、Claude Codeの中で動き、ペイン・バンド・スピナーなどの画面を描いたり、ツール呼び出しやプロンプトに割り込んだりできる。</li>
+          <li>ファイルを保存すると動作中のセッションに反映される（<mark>ホットリロード</mark>）。Claudeに「こんなModを作って」と頼むだけで書いてもらうこともできる。</li>
+          <li>Modは自分の権限で動くコードで、<mark>サンドボックスの外</mark>にある。信頼できる作者のものだけを入れ、導入前に<code>claude plugin validate</code>で中身を確認する。</li>
+        </ol>
+      </div>
+      <p>確認日は2026-10-05。公式ドキュメント（Claude Code DocsのMods各ページ、v2.1.289時点の記述）を一次情報として整理した。</p>
+
+      <h3>「Claude MOD」の意味を確認した結果</h3>
+      <div class="with-memo">
+        <p>公式ドキュメントに「Mods」という独立した章があり（<code>/docs/en/plugins/mods/</code>）、依頼文の想定どおりClaude Codeの機能を指すことが確認できた。ゲームのMOD（遊ぶ側がゲームを改造する追加データ）と「本体の外から挙動を足す」という発想は近いが、これは筆者の例えであり公式の説明ではない。ClaudeのWeb版やスマホアプリに「MOD」という機能がある、という一次情報は見つからなかった。</p>
+        <aside class="memo">ゲームのMODとの比較は筆者の例え話</aside>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>確認できたこと・できなかったこと</caption>
+          <thead><tr><th>項目</th><th>状況</th></tr></thead>
+          <tbody>
+            <tr><td>Claude CodeのMod（関数フックのプラグイン）</td><td>公式ドキュメントで確認済み</td></tr>
+            <tr><td>必要バージョン</td><td>v2.1.287以降、既定でオン（公式）</td></tr>
+            <tr><td>動く場所</td><td>CLIとデスクトップアプリのCodeタブで画面も描ける（公式）</td></tr>
+            <tr><td>ゲームのMOD的な別機能</td><td>一次情報なし。ここでは扱わない</td></tr>
+            <tr><td>サードパーティ製Modの品質・安全性</td><td>個別に確認が必要（本文の「注意点」参照）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>既存ノート<a href="claude-code-extensions-overview.html">Claude Codeの拡張の全体像：どの仕組みをいつ使うか</a>は、CLAUDE.md・Skill・Hooks・MCP・Modsを並べて比べている。このノートは、その中のModsだけを掘り下げたものにあたる。</p>
+
+      <h2 id="s2">基本用語</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>用語</th><th>意味</th></tr></thead>
+          <tbody>
+            <tr><td>Mod</td><td>Claude Codeの見た目や挙動を変えるプラグイン。コードは<mark>イベントハンドラ（フック）の集まり</mark></td></tr>
+            <tr><td>フック（hook）</td><td>イベントが起きたときにClaude Codeが呼ぶ関数。ここではMod内の関数を指す。従来のsettings.jsonに書くシェルコマンド式は「<mark>設定フック</mark>」と区別される</td></tr>
+            <tr><td>hooks module</td><td>Modのコード本体（例<code>register.js</code>）。<code>register(on)</code>をexportする</td></tr>
+            <tr><td>イベント</td><td><code>tool.call</code>（ツール実行前）、<code>prompt.submit</code>、<code>turn.complete</code>、<code>ui.render</code>など</td></tr>
+            <tr><td>マッチャー</td><td>フックを特定のイベントだけに絞る条件。例<code>{ tool: 'Bash' }</code></td></tr>
+            <tr><td><code>$</code>（mods API）</td><td>フックの第1引数。画面表示、ファイル、プロセス、モデル呼び出しなど外への操作はすべてここ経由</td></tr>
+            <tr><td><code>next</code></td><td>フックの第3引数。次のフック、最後にClaude Code本来の処理へ渡す関数</td></tr>
+            <tr><td>ペイン（pane）</td><td>会話の横や上に出る操作できる領域</td></tr>
+            <tr><td>バンド（band）</td><td>プロンプト欄の上に出る帯状の領域（<code>AbovePrompt</code>）</td></tr>
+            <tr><td>トースト</td><td>右上に数秒だけ出る通知（<code>$.ui.toast</code>、既定4秒）</td></tr>
+            <tr><td>ステータス行</td><td><code>$.ui.status</code>で出す、プロンプト下の1行</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s3">仕組みと全体像</h2>
+
+      <h3 id="s3-files">Modの構成ファイル</h3>
+      <div class="with-memo">
+        <p>最小のModは<mark>3ファイルだけ</mark>で、ビルド工程もNode.jsも要らない（Claude Codeが.js/.tsを直接読み込む）。</p>
+        <aside class="memo">hooks.jsonにmodulesがあればMod</aside>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ファイル</th><th>役割</th></tr></thead>
+          <tbody>
+            <tr><td><code>.claude-plugin/plugin.json</code></td><td>プラグインの名前・版数などの説明書き（マニフェスト）</td></tr>
+            <tr><td><code>hooks/hooks.json</code></td><td><code>"modules": ["./register.js"]</code>でコードの場所を指す。これがあるとプラグインがModになる</td></tr>
+            <tr><td><code>hooks/register.js</code></td><td>コード本体。<code>register(on)</code>の中で<code>on('イベント名',関数)</code>を並べる</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure>
+        <svg viewBox="0 0 720 320" role="img" aria-label="左にModの3ファイル（plugin.json、hooks.json、register.js）、右にClaude Code本体の流れ。イベントはまずregister.jsで登録したフックに渡り、フックはnextで本来の処理へ渡すか、nextを呼ばずに自分で結果を返す。">
+          <title>Modの3ファイルとフックの流れ</title>
+          <defs><marker id="f1-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+
+          <text x="20" y="28" font-size="15" font-weight="700">Modのフォルダ</text>
+          <rect x="20" y="40" width="260" height="260" rx="12" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="40" y="60" width="220" height="56" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="52" y="84" font-size="12" style="font-family: var(--font-mono)">.claude-plugin/plugin.json</text>
+          <text x="52" y="104" font-size="12" style="fill: var(--ink-sub)">名前・版数（マニフェスト）</text>
+          <rect x="40" y="142" width="220" height="56" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="52" y="166" font-size="12" style="font-family: var(--font-mono)">hooks/hooks.json</text>
+          <text x="52" y="186" font-size="12" style="fill: var(--ink-sub)">modulesでコードを指す</text>
+          <line x1="150" y1="199" x2="150" y2="221" stroke="currentColor" stroke-width="2" marker-end="url(#f1-ah)"/>
+          <rect x="40" y="224" width="220" height="56" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="52" y="248" font-size="12" style="font-family: var(--font-mono)">hooks/register.js</text>
+          <text x="52" y="268" font-size="12" style="fill: var(--ink-sub)">register(on)でフックを並べる</text>
+
+          <path d="M262 252 C 305 252, 312 168, 352 168" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#f1-ah)"/>
+
+          <text x="330" y="28" font-size="15" font-weight="700">Claude Code本体</text>
+          <rect x="330" y="40" width="370" height="260" rx="12" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="356" y="60" width="168" height="52" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="440" y="82" font-size="15" font-weight="700" text-anchor="middle">イベント</text>
+          <text x="440" y="102" font-size="12" text-anchor="middle">tool.callなど</text>
+          <line x1="440" y1="113" x2="440" y2="139" stroke="currentColor" stroke-width="2" marker-end="url(#f1-ah)"/>
+          <rect x="356" y="142" width="168" height="52" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+          <text x="440" y="164" font-size="15" font-weight="700" text-anchor="middle">フック（Modの関数）</text>
+          <text x="440" y="184" font-size="12" text-anchor="middle">$・e・nextを受け取る</text>
+          <line x1="440" y1="195" x2="440" y2="221" stroke="currentColor" stroke-width="2" marker-end="url(#f1-ah)"/>
+          <text x="450" y="213" font-size="12" style="font-family: var(--font-mono)">next(e)</text>
+          <rect x="356" y="224" width="168" height="52" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="440" y="246" font-size="15" font-weight="700" text-anchor="middle">本来の処理</text>
+          <text x="440" y="266" font-size="12" text-anchor="middle">ツール実行・画面描画</text>
+
+          <line x1="525" y1="168" x2="557" y2="168" stroke="currentColor" stroke-width="2" marker-end="url(#f1-ah)"/>
+          <rect x="560" y="142" width="124" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="622" y="164" font-size="13" font-weight="700" text-anchor="middle">nextを呼ばず</text>
+          <text x="622" y="184" font-size="12" text-anchor="middle">自分で結果を返す</text>
+        </svg>
+        <figcaption><b>図1</b>Modは3つのファイルでできている。register.jsで登録したフックが本来の処理の手前でイベントを受け取り、nextで先へ渡すか、自分で結果を返す。</figcaption>
+      </figure>
+
+      <h3 id="s3-hooks">フックが取れる3つの態度</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 460" role="img" aria-label="流れてくる荷物（イベント）を番人（フック）が扱う3通り。1は見るだけでそのまま通す、2は書き換えたコピーを通す、3は自分で結果を返して本来の処理には届けない。">
+            <title>フックの3つの動き</title>
+            <defs><marker id="e2-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+
+            <!-- 1 見るだけで通す -->
+            <circle cx="22" cy="24" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="30" text-anchor="middle" font-size="16" font-weight="700">1</text>
+            <text x="44" y="30" font-size="16" font-weight="700">見るだけで通す</text>
+            <g transform="translate(46 90)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-20" y="-16" width="40" height="32" rx="4"/><line x1="0" y1="-16" x2="0" y2="16"/></g>
+            <text x="46" y="128" font-size="16" text-anchor="middle">イベント</text>
+            <line x1="70" y1="90" x2="100" y2="90" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <g transform="translate(124 90)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-12" r="8"/><path d="M-15 16 C-15 0 15 0 15 16 Z"/></g>
+            <text x="124" y="128" font-size="16" text-anchor="middle">フック</text>
+            <line x1="146" y1="90" x2="170" y2="90" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <g transform="translate(196 90)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-20" y="-16" width="40" height="32" rx="4"/><line x1="0" y1="-16" x2="0" y2="16"/></g>
+            <text x="196" y="128" font-size="16" text-anchor="middle">そのまま</text>
+            <line x1="220" y1="90" x2="236" y2="90" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <rect x="240" y="68" width="104" height="44" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <text x="292" y="96" font-size="16" text-anchor="middle">本来の処理</text>
+
+            <line x1="20" y1="160" x2="340" y2="160" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+
+            <!-- 2 書き換えて通す -->
+            <circle cx="22" cy="184" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="190" text-anchor="middle" font-size="16" font-weight="700">2</text>
+            <text x="44" y="190" font-size="16" font-weight="700">書き換えて通す</text>
+            <g transform="translate(46 250)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-20" y="-16" width="40" height="32" rx="4"/><line x1="0" y1="-16" x2="0" y2="16"/></g>
+            <text x="46" y="288" font-size="16" text-anchor="middle">イベント</text>
+            <line x1="70" y1="250" x2="100" y2="250" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <g transform="translate(124 250)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-12" r="8"/><path d="M-15 16 C-15 0 15 0 15 16 Z"/></g>
+            <text x="124" y="288" font-size="16" text-anchor="middle">フック</text>
+            <line x1="146" y1="250" x2="170" y2="250" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <g transform="translate(196 250)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-20" y="-16" width="40" height="32" rx="4" fill="var(--marker-fill)"/><path d="M-9 0 L-2 7 L10 -7" fill="none"/></g>
+            <text x="196" y="288" font-size="16" text-anchor="middle">コピー</text>
+            <line x1="220" y1="250" x2="236" y2="250" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <rect x="240" y="228" width="104" height="44" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <text x="292" y="256" font-size="16" text-anchor="middle">本来の処理</text>
+
+            <line x1="20" y1="320" x2="340" y2="320" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+
+            <!-- 3 自分で受け取って返す -->
+            <circle cx="22" cy="344" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="350" text-anchor="middle" font-size="16" font-weight="700">3</text>
+            <text x="44" y="350" font-size="16" font-weight="700">自分で受け取って返す</text>
+            <g transform="translate(46 404)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-20" y="-16" width="40" height="32" rx="4"/><line x1="0" y1="-16" x2="0" y2="16"/></g>
+            <text x="46" y="442" font-size="16" text-anchor="middle">イベント</text>
+            <line x1="70" y1="404" x2="100" y2="404" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <g transform="translate(124 404)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-12" r="8"/><path d="M-15 16 C-15 0 15 0 15 16 Z"/></g>
+            <text x="124" y="442" font-size="16" text-anchor="middle">フック</text>
+            <line x1="146" y1="404" x2="170" y2="404" stroke="currentColor" stroke-width="2.5" marker-end="url(#e2-ah)"/>
+            <rect x="174" y="388" width="44" height="32" rx="4" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <text x="196" y="410" font-size="16" text-anchor="middle">結果</text>
+            <line x1="220" y1="404" x2="238" y2="404" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+            <rect x="240" y="382" width="104" height="44" rx="10" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+            <text x="292" y="410" font-size="16" text-anchor="middle">本来の処理</text>
+            <text x="292" y="446" font-size="16" text-anchor="middle">届かない</text>
+          </svg>
+          <figcaption><b>図2</b>フックを、流れてくる荷物（イベント）を見張る番人に見立てた（イメージ）。見るだけで通す、書き換えたコピーを通す、自分で結果を返して本来の処理に届けない、の3通り。</figcaption>
+        </figure>
+      </div>
+      <div class="with-memo">
+        <p>Claude Codeはイベントを処理する前に、まずフックを呼ぶ。フックはどう扱うかを決められる。</p>
+        <aside class="memo">覚え方：見る・変える・代わる</aside>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>態度</th><th>やること</th><th>例</th></tr></thead>
+          <tbody>
+            <tr><td>観察（Observe）</td><td>記録して<code>next(e)</code>でそのまま通す</td><td>ツール呼び出し回数を数える</td></tr>
+            <tr><td>書き換え（Rewrite）</td><td>変更したコピーを<code>next</code>に渡す</td><td>スピナーの横に文字を足す</td></tr>
+            <tr><td>代行（Answer）</td><td><code>next</code>を呼ばず自分の結果を返す</td><td>危険なコマンドを<code>{ deny:理由}</code>で拒否</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>最小のコード例</h3>
+      <p>公式チュートリアルの例を短くしたもの。ツール呼び出しを数えて、スピナーの横に表示する。</p>
+      <pre><code>let calls = 0
+export function register(on) {
+  on('tool.call', async ($, e, next) =&gt; {
+    calls += 1
+    $.ui.invalidate('ui.render')   // 画面を描き直す
+    return next(e)                 // ツールは普通に実行
+  })
+  on('ui.render', { component: 'Spinner' }, async ($, e, next) =&gt; {
+    return next({ ...e, props: { ...e.props, suffix: ' · tool calls: ' + calls + '…' } })
+  })
+}</code></pre>
+      <div class="with-memo">
+        <p>画面上は<code>Thinking · tool calls: 3…</code>のように出る。同じファイル内の変数<code>calls</code>を<mark>複数のフックで共有できる</mark>のが、外部スクリプトでは難しい点。</p>
+        <aside class="memo">eは直接変えず、コピーをnextへ</aside>
+      </div>
+
+      <h3 id="s3-api">できること（mods APIの名前空間）</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>やりたいこと</th><th>使うもの</th></tr></thead>
+          <tbody>
+            <tr><td>画面を描く・通知する</td><td><code>$.ui</code>（open, toast, status, log, askなど）</td></tr>
+            <tr><td>スラッシュコマンドを足す</td><td><code>$.command.register</code>と<code>command.run</code>イベント</td></tr>
+            <tr><td>Claudeが呼べるツールを足す</td><td><code>$.tool.register</code>（名前は<code>mcp__プラグイン名__ツール名</code>になる）</td></tr>
+            <tr><td>別モデルに小さな質問をする</td><td><code>$.model.complete</code>（利用者のプランやAPIキーを消費）</td></tr>
+            <tr><td>ファイル・コマンド・通信</td><td><code>$.fs</code>、<code>$.process</code>、<code>$.http</code></td></tr>
+            <tr><td>定期実行</td><td><code>$.clock.every</code>、<code>$.clock.after</code></td></tr>
+            <tr><td>状態の保存</td><td><code>$.store</code>（全セッション共有）、<code>$.state</code></td></tr>
+            <tr><td>他セッションへの連絡</td><td><code>$.session.send</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>制限もある。フック1回の実行は10秒まで、<code>$.fs</code>の読み書きは1ファイル4MiB、画面の再描画は毎秒10回までに丸められる。</p>
+
+      <h3>設定フック・Skill・MCPとの違い</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Mod</th><th>設定フック</th><th>Skill</th><th>MCPサーバー</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">実体</th><td>Claude Codeの中で動く関数</td><td>シェルコマンド・HTTP・プロンプト</td><td>SKILL.mdの指示文</td><td>外部プロセス・サービス</td></tr>
+            <tr><th scope="row"><mark>画面に描ける</mark></th><td>できる</td><td>できない</td><td>できない</td><td>できない</td></tr>
+            <tr><th scope="row">書く言語</th><td>JS / TS</td><td>スクリプト+ settings.json</td><td>Markdown</td><td>任意</td></tr>
+            <tr><th scope="row">選ぶ場面</th><td>ペイン・バンド・独自コマンド・イベント書き換え</td><td>手持ちのスクリプトで許可・拒否・記録</td><td>同じ指示を何度も貼る</td><td>外部システムに触れたい</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s3-env">動作環境</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>実行場所</th><th>フックは動く</th><th>画面に描かれる</th></tr></thead>
+          <tbody>
+            <tr><td>ターミナルの<code>claude</code>（JetBrainsプラグイン含む）</td><td>はい</td><td>はい</td></tr>
+            <tr><td>デスクトップアプリのCodeタブ</td><td>はい</td><td>はい（端末専用の要素を除く）</td></tr>
+            <tr><td>デスクトップアプリのWSLセッション</td><td>いいえ</td><td>いいえ</td></tr>
+            <tr><td>VS Code拡張のチャット欄</td><td>はい</td><td>いいえ</td></tr>
+            <tr><td><code>claude -p</code>・Agent SDK</td><td>はい</td><td>いいえ</td></tr>
+            <tr><td>クラウドセッション</td><td>条件つきではい</td><td>いいえ</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p>「ライブペインがVS Codeに出ない」という報告はGitHubのissueにも上がっているが、公式表では仕様どおり「描かれない」扱いになっている。</p>
+        <aside class="memo">VS Codeはフックだけ動く。不具合ではない</aside>
+      </div>
+
+      <h2 id="s4">具体例と使いどころ</h2>
+
+      <h3>公式サンプル</h3>
+      <p>Anthropicはclaude-code-playgroundリポジトリにサンプルModを置いている（無サポートの参考実装）。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mod</th><th>やること</th></tr></thead>
+          <tbody>
+            <tr><td>token-weather</td><td>コンテキストウィンドウの「予報」をプロンプト上に表示</td></tr>
+            <tr><td>blast-radius</td><td><code>rm -rf</code>や強制pushのような危険なコマンドを止め、影響範囲を見せて実行/中止のボタンを出す</td></tr>
+            <tr><td>replay-theater</td><td><code>/replay</code>で直前のターンのファイル編集をコマ送りで見る</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Claude Code自身の機能にもMod実装がある。<code>/diff</code>の画面、AGENTS.mdの読み込み、組織ポリシーを守る番人（<code>sec-default</code>）などで、<code>/plugin</code>のInstalledタブのBuilt-inに並ぶ。ソースは公開されていて、<mark>書き方の手本</mark>になる。</p>
+
+      <h3>典型的な活用パターン</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>目的</th><th>使うイベント・部品</th></tr></thead>
+          <tbody>
+            <tr><td>コンテキスト残量やコストを常時表示</td><td><code>$.session.usage()</code> +バンド/ステータス行</td></tr>
+            <tr><td>危険なツール呼び出しのガード</td><td><code>tool.call</code>で<code>{ deny }</code>または確認ボタン</td></tr>
+            <tr><td>完了時にトーストや音で知らせる</td><td><code>turn.complete</code> + <code>$.ui.toast</code> / <code>$.audio.play</code></td></tr>
+            <tr><td>プロンプトの自動補強</td><td><code>prompt.submit</code>で文面や追加コンテキストを書き換え</td></tr>
+            <tr><td>チーム固有のコマンド</td><td><code>/standup</code>のような<code>command.run</code></td></tr>
+            <tr><td>組織の統制</td><td>管理者設定の<code>prependPlugins</code>・<code>allowManagedModsOnly</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p>GitHubには有志のMod集（燃焼メーター、コードペットなど遊び要素のあるものも）が多数あるが、品質や安全性は公式が保証するものではない。</p>
+        <aside class="memo">有志のModは中身を確かめてから</aside>
+      </div>
+
+      <h3>始め方：Claudeに作らせる</h3>
+      <div class="with-memo">
+        <ol>
+          <li>対話セッションで「現在のgitブランチをプロンプトの上に表示するModを作って」のように頼む。内蔵の<code>plugin-authoring</code>スキルが使われる。</li>
+          <li>最初のファイル保存時に「このセッションでホットリロードを有効にするか」と聞かれるので許可する。<code>~/.claude</code>は保護パスなので、ファイルごとの承認も求められる。</li>
+          <li><code>/plugin</code>のInstalledタブで読み込まれたか確認する。</li>
+          <li>直したい点を伝える。ターン終了時に再読み込みされる。</li>
+          <li>残したいなら<code>~/.claude/dev-mods/</code>から<mark>自分のフォルダへコピー</mark>し、<code>claude --plugin-dir</code>で読み込むか、マーケットプレイスに載せる。</li>
+        </ol>
+        <aside class="memo">コピーしないと、いずれ消える</aside>
+      </div>
+      <p>自分で書く場合は<code>claude --plugin-dir ./first-mod</code>で一時的に読み込み、保存するたびに自動で再読み込みされる。<code>claude plugin test</code>でセッションなしのテストもできる。</p>
+
+      <h2 id="s5">注意点・よくある誤解</h2>
+
+      <h3>Modは権限の強いコードである</h3>
+      <div class="with-memo">
+        <p>公式が警告している点。Modは自分の権限でファイルの読み書き、プロセス起動、通信ができ、環境変数やAPIキーも読める。プロンプトとツール呼び出しはすべて見え、書き換えも、場合によっては<mark>許可確認の前に承認</mark>することもできる。サンドボックスはModが起動したプロセスには及ばない。ただし権限確認のダイアログの表示内容だけはModから変えられない。</p>
+        <aside class="memo">Modが変えられないのは権限ダイアログだけ</aside>
+      </div>
+
+      <h3>導入前の確認方法</h3>
+      <div class="with-memo">
+        <p><code>claude plugin validate ./some-mod</code>は、<mark>コードを実行せずに</mark><code>hooks:</code>（扱うイベント）と<code>calls:</code>（呼ぶAPI）を一覧表示する。ファイル読み書きやネットワーク通信があるかを先に見られる。止めたいときは、Installedタブで無効化、<code>--safe-mode</code>（そのセッションだけ全部オフ）、<code>"disableAllHooks": true</code>（全セッション）が使える。</p>
+        <aside class="memo">入れる前にvalidate、困ったら--safe-mode</aside>
+      </div>
+
+      <h3>よくある誤解</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>誤解</th><th>実際</th></tr></thead>
+          <tbody>
+            <tr><td>Modはsettings.jsonのフックの別名</td><td>設定フックは外部コマンドを起動する。ModはClaude Code内部の関数で、画面も描ける。公式は両方を「フック」と呼ぶが区別している</td></tr>
+            <tr><td>どの画面でも表示される</td><td>描画はターミナルとデスクトップのCodeタブのみ。VS Code拡張や<code>-p</code>ではフックだけ動く</td></tr>
+            <tr><td>Claudeが書いたModは永続する</td><td>書いたセッション専用で、フォルダは<code>cleanupPeriodDays</code>後に削除される。残すにはコピーが必要</td></tr>
+            <tr><td>編集すると状態が引き継がれる</td><td>再読み込みで<code>register</code>が再実行され、<mark>変数は初期化</mark>される。保持するなら<code>$.state</code>や<code>$.store</code></td></tr>
+            <tr><td>書き方は固定された仕様</td><td>イベントとAPIはリリースごとに変わりうると公式が明記。自動生成される<code>.d.ts</code>を正とする</td></tr>
+            <tr><td>プラグイン名を自由に付けられる</td><td><code>claude-</code>で始まるなどAnthropic公式に見える名前は<code>validate</code>で弾かれる</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>書くときの落とし穴</h3>
+      <div class="with-memo">
+        <ul>
+          <li>静的解析のため、<code>$.ui.toast(...)</code>のように名前空間とメソッドを省略せず書く。<code>const ui = $.ui</code>や、イベント名を変数にすることは検証で失敗する。</li>
+          <li>フックが例外を投げるとそのフックは飛ばされ、同じ<code>session.start</code>内の後続処理も実行されない。コマンド登録は最後に置くか<code>try/catch</code>で囲む。</li>
+          <li>組み込みコマンドと同名のコマンドは登録できない。</li>
+          <li>2026年10月時点では新しい機能で、検索結果の解説記事や非公式Mod集の記述には古いものや誤りが混じりうる。迷ったら公式ドキュメントを見る。</li>
+        </ul>
+        <aside class="memo">$.uiに別名を付けると検証で落ちる</aside>
+      </div>
+
+      <h2 id="s6">確認問題</h2>
+      <details class="quiz">
+        <summary>問1. Modと、settings.jsonに書く設定フックの最大の違いは何か。</summary>
+        <div class="answer"><p>ModはClaude Codeの内部で動くJS/TSの関数なので、ペインやバンドなどの画面を描ける。設定フックは外部のコマンドやHTTPを呼ぶ方式で、画面は描けない。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>問2. フックの3つの引数<code>$</code>、<code>e</code>、<code>next</code>はそれぞれ何か。</summary>
+        <div class="answer"><p><code>$</code>は外への操作をするmods API、<code>e</code>はイベントの入力（変更不可のデータ）、<code>next</code>は次のフックや本来の処理に渡す関数。変えたいときは変更したコピーを<code>next</code>に渡す。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>問3. Modを入れる前に、何をするかを実行せずに確認する方法は何か。</summary>
+        <div class="answer"><p><code>claude plugin validate &lt;ディレクトリ&gt;</code>を実行する。<code>hooks:</code>行に扱うイベント、<code>calls:</code>行に呼ぶAPIが出るので、ファイルアクセスや通信の有無を確認できる。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>問4. VS Code拡張のチャット欄で、Modのペインが出ないのはなぜか。</summary>
+        <div class="answer"><p>仕様。VS Code拡張ではフック自体は動くが、描画はターミナルとデスクトップのCodeタブにしか出ない。描けない環境では、トランスクリプトへの1行表示などに切り替える設計にする。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>問5. Modのファイルを保存した直後に、カウント変数が0に戻った。なぜか。どうすれば保持できるか。</summary>
+        <div class="answer"><p>再読み込みのたびに<code>register</code>が再実行され、モジュール内の変数が初期化されるため。値を残すには<code>$.state</code>や<code>$.store</code>を使う。</p></div>
+      </details>
+
+      <h2 id="s7">参考リンク</h2>
+      <ul class="refs">
+        <li><a href="https://code.claude.com/docs/en/plugins/mods/overview">Mods overview - Claude Code Docs</a>（定義・信頼性・動作環境・内蔵Mod）</li>
+        <li><a href="https://code.claude.com/docs/en/plugins/mods/create">Create a mod - Claude Code Docs</a>（作り方・ホットリロード・検証・テスト）</li>
+        <li><a href="https://code.claude.com/docs/en/plugins/mods/reference">Mods reference - Claude Code Docs</a>（イベント・API・描画箇所・制限）</li>
+        <li><a href="https://code.claude.com/docs/en/plugins/mods/api">Use the mods API - Claude Code Docs</a>（コマンド・ツール・モデル呼び出し・タイマー）</li>
+        <li><a href="https://github.com/anthropics/claude-code-playground/tree/main/claude-code/mods">anthropics/claude-code-playgroundのmodsサンプル</a></li>
+        <li><a href="https://github.com/anthropics/claude-code/tree/main/mods">anthropics/claude-codeの組み込みModソース</a></li>
+        <li><a href="https://github.com/anthropics/claude-code/issues/99423">VS Code extension: mods do not draw status line / toast / panes (issue #99423)</a>（描画非対応の報告。参考）</li>
+      </ul>
+
+    </main>
+
+    <footer>
+      <p>このページはClaude CodeがWeb上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+    </footer>
+  </article>
+</div>
+<!-- notebook-ui-js:start -->
+<script>
+/* 書き込みノートUI（全レポート共通）。本文の HTML には手を加えず、読み込み後に操作部品だけを足す */
+(() => {
+  'use strict';
+  const d = document, root = d.documentElement;
+  const page = d.querySelector('.page'), main = d.querySelector('main');
+  if (!page || !main) return;
+  root.classList.add('nb-js');
+  const sheet = d.querySelector('.sheet') || page;
+
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+  };
+  const svg = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  const ICON = {
+    back: svg('<path d="m15 18-6-6 6-6"/>'),
+    toc: svg('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>'),
+    text: svg('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'),
+    dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+    up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+    copy: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    check: svg('<path d="M20 6 9 17l-5-5"/>'),
+    expand: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'),
+    close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  };
+  /* 手描き風のチェックボックスと赤ペンのチェック */
+  const CHECKBOX = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4.6 5.3C9 4.7 14.8 5 19.5 4.5c.3 5 0 10 .3 15.1-5.3.3-10.1-.3-15.4.1.3-5.1-.2-9.8.2-14.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path class="nb-tick" pathLength="1" d="M6.8 12.6c1.5 1.3 2.6 2.9 3.6 4.6 2.4-5.3 6-9.9 11.4-14.6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const el = (tag, attrs = {}, html = '') => {
+    const n = d.createElement(tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (html) n.innerHTML = html;
+    return n;
+  };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  const cover = d.querySelector('.cover');
+  const toc = d.querySelector('.toc');
+  const h1 = cover && cover.querySelector('h1');
+  const pageTitle = h1 ? h1.textContent.trim() : d.title;
+  const back = cover && cover.querySelector('.back');
+  const indexHref = back ? back.getAttribute('href') : '../index.html';
+  const here = decodeURIComponent(location.pathname.split('/').pop() || '');
+
+  /* ---- 通知 ---- */
+  const toast = el('div', { class: 'nb-toast', role: 'status', 'aria-live': 'polite' });
+  let toastTimer;
+  const say = (msg) => {
+    toast.textContent = msg;
+    toast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800);
+  };
+  const copyText = (text) => {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((ok, ng) => {
+      const ta = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      d.body.appendChild(ta);
+      ta.select();
+      try { d.execCommand('copy') ? ok() : ng(); } catch (e) { ng(e); }
+      ta.remove();
+    });
+  };
+
+  /* ---- 本文へスキップ・上部バー（パンくず: 学習ノート › ページ › 章） ---- */
+  if (!main.id) main.id = 'main';
+  const skip = el('a', { class: 'nb-skip', href: '#' + main.id }, '本文へスキップ');
+  const bar = el('div', { class: 'nb-topbar' },
+    '<div class="nb-topbar-inner">' +
+      '<a class="nb-home" aria-label="学習ノートの一覧に戻る" href="' + indexHref + '">' + ICON.back + '<span>学習ノート</span></a>' +
+      '<div class="nb-where" aria-hidden="true"><span class="sep">›</span><span class="t t-page"></span><span class="sep">›</span><span class="t t-sec"></span></div>' +
+      '<div class="nb-actions">' +
+        (toc ? '<button type="button" class="nb-btn nb-toc-btn" aria-haspopup="dialog" aria-label="もくじを開く">' + ICON.toc + '<span class="label-wide">もくじ</span></button>' : '') +
+        '<button type="button" class="nb-btn nb-fs-btn"><span class="label"></span></button>' +
+        '<button type="button" class="nb-btn nb-theme-btn" aria-label="ダークモード">' + ICON.dark + '<span class="label-wide">ダーク</span></button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="nb-progress" aria-hidden="true"></div>');
+  d.body.prepend(skip, bar);
+  bar.querySelector('.t-page').textContent = pageTitle;
+  const whereBox = bar.querySelector('.nb-where'), whereSec = bar.querySelector('.t-sec');
+  const progress = bar.querySelector('.nb-progress');
+
+  /* 文字サイズ: 標準 → 大 → 特大 */
+  const FS = [['', '標準'], ['l', '大'], ['xl', '特大']];
+  const fsBtn = bar.querySelector('.nb-fs-btn');
+  const renderFs = () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const label = (FS.find((f) => f[0] === cur) || FS[0])[1];
+    fsBtn.querySelector('.label').textContent = '文字 ' + label;
+    fsBtn.setAttribute('aria-label', '文字サイズ: ' + label + '（押すと切り替え）');
+  };
+  fsBtn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const next = FS[(FS.findIndex((f) => f[0] === cur) + 1) % FS.length];
+    next[0] ? root.setAttribute('data-fs', next[0]) : root.removeAttribute('data-fs');
+    store.set('ln-fs', next[0] || null);
+    renderFs();
+    say('文字サイズ: ' + next[1]);
+    onScroll();
+  });
+  renderFs();
+
+  /* ダーク（夜のノート）の切替。最初は端末の設定に合わせる */
+  const themeBtn = bar.querySelector('.nb-theme-btn');
+  const isDark = () => root.getAttribute('data-theme') === 'dark' || (!root.hasAttribute('data-theme') && darkMq.matches);
+  const renderTheme = () => themeBtn.setAttribute('aria-pressed', String(isDark()));
+  themeBtn.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store.set('ln-theme', next);
+    renderTheme();
+    say(next === 'dark' ? 'ダーク: オン' : 'ダーク: オフ');
+  });
+  darkMq.addEventListener && darkMq.addEventListener('change', renderTheme);
+  renderTheme();
+
+  /* ---- 読了目安 ---- */
+  const meta = cover && cover.querySelector('.meta');
+  if (meta) {
+    const chars = main.textContent.replace(/\s+/g, '').length;
+    meta.appendChild(el('li', {}, '読了目安 約' + Math.max(1, Math.round(chars / 500)) + '分'));
+  }
+
+  /* ---- 見出しのリンク ---- */
+  const headText = new Map();
+  main.querySelectorAll('h2, h3').forEach((h, i) => {
+    headText.set(h, h.textContent.trim());
+    if (!h.id) h.id = 'sec-' + (i + 1);
+    const a = el('a', { class: 'nb-anchor', href: '#' + h.id, 'aria-label': '「' + headText.get(h) + '」へのリンクをコピー' }, '#');
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.replaceState(null, '', '#' + h.id);
+      h.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      copyText(location.href).then(() => say('見出しへのリンクをコピーしました'), () => say('リンクをアドレス欄に表示しました'));
+    });
+    h.appendChild(a);
+  });
+
+  /* ---- 目次: 章ごとのチェックボックス・引き出し・現在地 ---- */
+  const READ_KEY = 'ln-read:' + here, DONE_KEY = 'ln-done:' + here;
+  let readSet = new Set();
+  try { readSet = new Set(JSON.parse(store.get(READ_KEY) || '[]')); } catch (e) {}
+  const chapters = [];
+  let drawer = null;
+  if (toc) {
+    const list = toc.querySelector('ol, ul');
+    if (list) {
+      [...list.children].forEach((li) => {
+        const a = li.querySelector(':scope > a');
+        if (!a || !a.getAttribute('href') || a.getAttribute('href')[0] !== '#') return;
+        const id = decodeURIComponent(a.getAttribute('href').slice(1));
+        const h = d.getElementById(id);
+        if (!h) return;
+        const row = el('span', { class: 'nb-row' });
+        const btn = el('button', { type: 'button', class: 'nb-check', 'data-id': id }, CHECKBOX);
+        a.before(row);
+        row.append(btn, a);
+        chapters.push({ id, h, title: a.textContent.trim() });
+      });
+    }
+    toc.querySelectorAll('a').forEach((a) => { a.innerHTML = '<span class="t">' + a.innerHTML + '</span>'; });
+    if (chapters.length) toc.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer = el('dialog', { class: 'nb-drawer', 'aria-label': 'もくじ' },
+      '<div class="nb-dialog-head"><strong>もくじ</strong><button type="button" class="nb-btn nb-close" aria-label="もくじを閉じる">' + ICON.close + '</button></div>');
+    const nav = el('nav', { 'aria-label': 'もくじ' });
+    if (list) nav.appendChild(list.cloneNode(true));
+    if (chapters.length) nav.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer.appendChild(nav);
+    d.body.appendChild(drawer);
+    bar.querySelector('.nb-toc-btn').addEventListener('click', () => {
+      drawer.showModal();
+      const act = drawer.querySelector('a.is-active');
+      if (act) act.scrollIntoView({ block: 'center' });
+    });
+    drawer.querySelector('.nb-close').addEventListener('click', () => drawer.close());
+    drawer.addEventListener('click', (e) => {
+      if (e.target === drawer || e.target.closest('a')) drawer.close();
+    });
+    [toc, drawer].forEach((box) => box.addEventListener('click', (e) => {
+      const b = e.target.closest('.nb-check');
+      if (b) setRead(b.dataset.id, !readSet.has(b.dataset.id), true);
+    }));
+  }
+  const checkBtns = (id) => d.querySelectorAll('.nb-check[data-id="' + CSS.escape(id) + '"]');
+  const titleOf = (id) => (chapters.find((c) => c.id === id) || {}).title || '';
+  const renderRead = (id) => {
+    const on = readSet.has(id);
+    checkBtns(id).forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-label', '「' + titleOf(id) + '」' + (on ? 'を読んだ（押すとチェックを外す）' : 'はまだ読んでいない（押すとチェックを付ける）'));
+      b.closest('li').classList.toggle('is-read', on);
+    });
+  };
+  function setRead(id, on, byHand) {
+    if (on === readSet.has(id)) return;
+    on ? readSet.add(id) : readSet.delete(id);
+    store.set(READ_KEY, readSet.size ? JSON.stringify([...readSet]) : null);
+    store.set(DONE_KEY, chapters.length && chapters.every((c) => readSet.has(c.id)) ? '1' : null);
+    renderRead(id);
+    if (byHand) say(on ? 'チェックを付けました' : 'チェックを外しました');
+  }
+  chapters.forEach((c) => renderRead(c.id));
+
+  const tocLinks = toc ? [...toc.querySelectorAll('a[href^="#"]'), ...drawer.querySelectorAll('a[href^="#"]')] : [];
+  const targets = [];
+  const seen = new Set();
+  tocLinks.forEach((a) => {
+    const id = decodeURIComponent(a.getAttribute('href').slice(1));
+    const h = d.getElementById(id);
+    if (h && !seen.has(id)) { seen.add(id); targets.push({ id, h }); }
+  });
+  targets.sort((x, y) => (x.h.compareDocumentPosition(y.h) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  const h2s = [...main.querySelectorAll('h2')];
+  let activeId = null, activeH2 = null;
+  const setActive = (id) => {
+    if (id === activeId) return;
+    activeId = id;
+    tocLinks.forEach((a) => {
+      const on = id && a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', !!on);
+      on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
+    });
+    const a = toc && toc.querySelector('a.is-active');
+    if (a && toc.scrollHeight > toc.clientHeight + 4) {
+      const r = a.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if (r.top < tr.top + 24 || r.bottom > tr.bottom - 24) toc.scrollTop += r.top - tr.top - tr.height / 3;
+    }
+  };
+
+  /* ---- 先頭へ戻る ---- */
+  const fab = el('button', { type: 'button', class: 'nb-btn nb-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
+  fab.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    bar.querySelector('.nb-home').focus({ preventScroll: true });
+  });
+  d.body.append(fab, toast);
+
+  /* ---- スクロールに連動する部品（読了バー・現在地・読んだ章のチェック） ---- */
+  let userMoved = false;
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((t) => addEventListener(t, () => { userMoved = true; }, { once: true, passive: true }));
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY, vh = window.innerHeight, max = root.scrollHeight - vh;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    const barH = bar.offsetHeight, line = barH + 48;
+    whereBox.classList.toggle('is-shown', !!cover && cover.getBoundingClientRect().bottom < barH);
+    fab.classList.toggle('is-shown', y > 800);
+
+    let cur = null;
+    if (max > 0 && y >= max - 2 && targets.length) cur = targets[targets.length - 1];
+    else for (const t of targets) { if (t.h.getBoundingClientRect().top <= line) cur = t; else break; }
+    setActive(cur ? cur.id : null);
+
+    let sec = null;
+    for (const h of h2s) { if (h.getBoundingClientRect().top <= line) sec = h; else break; }
+    if (cur && h2s.includes(cur.h)) sec = cur.h;
+    if (sec !== activeH2) { activeH2 = sec; whereSec.textContent = sec ? headText.get(sec) : ''; }
+
+    // 章の末尾（次の章の見出し、最後の章は本文の終わり）が画面に入ったら、その章を読んだことにする
+    if (userMoved) {
+      chapters.forEach((c, i) => {
+        if (readSet.has(c.id)) return;
+        const end = chapters[i + 1] ? chapters[i + 1].h.getBoundingClientRect().top : main.getBoundingClientRect().bottom;
+        const start = c.h.getBoundingClientRect().top;
+        if (start < vh && end >= -vh * 1.5 && end <= vh) setRead(c.id, true);
+      });
+    }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  /* ---- 表: 用語列の判定と、横にはみ出すときの案内 ---- */
+  const scrollers = [];
+  main.querySelectorAll('.table-wrap').forEach((w) => {
+    const t = w.querySelector('table');
+    const firsts = t ? [...t.querySelectorAll('tbody tr > :first-child')] : [];
+    if (firsts.length && firsts.every((c) => c.textContent.trim().length <= 16)) t.classList.add('nb-term');
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 表は横にスクロールできます →');
+    w.after(hint);
+    scrollers.push({ w, hint, mask: true });
+  });
+
+  /* ---- 図: 拡大表示 ---- */
+  const lightbox = el('dialog', { class: 'nb-lightbox', 'aria-label': '図の拡大表示' },
+    '<div class="nb-dialog-head"><strong></strong><button type="button" class="nb-btn nb-close" aria-label="拡大表示を閉じる">' + ICON.close + '</button></div>');
+  lightbox.querySelector('.nb-close').addEventListener('click', () => lightbox.close());
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener('close', () => { const f = lightbox.querySelector('figure'); if (f) f.remove(); });
+  d.body.appendChild(lightbox);
+  main.querySelectorAll('figure').forEach((fig) => {
+    const pic = fig.querySelector(':scope > svg');
+    if (!pic) return;
+    const wrap = el('div', { class: 'nb-fig' });
+    fig.before(wrap);
+    wrap.appendChild(fig);
+    const cap = fig.querySelector('figcaption');
+    const label = (cap ? cap.textContent : (pic.querySelector('title') || {}).textContent || '図').trim();
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-expand', 'aria-label': '図を拡大表示: ' + label }, ICON.expand + '<span>拡大</span>');
+    btn.addEventListener('click', () => {
+      const f = el('figure', { class: fig.className });
+      f.appendChild(pic.cloneNode(true));
+      lightbox.querySelector('.nb-dialog-head strong').textContent = label;
+      lightbox.appendChild(f);
+      lightbox.showModal();
+    });
+    wrap.appendChild(btn);
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 図は横にスクロールできます（「拡大」で全体表示）→');
+    wrap.after(hint);
+    scrollers.push({ w: fig, hint, mask: false });
+  });
+  const updateScroller = (s) => {
+    const max = s.w.scrollWidth - s.w.clientWidth;
+    const can = max > 4;
+    s.hint.classList.toggle('is-shown', can);
+    if (s.mask) {
+      s.w.classList.toggle('nb-more-right', can && s.w.scrollLeft < max - 4);
+      s.w.classList.toggle('nb-more-left', can && s.w.scrollLeft > 4);
+    }
+  };
+  scrollers.forEach((s) => s.w.addEventListener('scroll', () => updateScroller(s), { passive: true }));
+  const updateScrollers = () => scrollers.forEach(updateScroller);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(updateScrollers);
+    scrollers.forEach((s) => ro.observe(s.w));
+  } else addEventListener('resize', updateScrollers);
+
+  /* ---- コードのコピー ---- */
+  main.querySelectorAll('pre').forEach((pre) => {
+    const wrap = el('div', { class: 'nb-code' });
+    pre.before(wrap);
+    wrap.appendChild(pre);
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-copy', 'aria-label': 'コードをコピー' }, ICON.copy + '<span>コピー</span>');
+    btn.addEventListener('click', () => {
+      copyText(pre.innerText.replace(/\n$/, '')).then(() => {
+        btn.innerHTML = ICON.check + '<span>コピー済み</span>';
+        say('コードをコピーしました');
+        setTimeout(() => { btn.innerHTML = ICON.copy + '<span>コピー</span>'; }, 1600);
+      }, () => say('コピーできませんでした'));
+    });
+    wrap.appendChild(btn);
+  });
+
+  /* ---- 確認問題: 答えの一括表示 ---- */
+  const quizzes = [...main.querySelectorAll('.quiz')];
+  const answers = [...main.querySelectorAll('details.quiz, .quiz details')];
+  if (answers.length >= 2) {
+    const tools = el('div', { class: 'nb-quiz-tools' },
+      '<span>全' + quizzes.length + '問。問題を押すと答えが開きます</span><button type="button" class="nb-btn"></button>');
+    const tbtn = tools.querySelector('button');
+    const render = () => {
+      const allOpen = answers.every((x) => x.open);
+      tbtn.textContent = allOpen ? '答えをすべて隠す' : '答えをすべて表示';
+      tbtn.setAttribute('aria-pressed', String(allOpen));
+    };
+    tbtn.addEventListener('click', () => {
+      const open = !answers.every((x) => x.open);
+      answers.forEach((x) => { x.open = open; });
+      render();
+    });
+    answers.forEach((x) => x.addEventListener('toggle', render));
+    quizzes[0].before(tools);
+    render();
+  }
+
+  /* ---- 印刷時は答えも含めてすべて開く ---- */
+  let closedForPrint = [];
+  addEventListener('beforeprint', () => {
+    closedForPrint = [...d.querySelectorAll('details:not([open])')];
+    closedForPrint.forEach((x) => { x.open = true; });
+  });
+  addEventListener('afterprint', () => { closedForPrint.forEach((x) => { x.open = false; }); closedForPrint = []; });
+
+  /* ---- シリーズの前後移動・関連ノート ----
+     トップページ（index.html）の一覧を台帳として読み込み、
+     同じシリーズ（data-series / data-order）と同じ分野（data-topic）のノートへのリンクを末尾に出す。
+     ファイルを直接開いた場合（file://）は読み込めないので何も出さない */
+  const TOPIC = { ai: 'AI', infra: 'インフラ', security: 'セキュリティ', dev: '開発' };
+  const node = (tag, cls, text) => {
+    const n = d.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const item = (n) => {
+    const li = node('li');
+    const a = node('a', '', n.title);
+    a.href = n.url;
+    li.append(node('span', 'm', [n.date, n.topics.map((t) => TOPIC[t] || t).join('・')].filter(Boolean).join('　')), a);
+    if (n.summary) li.appendChild(node('span', 's', n.summary));
+    return li;
+  };
+  const loadRelated = async () => {
+    if (!/^https?:$/.test(location.protocol) || !here) return;
+    const base = new URL(indexHref, location.href);
+    const res = await fetch(base, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const notes = [...doc.querySelectorAll('article.entry')].map((e) => {
+      const a = e.querySelector('h3 a');
+      if (!a) return null;
+      const url = new URL(a.getAttribute('href'), base);
+      return {
+        url: url.href,
+        file: decodeURIComponent(url.pathname.split('/').pop()),
+        title: a.textContent.trim(),
+        summary: ((e.querySelector('p') || {}).textContent || '').trim(),
+        topics: (e.dataset.topic || '').split(/\s+/).filter(Boolean),
+        date: e.dataset.date || '',
+        series: (e.dataset.series || '').trim(),
+        order: Number(e.dataset.order) || 0,
+      };
+    }).filter(Boolean);
+    const me = notes.find((n) => n.file === here);
+    if (!me) return;
+
+    const aside = node('aside', 'nb-related');
+    aside.setAttribute('aria-label', '次に読む');
+    let members = [];
+    if (me.series) {
+      members = notes.filter((n) => n.series === me.series)
+        .sort((a, b) => (a.order - b.order) || a.date.localeCompare(b.date));
+      const i = members.indexOf(me);
+      const seriesUrl = new URL(base);
+      seriesUrl.searchParams.set('series', me.series);
+      if (meta) {
+        const li = node('li');
+        const a = node('a', '', 'シリーズ「' + me.series + '」 ' + (i + 1) + '/' + members.length);
+        a.href = seriesUrl.href;
+        li.appendChild(a);
+        meta.prepend(li);
+      }
+      const box = node('section', 'nb-series');
+      const ol = node('ol');
+      members.forEach((n) => {
+        const li = node('li');
+        if (n === me) {
+          li.appendChild(node('span', 'is-current', n.title + '（このページ）'));
+          li.firstChild.setAttribute('aria-current', 'page');
+        } else {
+          const a = node('a', '', n.title);
+          a.href = n.url;
+          li.appendChild(a);
+        }
+        ol.appendChild(li);
+      });
+      box.append(node('h2', '', 'シリーズ「' + me.series + '」'), ol);
+      const pn = node('div', 'nb-pn');
+      [[members[i - 1], '← 前の回: ', 'is-prev'], [members[i + 1], '次の回: ', 'is-next']].forEach(([n, label, cls]) => {
+        if (!n) return;
+        const a = node('a', cls, label + n.title + (cls === 'is-next' ? ' →' : ''));
+        a.href = n.url;
+        pn.appendChild(a);
+      });
+      if (pn.children.length) box.appendChild(pn);
+      aside.appendChild(box);
+    }
+
+    // 関連ノート: 分野が重なるものを、重なりの多い順・新しい順に最大4件（シリーズの回は除く）
+    const mine = new Set(me.topics);
+    const related = notes
+      .filter((n) => n !== me && !members.includes(n))
+      .map((n) => ({ n, score: n.topics.filter((t) => mine.has(t)).length }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => (b.score - a.score) || b.n.date.localeCompare(a.n.date))
+      .slice(0, 4)
+      .map((x) => x.n);
+    if (related.length) {
+      const box = node('section', 'nb-also');
+      const ul = node('ul', 'nb-list');
+      related.forEach((n) => ul.appendChild(item(n)));
+      box.append(node('h2', '', '関連ノート'), ul);
+      aside.appendChild(box);
+    }
+    if (!aside.children.length) return;
+    const footer = sheet.querySelector(':scope > footer');
+    footer ? footer.before(aside) : sheet.appendChild(aside);
+    onScroll();
+  };
+  loadRelated().catch(() => {});
+
+  // #付きURLで開いたとき、上部バーの追加やフォント読み込みで見出しの位置がずれるので合わせ直す
+  const realignHash = () => {
+    if (userMoved || !location.hash) return;
+    let t = null;
+    try { t = d.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (t) t.scrollIntoView({ behavior: 'instant' });
+  };
+
+  realignHash();
+  update();
+  updateScrollers();
+  if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { realignHash(); onScroll(); updateScrollers(); });
+  addEventListener('load', () => { realignHash(); onScroll(); }, { once: true });
+})();
+</script>
+<!-- notebook-ui-js:end -->
+</body>
+</html>
