@@ -22,8 +22,13 @@ const PRICING = {
   'claude-sonnet-5': { input: 2.00, output: 10.00 }, // 要確認: $3/$15 とする情報もある
   'claude-haiku-4-5-20251001': { input: 1.00, output: 5.00 },
 };
+// サブエージェントのログは最終 usage が欠け、ストリーミング開始時の output_tokens（数個〜数十）しか残らない応答が多い。
+// そうした応答（stop_reason のある行がない応答）は、生成文字数（text＋thinking＋tool_use の input を JSON にした長さ）から推定する。
+// 0.74 は最終値がある日本語HTMLレポート作成時の応答で実測した比（2026-10-05）。thinking が伏せられている応答では過小になる。
+const OUTPUT_TOKENS_PER_CHAR = 0.74;
 const CSV_REL = path.join('reports', 'usage-log.csv');
-const HEADER = 'run_id,timestamp,theme,file,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,cost_usd';
+// output_estimated_tokens = output_tokens のうち文字数から推定して上乗せした分（2026-10-05 追加。それ以前の行は空欄）
+const HEADER = 'run_id,timestamp,theme,file,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,cost_usd,output_estimated_tokens';
 
 const log = (...a) => { if (process.env.USAGE_HOOK_DEBUG) console.error('[usage-hook]', ...a); };
 
@@ -108,34 +113,85 @@ function main() {
   }
 
   // 1つの応答がログ上で複数行に分割記録されるため、message.id 単位で最大値だけを採用（二重計上防止）
+  // あわせて、最終値が記録されたか（stop_reason のある行があるか）と生成文字数も応答ごとに持つ
   const perMessage = new Map();
-  const collect = (obj) => {
+  const collect = (obj, agentId = null) => {
     if (obj.type !== 'assistant' || !obj.message || !obj.message.usage) return;
     if (Date.parse(obj.timestamp) < startMs) return;
     const m = obj.message;
     const key = `${m.id || obj.uuid}:${obj.requestId || ''}`;
-    const prev = perMessage.get(key);
-    if (!prev || (m.usage.output_tokens || 0) >= (prev.usage.output_tokens || 0)) {
-      perMessage.set(key, { model: m.model, usage: m.usage });
-    }
+    const e = perMessage.get(key) || { model: m.model, usage: m.usage, final: false, blocks: new Set(), agentId, time: 0 };
+    if ((m.usage.output_tokens || 0) >= (e.usage.output_tokens || 0)) e.usage = m.usage;
+    if (m.stop_reason) e.final = true;
+    e.time = Math.max(e.time, Date.parse(obj.timestamp));
+    for (const c of Array.isArray(m.content) ? m.content : []) e.blocks.add(JSON.stringify(c)); // 同じブロックが重複記録されても1回だけ数える
+    perMessage.set(key, e);
   };
-  lines.filter(o => !o.isSidechain).forEach(collect);
-  lines.filter(o => o.isSidechain).forEach(collect); // 古い形式: 同じファイル内にサブエージェント分がある場合
+  lines.filter(o => !o.isSidechain).forEach(o => collect(o));
+  lines.filter(o => o.isSidechain).forEach(o => collect(o)); // 古い形式: 同じファイル内にサブエージェント分がある場合
 
-  // 新しい形式: <セッションID>/subagents/*.jsonl にサブエージェント分がある
+  // 新しい形式: <セッションID>/subagents/agent-<agentId>.jsonl にサブエージェント分がある
   const subDir = path.join(path.dirname(transcriptPath), path.basename(transcriptPath, '.jsonl'), 'subagents');
   if (fs.existsSync(subDir)) {
     for (const f of fs.readdirSync(subDir)) {
-      if (f.endsWith('.jsonl')) readJsonl(path.join(subDir, f)).forEach(collect);
+      if (!f.endsWith('.jsonl')) continue;
+      const agentId = (f.match(/^agent-(.+)\.jsonl$/) || [])[1] || null;
+      readJsonl(path.join(subDir, f)).forEach(o => collect(o, agentId));
+    }
+  }
+
+  // サブエージェントの「最後の応答」だけは、親ログに正確な usage が残っている
+  //   フォアグラウンド起動: Agent ツール結果 toolUseResult.usage（最後の応答の usage そのもの）
+  //   バックグラウンド起動: 完了通知 attachment.usage.totalTokens（最後の応答の 入力＋キャッシュ＋出力 の合計）
+  const finalByAgent = new Map();
+  for (const o of lines) {
+    const t = o.toolUseResult;
+    if (t && typeof t === 'object' && t.agentId && t.usage && t.usage.output_tokens != null) {
+      finalByAgent.set(t.agentId, { output: t.usage.output_tokens });
+    }
+    const a = o.type === 'attachment' && o.attachment;
+    if (a && a.usage && a.usage.totalTokens != null) {
+      const id = (String(a.prompt || '').match(/<task-id>([^<]+)<\/task-id>/) || [])[1];
+      // ツール結果の値を優先。通知が複数回ある（再開した）場合は最新のものを使う
+      if (id && (finalByAgent.get(id) || {}).output == null) finalByAgent.set(id, { total: a.usage.totalTokens });
+    }
+  }
+  const lastByAgent = new Map();
+  for (const e of perMessage.values()) {
+    if (e.agentId && (!lastByAgent.has(e.agentId) || e.time > lastByAgent.get(e.agentId).time)) lastByAgent.set(e.agentId, e);
+  }
+  for (const [agentId, e] of lastByAgent) {
+    const f = finalByAgent.get(agentId);
+    if (!f || e.final) continue;
+    const u = e.usage;
+    const exact = f.output != null ? f.output
+      : f.total - (u.input_tokens || 0) - (u.cache_creation_input_tokens || 0) - (u.cache_read_input_tokens || 0);
+    if (exact >= (u.output_tokens || 0)) {
+      e.usage = { ...u, output_tokens: exact };
+      e.final = true;
+      log('exact final output for', agentId, exact);
     }
   }
 
   const byModel = {};
-  for (const { model, usage } of perMessage.values()) {
+  for (const e of perMessage.values()) {
+    const { model, usage } = e;
     if (!model || model === '<synthetic>') continue;
-    const b = byModel[model] ||= { input: 0, output: 0, cw: 0, cr: 0 };
+    const b = byModel[model] ||= { input: 0, output: 0, cw: 0, cr: 0, est: 0 };
+    let output = usage.output_tokens || 0;
+    if (!e.final) {
+      let chars = 0;
+      for (const s of e.blocks) {
+        const c = JSON.parse(s);
+        if (c.type === 'text') chars += (c.text || '').length;
+        else if (c.type === 'thinking') chars += (c.thinking || '').length;
+        else if (c.type === 'tool_use') chars += JSON.stringify(c.input || {}).length;
+      }
+      const est = Math.round(chars * OUTPUT_TOKENS_PER_CHAR);
+      if (est > output) { b.est += est - output; output = est; }
+    }
     b.input += usage.input_tokens || 0;
-    b.output += usage.output_tokens || 0;
+    b.output += output;
     b.cw += usage.cache_creation_input_tokens || 0;
     b.cr += usage.cache_read_input_tokens || 0;
   }
@@ -154,12 +210,20 @@ function main() {
     const p = PRICING[model] || { input: 0, output: 0 };
     const cost = (b.input * p.input + b.output * p.output + b.cw * p.input * 1.25 + b.cr * p.input * 0.1) / 1e6;
     total += cost;
-    return [runId, now, theme, reportFile, model, b.input, b.output, b.cw, b.cr, cost.toFixed(4)].map(q).join(',');
+    return [runId, now, theme, reportFile, model, b.input, b.output, b.cw, b.cr, cost.toFixed(4), b.est].map(q).join(',');
   });
 
   if (!fs.existsSync(csvPath)) {
     fs.mkdirSync(path.dirname(csvPath), { recursive: true });
     fs.writeFileSync(csvPath, HEADER + '\n', 'utf8');
+  } else {
+    // 列追加前のCSVなら、見出し行だけ新しいものに差し替える（データ行には触らない）
+    const cur = fs.readFileSync(csvPath, 'utf8');
+    const nl = cur.indexOf('\n');
+    const first = (nl < 0 ? cur : cur.slice(0, nl)).replace(/\r$/, '');
+    if (first !== HEADER && HEADER.startsWith(first + ',')) {
+      fs.writeFileSync(csvPath, HEADER + (nl < 0 ? '\n' : cur.slice(nl)), 'utf8');
+    }
   }
   fs.appendFileSync(csvPath, rows.join('\n') + '\n', 'utf8');
   log('logged', rows.length, 'rows, total', total.toFixed(4));
