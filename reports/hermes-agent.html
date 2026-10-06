@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes Agentとは何か：使うほど育つ自己ホスト型AIエージェント | 学習ノート</title>
+<meta name="description" content="Nous Researchが公開するオープンソースのAIエージェント Hermes Agent を、普通のチャットAIとの違い、強み、弱みと注意点の順に整理します。">
+<!-- notebook-ui:start （全レポート共通の見た目と操作部品。このブロックは編集しない） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Klee+One:wght@600&family=Zen+Kaku+Gothic+New:wght@700&display=swap" rel="stylesheet">
+<style id="nb-style">
+  /* =====================================================================
+     学習ノート「書き込みノート」デザイン（全レポート共通）
+     白い紙のノートに、蛍光ペン（重要語）と赤ペン（要点メモ）だけで書き込んだ見た目。
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文 17px・行間 1.9・字間 0.02em・1行 40字（max-width: 40em）
+     - 文字サイズは タイトル34px／h2 26px／h3 19px／本文17px
+     - 余白は 8px ベース。見出しは前のセクションから離し、直後の本文に近づける
+     - 強調は <mark>（蛍光ペン）と .memo（赤ペン）の2種類だけ
+     ===================================================================== */
+  :root {
+    --desk: #F3F5F7;
+    --grid-line: rgba(42, 75, 141, .06);
+    --sheet: #FFFFFF;
+    --ink: #22262B;
+    --ink-sub: #46505B;
+    --ink-muted: #4C5560;
+    --rule: #B9C2CC;
+    --marker: #FFE24A;
+    --hl: #FFE24A;                 /* 文字に引く蛍光ペン */
+    --marker-fill: #FFE24A;        /* 図の中で1か所だけ塗る蛍光ペン */
+    --red-pen: #C8332A;
+    --blue-ink: #2A4B8D;
+    --link: #1F5BB5;
+    --code-bg: #F3F5F7;
+    --sheet-shadow: 0 1px 2px rgba(30, 40, 55, .08), 0 8px 24px rgba(30, 40, 55, .06);
+    /* 旧デザインの変数名（既存の図・レポート固有スタイルとの互換用） */
+    --paper: var(--sheet); --paper-2: var(--code-bg); --ink-2: var(--ink-sub);
+    --marker-ink: #22262B;
+    --note: #E3EBF7; --caution: #FBE6E3;   /* 図の中で「種類」を塗り分ける淡い色（強調には使わない） */
+    --surface: var(--sheet); --radius: 10px; --shadow: var(--sheet-shadow); --focus: var(--link);
+
+    --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    --font-title: "Zen Kaku Gothic New", "BIZ UDPGothic", "Hiragino Sans", sans-serif;
+    --font-hand: "Klee One", "BIZ UDPGothic", cursive;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --font-display: var(--font-title);
+
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+    --topbar-h: 64px;
+    --toc-w: 230px;
+    --sheet-w: 940px;
+    /* 文字サイズ（17px = 1rem） */
+    --fs-title: 2rem;              /* 34px */
+    --fs-h2: calc(26rem / 17);     /* 26px */
+    --fs-h3: calc(19rem / 17);     /* 19px */
+    --fs-small: calc(15rem / 17);  /* 15px キャプション・目次・メモ */
+    --fs-meta: calc(14rem / 17);   /* 14px メタ情報 */
+    color-scheme: light;
+    interpolate-size: allow-keywords;
+  }
+  /* ---- 夜のノート（ダーク）: 端末の設定に合わせる＋手動切替 ---- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+      --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+      --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+      --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+      --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+      --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+    --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+    --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+    --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+    --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+    --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+    color-scheme: dark;
+  }
+  /* 文字サイズ切替（rem 基準なので本文・見出しが一緒に拡大する） */
+  html { font-size: 106.25%; }
+  :root[data-fs="l"] { font-size: 118.75%; }
+  :root[data-fs="xl"] { font-size: 131.25%; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + var(--sp-2)); }
+  body {
+    margin: 0; color: var(--ink);
+    background-color: var(--desk);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--font-body); font-size: 1rem; line-height: 1.9; letter-spacing: 0.02em;
+    text-align: left; -webkit-font-smoothing: antialiased; text-size-adjust: 100%;
+  }
+  a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :where(a, button, summary, input, [tabindex]):focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+  em, i, cite { font-style: normal; font-weight: 700; }
+  strong, b { font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+  ::selection { background: var(--hl); color: inherit; }
+
+  /* ---- 蛍光ペン（その節で一番大事な語句だけ） ---- */
+  mark { background: linear-gradient(transparent 60%, var(--hl) 60%); color: inherit; padding: 0 0.08em; }
+
+  /* ---- ページの骨組み: 左に目次、右に本文の紙 ---- */
+  .page {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2);
+    margin: 0 auto; padding: var(--sp-4) var(--sp-3) var(--sp-5);
+    display: grid; grid-template-columns: var(--toc-w) minmax(0, var(--sheet-w));
+    column-gap: var(--sp-4); align-items: start; justify-content: center;
+  }
+  .sheet {
+    grid-column: 2; min-width: 0;
+    background: var(--sheet); padding: 48px 56px 64px;
+    box-shadow: var(--sheet-shadow);
+  }
+
+  /* ---- 表紙 ---- */
+  .cover { margin: 0 0 var(--sp-4); padding: 0 0 var(--sp-3); border-bottom: 1.5px dashed var(--rule); }
+  .cover .back { display: inline-block; margin-bottom: var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+  .nb-js .cover .back { display: none; }
+  .cover h1 {
+    margin: 0 0 var(--sp-2); font-family: var(--font-title); font-weight: 700;
+    font-size: var(--fs-title); line-height: 1.4; letter-spacing: 0;
+  }
+  .cover h1 span { background: none; }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); font-size: var(--fs-meta); line-height: 1.7; color: var(--ink-muted); }
+  .cover .meta a { color: inherit; }
+
+  /* ---- 目次（左に固定。読み終えた章に赤ペンのチェック） ---- */
+  .toc {
+    grid-column: 1; grid-row: 1 / span 2;
+    position: sticky; top: calc(var(--topbar-h) + var(--sp-3));
+    max-height: calc(100vh - var(--topbar-h) - var(--sp-5)); overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) 0; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    scrollbar-width: thin;
+  }
+  .toc h2 { margin: 0 0 12px; font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); line-height: 1.4; color: var(--ink); }
+  .toc ol, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol > li > a { padding-left: 30px; }
+  .toc ol > li > a, .nb-row a { display: block; padding-top: 4px; padding-bottom: 4px; }
+  .toc .sub { padding-left: 30px; margin: 0 0 6px; }
+  .toc .sub a { display: block; padding: 2px 0; color: var(--ink-sub); font-size: var(--fs-meta); }
+  .toc a.is-active { font-weight: 700; }
+  .toc a.is-active .t, .nb-drawer a.is-active .t { background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-row { display: flex; align-items: flex-start; gap: 8px; }
+  .nb-row a { flex: 1; min-width: 0; }
+  .nb-check {
+    flex: none; width: 22px; height: 22px; margin-top: 5px; padding: 0;
+    background: none; border: 0; color: var(--ink-sub); cursor: pointer;
+  }
+  .nb-check svg { display: block; width: 22px; height: 22px; overflow: visible; }
+  .nb-tick { stroke: var(--red-pen); stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .35s ease-out; }
+  .is-read > .nb-row .nb-tick, .nb-check[aria-pressed="true"] .nb-tick { stroke-dashoffset: 0; }
+  .nb-toc-note { margin: var(--sp-2) 0 0; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 本文 ---- */
+  .prose { overflow-wrap: break-word; }   /* 長い英単語・URLが狭い画面からはみ出さないように */
+  .prose > :first-child { margin-top: 0; }
+  .prose p, .prose ul, .prose ol { max-width: var(--measure); }
+  .prose p { margin: 0 0 1.5em; }
+  .prose ul, .prose ol { margin: 0 0 1.5em; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: 0.4em; }
+  .prose li > ul, .prose li > ol { margin: 0.4em 0 0; }
+  .prose h2 {
+    position: relative; width: fit-content; max-width: 100%;
+    margin: 80px 0 var(--sp-3); padding-bottom: 12px;
+    font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: 0;
+  }
+  /* 蛍光ペンで引いたような、少しゆがんだ下線（h2だけ） */
+  .prose h2::after {
+    content: ""; position: absolute; left: -4px; right: -6px; bottom: 0; height: 10px;
+    background: var(--hl);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  }
+  .prose h3 { margin: 56px 0 12px; font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .prose h4 { margin: 40px 0 8px; padding: 0; border: 0; font-size: 1rem; font-weight: 700; line-height: 1.6; letter-spacing: 0; color: var(--ink); }
+  .prose h2 + h3 { margin-top: var(--sp-3); }
+  .prose :is(h2, h3, h4) + :is(p, ul, ol, .with-memo, .callout, .table-wrap, figure, .nb-fig, pre, .nb-code, details, .nb-quiz-tools) { margin-top: 0; }
+
+  /* ---- 赤ペンのメモ（本文の右余白。狭い画面では段落の下へ回り込む） ---- */
+  .with-memo { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 32px; margin: 0 0 1.5em; }
+  .with-memo > :not(.memo) { flex: 1 1 22em; min-width: 0; margin-bottom: 0; }
+  .memo {
+    flex: 0 1 190px; margin: 4px 0 0; padding: 0;
+    font-family: var(--font-hand); font-weight: 600; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    color: var(--red-pen); transform: rotate(-1.5deg); transform-origin: 0 0;
+  }
+  .memo p { margin: 0; }
+
+  /* ---- 3行でいうと（青インクの破線枠＋手書きラベル） ---- */
+  .callout {
+    position: relative; max-width: var(--measure); margin: var(--sp-4) 0;
+    padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; background: none;
+  }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout p + p { margin-top: 0; }
+  .callout ul, .callout ol { margin-bottom: 0; }
+  .callout .label { display: block; margin-bottom: 4px; font-size: var(--fs-small); font-weight: 700; color: var(--ink-sub); letter-spacing: 0; }
+  .callout.caution .label { font-family: var(--font-hand); font-weight: 600; font-size: 1rem; color: var(--red-pen); }
+  .callout.note .label { color: var(--blue-ink); }
+  .callout.summary { margin: var(--sp-4) 0 var(--sp-5); padding: 28px var(--sp-3) 20px; border-color: var(--blue-ink); }
+  .callout.summary .label {
+    position: absolute; top: 0; left: 18px; transform: translateY(-55%); margin: 0; padding: 0 10px;
+    background: var(--sheet); font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.4; color: var(--blue-ink);
+  }
+  .callout.summary :is(ul, ol) { list-style: decimal; padding-inline-start: 1.6em; }
+  .callout.summary li::marker { font-family: var(--font-hand); font-weight: 600; color: var(--blue-ink); }
+
+  /* ---- 表（ヘッダー下は実線、行の区切りは破線） ---- */
+  .table-wrap { overflow-x: auto; margin: var(--sp-4) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: calc(16rem / 17); line-height: 1.7; letter-spacing: 0.01em; }
+  caption { caption-side: top; text-align: left; padding: 0 0 var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); }
+  th, td { padding: 10px var(--sp-2) 10px 0; text-align: left; vertical-align: top; border-bottom: 1px dashed var(--rule); }
+  :is(th, td):last-child { padding-right: 0; }
+  thead th { border-bottom: 2px solid var(--ink); font-weight: 700; white-space: nowrap; }
+  tbody th { font-weight: 700; }
+  table.nb-term tbody tr > :first-child { font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- コード ---- */
+  pre {
+    margin: var(--sp-4) 0; padding: var(--sp-2) 20px; overflow-x: auto;
+    background: var(--code-bg); border-radius: 8px;
+    font-size: var(--fs-small); line-height: 1.7; letter-spacing: 0;
+  }
+  code { font-family: var(--font-mono); }
+  pre code { font-size: inherit; }
+  :not(pre) > code { padding: 0.1em 0.35em; background: var(--code-bg); border-radius: 4px; font-size: 0.88em; letter-spacing: 0; overflow-wrap: anywhere; }
+
+  /* ---- 図（実線の枠に入れたインラインSVG。キャプションは図の直下） ---- */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg {
+    display: block; width: 100%; height: auto; padding: 20px;
+    border: 1.5px solid var(--ink); border-radius: 12px; color: var(--ink); background: var(--sheet);
+  }
+  figure svg text { font-family: var(--font-body); fill: currentColor; letter-spacing: 0; }
+  figcaption { margin-top: var(--sp-1); font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  figcaption b:first-child { color: var(--ink); margin-right: 0.3em; }
+
+  /* ---- やさしく図解（大きな絵と少ない言葉。縦長の図にして、スマホでも図の文字を12px前後に保つ） ---- */
+  .eli5 { max-width: 440px; margin: var(--sp-4) auto; }
+  .eli5 .nb-fig, .eli5 figure { margin: 0; }
+  .prose :is(h2, h3, h4) + .eli5 { margin-top: 0; }
+  .eli5-label {
+    display: inline-block; margin: 0 0 var(--sp-2); padding: 0 12px;
+    font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.6; letter-spacing: 0;
+    color: var(--blue-ink); border: 1.5px dashed var(--blue-ink); border-radius: 10px;
+  }
+
+  /* ---- 確認問題 ---- */
+  .quiz { max-width: var(--measure); margin: 0; border: 0; border-bottom: 1px dashed var(--rule); border-radius: 0; background: none; }
+  :not(.quiz) + .quiz { border-top: 1px dashed var(--rule); }
+  .quiz summary, .more summary { position: relative; padding: 14px 40px 14px 0; cursor: pointer; font-weight: 700; list-style: none; }
+  .quiz summary::-webkit-details-marker, .more summary::-webkit-details-marker { display: none; }
+  .quiz summary::after, .more summary::after {
+    content: ""; position: absolute; right: 8px; top: calc(14px + 0.45em); width: 18px; height: 18px;
+    background: var(--ink-sub); transition: transform .2s;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  details[open] > summary::after { transform: rotate(180deg); }
+  .quiz summary:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+  .quiz .answer { padding: 0 0 var(--sp-2); border: 0; }
+  .quiz .answer::before { content: "答え"; display: block; font-family: var(--font-hand); font-weight: 600; color: var(--red-pen); line-height: 1.6; }
+  .quiz .answer > :last-child { margin-bottom: 0; }
+  .quiz .question { margin: var(--sp-2) 0 4px; font-weight: 700; }
+  .quiz .choices { margin: 0 0 4px; }
+  .quiz details { margin: 0; border: 0; }
+  .quiz details summary { padding-top: 4px; padding-bottom: 8px; font-weight: 400; color: var(--link); }
+  .quiz details summary::after { top: calc(4px + 0.45em); }
+  details::details-content { transition: block-size .25s ease, content-visibility .25s allow-discrete; overflow: clip; block-size: 0; }
+  details[open]::details-content { block-size: auto; }
+  .more { max-width: var(--measure); margin: var(--sp-3) 0; padding: 0 var(--sp-2); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .more summary { color: var(--link); }
+  .more .inner { padding: 0 0 var(--sp-2); border: 0; }
+
+  /* ---- 参考リンク・フッター ---- */
+  .refs { max-width: var(--measure); }
+  .refs li { overflow-wrap: anywhere; }
+  .sheet > footer, .page > footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1.5px dashed var(--rule); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .sheet > footer p { margin: 0; }
+  .sheet > footer p + p { margin-top: var(--sp-1); }
+
+  /* ---- 上部バー ---- */
+  .nb-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); border-radius: 8px; }
+  .nb-skip:focus { top: var(--sp-1); }
+  .nb-topbar {
+    position: sticky; top: 0; z-index: 50; height: var(--topbar-h);
+    background: color-mix(in srgb, var(--desk) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+    letter-spacing: 0;
+  }
+  .nb-topbar-inner {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2); height: 100%;
+    margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2);
+  }
+  .nb-home {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; min-height: 44px; padding: 0 10px 0 4px; margin-left: -4px;
+    color: var(--ink); text-decoration: none; font-weight: 700; border-radius: 8px;
+  }
+  .nb-home:hover { background: color-mix(in srgb, var(--rule) 25%, transparent); text-decoration: none; }
+  .nb-home svg { width: 20px; height: 20px; }
+  .nb-where { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); opacity: 0; transition: opacity .2s; }
+  .nb-where.is-shown { opacity: 1; }
+  .nb-where .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-where .t-page { flex: 0 1 auto; max-width: 50%; }
+  .nb-where .sep { flex-shrink: 0; }
+  .nb-where .t-sec { flex: 0 1 auto; color: var(--ink); font-weight: 700; }
+  .nb-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; margin-left: auto; }
+  .nb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-width: 44px; min-height: 44px; padding: 0 14px;
+    font: inherit; font-size: var(--fs-small); line-height: 1; color: var(--ink);
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer;
+  }
+  .nb-btn:hover { border-color: var(--ink-sub); }
+  .nb-btn[aria-pressed="true"] { border-color: var(--ink); font-weight: 700; }
+  .nb-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nb-toc-btn { display: none; }
+  .nb-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--blue-ink); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* ---- 引き出し式の目次（900px以下） ---- */
+  .nb-drawer {
+    margin: 0 auto 0 0; height: 100%; max-height: 100dvh; width: min(340px, 88vw); max-width: none;
+    padding: 0; border: 0; background: var(--sheet); color: var(--ink); box-shadow: var(--sheet-shadow);
+    font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+  }
+  .nb-drawer::backdrop { background: rgb(10 14 20 / 0.45); }
+  .nb-drawer[open] { animation: nb-slide .22s ease-out; }
+  @keyframes nb-slide { from { transform: translateX(-24px); opacity: 0; } }
+  .nb-dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3); background: var(--sheet); border-bottom: 1px dashed var(--rule); }
+  .nb-dialog-head strong { font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); }
+  .nb-drawer nav { padding: var(--sp-2) var(--sp-3) var(--sp-4); }
+  .nb-drawer ol, .nb-drawer ul { list-style: none; margin: 0; padding: 0; }
+  .nb-drawer a { color: var(--ink); text-decoration: none; }
+  .nb-drawer ol > li > a { display: block; padding: 6px 0 6px 30px; }
+  .nb-drawer .nb-row a { padding: 6px 0; }
+  .nb-drawer .nb-check { margin-top: 7px; }
+  .nb-drawer .sub { padding-left: 30px; margin: 0 0 6px; }
+  .nb-drawer .sub a { display: block; padding: 6px 0; color: var(--ink-sub); }
+  .nb-drawer a.is-active { font-weight: 700; }
+
+  /* ---- 見出しのリンク ---- */
+  .nb-anchor { margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.75em; font-weight: 400; color: var(--ink-sub); text-decoration: none; opacity: 0; transition: opacity .15s; }
+  :is(h2, h3, h4):hover > .nb-anchor, .nb-anchor:focus-visible { opacity: 1; }
+  @media (hover: none) { .nb-anchor { display: none; } }
+
+  /* ---- 表・図の横スクロールの案内 ---- */
+  .nb-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+  .nb-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+  .nb-more-left.nb-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+  .nb-scroll-hint { display: none; margin: calc(var(--sp-3) * -1) 0 var(--sp-3); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .nb-scroll-hint.is-shown { display: block; }
+
+  /* ---- 図の拡大 ---- */
+  .nb-fig { position: relative; margin: var(--sp-4) 0; }
+  .nb-fig > figure { margin: 0; }
+  .nb-expand {
+    position: absolute; top: -14px; right: var(--sp-2); z-index: 1;
+    min-height: 28px; min-width: 28px; padding: 0 10px; font-size: var(--fs-meta);
+    color: var(--ink-sub); background: var(--sheet);
+  }
+  .nb-expand svg { width: 14px; height: 14px; }
+  .nb-lightbox {
+    width: min(1200px, 96vw); max-width: none; max-height: 92dvh; padding: 0;
+    border: 1.5px solid var(--ink); border-radius: 12px; background: var(--sheet); color: var(--ink);
+  }
+  .nb-lightbox::backdrop { background: rgb(10 14 20 / 0.6); }
+  .nb-lightbox .nb-dialog-head strong { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-small); color: var(--ink-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-lightbox figure { margin: 0; padding: var(--sp-3); overflow: auto; }
+  .nb-lightbox figure > svg { min-width: 760px; border: 0; padding: 0; }
+
+  /* ---- コードのコピー ---- */
+  .nb-code { position: relative; margin: var(--sp-4) 0; }
+  .nb-code > pre { margin: 0; padding-right: 96px; }
+  .nb-copy { position: absolute; top: var(--sp-1); right: var(--sp-1); min-height: 32px; padding: 0 10px; font-size: var(--fs-meta); color: var(--ink-sub); }
+  .nb-copy svg { width: 16px; height: 16px; }
+
+  /* ---- 確認問題の一括表示 ---- */
+  .nb-quiz-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-1) var(--sp-2); max-width: var(--measure); margin: 0 0 var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+
+  /* ---- シリーズ・関連ノート（トップページの一覧から自動で作る） ---- */
+  .nb-related { margin-top: var(--sp-5); }
+  .nb-related h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .nb-related > section + section { margin-top: var(--sp-4); }
+  .nb-series { padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .nb-series ol { margin: 0; padding-left: 1.6em; }
+  .nb-series li + li { margin-top: 4px; }
+  .nb-series .is-current { font-weight: 700; background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-pn { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-1) var(--sp-3); margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px dashed var(--rule); }
+  .nb-pn .is-next { margin-left: auto; text-align: right; }
+  .nb-list { list-style: none; margin: 0; padding: 0; }
+  .nb-list li { padding: 12px 0; border-bottom: 1px dashed var(--rule); }
+  .nb-list li:first-child { border-top: 1px dashed var(--rule); }
+  .nb-list a { font-weight: 700; }
+  .nb-list .s { display: block; margin-top: 2px; font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  .nb-list .m { display: block; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 先頭へ・通知 ---- */
+  .nb-fab {
+    position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40; width: 48px; height: 48px; padding: 0;
+    box-shadow: var(--sheet-shadow); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .nb-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+  .nb-toast {
+    position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    padding: var(--sp-1) var(--sp-2); border-radius: 8px; background: var(--ink); color: var(--sheet); font-size: var(--fs-small); letter-spacing: 0;
+    transition: opacity .2s, transform .2s;
+  }
+  .nb-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---- 900px以下: 目次はヘッダーから開く ---- */
+  @media (max-width: 900px) {
+    .page { display: block; max-width: calc(var(--sheet-w) + var(--sp-3) * 2); padding: var(--sp-3) var(--sp-2) var(--sp-5); }
+    .toc { position: static; max-height: none; overflow: visible; margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--sheet); }
+    .nb-js .page > .toc { display: none; }
+    .nb-toc-btn { display: inline-flex; }
+    .sheet { padding: 40px 32px 56px; }
+  }
+  @media (max-width: 600px) {
+    :root { --topbar-h: 56px; }
+    .page { padding: var(--sp-2) 10px var(--sp-4); }
+    .sheet { padding: 32px 20px 48px; }
+    .nb-topbar-inner { padding: 0 var(--sp-1) 0 var(--sp-2); gap: var(--sp-1); }
+    .nb-where, .nb-btn .label-wide { display: none; }
+    .nb-actions { gap: 6px; }
+    .nb-btn { padding: 0 10px; }
+    .prose h2 { margin-top: 64px; }
+    .memo { flex-basis: 100%; padding-left: 1em; }
+    table.nb-term tbody tr > :first-child { white-space: normal; min-width: 7em; }
+    .table-wrap :is(th, td) { min-width: 5em; }
+    .eli5 figure > svg { padding: 12px; }
+    .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after, ::details-content { transition: none !important; animation: none !important; }
+  }
+  @media print {
+    body { background: #fff; }
+    .nb-topbar, .nb-fab, .nb-toast, .nb-anchor, .nb-copy, .nb-expand, .nb-quiz-tools, .nb-scroll-hint, .nb-skip, .page > .toc, .nb-toc-note { display: none !important; }
+    .page { display: block; max-width: none; padding: 0; }
+    .sheet { box-shadow: none; padding: 0; }
+    .nb-more-left, .nb-more-right { -webkit-mask-image: none; mask-image: none; }
+    figure, .quiz, .table-wrap, .callout { break-inside: avoid; }
+  }
+</style>
+<script>try{var t=localStorage.getItem('ln-theme'),f=localStorage.getItem('ln-fs'),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);if(f==='l'||f==='xl')r.setAttribute('data-fs',f);}catch(e){}</script>
+<!-- notebook-ui:end -->
+<style>
+  /* このレポートだけで使うスタイル（必要なときだけ書く。色は上の CSS 変数を使う） */
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="toc" aria-label="目次">
+    <h2>もくじ</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">学習ループと全体像</a>
+        <ul class="sub">
+          <li><a href="#s3-1">学習ループの流れ</a></li>
+          <li><a href="#s3-2">全体の構成</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">チャットAIとの違い</a></li>
+      <li><a href="#s5">使いどころの具体例</a></li>
+      <li><a href="#s6">強み</a></li>
+      <li><a href="#s7">弱み・注意点</a>
+        <ul class="sub">
+          <li><a href="#s7-1">費用が見えにくい</a></li>
+          <li><a href="#s7-2">安全面のリスク</a></li>
+          <li><a href="#s7-3">スキルの劣化と思い込み</a></li>
+          <li><a href="#s7-4">導入・運用の手間</a></li>
+          <li><a href="#s7-5">対策の考え方</a></li>
+        </ul>
+      </li>
+      <li><a href="#s8">向く人・向かない人</a></li>
+      <li><a href="#s9">よくある誤解</a></li>
+      <li><a href="#s10">確認問題</a></li>
+      <li><a href="#s11">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <article class="sheet">
+    <header class="cover">
+      <a class="back" href="../index.html">学習ノートに戻る</a>
+      <h1>Hermes Agentとは何か：使うほど育つ自己ホスト型AIエージェント</h1>
+      <ul class="meta">
+        <li>作成日 2026-10-06</li>
+        <li>分野 AI</li>
+      </ul>
+    </header>
+
+    <main class="prose">
+
+      <h2 id="s1">概要</h2>
+      <div class="callout summary">
+        <span class="label">3行でいうと</span>
+        <ol>
+          <li>Hermes Agentは、AIモデル「Hermes」を作っているNous Researchが2026年2月に公開した、MITライセンスの<mark>オープンソースAIエージェント</mark>で、自分のPCやサーバーで動かす。</li>
+          <li>最大の特徴は「<mark>学習ループ</mark>」。作業の中で手順を「スキル」として書き溜め、会話をまたいで記憶し、次回以降の仕事に使い回す。</li>
+          <li>本体は無料で、Telegram・Discord・Slackなどからも話しかけられる。一方で、モデルのAPI料金、設定の手間、自分で書いたスキルや記憶が誤ったり汚染されたりする危険は、<mark>自分で管理する</mark>必要がある。</li>
+        </ol>
+      </div>
+      <div class="callout note">
+        <span class="label">確認日</span>
+        <p>確認日：2026-10-06。公式サイト・公式GitHub・公式ドキュメントを中心に確認しました。開発が速いプロジェクトなので、機能や料金は変わる可能性があります。</p>
+      </div>
+
+      <h3>誰が作ったか</h3>
+      <p>開発元はNous Researchです。オープンウェイトの言語モデル群「Hermes」シリーズ（例：2025年8月公開のHermes 4）で知られる研究・開発組織です。ソースコードはGitHubの<code>NousResearch/hermes-agent</code>で公開されています。PythonとTypeScriptで書かれ、Linux・macOS・Windowsで動きます。</p>
+
+      <h3>「Hermes」という名前の混同に注意</h3>
+      <p>Nous Researchは「Hermes」という名前を2つの意味で使っています。両者は別物です。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Hermes（モデル）とHermes Agentの違い</caption>
+          <thead><tr><th></th><th>Hermes（Hermes 4など）</th><th>Hermes Agent</th></tr></thead>
+          <tbody>
+            <tr><th>正体</th><td>言語モデル（AIの頭脳そのもの）</td><td>モデルを包んで動かすソフトウェア（エージェントの枠組み）</td></tr>
+            <tr><th>公開時期</th><td>Hermes 4は2025年8月</td><td>2026年2月</td></tr>
+            <tr><th>役割</th><td>文章や推論を生成する</td><td>記憶・スキル・ツール実行・メッセージ連携を担当する</td></tr>
+            <tr><th>モデルとの関係</th><td>単体でも使える</td><td>Hermesモデルに限らず、Claude・GPT・Gemini・ローカルモデルなどを差し替えられる</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p>つまりHermes Agentを使うのに、Hermesモデルは必須ではありません。</p>
+        <aside class="memo">Hermes＝頭脳、Agent＝それを包む枠</aside>
+      </div>
+
+      <h2 id="s2">基本用語</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>用語</th><th>意味</th></tr></thead>
+          <tbody>
+            <tr><th>エージェント</th><td>LLMが結果を見ながら、次に何をするかを自分で決めて実行を繰り返すもの。違いの詳細は<a href="ai-agents-vs-workflows.html">AIエージェントとワークフローの違い</a>を参照。</td></tr>
+            <tr><th>ハーネス（枠組み）</th><td>モデルの外側で、記憶・ツール・権限・ループを受け持つ部分。Hermes Agentはこれにあたる。</td></tr>
+            <tr><th>スキル</th><td>「このタイプの作業はこの手順でやる」と書いた<mark>Markdownファイル</mark>（<code>SKILL.md</code>）。agentskills.ioというオープン標準に沿っている。</td></tr>
+            <tr><th>永続メモリ</th><td>会話を閉じても残る記憶。利用者の好み、環境の情報、過去の失敗から得た教訓など。</td></tr>
+            <tr><th>ゲートウェイ</th><td>Telegram、Discord、Slack、WhatsApp、Signal、メールなどからエージェントに話しかけるための窓口プロセス。</td></tr>
+            <tr><th>ターミナルバックエンド</th><td>コマンドを実行する場所。ローカル、Docker、SSH、Singularity、Modal、Daytonaなどから選ぶ。</td></tr>
+            <tr><th>サブエージェント</th><td>親のエージェントが並行作業のために生み出す、別の会話・別の実行環境を持つ小さなエージェント。</td></tr>
+            <tr><th>MCP</th><td>外部ツールをつなぐ共通規格。Hermes Agentも対応する。詳しくは<a href="what-is-mcp.html">MCP（Model Context Protocol）とは何か</a>。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s3">学習ループと全体像</h2>
+
+      <h3 id="s3-1">学習ループの流れ</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 490" role="img" aria-label="あなたが依頼し、AIがいくつものツールで作業する。うまくいった手順をAIがスキルとして書き残す。次に似た依頼が来たら、AIはそのスキルを読み込み、ゼロから考えずに進める。">
+            <title>Hermes Agentの学習ループ</title>
+            <defs><marker id="e1-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+            <line x1="22" y1="75" x2="22" y2="167" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <line x1="22" y1="193" x2="22" y2="285" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <line x1="22" y1="311" x2="22" y2="363" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <circle cx="22" cy="62" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="68" text-anchor="middle" font-size="16" font-weight="700">1</text>
+            <g transform="translate(84 66)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+            <text x="84" y="108" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+            <line x1="114" y1="62" x2="238" y2="62" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+            <text x="176" y="46" text-anchor="middle" font-size="16">依頼する</text>
+            <g transform="translate(270 66)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <text x="270" y="108" text-anchor="middle" font-size="16" font-weight="700">AI</text>
+            <circle cx="22" cy="180" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="186" text-anchor="middle" font-size="16" font-weight="700">2</text>
+            <g transform="translate(84 184)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <line x1="114" y1="180" x2="222" y2="180" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+            <text x="168" y="164" text-anchor="middle" font-size="16">作業する</text>
+            <rect x="232" y="164" width="32" height="32" rx="6" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <circle cx="246" cy="178" r="6" fill="none" stroke="currentColor" stroke-width="2"/><line x1="250" y1="182" x2="257" y2="189" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <rect x="268" y="164" width="32" height="32" rx="6" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <path d="M276 173 L282 180 L276 187 M285 188 H293" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="304" y="164" width="32" height="32" rx="6" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <path d="M312 173 H328 M312 180 H328 M312 187 H322" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <text x="284" y="224" text-anchor="middle" font-size="16">いくつものツール</text>
+            <circle cx="22" cy="298" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="304" text-anchor="middle" font-size="16" font-weight="700">3</text>
+            <g transform="translate(84 302)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <line x1="114" y1="298" x2="242" y2="298" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+            <text x="178" y="282" text-anchor="middle" font-size="16">手順を書き残す</text>
+            <g transform="translate(284 300)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M-22 -28 H10 L22 -16 V28 H-22 Z" fill="var(--marker-fill)"/><path d="M10 -28 V-16 H22 M-12 -6 H12 M-12 4 H12 M-12 14 H6" fill="none"/></g>
+            <text x="284" y="350" text-anchor="middle" font-size="16" font-weight="700">スキル</text>
+            <circle cx="22" cy="376" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="382" text-anchor="middle" font-size="16" font-weight="700">4</text>
+            <text x="46" y="382" text-anchor="start" font-size="16">次に似た依頼が来たら</text>
+            <g transform="translate(84 430)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M-22 -28 H10 L22 -16 V28 H-22 Z" fill="var(--code-bg)"/><path d="M10 -28 V-16 H22 M-12 -6 H12 M-12 4 H12 M-12 14 H6" fill="none"/></g>
+            <line x1="114" y1="428" x2="238" y2="428" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+            <text x="176" y="412" text-anchor="middle" font-size="16">読み込む</text>
+            <g transform="translate(270 432)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <text x="180" y="480" text-anchor="middle" font-size="16" font-weight="700">ゼロから考えずに進める</text>
+          </svg>
+          <figcaption><b>図1</b>学習ループの流れ（イメージ）。うまくいった手順をスキルとして書き残し、次に似た依頼が来たら、それを読み込んで使う。</figcaption>
+        </figure>
+      </div>
+      <p>Hermes Agentのいちばんの特徴は、<mark>使うほど手持ちの道具が増える</mark>仕組みです。公式の説明と解説記事によると、次のように働きます。</p>
+      <div class="with-memo">
+        <ol>
+          <li>利用者が依頼し、エージェントがツールを使って作業する。</li>
+          <li>複雑な作業（目安として、ツール呼び出し5回以上と紹介する記事が多い）を終えると、うまくいった手順・落とし穴・確認方法を<code>skill_manage</code>ツールで<mark>スキルとして書き残す</mark>。</li>
+          <li>スキルは使うたびに修正される。メモリにも「この人はこうしてほしい」といった情報が足される。過去の会話は全文検索（FTS5）とLLM要約で引き出せる。</li>
+          <li>次に似た依頼が来たら、ゼロから考えず該当スキルを読み込んで進める。</li>
+        </ol>
+        <aside class="memo">育つのは外付けのノート。モデルはそのまま</aside>
+      </div>
+      <p>スキルは3段階で少しずつ読み込まれます。最初は名前と説明の一覧だけ（約3千トークン）、必要なものだけ本文を読み、必要なときだけ付属ファイルを読みます。コンテキストを節約するための工夫です。なお、スキルの書き込みに人間の承認を挟む<code>write_approval</code>の設定もあります。</p>
+
+      <h3 id="s3-2">全体の構成</h3>
+      <figure>
+        <svg viewBox="0 0 720 420" role="img" aria-label="Hermes Agentの全体構成。左の入口（CLI・デスクトップ、メッセージアプリはゲートウェイ経由）から中央の本体へつながる。本体はメモリ、スキル、ツール・MCP、cronスケジューラ、サブエージェントを持ち、上のモデルを呼び出し、下の実行場所でコマンドを実行する。">
+          <title>Hermes Agentの全体構成</title>
+          <defs><marker id="f2-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <text x="100" y="146" text-anchor="middle" font-size="15" font-weight="700">利用者の入口</text>
+          <rect x="20" y="160" width="160" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="100" y="185" text-anchor="middle" font-size="14">CLI・デスクトップ</text>
+          <rect x="20" y="222" width="160" height="56" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="100" y="245" text-anchor="middle" font-size="14">Telegram・Discord</text>
+          <text x="100" y="267" text-anchor="middle" font-size="14">Slack・メール など</text>
+          <rect x="212" y="230" width="104" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="264" y="255" text-anchor="middle" font-size="14">ゲートウェイ</text>
+          <line x1="180" y1="180" x2="346" y2="180" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <line x1="180" y1="250" x2="208" y2="250" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <line x1="316" y1="250" x2="346" y2="250" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <rect x="350" y="12" width="340" height="82" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="520" y="36" text-anchor="middle" font-size="15" font-weight="700">モデル（差し替えできる）</text>
+          <text x="520" y="60" text-anchor="middle" font-size="13">Nous Portal・OpenRouter・OpenAI</text>
+          <text x="520" y="82" text-anchor="middle" font-size="13">Claude・Gemini・ローカル など</text>
+          <line x1="520" y1="128" x2="520" y2="98" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <text x="532" y="118" text-anchor="start" font-size="13">呼び出す</text>
+          <rect x="350" y="130" width="340" height="170" rx="12" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="520" y="157" text-anchor="middle" font-size="15" font-weight="700">Hermes Agent 本体</text>
+          <rect x="364" y="170" width="97" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="412.5" y="195" text-anchor="middle" font-size="14">メモリ</text>
+          <rect x="471" y="170" width="97" height="40" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="519.5" y="195" text-anchor="middle" font-size="14" font-weight="700">スキル</text>
+          <rect x="578" y="170" width="98" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="627" y="195" text-anchor="middle" font-size="14">ツール・MCP</text>
+          <rect x="364" y="220" width="151" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="439.5" y="245" text-anchor="middle" font-size="14">cronスケジューラ</text>
+          <rect x="525" y="220" width="151" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="600.5" y="245" text-anchor="middle" font-size="14">サブエージェント</text>
+          <text x="520" y="286" text-anchor="middle" font-size="13">どの入口からでも同じ記憶を使う</text>
+          <line x1="520" y1="302" x2="520" y2="334" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <text x="532" y="323" text-anchor="start" font-size="13">コマンド実行</text>
+          <rect x="350" y="338" width="340" height="66" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="520" y="364" text-anchor="middle" font-size="14" font-weight="700">実行場所（ターミナルバックエンド）</text>
+          <text x="520" y="388" text-anchor="middle" font-size="13">local・Docker・SSH・Modal など</text>
+        </svg>
+        <figcaption><b>図2</b>Hermes Agentの全体構成。入口から届いた依頼を本体が受け、モデルを呼び出し、実行場所でコマンドを動かす。黄色のスキルが、使うほど増えていく部分。</figcaption>
+      </figure>
+      <div class="table-wrap">
+        <table>
+          <caption>構成要素と役割</caption>
+          <thead><tr><th>層</th><th>中身</th><th>選べるもの</th></tr></thead>
+          <tbody>
+            <tr><th>入口</th><td>CLI、デスクトップアプリ、ゲートウェイ</td><td>Telegram、Discord、Slack、WhatsApp、Signal、メール。どこから話しても<mark>同じ記憶を共有する</mark></td></tr>
+            <tr><th>本体</th><td>メモリ、スキル、40以上の組み込みツール、MCP連携、cron、サブエージェント</td><td>ブラウザ操作、Web検索、画像・音声関連なども含む</td></tr>
+            <tr><th>モデル</th><td>OpenAI互換APIなら基本的に接続可能</td><td>Nous Portal、OpenRouter、OpenAI、Anthropic、Google、Ollama・vLLMなどのローカル。<code>hermes model</code>で切り替え</td></tr>
+            <tr><th>実行場所</th><td>ターミナルバックエンド</td><td>local、Docker、SSH、Singularity、Modal、Daytonaなど。ModalやDaytonaは使っていない間は休止できる</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s4">チャットAIとの違い</h2>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 450" role="img" aria-label="上はチャットAI。あなたが質問し、AIが答える。話しかけたときだけ動く。下はHermes Agent。自分のPCやサーバーに常駐し、コマンドを実行し、前回を覚えていて、夜中も定刻に働く。使うほど自分用に育つ。">
+            <title>チャットAIとHermes Agentの違い</title>
+            <defs><marker id="e3-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+            <rect x="20" y="14" width="112" height="30" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <text x="32" y="35" text-anchor="start" font-size="16" font-weight="700">チャットAI</text>
+            <g transform="translate(70 104)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+            <text x="70" y="148" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+            <line x1="100" y1="92" x2="254" y2="92" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+            <text x="177" y="80" text-anchor="middle" font-size="16">質問</text>
+            <line x1="254" y1="118" x2="100" y2="118" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+            <text x="177" y="142" text-anchor="middle" font-size="16">答え</text>
+            <g transform="translate(290 104)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <text x="180" y="182" text-anchor="middle" font-size="16">話しかけたときだけ動く</text>
+            <line x1="20" y1="200" x2="340" y2="200" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <rect x="20" y="216" width="158" height="30" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+            <text x="32" y="237" text-anchor="start" font-size="16" font-weight="700">Hermes Agent</text>
+            <rect x="20" y="262" width="150" height="104" rx="10" fill="none" stroke="currentColor" stroke-width="2"/>
+            <g transform="translate(95 320)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <text x="95" y="390" text-anchor="middle" font-size="16">自分のPC・サーバー</text>
+            <line x1="174" y1="284" x2="192" y2="284" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+            <text x="198" y="290" text-anchor="start" font-size="16">コマンドを実行</text>
+            <line x1="174" y1="316" x2="192" y2="316" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+            <text x="198" y="322" text-anchor="start" font-size="16">前回を覚えている</text>
+            <line x1="174" y1="348" x2="192" y2="348" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+            <text x="198" y="354" text-anchor="start" font-size="16">夜中も定刻に働く</text>
+            <text x="180" y="434" text-anchor="middle" font-size="16" font-weight="700">使うほど自分用に育つ</text>
+          </svg>
+          <figcaption><b>図3</b>チャットAIとHermes Agentの違い（イメージ）。最近はチャットAIにも記憶やエージェント機能を持つものが増えており、境界は絶対的ではない。</figcaption>
+        </figure>
+      </div>
+      <p>ChatGPTなどのチャットAIは、基本的に「会話の窓口」です。Hermes Agentは、モデルの周りに<mark>記憶・道具・常駐の仕組み</mark>を足したものです。ただし最近のチャットAIも、記憶機能やエージェント機能を持つものが増えており、境界は絶対的なものではありません。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>チャットAIとHermes Agentの比較</caption>
+          <thead><tr><th>観点</th><th>普通のチャットAI</th><th>Hermes Agent</th></tr></thead>
+          <tbody>
+            <tr><th>動く場所</th><td>提供企業のクラウド</td><td>自分のPC・VPS・クラウド環境（自己ホスト）</td></tr>
+            <tr><th>できること</th><td>主に文章の生成と対話。機能は提供元が決める</td><td>コマンド実行、ファイル操作、ブラウザ操作、スケジュール実行など。ツールの追加は自由</td></tr>
+            <tr><th>記憶</th><td>提供元の機能の範囲</td><td>ローカルの<code>~/.hermes/</code>に保存。過去の会話の検索、利用者モデルの蓄積も</td></tr>
+            <tr><th>上達の仕方</th><td>モデル自体の更新を待つ</td><td>使ううちにスキルが増え、自分用に育つ</td></tr>
+            <tr><th>使うモデル</th><td>基本はその会社のモデル</td><td>自由に差し替えられる。ローカルモデルで完全オフラインも可能（コンテキスト64,000トークン以上が必要）</td></tr>
+            <tr><th>起動のきっかけ</th><td>人間が話しかけたとき</td><td>cronによる定期実行やメッセージ着信でも動く</td></tr>
+            <tr><th>費用</th><td>月額サブスクが中心</td><td>本体は無料。モデルのAPI料金は別</td></tr>
+            <tr><th>責任の所在</th><td>提供元が環境を管理</td><td>設定・権限・保守・セキュリティは自分で管理</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>近い存在との違い</h3>
+      <p>Claude Codeのようなコーディング用エージェントは、主に「いま開いているプロジェクトの作業」を支援します。Hermes Agentは、プロジェクトの枠を超えて常駐し、複数のチャット経路から呼び出され、経験を蓄積する個人用エージェントという位置づけです。同じ自己ホスト型・MIT・メッセージ連携のOpenClawとよく比較され、各種比較記事では「OpenClawは連携先の広さ、Hermesは<mark>記憶と自己改善の深さ</mark>」と整理されることが多いです。Claude Code側の拡張の仕組みは<a href="claude-code-extensions-overview.html">Claude Codeの拡張の全体像</a>にまとめています。</p>
+
+      <h2 id="s5">使いどころの具体例</h2>
+      <ul>
+        <li><strong>個人の秘書として：</strong>スマホのTelegramから「昨日の議事録を整理して」と頼む。自宅や小さなVPSのHermesが作業し、結果を返す。</li>
+        <li><strong>定期作業：</strong>「毎朝8時にサーバーの状態をまとめて送って」と自然言語で頼むと、cronとして登録される。</li>
+        <li><strong>繰り返しの調査・運用：</strong>同種の作業が続くと、手順が<mark>スキル化</mark>されて速く安定する。</li>
+        <li><strong>並行作業：</strong>サブエージェントに調査を分担させる。</li>
+        <li><strong>プライバシー重視の運用：</strong>ローカルモデル（Ollama・vLLM）と組み合わせ、データを外に出さずに動かす。公式FAQでは、設定したLLM提供元以外には通信せず、<mark>テレメトリも収集しない</mark>と説明している。</li>
+      </ul>
+      <p>導入は公式のワンライナー（Linux・macOS・WSL2・Windows PowerShell・Termux向け）が用意されており、デスクトップアプリ版（macOS・Windows）もあります。</p>
+
+      <h2 id="s6">強み</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>強み</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><th>経験が蓄積する</th><td>スキルと記憶により、使うほど自分の流儀に合っていく。</td></tr>
+            <tr><th>中身が読める</th><td>スキルはMarkdown、記憶は検索可能な形式なので、<mark>人間が確認・修正・バージョン管理できる</mark>。ブラックボックスの追加学習とは違う。</td></tr>
+            <tr><th>モデルに縛られない</th><td>コマンド1つでモデルを切り替えられる。費用や性能の都合で乗り換えやすい。</td></tr>
+            <tr><th>データを手元に置ける</th><td>ローカルモデルと組み合わせれば完全オフライン運用も可能。</td></tr>
+            <tr><th>どこからでも使える</th><td>メッセージアプリ経由で、複数の経路でも同じ記憶を共有する。</td></tr>
+            <tr><th>自動実行と並列化</th><td>cronスケジューラとサブエージェントを標準で備える。</td></tr>
+            <tr><th>安全のための仕組みがある</th><td>危険なコマンドの承認、メッセージ連携のDMペアリング、コンテナ隔離などの仕組みがある。</td></tr>
+            <tr><th>オープン</th><td>MITライセンスで、ソースも公開されている。agentskills.io標準やMCPにも対応し、外部のスキル資産を使える。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s7">弱み・注意点</h2>
+
+      <h3 id="s7-1">費用が見えにくい</h3>
+      <div class="with-memo">
+        <p>本体は無料でも、モデルのAPI料金はかかります。学習の過程で背景のLLM呼び出しが増え、スキルが増えるほど「どのスキルを使うか」の判断にもトークンを使います。ゲートウェイ経由だと1ターンあたりの消費が大きいという解説もあります（CLIで6〜8千、ゲートウェイで1.5〜2万トークン程度という報告。環境依存の目安）。cronやサブエージェントは、寝ている間にも費用が発生します。個人の体験談として、再帰的なサブエージェント生成で一晩に約47ドルかかったという報告もあります。<mark>上限額やステップ数の制限</mark>を必ず設定してください。</p>
+        <aside class="memo">本体は無料でも、動かすとお金がかかる</aside>
+      </div>
+
+      <h3 id="s7-2">安全面のリスク</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 430" role="img" aria-label="Webページに隠れた悪い指示をAIが読む。AIがそれを手順としてスキルや記憶に保存する。次回以降はそのスキルを毎回読み込むので、悪い指示に従い続けてしまう。">
+            <title>スキル汚染の流れ</title>
+            <defs><marker id="e4-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+            <line x1="22" y1="75" x2="22" y2="187" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <line x1="22" y1="213" x2="22" y2="325" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <circle cx="22" cy="62" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="68" text-anchor="middle" font-size="16" font-weight="700">1</text>
+            <g transform="translate(84 54)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-28" y="-20" width="56" height="40" rx="4"/><line x1="-28" y1="-10" x2="28" y2="-10"/><path d="M-18 0 H18 M-18 9 H8" fill="none"/></g>
+            <text x="84" y="22" text-anchor="middle" font-size="16" font-weight="700">Webページ</text>
+            <rect x="40" y="84" width="88" height="30" rx="6" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+            <text x="84" y="105" text-anchor="middle" font-size="16">悪い指示</text>
+            <line x1="140" y1="62" x2="238" y2="62" stroke="currentColor" stroke-width="2.5" marker-end="url(#e4-ah)"/>
+            <text x="189" y="46" text-anchor="middle" font-size="16">読む</text>
+            <g transform="translate(270 66)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <text x="270" y="108" text-anchor="middle" font-size="16" font-weight="700">AI</text>
+            <circle cx="22" cy="200" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="206" text-anchor="middle" font-size="16" font-weight="700">2</text>
+            <g transform="translate(84 204)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <line x1="114" y1="200" x2="242" y2="200" stroke="currentColor" stroke-width="2.5" marker-end="url(#e4-ah)"/>
+            <text x="178" y="184" text-anchor="middle" font-size="16">手順として保存</text>
+            <g transform="translate(284 202)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M-22 -28 H10 L22 -16 V28 H-22 Z" fill="var(--marker-fill)"/><path d="M10 -28 V-16 H22 M-12 -6 H12 M-12 14 H6" fill="none"/><path d="M-12 4 H12" fill="none" stroke-dasharray="4 3"/></g>
+            <text x="284" y="252" text-anchor="middle" font-size="16" font-weight="700">スキル・記憶</text>
+            <circle cx="22" cy="338" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="344" text-anchor="middle" font-size="16" font-weight="700">3</text>
+            <g transform="translate(84 342)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M-22 -28 H10 L22 -16 V28 H-22 Z" fill="var(--code-bg)"/><path d="M10 -28 V-16 H22 M-12 -6 H12 M-12 14 H6" fill="none"/><path d="M-12 4 H12" fill="none" stroke-dasharray="4 3"/></g>
+            <line x1="114" y1="338" x2="238" y2="338" stroke="currentColor" stroke-width="2.5" marker-end="url(#e4-ah)"/>
+            <text x="176" y="322" text-anchor="middle" font-size="16">毎回読み込む</text>
+            <g transform="translate(270 342)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <rect x="60" y="380" width="240" height="38" rx="8" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/>
+            <text x="180" y="405" text-anchor="middle" font-size="16">次回以降も従ってしまう</text>
+          </svg>
+          <figcaption><b>図4</b>スキル汚染の流れ（イメージ）。Webページなどに仕込まれた悪意ある指示が保存されると、1回限りで終わらず、次回以降も信頼できる手順として読み込まれる。</figcaption>
+        </figure>
+      </div>
+      <p>エージェントは、コマンド実行やファイル操作などの強い権限を持ちます。さらに、自分が書いたスキルや記憶は、次回以降「信頼できる手順」として読み込まれます。そのため、Webページやメールに仕込まれた悪意ある指示（プロンプトインジェクション）が、1回限りで終わらず、<mark>保存されて残り続ける</mark>恐れがあります。解説記事では「保存ボタンのついたプロンプトインジェクション」とも表現されています。公式にも、危険コマンドの承認、DMペアリング、コンテナ隔離といった防御が用意されていますが、承認モードを「off」にすれば無効になり、設定次第で守りは弱くなります。攻撃全般の考え方は<a href="ai-security.html">AIセキュリティ入門</a>を参照してください。</p>
+
+      <h3 id="s7-3">スキルの劣化と思い込み</h3>
+      <div class="with-memo">
+        <p>自己改善は「さっき動いたか」を基準に進むため、外部サービスの仕様が変わっても、<mark>古い手順を疑わずに使い続ける</mark>可能性があります。スキルが数百に増えると、探すコストも増え、間違ったスキルが選ばれる余地も広がります。</p>
+        <aside class="memo">「さっき動いた」は「今も正しい」ではない</aside>
+      </div>
+
+      <h3 id="s7-4">導入・運用の手間</h3>
+      <ul>
+        <li>初期設定（モデル、ゲートウェイ、権限、バックエンド）に数時間かかるという比較記事が多い。ローカルモデルの用意が必要ならさらにかかる。</li>
+        <li>ローカルモデルは十分なコンテキスト長（64,000トークン以上）と性能が必要。結果の質はモデルとハードウェアに強く左右される。</li>
+        <li>スキルの数やエコシステムの成熟度は、先行する競合より小さいと評されることがある。専門的な用途は自作が必要になる場合がある。</li>
+        <li>オープンな課題（Issue）やPRが多く、開発が速い反面、仕様変更や不具合に付き合う必要がある。</li>
+      </ul>
+
+      <h3 id="s7-5">対策の考え方</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>リスク</th><th>対策の例</th></tr></thead>
+          <tbody>
+            <tr><th>費用の暴走</th><td>API側の利用上限、ステップ数制限、cron・サブエージェントの見直し、使うモデルの格下げ</td></tr>
+            <tr><th>スキルの劣化</th><td>スキルをGitで管理、定期的に棚卸しして不要なものを削除、重要なものはスモークテスト</td></tr>
+            <tr><th>汚染・乗っ取り</th><td>承認モードを手動またはsmartにしておく、Docker等の隔離環境で実行、<code>write_approval</code>でスキル書き込みを承認制に、外部スキルはスキャン結果を確認</td></tr>
+            <tr><th>権限の過剰</th><td>仕事用マシンの本体ではなく専用環境で動かす（公式ガイドにも専用の解説がある）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s8">向く人・向かない人</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>向く人</th><th>向かない人</th></tr></thead>
+          <tbody>
+            <tr><td>自分用のAIを長く育てたい人</td><td>設定やサーバー管理を一切したくない人</td></tr>
+            <tr><td>VPSやDockerなどの扱いに慣れている人</td><td>1回きりの質問や文章作成で足りる人（チャットAIで十分）</td></tr>
+            <tr><td>データを自分の管理下に置きたい人、ローカルモデルを使いたい人</td><td>費用の上限を決められない、または監視できない人</td></tr>
+            <tr><td>スマホのチャットから自分の環境に作業を頼みたい人</td><td>機密性の高い環境に、権限の分離なしで入れようとする人</td></tr>
+            <tr><td>繰り返し作業を自動化したい人</td><td>出力を必ず人間が検証する習慣のない人</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>はじめるなら、<mark>隔離された環境</mark>（Dockerなど）と<mark>少額の利用上限</mark>から試し、スキルの中身を見ながら育てるのが安全です。</p>
+
+      <h2 id="s9">よくある誤解</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>誤解</th><th>実際</th></tr></thead>
+          <tbody>
+            <tr><th>Hermes AgentはHermes（モデル）のことだ</th><td>別物。Hermes Agentはモデルを包むソフトウェアで、中のモデルは差し替えられる。</td></tr>
+            <tr><th>自己改善とは、AIのモデル自体が賢くなることだ</th><td><mark>モデルの重みは変わらない</mark>。変わるのは、書き溜めるスキルと記憶という「外付けのノート」。だから中身が読める。</td></tr>
+            <tr><th>オープンソースで無料だから、全部タダで使える</th><td>本体は無料。モデルのAPI、VPS、Nous Portalのサブスク（有料プランあり）などは別料金。ローカルモデルでも電気代と機材がかかる。</td></tr>
+            <tr><th>自己ホストだから安全だ</th><td>データの行き先は自分で決められるが、強い権限を持つ常駐エージェントの安全は自分で守る必要がある。</td></tr>
+            <tr><th>覚えさせたことは正しく残る</th><td>誤った手順や古い手順も保存される。定期的に人間が見直す必要がある。</td></tr>
+            <tr><th>普通のチャットAIの上位互換だ</th><td>用途が違う。単発の質問ではチャットAIの方が手軽で、設定も不要。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s10">確認問題</h2>
+      <details class="quiz">
+        <summary>Q1. Nous Researchの「Hermes 4」と「Hermes Agent」の違いを説明してください。</summary>
+        <div class="answer"><p>Hermes 4は言語モデル（AIの頭脳）、Hermes Agentはモデルを包んで記憶・スキル・ツール実行・メッセージ連携を担うエージェントの枠組み（ソフトウェア）。Hermes AgentはHermesモデルに限らず他社モデルやローカルモデルも使える。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q2. Hermes Agentの「自己改善」で、実際に変わるものと変わらないものは何ですか。</summary>
+        <div class="answer"><p>変わるのはスキル（Markdownの手順書）と記憶という外付けのデータ。モデルの重みは変わらない。中身が読めるため、人間が確認・修正・削除できる。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q3. 普通のチャットAIと比べたHermes Agentの特徴を、3つ挙げてください。</summary>
+        <div class="answer"><p>例：自分の環境で動く（自己ホスト）、コマンド実行やcronなどで自律的に動く、スキルと記憶が蓄積して自分用に育つ、モデルを自由に差し替えられる、などから3つ。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q4. Hermes Agentが「無料」なのに、思わぬ費用が出る理由を2つ挙げてください。</summary>
+        <div class="answer"><p>本体が無料でもモデルのAPI料金は別。さらに、背景での学習処理、スキルの増加によるトークン消費、cronやサブエージェントによる夜間の自動実行などで、使っていない間も費用が発生する。VPSやサブスク費用が別にかかることもある。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q5. 自己生成スキルが「通常のプロンプトインジェクションより厄介」といわれるのはなぜですか。また対策を2つ挙げてください。</summary>
+        <div class="answer"><p>悪意ある指示が一度保存されると、セッションが終わっても消えず、次回以降も信頼された手順として繰り返し読み込まれるから。対策例：承認モードを手動・smartにする、Dockerなどの隔離環境で動かす、スキル書き込みを承認制にする（<code>write_approval</code>）、スキルをGit管理して定期的に見直す。</p></div>
+      </details>
+
+      <h2 id="s11">参考リンク</h2>
+      <ul class="refs">
+        <li><a href="https://hermes-agent.nousresearch.com/">Hermes Agent公式サイト（Nous Research）</a></li>
+        <li><a href="https://github.com/nousresearch/hermes-agent">GitHub：NousResearch/hermes-agent</a></li>
+        <li><a href="https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/skills.md">公式ドキュメント：Skills</a></li>
+        <li><a href="https://hermes-agent.nousresearch.com/docs/user-guide/security">公式ドキュメント：Security</a></li>
+        <li><a href="https://hermes-agent.nousresearch.com/docs/reference/faq">公式ドキュメント：FAQ &amp; Troubleshooting</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Hermes_Agent">Wikipedia：Hermes Agent</a></li>
+        <li><a href="https://dev.to/chintanonweb/hermes-agent-gets-smarter-every-day-so-does-the-bill-4i8o">DEV Community：Hermes Agent Gets Smarter Every Day. So Does the Bill.（費用・スキル劣化・信頼範囲の批評）</a></li>
+        <li><a href="https://www.ertas.ai/blog/hermes-agent-vs-hermes-4">Ertas AI：Nous Hermes Agent vs Hermes 4（名前の混同の整理）</a></li>
+        <li><a href="https://www.mindstudio.ai/blog/hermes-agent-vs-openclaw-comparison">MindStudio：Hermes Agent vs OpenClaw（比較記事）</a></li>
+      </ul>
+
+    </main>
+
+    <footer>
+      <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+      <p>確認日：2026年10月6日</p>
+    </footer>
+  </article>
+</div>
+<!-- notebook-ui-js:start -->
+<script>
+/* 書き込みノートUI（全レポート共通）。本文の HTML には手を加えず、読み込み後に操作部品だけを足す */
+(() => {
+  'use strict';
+  const d = document, root = d.documentElement;
+  const page = d.querySelector('.page'), main = d.querySelector('main');
+  if (!page || !main) return;
+  root.classList.add('nb-js');
+  const sheet = d.querySelector('.sheet') || page;
+
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+  };
+  const svg = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  const ICON = {
+    back: svg('<path d="m15 18-6-6 6-6"/>'),
+    toc: svg('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>'),
+    text: svg('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'),
+    dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+    up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+    copy: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    check: svg('<path d="M20 6 9 17l-5-5"/>'),
+    expand: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'),
+    close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  };
+  /* 手描き風のチェックボックスと赤ペンのチェック */
+  const CHECKBOX = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4.6 5.3C9 4.7 14.8 5 19.5 4.5c.3 5 0 10 .3 15.1-5.3.3-10.1-.3-15.4.1.3-5.1-.2-9.8.2-14.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path class="nb-tick" pathLength="1" d="M6.8 12.6c1.5 1.3 2.6 2.9 3.6 4.6 2.4-5.3 6-9.9 11.4-14.6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const el = (tag, attrs = {}, html = '') => {
+    const n = d.createElement(tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (html) n.innerHTML = html;
+    return n;
+  };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  const cover = d.querySelector('.cover');
+  const toc = d.querySelector('.toc');
+  const h1 = cover && cover.querySelector('h1');
+  const pageTitle = h1 ? h1.textContent.trim() : d.title;
+  const back = cover && cover.querySelector('.back');
+  const indexHref = back ? back.getAttribute('href') : '../index.html';
+  const here = decodeURIComponent(location.pathname.split('/').pop() || '');
+
+  /* ---- 通知 ---- */
+  const toast = el('div', { class: 'nb-toast', role: 'status', 'aria-live': 'polite' });
+  let toastTimer;
+  const say = (msg) => {
+    toast.textContent = msg;
+    toast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800);
+  };
+  const copyText = (text) => {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((ok, ng) => {
+      const ta = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      d.body.appendChild(ta);
+      ta.select();
+      try { d.execCommand('copy') ? ok() : ng(); } catch (e) { ng(e); }
+      ta.remove();
+    });
+  };
+
+  /* ---- 本文へスキップ・上部バー（パンくず: 学習ノート › ページ › 章） ---- */
+  if (!main.id) main.id = 'main';
+  const skip = el('a', { class: 'nb-skip', href: '#' + main.id }, '本文へスキップ');
+  const bar = el('div', { class: 'nb-topbar' },
+    '<div class="nb-topbar-inner">' +
+      '<a class="nb-home" aria-label="学習ノートの一覧に戻る" href="' + indexHref + '">' + ICON.back + '<span>学習ノート</span></a>' +
+      '<div class="nb-where" aria-hidden="true"><span class="sep">›</span><span class="t t-page"></span><span class="sep">›</span><span class="t t-sec"></span></div>' +
+      '<div class="nb-actions">' +
+        (toc ? '<button type="button" class="nb-btn nb-toc-btn" aria-haspopup="dialog" aria-label="もくじを開く">' + ICON.toc + '<span class="label-wide">もくじ</span></button>' : '') +
+        '<button type="button" class="nb-btn nb-fs-btn"><span class="label"></span></button>' +
+        '<button type="button" class="nb-btn nb-theme-btn" aria-label="ダークモード">' + ICON.dark + '<span class="label-wide">ダーク</span></button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="nb-progress" aria-hidden="true"></div>');
+  d.body.prepend(skip, bar);
+  bar.querySelector('.t-page').textContent = pageTitle;
+  const whereBox = bar.querySelector('.nb-where'), whereSec = bar.querySelector('.t-sec');
+  const progress = bar.querySelector('.nb-progress');
+
+  /* 文字サイズ: 標準 → 大 → 特大 */
+  const FS = [['', '標準'], ['l', '大'], ['xl', '特大']];
+  const fsBtn = bar.querySelector('.nb-fs-btn');
+  const renderFs = () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const label = (FS.find((f) => f[0] === cur) || FS[0])[1];
+    fsBtn.querySelector('.label').textContent = '文字 ' + label;
+    fsBtn.setAttribute('aria-label', '文字サイズ: ' + label + '（押すと切り替え）');
+  };
+  fsBtn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const next = FS[(FS.findIndex((f) => f[0] === cur) + 1) % FS.length];
+    next[0] ? root.setAttribute('data-fs', next[0]) : root.removeAttribute('data-fs');
+    store.set('ln-fs', next[0] || null);
+    renderFs();
+    say('文字サイズ: ' + next[1]);
+    onScroll();
+  });
+  renderFs();
+
+  /* ダーク（夜のノート）の切替。最初は端末の設定に合わせる */
+  const themeBtn = bar.querySelector('.nb-theme-btn');
+  const isDark = () => root.getAttribute('data-theme') === 'dark' || (!root.hasAttribute('data-theme') && darkMq.matches);
+  const renderTheme = () => themeBtn.setAttribute('aria-pressed', String(isDark()));
+  themeBtn.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store.set('ln-theme', next);
+    renderTheme();
+    say(next === 'dark' ? 'ダーク: オン' : 'ダーク: オフ');
+  });
+  darkMq.addEventListener && darkMq.addEventListener('change', renderTheme);
+  renderTheme();
+
+  /* ---- 読了目安 ---- */
+  const meta = cover && cover.querySelector('.meta');
+  if (meta) {
+    const chars = main.textContent.replace(/\s+/g, '').length;
+    meta.appendChild(el('li', {}, '読了目安 約' + Math.max(1, Math.round(chars / 500)) + '分'));
+  }
+
+  /* ---- 見出しのリンク ---- */
+  const headText = new Map();
+  main.querySelectorAll('h2, h3').forEach((h, i) => {
+    headText.set(h, h.textContent.trim());
+    if (!h.id) h.id = 'sec-' + (i + 1);
+    const a = el('a', { class: 'nb-anchor', href: '#' + h.id, 'aria-label': '「' + headText.get(h) + '」へのリンクをコピー' }, '#');
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.replaceState(null, '', '#' + h.id);
+      h.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      copyText(location.href).then(() => say('見出しへのリンクをコピーしました'), () => say('リンクをアドレス欄に表示しました'));
+    });
+    h.appendChild(a);
+  });
+
+  /* ---- 目次: 章ごとのチェックボックス・引き出し・現在地 ---- */
+  const READ_KEY = 'ln-read:' + here, DONE_KEY = 'ln-done:' + here;
+  let readSet = new Set();
+  try { readSet = new Set(JSON.parse(store.get(READ_KEY) || '[]')); } catch (e) {}
+  const chapters = [];
+  let drawer = null;
+  if (toc) {
+    const list = toc.querySelector('ol, ul');
+    if (list) {
+      [...list.children].forEach((li) => {
+        const a = li.querySelector(':scope > a');
+        if (!a || !a.getAttribute('href') || a.getAttribute('href')[0] !== '#') return;
+        const id = decodeURIComponent(a.getAttribute('href').slice(1));
+        const h = d.getElementById(id);
+        if (!h) return;
+        const row = el('span', { class: 'nb-row' });
+        const btn = el('button', { type: 'button', class: 'nb-check', 'data-id': id }, CHECKBOX);
+        a.before(row);
+        row.append(btn, a);
+        chapters.push({ id, h, title: a.textContent.trim() });
+      });
+    }
+    toc.querySelectorAll('a').forEach((a) => { a.innerHTML = '<span class="t">' + a.innerHTML + '</span>'; });
+    if (chapters.length) toc.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer = el('dialog', { class: 'nb-drawer', 'aria-label': 'もくじ' },
+      '<div class="nb-dialog-head"><strong>もくじ</strong><button type="button" class="nb-btn nb-close" aria-label="もくじを閉じる">' + ICON.close + '</button></div>');
+    const nav = el('nav', { 'aria-label': 'もくじ' });
+    if (list) nav.appendChild(list.cloneNode(true));
+    if (chapters.length) nav.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer.appendChild(nav);
+    d.body.appendChild(drawer);
+    bar.querySelector('.nb-toc-btn').addEventListener('click', () => {
+      drawer.showModal();
+      const act = drawer.querySelector('a.is-active');
+      if (act) act.scrollIntoView({ block: 'center' });
+    });
+    drawer.querySelector('.nb-close').addEventListener('click', () => drawer.close());
+    drawer.addEventListener('click', (e) => {
+      if (e.target === drawer || e.target.closest('a')) drawer.close();
+    });
+    [toc, drawer].forEach((box) => box.addEventListener('click', (e) => {
+      const b = e.target.closest('.nb-check');
+      if (b) setRead(b.dataset.id, !readSet.has(b.dataset.id), true);
+    }));
+  }
+  const checkBtns = (id) => d.querySelectorAll('.nb-check[data-id="' + CSS.escape(id) + '"]');
+  const titleOf = (id) => (chapters.find((c) => c.id === id) || {}).title || '';
+  const renderRead = (id) => {
+    const on = readSet.has(id);
+    checkBtns(id).forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-label', '「' + titleOf(id) + '」' + (on ? 'を読んだ（押すとチェックを外す）' : 'はまだ読んでいない（押すとチェックを付ける）'));
+      b.closest('li').classList.toggle('is-read', on);
+    });
+  };
+  function setRead(id, on, byHand) {
+    if (on === readSet.has(id)) return;
+    on ? readSet.add(id) : readSet.delete(id);
+    store.set(READ_KEY, readSet.size ? JSON.stringify([...readSet]) : null);
+    store.set(DONE_KEY, chapters.length && chapters.every((c) => readSet.has(c.id)) ? '1' : null);
+    renderRead(id);
+    if (byHand) say(on ? 'チェックを付けました' : 'チェックを外しました');
+  }
+  chapters.forEach((c) => renderRead(c.id));
+
+  const tocLinks = toc ? [...toc.querySelectorAll('a[href^="#"]'), ...drawer.querySelectorAll('a[href^="#"]')] : [];
+  const targets = [];
+  const seen = new Set();
+  tocLinks.forEach((a) => {
+    const id = decodeURIComponent(a.getAttribute('href').slice(1));
+    const h = d.getElementById(id);
+    if (h && !seen.has(id)) { seen.add(id); targets.push({ id, h }); }
+  });
+  targets.sort((x, y) => (x.h.compareDocumentPosition(y.h) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  const h2s = [...main.querySelectorAll('h2')];
+  let activeId = null, activeH2 = null;
+  const setActive = (id) => {
+    if (id === activeId) return;
+    activeId = id;
+    tocLinks.forEach((a) => {
+      const on = id && a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', !!on);
+      on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
+    });
+    const a = toc && toc.querySelector('a.is-active');
+    if (a && toc.scrollHeight > toc.clientHeight + 4) {
+      const r = a.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if (r.top < tr.top + 24 || r.bottom > tr.bottom - 24) toc.scrollTop += r.top - tr.top - tr.height / 3;
+    }
+  };
+
+  /* ---- 先頭へ戻る ---- */
+  const fab = el('button', { type: 'button', class: 'nb-btn nb-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
+  fab.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    bar.querySelector('.nb-home').focus({ preventScroll: true });
+  });
+  d.body.append(fab, toast);
+
+  /* ---- スクロールに連動する部品（読了バー・現在地・読んだ章のチェック） ---- */
+  let userMoved = false;
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((t) => addEventListener(t, () => { userMoved = true; }, { once: true, passive: true }));
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY, vh = window.innerHeight, max = root.scrollHeight - vh;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    const barH = bar.offsetHeight, line = barH + 48;
+    whereBox.classList.toggle('is-shown', !!cover && cover.getBoundingClientRect().bottom < barH);
+    fab.classList.toggle('is-shown', y > 800);
+
+    let cur = null;
+    if (max > 0 && y >= max - 2 && targets.length) cur = targets[targets.length - 1];
+    else for (const t of targets) { if (t.h.getBoundingClientRect().top <= line) cur = t; else break; }
+    setActive(cur ? cur.id : null);
+
+    let sec = null;
+    for (const h of h2s) { if (h.getBoundingClientRect().top <= line) sec = h; else break; }
+    if (cur && h2s.includes(cur.h)) sec = cur.h;
+    if (sec !== activeH2) { activeH2 = sec; whereSec.textContent = sec ? headText.get(sec) : ''; }
+
+    // 章の末尾（次の章の見出し、最後の章は本文の終わり）が画面に入ったら、その章を読んだことにする
+    if (userMoved) {
+      chapters.forEach((c, i) => {
+        if (readSet.has(c.id)) return;
+        const end = chapters[i + 1] ? chapters[i + 1].h.getBoundingClientRect().top : main.getBoundingClientRect().bottom;
+        const start = c.h.getBoundingClientRect().top;
+        if (start < vh && end >= -vh * 1.5 && end <= vh) setRead(c.id, true);
+      });
+    }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  /* ---- 表: 用語列の判定と、横にはみ出すときの案内 ---- */
+  const scrollers = [];
+  main.querySelectorAll('.table-wrap').forEach((w) => {
+    const t = w.querySelector('table');
+    const firsts = t ? [...t.querySelectorAll('tbody tr > :first-child')] : [];
+    if (firsts.length && firsts.every((c) => c.textContent.trim().length <= 16)) t.classList.add('nb-term');
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 表は横にスクロールできます →');
+    w.after(hint);
+    scrollers.push({ w, hint, mask: true });
+  });
+
+  /* ---- 図: 拡大表示 ---- */
+  const lightbox = el('dialog', { class: 'nb-lightbox', 'aria-label': '図の拡大表示' },
+    '<div class="nb-dialog-head"><strong></strong><button type="button" class="nb-btn nb-close" aria-label="拡大表示を閉じる">' + ICON.close + '</button></div>');
+  lightbox.querySelector('.nb-close').addEventListener('click', () => lightbox.close());
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener('close', () => { const f = lightbox.querySelector('figure'); if (f) f.remove(); });
+  d.body.appendChild(lightbox);
+  main.querySelectorAll('figure').forEach((fig) => {
+    const pic = fig.querySelector(':scope > svg');
+    if (!pic) return;
+    const wrap = el('div', { class: 'nb-fig' });
+    fig.before(wrap);
+    wrap.appendChild(fig);
+    const cap = fig.querySelector('figcaption');
+    const label = (cap ? cap.textContent : (pic.querySelector('title') || {}).textContent || '図').trim();
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-expand', 'aria-label': '図を拡大表示: ' + label }, ICON.expand + '<span>拡大</span>');
+    btn.addEventListener('click', () => {
+      const f = el('figure', { class: fig.className });
+      f.appendChild(pic.cloneNode(true));
+      lightbox.querySelector('.nb-dialog-head strong').textContent = label;
+      lightbox.appendChild(f);
+      lightbox.showModal();
+    });
+    wrap.appendChild(btn);
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 図は横にスクロールできます（「拡大」で全体表示）→');
+    wrap.after(hint);
+    scrollers.push({ w: fig, hint, mask: false });
+  });
+  const updateScroller = (s) => {
+    const max = s.w.scrollWidth - s.w.clientWidth;
+    const can = max > 4;
+    s.hint.classList.toggle('is-shown', can);
+    if (s.mask) {
+      s.w.classList.toggle('nb-more-right', can && s.w.scrollLeft < max - 4);
+      s.w.classList.toggle('nb-more-left', can && s.w.scrollLeft > 4);
+    }
+  };
+  scrollers.forEach((s) => s.w.addEventListener('scroll', () => updateScroller(s), { passive: true }));
+  const updateScrollers = () => scrollers.forEach(updateScroller);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(updateScrollers);
+    scrollers.forEach((s) => ro.observe(s.w));
+  } else addEventListener('resize', updateScrollers);
+
+  /* ---- コードのコピー ---- */
+  main.querySelectorAll('pre').forEach((pre) => {
+    const wrap = el('div', { class: 'nb-code' });
+    pre.before(wrap);
+    wrap.appendChild(pre);
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-copy', 'aria-label': 'コードをコピー' }, ICON.copy + '<span>コピー</span>');
+    btn.addEventListener('click', () => {
+      copyText(pre.innerText.replace(/\n$/, '')).then(() => {
+        btn.innerHTML = ICON.check + '<span>コピー済み</span>';
+        say('コードをコピーしました');
+        setTimeout(() => { btn.innerHTML = ICON.copy + '<span>コピー</span>'; }, 1600);
+      }, () => say('コピーできませんでした'));
+    });
+    wrap.appendChild(btn);
+  });
+
+  /* ---- 確認問題: 答えの一括表示 ---- */
+  const quizzes = [...main.querySelectorAll('.quiz')];
+  const answers = [...main.querySelectorAll('details.quiz, .quiz details')];
+  if (answers.length >= 2) {
+    const tools = el('div', { class: 'nb-quiz-tools' },
+      '<span>全' + quizzes.length + '問。問題を押すと答えが開きます</span><button type="button" class="nb-btn"></button>');
+    const tbtn = tools.querySelector('button');
+    const render = () => {
+      const allOpen = answers.every((x) => x.open);
+      tbtn.textContent = allOpen ? '答えをすべて隠す' : '答えをすべて表示';
+      tbtn.setAttribute('aria-pressed', String(allOpen));
+    };
+    tbtn.addEventListener('click', () => {
+      const open = !answers.every((x) => x.open);
+      answers.forEach((x) => { x.open = open; });
+      render();
+    });
+    answers.forEach((x) => x.addEventListener('toggle', render));
+    quizzes[0].before(tools);
+    render();
+  }
+
+  /* ---- 印刷時は答えも含めてすべて開く ---- */
+  let closedForPrint = [];
+  addEventListener('beforeprint', () => {
+    closedForPrint = [...d.querySelectorAll('details:not([open])')];
+    closedForPrint.forEach((x) => { x.open = true; });
+  });
+  addEventListener('afterprint', () => { closedForPrint.forEach((x) => { x.open = false; }); closedForPrint = []; });
+
+  /* ---- シリーズの前後移動・関連ノート ----
+     トップページ（index.html）の一覧を台帳として読み込み、
+     同じシリーズ（data-series / data-order）と同じ分野（data-topic）のノートへのリンクを末尾に出す。
+     ファイルを直接開いた場合（file://）は読み込めないので何も出さない */
+  const TOPIC = { ai: 'AI', infra: 'インフラ', security: 'セキュリティ', dev: '開発' };
+  const node = (tag, cls, text) => {
+    const n = d.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const item = (n) => {
+    const li = node('li');
+    const a = node('a', '', n.title);
+    a.href = n.url;
+    li.append(node('span', 'm', [n.date, n.topics.map((t) => TOPIC[t] || t).join('・')].filter(Boolean).join('　')), a);
+    if (n.summary) li.appendChild(node('span', 's', n.summary));
+    return li;
+  };
+  const loadRelated = async () => {
+    if (!/^https?:$/.test(location.protocol) || !here) return;
+    const base = new URL(indexHref, location.href);
+    const res = await fetch(base, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const notes = [...doc.querySelectorAll('article.entry')].map((e) => {
+      const a = e.querySelector('h3 a');
+      if (!a) return null;
+      const url = new URL(a.getAttribute('href'), base);
+      return {
+        url: url.href,
+        file: decodeURIComponent(url.pathname.split('/').pop()),
+        title: a.textContent.trim(),
+        summary: ((e.querySelector('p') || {}).textContent || '').trim(),
+        topics: (e.dataset.topic || '').split(/\s+/).filter(Boolean),
+        date: e.dataset.date || '',
+        series: (e.dataset.series || '').trim(),
+        order: Number(e.dataset.order) || 0,
+      };
+    }).filter(Boolean);
+    const me = notes.find((n) => n.file === here);
+    if (!me) return;
+
+    const aside = node('aside', 'nb-related');
+    aside.setAttribute('aria-label', '次に読む');
+    let members = [];
+    if (me.series) {
+      members = notes.filter((n) => n.series === me.series)
+        .sort((a, b) => (a.order - b.order) || a.date.localeCompare(b.date));
+      const i = members.indexOf(me);
+      const seriesUrl = new URL(base);
+      seriesUrl.searchParams.set('series', me.series);
+      if (meta) {
+        const li = node('li');
+        const a = node('a', '', 'シリーズ「' + me.series + '」 ' + (i + 1) + '/' + members.length);
+        a.href = seriesUrl.href;
+        li.appendChild(a);
+        meta.prepend(li);
+      }
+      const box = node('section', 'nb-series');
+      const ol = node('ol');
+      members.forEach((n) => {
+        const li = node('li');
+        if (n === me) {
+          li.appendChild(node('span', 'is-current', n.title + '（このページ）'));
+          li.firstChild.setAttribute('aria-current', 'page');
+        } else {
+          const a = node('a', '', n.title);
+          a.href = n.url;
+          li.appendChild(a);
+        }
+        ol.appendChild(li);
+      });
+      box.append(node('h2', '', 'シリーズ「' + me.series + '」'), ol);
+      const pn = node('div', 'nb-pn');
+      [[members[i - 1], '← 前の回: ', 'is-prev'], [members[i + 1], '次の回: ', 'is-next']].forEach(([n, label, cls]) => {
+        if (!n) return;
+        const a = node('a', cls, label + n.title + (cls === 'is-next' ? ' →' : ''));
+        a.href = n.url;
+        pn.appendChild(a);
+      });
+      if (pn.children.length) box.appendChild(pn);
+      aside.appendChild(box);
+    }
+
+    // 関連ノート: 分野が重なるものを、重なりの多い順・新しい順に最大4件（シリーズの回は除く）
+    const mine = new Set(me.topics);
+    const related = notes
+      .filter((n) => n !== me && !members.includes(n))
+      .map((n) => ({ n, score: n.topics.filter((t) => mine.has(t)).length }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => (b.score - a.score) || b.n.date.localeCompare(a.n.date))
+      .slice(0, 4)
+      .map((x) => x.n);
+    if (related.length) {
+      const box = node('section', 'nb-also');
+      const ul = node('ul', 'nb-list');
+      related.forEach((n) => ul.appendChild(item(n)));
+      box.append(node('h2', '', '関連ノート'), ul);
+      aside.appendChild(box);
+    }
+    if (!aside.children.length) return;
+    const footer = sheet.querySelector(':scope > footer');
+    footer ? footer.before(aside) : sheet.appendChild(aside);
+    onScroll();
+  };
+  loadRelated().catch(() => {});
+
+  // #付きURLで開いたとき、上部バーの追加やフォント読み込みで見出しの位置がずれるので合わせ直す
+  const realignHash = () => {
+    if (userMoved || !location.hash) return;
+    let t = null;
+    try { t = d.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (t) t.scrollIntoView({ behavior: 'instant' });
+  };
+
+  realignHash();
+  update();
+  updateScrollers();
+  if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { realignHash(); onScroll(); updateScrollers(); });
+  addEventListener('load', () => { realignHash(); onScroll(); }, { once: true });
+})();
+</script>
+<!-- notebook-ui-js:end -->
+</body>
+</html>
