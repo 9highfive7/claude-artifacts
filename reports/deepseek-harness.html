@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepSeek Harnessとは何か：すべてがプラグインのオープンソース・エージェント基盤 | 学習ノート</title>
+<meta name="description" content="DeepSeek社が2026年8月に公開したオープンソースのエージェントハーネス dsh を、特定の根拠、仕組み（Cordis・プラグイン・セッションログ・権限）、強み、弱み、他ツールとの違い、始め方の順に整理。">
+<!-- notebook-ui:start （全レポート共通の見た目と操作部品。このブロックは編集しない） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Klee+One:wght@600&family=Zen+Kaku+Gothic+New:wght@700&display=swap" rel="stylesheet">
+<style id="nb-style">
+  /* =====================================================================
+     学習ノート「書き込みノート」デザイン（全レポート共通）
+     白い紙のノートに、蛍光ペン（重要語）と赤ペン（要点メモ）だけで書き込んだ見た目。
+     数値の根拠: readable-html-layout スキル（WCAG 1.4.8 / デジタル庁 / NN/g）
+     - 本文 17px・行間 1.9・字間 0.02em・1行 40字（max-width: 40em）
+     - 文字サイズは タイトル34px／h2 26px／h3 19px／本文17px
+     - 余白は 8px ベース。見出しは前のセクションから離し、直後の本文に近づける
+     - 強調は <mark>（蛍光ペン）と .memo（赤ペン）の2種類だけ
+     ===================================================================== */
+  :root {
+    --desk: #F3F5F7;
+    --grid-line: rgba(42, 75, 141, .06);
+    --sheet: #FFFFFF;
+    --ink: #22262B;
+    --ink-sub: #46505B;
+    --ink-muted: #4C5560;
+    --rule: #B9C2CC;
+    --marker: #FFE24A;
+    --hl: #FFE24A;                 /* 文字に引く蛍光ペン */
+    --marker-fill: #FFE24A;        /* 図の中で1か所だけ塗る蛍光ペン */
+    --red-pen: #C8332A;
+    --blue-ink: #2A4B8D;
+    --link: #1F5BB5;
+    --code-bg: #F3F5F7;
+    --sheet-shadow: 0 1px 2px rgba(30, 40, 55, .08), 0 8px 24px rgba(30, 40, 55, .06);
+    /* 旧デザインの変数名（既存の図・レポート固有スタイルとの互換用） */
+    --paper: var(--sheet); --paper-2: var(--code-bg); --ink-2: var(--ink-sub);
+    --marker-ink: #22262B;
+    --note: #E3EBF7; --caution: #FBE6E3;   /* 図の中で「種類」を塗り分ける淡い色（強調には使わない） */
+    --surface: var(--sheet); --radius: 10px; --shadow: var(--sheet-shadow); --focus: var(--link);
+
+    --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    --font-title: "Zen Kaku Gothic New", "BIZ UDPGothic", "Hiragino Sans", sans-serif;
+    --font-hand: "Klee One", "BIZ UDPGothic", cursive;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --font-display: var(--font-title);
+
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 40px; --sp-5: 64px;
+    --measure: 40em;
+    --topbar-h: 64px;
+    --toc-w: 230px;
+    --sheet-w: 940px;
+    /* 文字サイズ（17px = 1rem） */
+    --fs-title: 2rem;              /* 34px */
+    --fs-h2: calc(26rem / 17);     /* 26px */
+    --fs-h3: calc(19rem / 17);     /* 19px */
+    --fs-small: calc(15rem / 17);  /* 15px キャプション・目次・メモ */
+    --fs-meta: calc(14rem / 17);   /* 14px メタ情報 */
+    color-scheme: light;
+    interpolate-size: allow-keywords;
+  }
+  /* ---- 夜のノート（ダーク）: 端末の設定に合わせる＋手動切替 ---- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+      --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+      --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+      --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+      --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+      --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --desk: #1B1F24; --grid-line: rgba(255, 255, 255, .04); --sheet: #23282E;
+    --ink: #E6EAEE; --ink-sub: #AEB7C1; --ink-muted: #AEB7C1; --rule: #4A535C;
+    --marker: #5C5222; --hl: rgba(255, 226, 74, .34); --marker-fill: rgba(255, 226, 74, .28);
+    --red-pen: #FF8A7A; --blue-ink: #8FB0F0; --link: #93B8F5; --code-bg: #1B1F24;
+    --sheet-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+    --marker-ink: #E6EAEE; --note: #24344A; --caution: #4A2A26;
+    color-scheme: dark;
+  }
+  /* 文字サイズ切替（rem 基準なので本文・見出しが一緒に拡大する） */
+  html { font-size: 106.25%; }
+  :root[data-fs="l"] { font-size: 118.75%; }
+  :root[data-fs="xl"] { font-size: 131.25%; }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + var(--sp-2)); }
+  body {
+    margin: 0; color: var(--ink);
+    background-color: var(--desk);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--font-body); font-size: 1rem; line-height: 1.9; letter-spacing: 0.02em;
+    text-align: left; -webkit-font-smoothing: antialiased; text-size-adjust: 100%;
+  }
+  a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  a:hover { text-decoration-thickness: 2px; }
+  :where(a, button, summary, input, [tabindex]):focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+  em, i, cite { font-style: normal; font-weight: 700; }
+  strong, b { font-weight: 700; }
+  img, svg, video { max-width: 100%; height: auto; }
+  ::selection { background: var(--hl); color: inherit; }
+
+  /* ---- 蛍光ペン（その節で一番大事な語句だけ） ---- */
+  mark { background: linear-gradient(transparent 60%, var(--hl) 60%); color: inherit; padding: 0 0.08em; }
+
+  /* ---- ページの骨組み: 左に目次、右に本文の紙 ---- */
+  .page {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2);
+    margin: 0 auto; padding: var(--sp-4) var(--sp-3) var(--sp-5);
+    display: grid; grid-template-columns: var(--toc-w) minmax(0, var(--sheet-w));
+    column-gap: var(--sp-4); align-items: start; justify-content: center;
+  }
+  .sheet {
+    grid-column: 2; min-width: 0;
+    background: var(--sheet); padding: 48px 56px 64px;
+    box-shadow: var(--sheet-shadow);
+  }
+
+  /* ---- 表紙 ---- */
+  .cover { margin: 0 0 var(--sp-4); padding: 0 0 var(--sp-3); border-bottom: 1.5px dashed var(--rule); }
+  .cover .back { display: inline-block; margin-bottom: var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+  .nb-js .cover .back { display: none; }
+  .cover h1 {
+    margin: 0 0 var(--sp-2); font-family: var(--font-title); font-weight: 700;
+    font-size: var(--fs-title); line-height: 1.4; letter-spacing: 0;
+  }
+  .cover h1 span { background: none; }
+  .cover .meta { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); font-size: var(--fs-meta); line-height: 1.7; color: var(--ink-muted); }
+  .cover .meta a { color: inherit; }
+
+  /* ---- 目次（左に固定。読み終えた章に赤ペンのチェック） ---- */
+  .toc {
+    grid-column: 1; grid-row: 1 / span 2;
+    position: sticky; top: calc(var(--topbar-h) + var(--sp-3));
+    max-height: calc(100vh - var(--topbar-h) - var(--sp-5)); overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) 0; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    scrollbar-width: thin;
+  }
+  .toc h2 { margin: 0 0 12px; font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); line-height: 1.4; color: var(--ink); }
+  .toc ol, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol > li > a { padding-left: 30px; }
+  .toc ol > li > a, .nb-row a { display: block; padding-top: 4px; padding-bottom: 4px; }
+  .toc .sub { padding-left: 30px; margin: 0 0 6px; }
+  .toc .sub a { display: block; padding: 2px 0; color: var(--ink-sub); font-size: var(--fs-meta); }
+  .toc a.is-active { font-weight: 700; }
+  .toc a.is-active .t, .nb-drawer a.is-active .t { background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-row { display: flex; align-items: flex-start; gap: 8px; }
+  .nb-row a { flex: 1; min-width: 0; }
+  .nb-check {
+    flex: none; width: 22px; height: 22px; margin-top: 5px; padding: 0;
+    background: none; border: 0; color: var(--ink-sub); cursor: pointer;
+  }
+  .nb-check svg { display: block; width: 22px; height: 22px; overflow: visible; }
+  .nb-tick { stroke: var(--red-pen); stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .35s ease-out; }
+  .is-read > .nb-row .nb-tick, .nb-check[aria-pressed="true"] .nb-tick { stroke-dashoffset: 0; }
+  .nb-toc-note { margin: var(--sp-2) 0 0; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 本文 ---- */
+  .prose { overflow-wrap: break-word; }   /* 長い英単語・URLが狭い画面からはみ出さないように */
+  .prose > :first-child { margin-top: 0; }
+  .prose p, .prose ul, .prose ol { max-width: var(--measure); }
+  .prose p { margin: 0 0 1.5em; }
+  .prose ul, .prose ol { margin: 0 0 1.5em; padding-inline-start: 1.5em; }
+  .prose li + li { margin-top: 0.4em; }
+  .prose li > ul, .prose li > ol { margin: 0.4em 0 0; }
+  .prose h2 {
+    position: relative; width: fit-content; max-width: 100%;
+    margin: 80px 0 var(--sp-3); padding-bottom: 12px;
+    font-size: var(--fs-h2); font-weight: 700; line-height: 1.4; letter-spacing: 0;
+  }
+  /* 蛍光ペンで引いたような、少しゆがんだ下線（h2だけ） */
+  .prose h2::after {
+    content: ""; position: absolute; left: -4px; right: -6px; bottom: 0; height: 10px;
+    background: var(--hl);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 30 2, 50 9, 80 5 S 140 2, 198 6' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  }
+  .prose h3 { margin: 56px 0 12px; font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .prose h4 { margin: 40px 0 8px; padding: 0; border: 0; font-size: 1rem; font-weight: 700; line-height: 1.6; letter-spacing: 0; color: var(--ink); }
+  .prose h2 + h3 { margin-top: var(--sp-3); }
+  .prose :is(h2, h3, h4) + :is(p, ul, ol, .with-memo, .callout, .table-wrap, figure, .nb-fig, pre, .nb-code, details, .nb-quiz-tools) { margin-top: 0; }
+
+  /* ---- 赤ペンのメモ（本文の右余白。狭い画面では段落の下へ回り込む） ---- */
+  .with-memo { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 32px; margin: 0 0 1.5em; }
+  .with-memo > :not(.memo) { flex: 1 1 22em; min-width: 0; margin-bottom: 0; }
+  .memo {
+    flex: 0 1 190px; margin: 4px 0 0; padding: 0;
+    font-family: var(--font-hand); font-weight: 600; font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+    color: var(--red-pen); transform: rotate(-1.5deg); transform-origin: 0 0;
+  }
+  .memo p { margin: 0; }
+
+  /* ---- 3行でいうと（青インクの破線枠＋手書きラベル） ---- */
+  .callout {
+    position: relative; max-width: var(--measure); margin: var(--sp-4) 0;
+    padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; background: none;
+  }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout p + p { margin-top: 0; }
+  .callout ul, .callout ol { margin-bottom: 0; }
+  .callout .label { display: block; margin-bottom: 4px; font-size: var(--fs-small); font-weight: 700; color: var(--ink-sub); letter-spacing: 0; }
+  .callout.caution .label { font-family: var(--font-hand); font-weight: 600; font-size: 1rem; color: var(--red-pen); }
+  .callout.note .label { color: var(--blue-ink); }
+  .callout.summary { margin: var(--sp-4) 0 var(--sp-5); padding: 28px var(--sp-3) 20px; border-color: var(--blue-ink); }
+  .callout.summary .label {
+    position: absolute; top: 0; left: 18px; transform: translateY(-55%); margin: 0; padding: 0 10px;
+    background: var(--sheet); font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.4; color: var(--blue-ink);
+  }
+  .callout.summary :is(ul, ol) { list-style: decimal; padding-inline-start: 1.6em; }
+  .callout.summary li::marker { font-family: var(--font-hand); font-weight: 600; color: var(--blue-ink); }
+
+  /* ---- 表（ヘッダー下は実線、行の区切りは破線） ---- */
+  .table-wrap { overflow-x: auto; margin: var(--sp-4) 0; }
+  table { border-collapse: collapse; width: 100%; font-size: calc(16rem / 17); line-height: 1.7; letter-spacing: 0.01em; }
+  caption { caption-side: top; text-align: left; padding: 0 0 var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); }
+  th, td { padding: 10px var(--sp-2) 10px 0; text-align: left; vertical-align: top; border-bottom: 1px dashed var(--rule); }
+  :is(th, td):last-child { padding-right: 0; }
+  thead th { border-bottom: 2px solid var(--ink); font-weight: 700; white-space: nowrap; }
+  tbody th { font-weight: 700; }
+  table.nb-term tbody tr > :first-child { font-weight: 700; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- コード ---- */
+  pre {
+    margin: var(--sp-4) 0; padding: var(--sp-2) 20px; overflow-x: auto;
+    background: var(--code-bg); border-radius: 8px;
+    font-size: var(--fs-small); line-height: 1.7; letter-spacing: 0;
+  }
+  code { font-family: var(--font-mono); }
+  pre code { font-size: inherit; }
+  :not(pre) > code { padding: 0.1em 0.35em; background: var(--code-bg); border-radius: 4px; font-size: 0.88em; letter-spacing: 0; overflow-wrap: anywhere; }
+
+  /* ---- 図（実線の枠に入れたインラインSVG。キャプションは図の直下） ---- */
+  figure { margin: var(--sp-4) 0; }
+  figure > svg {
+    display: block; width: 100%; height: auto; padding: 20px;
+    border: 1.5px solid var(--ink); border-radius: 12px; color: var(--ink); background: var(--sheet);
+  }
+  figure svg text { font-family: var(--font-body); fill: currentColor; letter-spacing: 0; }
+  figcaption { margin-top: var(--sp-1); font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  figcaption b:first-child { color: var(--ink); margin-right: 0.3em; }
+
+  /* ---- やさしく図解（大きな絵と少ない言葉。縦長の図にして、スマホでも図の文字を12px前後に保つ） ---- */
+  .eli5 { max-width: 440px; margin: var(--sp-4) auto; }
+  .eli5 .nb-fig, .eli5 figure { margin: 0; }
+  .prose :is(h2, h3, h4) + .eli5 { margin-top: 0; }
+  .eli5-label {
+    display: inline-block; margin: 0 0 var(--sp-2); padding: 0 12px;
+    font-family: var(--font-hand); font-weight: 600; font-size: calc(18rem / 17); line-height: 1.6; letter-spacing: 0;
+    color: var(--blue-ink); border: 1.5px dashed var(--blue-ink); border-radius: 10px;
+  }
+
+  /* ---- 確認問題 ---- */
+  .quiz { max-width: var(--measure); margin: 0; border: 0; border-bottom: 1px dashed var(--rule); border-radius: 0; background: none; }
+  :not(.quiz) + .quiz { border-top: 1px dashed var(--rule); }
+  .quiz summary, .more summary { position: relative; padding: 14px 40px 14px 0; cursor: pointer; font-weight: 700; list-style: none; }
+  .quiz summary::-webkit-details-marker, .more summary::-webkit-details-marker { display: none; }
+  .quiz summary::after, .more summary::after {
+    content: ""; position: absolute; right: 8px; top: calc(14px + 0.45em); width: 18px; height: 18px;
+    background: var(--ink-sub); transition: transform .2s;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  details[open] > summary::after { transform: rotate(180deg); }
+  .quiz summary:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em; }
+  .quiz .answer { padding: 0 0 var(--sp-2); border: 0; }
+  .quiz .answer::before { content: "答え"; display: block; font-family: var(--font-hand); font-weight: 600; color: var(--red-pen); line-height: 1.6; }
+  .quiz .answer > :last-child { margin-bottom: 0; }
+  .quiz .question { margin: var(--sp-2) 0 4px; font-weight: 700; }
+  .quiz .choices { margin: 0 0 4px; }
+  .quiz details { margin: 0; border: 0; }
+  .quiz details summary { padding-top: 4px; padding-bottom: 8px; font-weight: 400; color: var(--link); }
+  .quiz details summary::after { top: calc(4px + 0.45em); }
+  details::details-content { transition: block-size .25s ease, content-visibility .25s allow-discrete; overflow: clip; block-size: 0; }
+  details[open]::details-content { block-size: auto; }
+  .more { max-width: var(--measure); margin: var(--sp-3) 0; padding: 0 var(--sp-2); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .more summary { color: var(--link); }
+  .more .inner { padding: 0 0 var(--sp-2); border: 0; }
+
+  /* ---- 参考リンク・フッター ---- */
+  .refs { max-width: var(--measure); }
+  .refs li { overflow-wrap: anywhere; }
+  .sheet > footer, .page > footer { margin-top: var(--sp-5); padding-top: var(--sp-3); border-top: 1.5px dashed var(--rule); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .sheet > footer p { margin: 0; }
+  .sheet > footer p + p { margin-top: var(--sp-1); }
+
+  /* ---- 上部バー ---- */
+  .nb-skip { position: absolute; left: var(--sp-2); top: -100px; z-index: 100; padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); border-radius: 8px; }
+  .nb-skip:focus { top: var(--sp-1); }
+  .nb-topbar {
+    position: sticky; top: 0; z-index: 50; height: var(--topbar-h);
+    background: color-mix(in srgb, var(--desk) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+    letter-spacing: 0;
+  }
+  .nb-topbar-inner {
+    max-width: calc(var(--toc-w) + var(--sp-4) + var(--sheet-w) + var(--sp-3) * 2); height: 100%;
+    margin: 0 auto; padding: 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2);
+  }
+  .nb-home {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; min-height: 44px; padding: 0 10px 0 4px; margin-left: -4px;
+    color: var(--ink); text-decoration: none; font-weight: 700; border-radius: 8px;
+  }
+  .nb-home:hover { background: color-mix(in srgb, var(--rule) 25%, transparent); text-decoration: none; }
+  .nb-home svg { width: 20px; height: 20px; }
+  .nb-where { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-sub); opacity: 0; transition: opacity .2s; }
+  .nb-where.is-shown { opacity: 1; }
+  .nb-where .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-where .t-page { flex: 0 1 auto; max-width: 50%; }
+  .nb-where .sep { flex-shrink: 0; }
+  .nb-where .t-sec { flex: 0 1 auto; color: var(--ink); font-weight: 700; }
+  .nb-actions { display: flex; gap: var(--sp-1); flex-shrink: 0; margin-left: auto; }
+  .nb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-width: 44px; min-height: 44px; padding: 0 14px;
+    font: inherit; font-size: var(--fs-small); line-height: 1; color: var(--ink);
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer;
+  }
+  .nb-btn:hover { border-color: var(--ink-sub); }
+  .nb-btn[aria-pressed="true"] { border-color: var(--ink); font-weight: 700; }
+  .nb-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nb-toc-btn { display: none; }
+  .nb-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--blue-ink); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* ---- 引き出し式の目次（900px以下） ---- */
+  .nb-drawer {
+    margin: 0 auto 0 0; height: 100%; max-height: 100dvh; width: min(340px, 88vw); max-width: none;
+    padding: 0; border: 0; background: var(--sheet); color: var(--ink); box-shadow: var(--sheet-shadow);
+    font-size: var(--fs-small); line-height: 1.6; letter-spacing: 0;
+  }
+  .nb-drawer::backdrop { background: rgb(10 14 20 / 0.45); }
+  .nb-drawer[open] { animation: nb-slide .22s ease-out; }
+  @keyframes nb-slide { from { transform: translateX(-24px); opacity: 0; } }
+  .nb-dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3); background: var(--sheet); border-bottom: 1px dashed var(--rule); }
+  .nb-dialog-head strong { font-family: var(--font-hand); font-weight: 600; font-size: calc(20rem / 17); }
+  .nb-drawer nav { padding: var(--sp-2) var(--sp-3) var(--sp-4); }
+  .nb-drawer ol, .nb-drawer ul { list-style: none; margin: 0; padding: 0; }
+  .nb-drawer a { color: var(--ink); text-decoration: none; }
+  .nb-drawer ol > li > a { display: block; padding: 6px 0 6px 30px; }
+  .nb-drawer .nb-row a { padding: 6px 0; }
+  .nb-drawer .nb-check { margin-top: 7px; }
+  .nb-drawer .sub { padding-left: 30px; margin: 0 0 6px; }
+  .nb-drawer .sub a { display: block; padding: 6px 0; color: var(--ink-sub); }
+  .nb-drawer a.is-active { font-weight: 700; }
+
+  /* ---- 見出しのリンク ---- */
+  .nb-anchor { margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.75em; font-weight: 400; color: var(--ink-sub); text-decoration: none; opacity: 0; transition: opacity .15s; }
+  :is(h2, h3, h4):hover > .nb-anchor, .nb-anchor:focus-visible { opacity: 1; }
+  @media (hover: none) { .nb-anchor { display: none; } }
+
+  /* ---- 表・図の横スクロールの案内 ---- */
+  .nb-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+  .nb-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+  .nb-more-left.nb-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+  .nb-scroll-hint { display: none; margin: calc(var(--sp-3) * -1) 0 var(--sp-3); font-size: var(--fs-meta); color: var(--ink-muted); }
+  .nb-scroll-hint.is-shown { display: block; }
+
+  /* ---- 図の拡大 ---- */
+  .nb-fig { position: relative; margin: var(--sp-4) 0; }
+  .nb-fig > figure { margin: 0; }
+  .nb-expand {
+    position: absolute; top: -14px; right: var(--sp-2); z-index: 1;
+    min-height: 28px; min-width: 28px; padding: 0 10px; font-size: var(--fs-meta);
+    color: var(--ink-sub); background: var(--sheet);
+  }
+  .nb-expand svg { width: 14px; height: 14px; }
+  .nb-lightbox {
+    width: min(1200px, 96vw); max-width: none; max-height: 92dvh; padding: 0;
+    border: 1.5px solid var(--ink); border-radius: 12px; background: var(--sheet); color: var(--ink);
+  }
+  .nb-lightbox::backdrop { background: rgb(10 14 20 / 0.6); }
+  .nb-lightbox .nb-dialog-head strong { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-small); color: var(--ink-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nb-lightbox figure { margin: 0; padding: var(--sp-3); overflow: auto; }
+  .nb-lightbox figure > svg { min-width: 760px; border: 0; padding: 0; }
+
+  /* ---- コードのコピー ---- */
+  .nb-code { position: relative; margin: var(--sp-4) 0; }
+  .nb-code > pre { margin: 0; padding-right: 96px; }
+  .nb-copy { position: absolute; top: var(--sp-1); right: var(--sp-1); min-height: 32px; padding: 0 10px; font-size: var(--fs-meta); color: var(--ink-sub); }
+  .nb-copy svg { width: 16px; height: 16px; }
+
+  /* ---- 確認問題の一括表示 ---- */
+  .nb-quiz-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-1) var(--sp-2); max-width: var(--measure); margin: 0 0 var(--sp-2); font-size: var(--fs-small); color: var(--ink-sub); }
+
+  /* ---- シリーズ・関連ノート（トップページの一覧から自動で作る） ---- */
+  .nb-related { margin-top: var(--sp-5); }
+  .nb-related h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-h3); font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+  .nb-related > section + section { margin-top: var(--sp-4); }
+  .nb-series { padding: 20px var(--sp-3); border: 1.5px dashed var(--rule); border-radius: 10px; }
+  .nb-series ol { margin: 0; padding-left: 1.6em; }
+  .nb-series li + li { margin-top: 4px; }
+  .nb-series .is-current { font-weight: 700; background: linear-gradient(transparent 60%, var(--hl) 60%); }
+  .nb-pn { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-1) var(--sp-3); margin-top: var(--sp-2); padding-top: var(--sp-2); border-top: 1px dashed var(--rule); }
+  .nb-pn .is-next { margin-left: auto; text-align: right; }
+  .nb-list { list-style: none; margin: 0; padding: 0; }
+  .nb-list li { padding: 12px 0; border-bottom: 1px dashed var(--rule); }
+  .nb-list li:first-child { border-top: 1px dashed var(--rule); }
+  .nb-list a { font-weight: 700; }
+  .nb-list .s { display: block; margin-top: 2px; font-size: var(--fs-small); line-height: 1.7; color: var(--ink-sub); }
+  .nb-list .m { display: block; font-size: var(--fs-meta); color: var(--ink-muted); }
+
+  /* ---- 先頭へ・通知 ---- */
+  .nb-fab {
+    position: fixed; right: var(--sp-3); bottom: var(--sp-3); z-index: 40; width: 48px; height: 48px; padding: 0;
+    box-shadow: var(--sheet-shadow); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .nb-fab.is-shown { opacity: 1; transform: none; pointer-events: auto; }
+  .nb-toast {
+    position: fixed; left: 50%; bottom: var(--sp-4); z-index: 60; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+    padding: var(--sp-1) var(--sp-2); border-radius: 8px; background: var(--ink); color: var(--sheet); font-size: var(--fs-small); letter-spacing: 0;
+    transition: opacity .2s, transform .2s;
+  }
+  .nb-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---- 900px以下: 目次はヘッダーから開く ---- */
+  @media (max-width: 900px) {
+    .page { display: block; max-width: calc(var(--sheet-w) + var(--sp-3) * 2); padding: var(--sp-3) var(--sp-2) var(--sp-5); }
+    .toc { position: static; max-height: none; overflow: visible; margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--sheet); }
+    .nb-js .page > .toc { display: none; }
+    .nb-toc-btn { display: inline-flex; }
+    .sheet { padding: 40px 32px 56px; }
+  }
+  @media (max-width: 600px) {
+    :root { --topbar-h: 56px; }
+    .page { padding: var(--sp-2) 10px var(--sp-4); }
+    .sheet { padding: 32px 20px 48px; }
+    .nb-topbar-inner { padding: 0 var(--sp-1) 0 var(--sp-2); gap: var(--sp-1); }
+    .nb-where, .nb-btn .label-wide { display: none; }
+    .nb-actions { gap: 6px; }
+    .nb-btn { padding: 0 10px; }
+    .prose h2 { margin-top: 64px; }
+    .memo { flex-basis: 100%; padding-left: 1em; }
+    table.nb-term tbody tr > :first-child { white-space: normal; min-width: 7em; }
+    .table-wrap :is(th, td) { min-width: 5em; }
+    .eli5 figure > svg { padding: 12px; }
+    .nb-fab { right: var(--sp-2); bottom: var(--sp-2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after, ::details-content { transition: none !important; animation: none !important; }
+  }
+  @media print {
+    body { background: #fff; }
+    .nb-topbar, .nb-fab, .nb-toast, .nb-anchor, .nb-copy, .nb-expand, .nb-quiz-tools, .nb-scroll-hint, .nb-skip, .page > .toc, .nb-toc-note { display: none !important; }
+    .page { display: block; max-width: none; padding: 0; }
+    .sheet { box-shadow: none; padding: 0; }
+    .nb-more-left, .nb-more-right { -webkit-mask-image: none; mask-image: none; }
+    figure, .quiz, .table-wrap, .callout { break-inside: avoid; }
+  }
+</style>
+<script>try{var t=localStorage.getItem('ln-theme'),f=localStorage.getItem('ln-fs'),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);if(f==='l'||f==='xl')r.setAttribute('data-fs',f);}catch(e){}</script>
+<!-- notebook-ui:end -->
+<style>
+  /* このレポートだけで使うスタイル（必要なときだけ書く。色は上の CSS 変数を使う） */
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="toc" aria-label="目次">
+    <h2>もくじ</h2>
+    <ol>
+      <li><a href="#s1">概要</a></li>
+      <li><a href="#s2">基本用語</a></li>
+      <li><a href="#s3">仕組みと全体像</a>
+        <ul class="sub">
+          <li><a href="#s3-1">Everything is a Plugin</a></li>
+          <li><a href="#s3-3">ツール実行の流れ</a></li>
+          <li><a href="#s3-4">追記専用のセッションログ</a></li>
+          <li><a href="#s3-6">承認とサンドボックスの違い</a></li>
+        </ul>
+      </li>
+      <li><a href="#s4">具体例・使いどころ</a></li>
+      <li><a href="#s5">強みと他ツールとの違い</a></li>
+      <li><a href="#s6">注意点・よくある誤解</a></li>
+      <li><a href="#s7">確認問題</a></li>
+      <li><a href="#s8">参考リンク</a></li>
+    </ol>
+  </nav>
+
+  <article class="sheet">
+    <header class="cover">
+      <a class="back" href="../index.html">学習ノートに戻る</a>
+      <h1>DeepSeek Harnessとは何か：すべてがプラグインのオープンソース・エージェント基盤</h1>
+      <ul class="meta">
+        <li>確認日 2026-10-06</li>
+        <li>分野 AI／開発</li>
+        <li>対象バージョン 開発者プレビュー（v0.1系）</li>
+      </ul>
+    </header>
+
+    <main class="prose">
+
+      <h2 id="s1">概要</h2>
+      <div class="callout summary">
+        <span class="label">3行でいうと</span>
+        <ol>
+          <li>DeepSeek Harness（コマンド名<code>dsh</code>）は、DeepSeek社が2026年8月に公開した、MITライセンスのオープンソース「<mark>エージェントハーネス</mark>」です。ハーネスとは、モデルを手元のファイル・ターミナル・ツール・会話履歴につないで動かす実行基盤のことです。</li>
+          <li>最大の特徴は「<mark>Everything is a Plugin</mark>」。モデルとの接続、ツール、セッション保存、サンドボックス、エージェントのループ（繰り返し処理）、画面までがプラグインで、設定から差し替えられます。</li>
+          <li>強みは<mark>差し替えやすさ</mark>と記録の透明さ。弱みは開発者プレビューで破壊的変更が前提であること、第三者による監査がないこと、サンドボックスの範囲が限られることです。</li>
+        </ol>
+      </div>
+      <div class="callout caution">
+        <span class="label">はじめる前に</span>
+        <p>仕様は頻繁に変わるため、始める前に公式リポジトリを必ず確認してください。このノートの確認日は2026-10-06、対象は開発者プレビュー（v0.1系）です。</p>
+      </div>
+
+      <h3 id="s1-1">「DeepSeek Harness」はどれを指すか</h3>
+      <p>名前が曖昧だったため、候補を確認しました。本文の主題は<strong>候補Aの公式ハーネス</strong>です。</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>候補</th><th>正体</th><th>公式か</th><th>言語・形態</th><th>本ノートでの扱い</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A. deepseek-ai/deepseek-harness</td>
+              <td>エージェントを動かす実行基盤そのもの。Web UI、CLI、デスクトップアプリ</td>
+              <td>公式。DeepSeek社の公式サイト、公式GitHub組織<code>deepseek-ai</code>で確認</td>
+              <td>Node.js（TypeScript系）。<code>npx @deepseek-ai/dsh web</code></td>
+              <td>主題</td>
+            </tr>
+            <tr>
+              <td>B. HenryZ838978/deepseek-harness</td>
+              <td>DeepSeek V4のAPI挙動（reasoning_contentの往復など）が仕様どおりかを検査する個人製のプロトコル層ツール</td>
+              <td>非公式。READMEが「公式のNodeエージェントのforkや配布物ではない」と明記</td>
+              <td>Python。PyPI公開は2026年5月、公式より前</td>
+              <td>名前の衝突として紹介のみ</td>
+            </tr>
+            <tr>
+              <td>C. 解説サイトや「Awesome」系リスト</td>
+              <td>公式のコピーや解説、リンク集（<code>deepseekharness.dev</code>などのドメイン）</td>
+              <td>公式との関係は確認できず</td>
+              <td>-</td>
+              <td>公式情報としては使わない</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p><strong>Aと断定した根拠</strong>は3つです。(1) DeepSeek社の公式サイト内に専用ページ（deepseek.com/en/harness）がある。(2) 公式GitHubリポジトリがあり、DeepSeek公式アカウントの告知（v0.1をDeveloper Previewとして公開、MITライセンスでオープンソース化、Cordisベース）と内容が合う。(3) 検索結果の大半がこの製品を指している。
+        注意点として、AとBはどちらも <code>dsh</code> というコマンド名を使います。そのため「dsh doctor」のような記事を読むときは、どちらの話か確認が必要です。</p>
+        <aside class="memo">AもBも dsh。記事はどちらの話か確認</aside>
+      </div>
+
+      <h2 id="s2">基本用語</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>用語</th><th>意味</th><th>覚えどころ</th></tr></thead>
+          <tbody>
+            <tr><td>ハーネス（harness）</td><td>モデルを「道具を使って作業するエージェント」にする<mark>周辺の仕組み</mark>。ツール呼び出し、権限、履歴の保存、ループ制御などを含む</td><td>モデルが馬なら、手綱と馬具にあたる部分</td></tr>
+            <tr><td>dsh</td><td>DeepSeek Harnessのコマンド名とnpmパッケージ名（<code>@deepseek-ai/dsh</code>）</td><td>deepseek harness の略</td></tr>
+            <tr><td>Cordis</td><td>プラグインの組み立てを管理するメタフレームワーク。プラグインがサービス、型付きイベント、元に戻せる効果を共有コンテキストに提供する</td><td>dshの下の層。プラグインの付け外しを面倒みる</td></tr>
+            <tr><td>プラグイン</td><td>機能の最小単位。モデルアダプタ、ツール、セッション、サンドボックスなどがすべて該当</td><td>この製品では「機能＝プラグイン」</td></tr>
+            <tr><td>プロファイル／バンドル</td><td>プロファイルは起動構成の名前（<code>web</code>、<code>headless</code>、<code>sdk</code>など）。バンドルは設定とコードをまとめた配布パッケージ</td><td>バンドルを積んだものがプロファイル</td></tr>
+            <tr><td>セッションイベントログ</td><td>会話をチャット配列ではなく、追記専用の出来事の記録（JSONL）として残すもの</td><td>「モデルに見えたものは必ず記録する」</td></tr>
+            <tr><td>ステップ／ターン</td><td>ステップは「モデルへの1回の要求とそのツール呼び出し」。ターンは0回以上のステップのまとまり</td><td>1ターン＝複数ステップ</td></tr>
+            <tr><td>承認（approval）とサンドボックス</td><td>承認は「ユーザーに確認するか」、サンドボックスは「触れる資源を物理的に制限するか」。<mark>別々の制御</mark></td><td>後述。混同しやすい</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s3">仕組みと全体像</h2>
+
+      <h3 id="s3-1">Everything is a Plugin</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 462" role="img" aria-label="1. 土台のCordisをしく。2. その上にモデル、ツール、記録、安全柵、ループ、画面のブロックを載せる。3. ブロックを1個だけ別のものに交換する。設定で差し替えられる。">
+            <title>「全部プラグイン」の考え方</title>
+            <defs><marker id="e1-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+            <circle cx="22" cy="34" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="40" text-anchor="middle" font-size="16" font-weight="700">1</text>
+            <line x1="22" y1="51" x2="22" y2="117" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <text x="48" y="40" text-anchor="start" font-size="16" font-weight="700">土台をしく</text>
+            <rect x="48" y="56" width="292" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/>
+            <text x="194" y="82" text-anchor="middle" font-size="16" font-weight="700">Cordis</text>
+
+            <circle cx="22" cy="134" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="140" text-anchor="middle" font-size="16" font-weight="700">2</text>
+            <line x1="22" y1="151" x2="22" y2="317" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <text x="48" y="140" text-anchor="start" font-size="16" font-weight="700">ブロックを載せる</text>
+            <rect x="48" y="156" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="94" y="182" text-anchor="middle" font-size="16">モデル</text>
+            <rect x="148" y="156" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="194" y="182" text-anchor="middle" font-size="16">ツール</text>
+            <rect x="248" y="156" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="294" y="182" text-anchor="middle" font-size="16">記録</text>
+            <rect x="48" y="204" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="94" y="230" text-anchor="middle" font-size="16">安全柵</text>
+            <rect x="148" y="204" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="194" y="230" text-anchor="middle" font-size="16">ループ</text>
+            <rect x="248" y="204" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="294" y="230" text-anchor="middle" font-size="16">画面</text>
+            <rect x="48" y="252" width="292" height="36" rx="8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="194" y="276" text-anchor="middle" font-size="16" font-weight="700">Cordis</text>
+
+            <circle cx="22" cy="334" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="340" text-anchor="middle" font-size="16" font-weight="700">3</text>
+            <text x="48" y="340" text-anchor="start" font-size="16" font-weight="700">1個だけ交換する</text>
+            <rect x="48" y="360" width="92" height="44" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="94" y="388" text-anchor="middle" font-size="16">モデル</text>
+            <line x1="146" y1="382" x2="204" y2="382" stroke="currentColor" stroke-width="2.5" marker-end="url(#e1-ah)"/>
+            <rect x="212" y="360" width="128" height="44" rx="8" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/><text x="276" y="388" text-anchor="middle" font-size="16" font-weight="700">別のモデル</text>
+            <text x="194" y="440" text-anchor="middle" font-size="16" font-weight="700">設定で差し替えられる</text>
+          </svg>
+          <figcaption><b>図1</b>「全部プラグイン」の考え方。Cordisという土台の上に、モデル、ツール、記録、安全柵、ループ、画面のブロックが載っていて、どれも設定で別のものに差し替えられる（イメージ）。</figcaption>
+        </figure>
+      </div>
+      <div class="with-memo">
+        <p>多くのコーディングエージェントは、中心のループ（モデルに聞く→道具を使う→結果を見る）が固定で、その周りに拡張を足す作りです。dshはこの<mark>ループ自体を含めて</mark>、次のものをプラグインとして扱います。</p>
+        <aside class="memo">要点：中心のループまで差し替えられる</aside>
+      </div>
+      <ul>
+        <li>モデルアダプタ（どのモデル、どのAPIにつなぐか）</li>
+        <li>ツール（ファイル編集、シェル、検索、スキル、計画、サブエージェントなど）</li>
+        <li>セッションの保存先、サンドボックス、ファイルシステム</li>
+        <li>エージェントのループ、複数エージェントの取りまとめ</li>
+        <li>画面（UI）</li>
+      </ul>
+      <p>Cordisのおかげで、プラグインは必要な依存関係を宣言するだけで起動順を手で書かずに済みます。外したときは、そのプラグインが登録したイベント、プロンプトの節、ツールの定義も自動で巻き戻ります。DataCamp記事はこれを「空間的な組み合わせ」と「時間的な組み合わせ」と呼んでいます（ここは記事側の整理で、公式用語かは未確認です）。</p>
+
+      <h3 id="s3-2">起動構成の積み重ね</h3>
+      <div class="with-memo">
+        <p>公式のアーキテクチャ文書によると、起動時はプロファイルがバンドルを積み重ね、設定を「バンドルの設定 → プロファイルの修正 → ホーム（<code>~/.dsh</code>）の修正 → コマンドラインの上書き」の順に適用します。設定ファイルは既定で<code>~/.dsh/settings.yaml</code>、APIキーは別ファイル（<code>~/.dsh/.credentials.yaml</code>、ハンズオン記事より）に置かれます。</p>
+        <aside class="memo">APIキーは設定ファイルとは別の場所</aside>
+      </div>
+
+      <h3 id="s3-3">ツール実行の流れ</h3>
+      <figure>
+        <svg viewBox="0 0 720 290" role="img" aria-label="1ステップの流れ。プロンプト組み立て、モデルへ要求（agent/request）、モデルのストリーミング応答、tools/pre-execute（検証・権限確認）、ツール実行、tools/post-execute、結果をイベントとしてログへ記録、の順に進む。pre-executeとpost-executeが割り込みポイント。">
+          <title>ツール実行の1ステップの流れ</title>
+          <defs><marker id="f2-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+          <text x="635" y="32" text-anchor="middle" font-size="13" font-weight="700">割り込みポイント</text>
+          <rect x="20" y="44" width="150" height="64" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="95" y="82" text-anchor="middle" font-size="15" font-weight="700">プロンプト組み立て</text>
+          <rect x="200" y="44" width="150" height="64" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="275" y="72" text-anchor="middle" font-size="15" font-weight="700">モデルへ要求</text>
+          <text x="275" y="94" text-anchor="middle" font-size="13">agent/request</text>
+          <rect x="380" y="44" width="150" height="64" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="455" y="72" text-anchor="middle" font-size="15" font-weight="700">モデルの応答</text>
+          <text x="455" y="94" text-anchor="middle" font-size="13">ストリーミング</text>
+          <rect x="560" y="44" width="150" height="64" rx="10" fill="var(--marker-fill)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="635" y="72" text-anchor="middle" font-size="13" font-weight="700">tools/pre-execute</text>
+          <text x="635" y="94" text-anchor="middle" font-size="13">検証・権限確認</text>
+          <line x1="172" y1="76" x2="196" y2="76" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <line x1="352" y1="76" x2="376" y2="76" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <line x1="532" y1="76" x2="556" y2="76" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <line x1="635" y1="110" x2="635" y2="176" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <rect x="560" y="180" width="150" height="64" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="635" y="218" text-anchor="middle" font-size="15" font-weight="700">ツール実行</text>
+          <rect x="380" y="180" width="150" height="64" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="455" y="208" text-anchor="middle" font-size="13" font-weight="700">tools/post-execute</text>
+          <text x="455" y="230" text-anchor="middle" font-size="13">実行後の処理</text>
+          <rect x="200" y="180" width="150" height="64" rx="10" fill="var(--code-bg)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="275" y="208" text-anchor="middle" font-size="15" font-weight="700">ログへ記録</text>
+          <text x="275" y="230" text-anchor="middle" font-size="13">結果をイベントに</text>
+          <line x1="558" y1="212" x2="534" y2="212" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <line x1="378" y1="212" x2="354" y2="212" stroke="currentColor" stroke-width="2" marker-end="url(#f2-ah)"/>
+          <text x="95" y="208" text-anchor="middle" font-size="14">ここまでで</text>
+          <text x="95" y="230" text-anchor="middle" font-size="14" font-weight="700">1ステップ</text>
+          <text x="455" y="272" text-anchor="middle" font-size="13" font-weight="700">割り込みポイント</text>
+        </svg>
+        <figcaption><b>図2</b>ツール実行の1ステップの流れ（公式文書より）。実行の前（pre-execute）と後（post-execute）に、プラグインを差し込める割り込みポイントがある。</figcaption>
+      </figure>
+      <div class="with-memo">
+        <p>公式文書では、1ステップは「プロンプト組み立て → モデルへ要求 → 応答 → <code>tools/pre-execute</code> → 実行 → <code>tools/post-execute</code> → ログ」と進みます。実行の前後に割り込みポイントがあり、引数の検証、会社のルールの強制、出力の黒塗り、計測などをプラグインで差し込めます。ツールを実行するかどうかを決めるのはモデルだけでなく、別の方針（ポリシー）の層です。</p>
+        <aside class="memo">実行の可否はモデルだけで決まらない</aside>
+      </div>
+
+      <h3 id="s3-4">追記専用のセッションログ</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 456" role="img" aria-label="1. あなたとAIがやり取りする。2. やり取りがログに1行ずつ追記される。3. あとから再開、分岐、再生ができる。">
+            <title>追記専用のセッションログ</title>
+            <defs><marker id="e3-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+            <circle cx="22" cy="34" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="40" text-anchor="middle" font-size="16" font-weight="700">1</text>
+            <line x1="22" y1="51" x2="22" y2="163" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <text x="48" y="40" text-anchor="start" font-size="16" font-weight="700">あなたとAIが話す</text>
+            <g transform="translate(90 96)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+            <g transform="translate(290 100)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <line x1="124" y1="88" x2="252" y2="88" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+            <line x1="252" y1="110" x2="124" y2="110" stroke="currentColor" stroke-width="2.5" marker-end="url(#e3-ah)"/>
+            <text x="90" y="144" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+            <text x="290" y="144" text-anchor="middle" font-size="16" font-weight="700">AI</text>
+
+            <circle cx="22" cy="180" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="186" text-anchor="middle" font-size="16" font-weight="700">2</text>
+            <line x1="22" y1="197" x2="22" y2="363" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <text x="48" y="186" text-anchor="start" font-size="16" font-weight="700">1行ずつ書き足す</text>
+            <rect x="48" y="200" width="292" height="148" rx="8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <text x="64" y="224" text-anchor="start" font-size="16" font-weight="700">ログ（追記専用）</text>
+            <line x1="56" y1="234" x2="332" y2="234" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5"/>
+            <text x="64" y="254" text-anchor="start" font-size="16">1  あなたの発言</text>
+            <line x1="56" y1="262" x2="332" y2="262" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5"/>
+            <text x="64" y="282" text-anchor="start" font-size="16">2  AIの返事</text>
+            <line x1="56" y1="290" x2="332" y2="290" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5"/>
+            <text x="64" y="310" text-anchor="start" font-size="16">3  ツールの結果</text>
+            <rect x="56" y="318" width="276" height="24" rx="4" fill="var(--marker-fill)" stroke="none"/>
+            <text x="64" y="336" text-anchor="start" font-size="16" font-weight="700">＋ 新しい行を足す</text>
+
+            <circle cx="22" cy="380" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="386" text-anchor="middle" font-size="16" font-weight="700">3</text>
+            <text x="48" y="386" text-anchor="start" font-size="16" font-weight="700">あとから使える</text>
+            <rect x="48" y="400" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="94" y="426" text-anchor="middle" font-size="16">再開</text>
+            <rect x="148" y="400" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="194" y="426" text-anchor="middle" font-size="16">分岐</text>
+            <rect x="248" y="400" width="92" height="40" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="294" y="426" text-anchor="middle" font-size="16">再生</text>
+          </svg>
+          <figcaption><b>図3</b>追記専用のセッションログ。やり取りを消さずに1行ずつ書き足していくので、あとから再開、分岐、再生ができる（イメージ）。</figcaption>
+        </figure>
+      </div>
+      <div class="with-memo">
+        <p>会話はチャット配列ではなく、<mark>追記専用のイベントログ</mark>（<code>session.v1.jsonl</code>のようにバージョン付き）で持ちます。公式文書の原則は「モデルに見えるものは、すべてログから再現できる」です。このおかげで、再開、分岐（fork）、検索、再生、評価がしやすくなります。ログの形式は版ごとに移行処理でつなぐ設計です。</p>
+        <aside class="memo">原則：見えたものは全部ログに残る</aside>
+      </div>
+
+      <h3 id="s3-5">4つの動作モード</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>モード</th><th>中身</th><th>向く場面</th></tr></thead>
+          <tbody>
+            <tr><td>Standard</td><td>ファイル編集、シェル、検索、スキル、計画、サブエージェント、ワークフローの全部入り</td><td>普段使い</td></tr>
+            <tr><td>PTC</td><td>同じ道具を、生成されたSDK経由のプログラム呼び出しで使う（v0.1.2以降の名称。以前は「Code」で、名称変更時にセッションAPIが変わったとDataCampが報告）</td><td>道具の呼び出しをコードで組みたいとき</td></tr>
+            <tr><td>Minimal</td><td>永続シェルと文字列置換エディタだけ</td><td>最小構成での検証、ベンチマーク。安全面でも最初の一歩に向く</td></tr>
+            <tr><td>Creator</td><td>プラグインを作る人向けに内部を見せるモード</td><td>プラグイン開発、テスト</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p>出典はDataCampの解説で、公式サイトも「Creator mode」でプラグインを作れると説明しています。モード名や中身は版で変わる可能性があります。</p>
+        <aside class="memo">古い記事の「Code」＝今の「PTC」</aside>
+      </div>
+
+      <h3 id="s3-6">承認とサンドボックスの違い</h3>
+      <div class="eli5">
+        <span class="eli5-label">やさしく図解</span>
+        <figure>
+          <svg viewBox="0 0 360 490" role="img" aria-label="1. 承認は、AIが実行してよいかをあなたに聞く仕組み。2. サンドボックスは、作業フォルダを壁で囲み、外へ書き込めなくする仕組み。3. 2つは別の仕組みで、片方だけでは足りない。">
+            <title>承認とサンドボックスの違い</title>
+            <defs><marker id="e4-ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+            <circle cx="22" cy="34" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="40" text-anchor="middle" font-size="16" font-weight="700">1</text>
+            <line x1="22" y1="51" x2="22" y2="163" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <text x="48" y="40" text-anchor="start" font-size="16" font-weight="700">承認：人に聞く</text>
+            <g transform="translate(84 100)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <g transform="translate(278 100)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><circle cx="0" cy="-16" r="10"/><path d="M-18 18 C-18 -2 18 -2 18 18 Z"/></g>
+            <text x="181" y="90" text-anchor="middle" font-size="16">実行していい？</text>
+            <line x1="118" y1="104" x2="246" y2="104" stroke="currentColor" stroke-width="2.5" marker-end="url(#e4-ah)"/>
+            <text x="84" y="144" text-anchor="middle" font-size="16" font-weight="700">AI</text>
+            <text x="278" y="144" text-anchor="middle" font-size="16" font-weight="700">あなた</text>
+
+            <circle cx="22" cy="180" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="186" text-anchor="middle" font-size="16" font-weight="700">2</text>
+            <line x1="22" y1="197" x2="22" y2="339" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>
+            <text x="48" y="186" text-anchor="start" font-size="16" font-weight="700">サンドボックス：壁で囲む</text>
+            <rect x="48" y="202" width="220" height="96" rx="6" fill="none" stroke="currentColor" stroke-width="3.5"/>
+            <text x="62" y="226" text-anchor="start" font-size="16">作業フォルダ</text>
+            <g transform="translate(96 270)" fill="var(--code-bg)" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><rect x="-24" y="-18" width="48" height="36" rx="9"/><line x1="0" y1="-18" x2="0" y2="-26"/><circle cx="0" cy="-30" r="3"/><circle cx="-9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><circle cx="9" cy="-3" r="3.5" fill="currentColor" stroke="none"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+            <line x1="128" y1="270" x2="258" y2="270" stroke="currentColor" stroke-width="2.5" marker-end="url(#e4-ah)"/>
+            <path d="M290 259 L312 281 M312 259 L290 281" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <text x="158" y="322" text-anchor="middle" font-size="16">外へは書き込めない</text>
+
+            <circle cx="22" cy="356" r="13" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="362" text-anchor="middle" font-size="16" font-weight="700">3</text>
+            <text x="48" y="362" text-anchor="start" font-size="16" font-weight="700">2つは別の仕組み</text>
+            <rect x="48" y="378" width="110" height="44" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="103" y="406" text-anchor="middle" font-size="16" font-weight="700">承認</text>
+            <text x="177" y="408" text-anchor="middle" font-size="20" font-weight="700">≠</text>
+            <rect x="196" y="378" width="144" height="44" rx="8" fill="var(--code-bg)" stroke="currentColor" stroke-width="2"/><text x="268" y="406" text-anchor="middle" font-size="16" font-weight="700">サンドボックス</text>
+            <rect x="74" y="436" width="240" height="40" rx="20" fill="var(--marker-fill)" stroke="currentColor" stroke-width="2"/>
+            <text x="194" y="462" text-anchor="middle" font-size="16" font-weight="700">片方だけでは足りない</text>
+          </svg>
+          <figcaption><b>図4</b>承認とサンドボックスの違い。承認は実行してよいかを人に聞く仕組み、サンドボックスは書き込める範囲を壁で囲む仕組みで、片方だけでは足りない（イメージ）。</figcaption>
+        </figure>
+      </div>
+      <p>公式文書とHabr記事は、承認（ユーザーに確認が必要か）とサンドボックス（資源へのアクセスの制限）を<mark>別の制御</mark>として分けています。<code>danger-full-access</code>のような権限プリセットは、この2つを独立に決めます。つまり、確認ダイアログがあってもファイルシステムの境界にはならず、サンドボックスがあっても本人の意思確認の代わりにはなりません。</p>
+      <div class="with-memo">
+        <p>既定では、ベース構成のプロファイルで新しいセッションは<code>workspace-write</code>プリセットになります。書き込みとシェルによる変更は作業ディレクトリと一時領域に限られますが、<strong>読み取りとネットワークは制限されません</strong>。プロセスの見え方はサンドボックスの実装次第です。</p>
+        <aside class="memo">既定でも読み取りと通信は制限なし</aside>
+      </div>
+
+      <h2 id="s4">具体例・使いどころ</h2>
+
+      <h3 id="s4-1">始め方（導入と起動）</h3>
+      <p>前提は <mark>Node.js</mark> です。公式サイトでは、デスクトップアプリ（macOSとWindows）か、次のコマンドでのWeb UI起動が案内されています。</p>
+      <pre><code>npx @deepseek-ai/dsh web
+# ブラウザで http://127.0.0.1:3080 が開く（既定）</code></pre>
+      <p>ソースから動かす場合はpnpmを使います。</p>
+      <pre><code>git clone https://github.com/deepseek-ai/deepseek-harness.git
+cd deepseek-harness
+pnpm install
+pnpm run build
+pnpm dsh web</code></pre>
+      <div class="with-memo">
+        <p>ハンズオン記事（deepakness.com）では、<code>npx</code>が最初は失敗したためソースからの導入に切り替え、約1分で起動できたと報告されています。起動後にAPIキーを求められ、SettingsのModelsから設定する流れです。公式サイトの説明では、モデルはDeepSeek-V4.1-Flashが前面に出ています。一方、第三者の検証記事ではV4-ProやV4-Flashの各版が使われていて、モデル名や版は記事ごとに違います。使う前に最新の一覧を確認してください。</p>
+        <aside class="memo">npx が失敗したらソースから</aside>
+      </div>
+
+      <h3 id="s4-2">使いどころ</h3>
+      <div class="with-memo">
+        <ul>
+          <li><strong>安いモデルで試す</strong>: DeepInfraの検証記事では、V4-Flash（入力100万トークンあたり0.08ドル／出力0.18ドル）で音声メモ連携の作業が39ステップ・約6分で約3セントでした。記事内の1事例で、一般化はできません。</li>
+          <li><strong>モデルを途中で替える</strong>: 難しい推論は高価なモデル、機械的な作業は安価なモデル、と<mark>ステップごとに割り当てる</mark>使い方が紹介されています。</li>
+          <li><strong>他のエージェントに任せる</strong>: サブエージェントとしてClaude CodeやCodexに仕事を渡し、外側のループはオープンウェイトのモデルで回す構成が可能と報告されています（DeepInfra記事）。</li>
+          <li><strong>自社のエージェント基盤として使う</strong>: ツール実行の前後に会社のルールを差し込めるため、プラットフォームチームが内製の基盤を作る用途に向きます（Wavectの評価）。</li>
+          <li><strong>ベンチマークやエージェントの研究</strong>: ループやログを差し替えて、モデルとハーネスのどちらが結果に効いているかを比べる使い方です。</li>
+        </ul>
+        <aside class="memo">約3セントは1事例。一般化しない</aside>
+      </div>
+
+      <h2 id="s5">強みと他ツールとの違い</h2>
+
+      <h3 id="s5-1">強み</h3>
+      <ul>
+        <li><strong>差し替えやすさ</strong>: ループ、モデルアダプタ、保存先まで設定で入れ替えられる。<mark>フォークせずに済む</mark>。</li>
+        <li><strong>モデルを選ばない</strong>: DeepSeek、Anthropic、OpenAI、OpenAI互換のエンドポイントにつなげる（DataCamp、DeepInfra、Wavectの記事）。</li>
+        <li><strong>記録の透明さ</strong>: 追記専用ログで、何がモデルに渡ったかを後から再現できる。</li>
+        <li><strong>見える化</strong>: トークン毎秒、キャッシュヒット、ツール呼び出し数、ステップ数などを画面に出す（ハンズオン記事）。実行トレースも公式サイトで案内されている。</li>
+        <li><strong>オープンソース（MIT）</strong>: コードを読んで監査し、自分で拡張できる。</li>
+        <li><strong>非エンジニア向けの入口</strong>: 公式サイトはコード以外にも、文書、表計算、PDF、定期タスクの用途を挙げ、デスクトップアプリも用意している。</li>
+      </ul>
+
+      <h3 id="s5-2">類似ツールとの比較</h3>
+      <p>次の表は主にDataCampの整理にもとづきます。同記事は「競合は中核を固定している」という立場の解説で、各製品の最新仕様は各公式ドキュメントで確認してください。</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>観点</th><th>DeepSeek Harness</th><th>Claude Code</th><th>Codex CLI</th><th>OpenCode</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>提供元</td><td>DeepSeek</td><td>Anthropic</td><td>OpenAI</td><td>オープンソースコミュニティ</td></tr>
+            <tr><td>ソース公開</td><td>MIT</td><td>本体は非公開（拡張の仕組みは公開）</td><td>CLIはオープンソース</td><td>オープンソース</td></tr>
+            <tr><td>差し替えの範囲（DataCampの整理）</td><td>ループ、モデルアダプタ、保存層まで</td><td>MCPや拡張は可。内蔵ループは固定</td><td>固定の中核を拡張</td><td>ツールとプロバイダは設定可。サーバの中核は固定</td></tr>
+            <tr><td>モデルの自由度</td><td>高い（OpenAI互換など）</td><td>Claude中心</td><td>OpenAI中心</td><td>高い</td></tr>
+            <tr><td>成熟度</td><td>開発者プレビュー</td><td>製品版</td><td>製品版</td><td>製品版</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="with-memo">
+        <p>Claude Codeの拡張の考え方は <a href="claude-code-extensions-overview.html">Claude Code の拡張の全体像：どの仕組みをいつ使うか</a> が詳しく扱っています。ここでは、dshは「拡張を足す」より「<mark>部品を入れ替える</mark>」寄りの設計、という違いだけ押さえてください。エージェントとワークフローの区別は <a href="ai-agents-vs-workflows.html">AIエージェントとワークフローの違い</a> を参照してください。</p>
+        <aside class="memo">他は「足す」、dshは「入れ替える」</aside>
+      </div>
+
+      <h2 id="s6">注意点・よくある誤解</h2>
+
+      <h3 id="s6-1">弱みと注意点</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>内容</th><th>対策の例</th></tr></thead>
+          <tbody>
+            <tr><td>開発者プレビュー</td><td>公式READMEが「<mark>互換性を壊す変更が入る</mark>」と明記。名称変更やセッションAPIの変更の例がある</td><td>バージョンを固定。業務の本番には入れない</td></tr>
+            <tr><td>セキュリティ監査なし</td><td>安全上の注意書きで、正式な監査を受けていないとされる（DataCamp）</td><td>使い捨ての作業フォルダで試す</td></tr>
+            <tr><td>サンドボックスの範囲</td><td>書き込みは制限するが、<mark>読み取りとネットワークは対象外</mark>（公式ドキュメント）</td><td>外向き通信の制限、資格情報の分離を別途用意</td></tr>
+            <tr><td>間接プロンプトインジェクション</td><td>2026年8月の論文（AI-Infra-Guardによる14,500回超の実験）で、攻撃手法によって成功率が異なると報告。例として、文字モードの「偽の完了」攻撃で17%、ファイルモードの不可視Unicode攻撃で25.5%。これは論文の特定条件での数字</td><td>信頼できない内容と、機微な操作の間に制御を置く。承認を残す</td></tr>
+            <tr><td>設定の手間</td><td>ゲートウェイによっては、YAMLでロール名や最大トークンの項目を調整する必要があった（DeepInfra記事）</td><td>Settingsからプロバイダごとに確認</td></tr>
+            <tr><td>コスト</td><td>費用はタスクの複雑さより、積み上がる文脈の量で増える。長い探索で約2,000万トークン使った例も（MindStudio記事）</td><td>安いモデルの併用、Minimalから開始</td></tr>
+            <tr><td>導入のしやすさ</td><td><code>npx</code>が失敗した報告あり。ブラウザ起動が前提</td><td>ソースから導入、デスクトップアプリを試す</td></tr>
+            <tr><td>視覚機能</td><td>DeepSeekのモデルがテキストのみのため、画像を扱えないとの報告（ハンズオン記事）。使うモデル次第で変わる可能性</td><td>画像が必要なら別のモデルを接続</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="s6-2">よくある誤解</h3>
+      <div class="callout caution">
+        <span class="label">ここを間違えやすい</span>
+        <ul>
+          <li><strong>「DeepSeekのモデル専用」ではない</strong>。OpenAI互換のエンドポイントにつなげられると複数の記事が報告しています（公式の対応モデル一覧までは確認できていません）。</li>
+          <li><strong>「ローカルだから安全」ではない</strong>。保存がローカルでも、外部のモデル提供元、Web検索ツール、第三者プラグインにはデータが送られうる、とDataCampが指摘しています。</li>
+          <li><strong>「サンドボックスがあるから何をされても平気」ではない</strong>。上記のとおり読み取りとネットワークは対象外です。「読み取り専用」とシステムプロンプトで指示するだけでは、OSレベルの強制になりません。</li>
+          <li><strong>「deepseek-harnessは1つ」ではない</strong>。Pythonの非公式ツール（候補B）が同名で、同じ<code>dsh</code>コマンド名を持ちます。</li>
+          <li><strong>「ハーネスはモデルの付属品」ではない</strong>。DataCampの記事は、ベンチマークの点数はモデルだけでなく使ったハーネスにも左右される、と述べています。これは同記事の主張で、特定の研究の引用はありません。</li>
+        </ul>
+      </div>
+      <p>推測として書いておくと、プレビュー段階でのAPI変更が続く限り、ネット上の古い手順（モード名、コマンド、設定項目）は今の版と合わないことがあります。公式文書の日付を確認してください。</p>
+      <p>セキュリティ全般は <a href="ai-security.html">AIセキュリティ入門 — 守る側のための教科書</a> と <a href="ai-security-reader.html">AIセキュリティ読本 — 脅威の早見と演習</a> に、プロンプトインジェクションの基本と対策がまとまっています。</p>
+
+      <h3 id="s6-3">向く人・向かない人</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>出典</th><th>向く</th><th>向かない</th></tr></thead>
+          <tbody>
+            <tr><td>Wavectの評価</td><td>内製のエージェント基盤を作るプラットフォームチーム。本番ではないリポジトリでの限定的な試行。構成とポリシーを自分で持つ組織</td><td>安定した製品とサポートが必要なチーム。既定のまま顧客向けの自律運用に使うこと。ネットワークと認証の統制がない規制業種</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>同評価の導入手順は、<mark>Minimalから始める</mark>、使い捨ての作業場で試す、バージョンを全部固定する、代表的な30〜50タスクで手動の基準を取る、でした。</p>
+
+      <h2 id="s7">確認問題</h2>
+      <details class="quiz">
+        <summary>Q1. DeepSeek Harnessの公式プロダクトと、同名の非公式ツールを見分けるポイントを2つ挙げてください。</summary>
+        <div class="answer"><p>公式はdeepseek-ai組織のリポジトリで、Node.js製のエージェント実行基盤（Web UI、CLI、デスクトップ）。非公式（HenryZ838978）はPython製で、DeepSeek V4のAPI挙動を検査するプロトコル層ツール。READMEが公式のforkではないと明記し、PyPIでの公開も公式より前。どちらも<code>dsh</code>コマンド名を使うため、混同に注意。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q2. 「Everything is a Plugin」で、固定されがちなどの部分までプラグインとして入れ替えられますか。3つ挙げてください。</summary>
+        <div class="answer"><p>例: エージェントのループ、モデルアダプタ、セッションの保存層（ほかにツール、サンドボックス、UIなど）。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q3. 「承認」と「サンドボックス」の違いを説明してください。それぞれ片方だけだと何が足りませんか。</summary>
+        <div class="answer"><p>承認はユーザーに確認を求める仕組み、サンドボックスは触れる資源を制限する仕組み。承認だけでは、承認した後の操作は境界で止められず、サンドボックスだけでは本人の意思確認がない。さらに既定のサンドボックスは書き込みを主に制限し、読み取りとネットワークは制限しない。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q4. 追記専用のセッションログにすると、チャット配列で持つ場合と比べてどんな利点がありますか。</summary>
+        <div class="answer"><p>モデルに見えたものをすべて再現できるため、再開、分岐、検索、再生、評価がしやすい。障害調査のための記録にもなる。</p></div>
+      </details>
+      <details class="quiz">
+        <summary>Q5. 職場で試すとき、最初に取るべき安全上の手順を3つ挙げてください。</summary>
+        <div class="answer"><p>例: (1) Minimalモードで使い捨ての作業フォルダから始める。(2) バージョンとプラグインを固定する。(3) 外向き通信の制限と資格情報の分離を別に用意し、破壊的な操作は承認制にする。信頼できない文書やリポジトリを読ませるときは特に注意する。</p></div>
+      </details>
+
+      <h2 id="s8">参考リンク</h2>
+      <p>下の一覧のうち、1〜2は一次情報、3〜10は第三者または解説記事（内容は各記事の主張で、筆者が動作を再検証したものではありません）。</p>
+      <ol class="refs">
+        <li><a href="https://www.deepseek.com/en/harness/">DeepSeek Harness（公式サイト）</a></li>
+        <li><a href="https://github.com/deepseek-ai/deepseek-harness">deepseek-ai/deepseek-harness（公式GitHub）</a>、<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/architecture.md">architecture.md</a></li>
+        <li><a href="https://x.com/deepseek_ai/status/2087887408440164663">DeepSeek公式Xの告知（v0.1 Developer Preview）</a>（本文の取得は402エラーで、検索結果の要約のみ確認）</li>
+        <li><a href="https://www.datacamp.com/blog/what-is-deepseek-harness">DataCamp: What Is DeepSeek Harness?</a></li>
+        <li><a href="https://deepinfra.com/blog/deepseek-harness-review">DeepInfra: DeepSeek Harness Review</a></li>
+        <li><a href="https://wavect.io/blog/deepseek-harness-enterprise-review/">Wavect: Production Readiness</a></li>
+        <li><a href="https://deepakness.com/blog/deepseek-harness/">deepakness.com: Trying the New DeepSeek Harness</a></li>
+        <li><a href="https://www.mindstudio.ai/blog/deepseek-harness-agentic-coding">MindStudio: The Plug-In Coding Agent Explained</a></li>
+        <li><a href="https://habr.com/en/articles/1070958/">Habr: Inside DeepSeek Harness</a></li>
+        <li><a href="https://arxiv.org/abs/2608.16393">arXiv: Security Assessment of DeepSeek Harness with A.I.G</a></li>
+        <li><a href="https://github.com/HenryZ838978/deepseek-harness">HenryZ838978/deepseek-harness（同名の非公式ツール）</a></li>
+      </ol>
+
+    </main>
+
+    <footer>
+      <p>このページは Claude Code が Web 上の一次情報を調べてまとめ、レイアウトを整えたものです。内容の正確さは参考リンクで確認してください。</p>
+    </footer>
+  </article>
+</div>
+<!-- notebook-ui-js:start -->
+<script>
+/* 書き込みノートUI（全レポート共通）。本文の HTML には手を加えず、読み込み後に操作部品だけを足す */
+(() => {
+  'use strict';
+  const d = document, root = d.documentElement;
+  const page = d.querySelector('.page'), main = d.querySelector('main');
+  if (!page || !main) return;
+  root.classList.add('nb-js');
+  const sheet = d.querySelector('.sheet') || page;
+
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} },
+  };
+  const svg = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  const ICON = {
+    back: svg('<path d="m15 18-6-6 6-6"/>'),
+    toc: svg('<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>'),
+    text: svg('<path d="M4 7V4h16v3M9 20h6M12 4v16"/>'),
+    dark: svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+    up: svg('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+    copy: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    check: svg('<path d="M20 6 9 17l-5-5"/>'),
+    expand: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'),
+    close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  };
+  /* 手描き風のチェックボックスと赤ペンのチェック */
+  const CHECKBOX = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4.6 5.3C9 4.7 14.8 5 19.5 4.5c.3 5 0 10 .3 15.1-5.3.3-10.1-.3-15.4.1.3-5.1-.2-9.8.2-14.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path class="nb-tick" pathLength="1" d="M6.8 12.6c1.5 1.3 2.6 2.9 3.6 4.6 2.4-5.3 6-9.9 11.4-14.6" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const el = (tag, attrs = {}, html = '') => {
+    const n = d.createElement(tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (html) n.innerHTML = html;
+    return n;
+  };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  const cover = d.querySelector('.cover');
+  const toc = d.querySelector('.toc');
+  const h1 = cover && cover.querySelector('h1');
+  const pageTitle = h1 ? h1.textContent.trim() : d.title;
+  const back = cover && cover.querySelector('.back');
+  const indexHref = back ? back.getAttribute('href') : '../index.html';
+  const here = decodeURIComponent(location.pathname.split('/').pop() || '');
+
+  /* ---- 通知 ---- */
+  const toast = el('div', { class: 'nb-toast', role: 'status', 'aria-live': 'polite' });
+  let toastTimer;
+  const say = (msg) => {
+    toast.textContent = msg;
+    toast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-shown'), 1800);
+  };
+  const copyText = (text) => {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((ok, ng) => {
+      const ta = el('textarea', { readonly: '', style: 'position:fixed;opacity:0' });
+      ta.value = text;
+      d.body.appendChild(ta);
+      ta.select();
+      try { d.execCommand('copy') ? ok() : ng(); } catch (e) { ng(e); }
+      ta.remove();
+    });
+  };
+
+  /* ---- 本文へスキップ・上部バー（パンくず: 学習ノート › ページ › 章） ---- */
+  if (!main.id) main.id = 'main';
+  const skip = el('a', { class: 'nb-skip', href: '#' + main.id }, '本文へスキップ');
+  const bar = el('div', { class: 'nb-topbar' },
+    '<div class="nb-topbar-inner">' +
+      '<a class="nb-home" aria-label="学習ノートの一覧に戻る" href="' + indexHref + '">' + ICON.back + '<span>学習ノート</span></a>' +
+      '<div class="nb-where" aria-hidden="true"><span class="sep">›</span><span class="t t-page"></span><span class="sep">›</span><span class="t t-sec"></span></div>' +
+      '<div class="nb-actions">' +
+        (toc ? '<button type="button" class="nb-btn nb-toc-btn" aria-haspopup="dialog" aria-label="もくじを開く">' + ICON.toc + '<span class="label-wide">もくじ</span></button>' : '') +
+        '<button type="button" class="nb-btn nb-fs-btn"><span class="label"></span></button>' +
+        '<button type="button" class="nb-btn nb-theme-btn" aria-label="ダークモード">' + ICON.dark + '<span class="label-wide">ダーク</span></button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="nb-progress" aria-hidden="true"></div>');
+  d.body.prepend(skip, bar);
+  bar.querySelector('.t-page').textContent = pageTitle;
+  const whereBox = bar.querySelector('.nb-where'), whereSec = bar.querySelector('.t-sec');
+  const progress = bar.querySelector('.nb-progress');
+
+  /* 文字サイズ: 標準 → 大 → 特大 */
+  const FS = [['', '標準'], ['l', '大'], ['xl', '特大']];
+  const fsBtn = bar.querySelector('.nb-fs-btn');
+  const renderFs = () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const label = (FS.find((f) => f[0] === cur) || FS[0])[1];
+    fsBtn.querySelector('.label').textContent = '文字 ' + label;
+    fsBtn.setAttribute('aria-label', '文字サイズ: ' + label + '（押すと切り替え）');
+  };
+  fsBtn.addEventListener('click', () => {
+    const cur = root.getAttribute('data-fs') || '';
+    const next = FS[(FS.findIndex((f) => f[0] === cur) + 1) % FS.length];
+    next[0] ? root.setAttribute('data-fs', next[0]) : root.removeAttribute('data-fs');
+    store.set('ln-fs', next[0] || null);
+    renderFs();
+    say('文字サイズ: ' + next[1]);
+    onScroll();
+  });
+  renderFs();
+
+  /* ダーク（夜のノート）の切替。最初は端末の設定に合わせる */
+  const themeBtn = bar.querySelector('.nb-theme-btn');
+  const isDark = () => root.getAttribute('data-theme') === 'dark' || (!root.hasAttribute('data-theme') && darkMq.matches);
+  const renderTheme = () => themeBtn.setAttribute('aria-pressed', String(isDark()));
+  themeBtn.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store.set('ln-theme', next);
+    renderTheme();
+    say(next === 'dark' ? 'ダーク: オン' : 'ダーク: オフ');
+  });
+  darkMq.addEventListener && darkMq.addEventListener('change', renderTheme);
+  renderTheme();
+
+  /* ---- 読了目安 ---- */
+  const meta = cover && cover.querySelector('.meta');
+  if (meta) {
+    const chars = main.textContent.replace(/\s+/g, '').length;
+    meta.appendChild(el('li', {}, '読了目安 約' + Math.max(1, Math.round(chars / 500)) + '分'));
+  }
+
+  /* ---- 見出しのリンク ---- */
+  const headText = new Map();
+  main.querySelectorAll('h2, h3').forEach((h, i) => {
+    headText.set(h, h.textContent.trim());
+    if (!h.id) h.id = 'sec-' + (i + 1);
+    const a = el('a', { class: 'nb-anchor', href: '#' + h.id, 'aria-label': '「' + headText.get(h) + '」へのリンクをコピー' }, '#');
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.replaceState(null, '', '#' + h.id);
+      h.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      copyText(location.href).then(() => say('見出しへのリンクをコピーしました'), () => say('リンクをアドレス欄に表示しました'));
+    });
+    h.appendChild(a);
+  });
+
+  /* ---- 目次: 章ごとのチェックボックス・引き出し・現在地 ---- */
+  const READ_KEY = 'ln-read:' + here, DONE_KEY = 'ln-done:' + here;
+  let readSet = new Set();
+  try { readSet = new Set(JSON.parse(store.get(READ_KEY) || '[]')); } catch (e) {}
+  const chapters = [];
+  let drawer = null;
+  if (toc) {
+    const list = toc.querySelector('ol, ul');
+    if (list) {
+      [...list.children].forEach((li) => {
+        const a = li.querySelector(':scope > a');
+        if (!a || !a.getAttribute('href') || a.getAttribute('href')[0] !== '#') return;
+        const id = decodeURIComponent(a.getAttribute('href').slice(1));
+        const h = d.getElementById(id);
+        if (!h) return;
+        const row = el('span', { class: 'nb-row' });
+        const btn = el('button', { type: 'button', class: 'nb-check', 'data-id': id }, CHECKBOX);
+        a.before(row);
+        row.append(btn, a);
+        chapters.push({ id, h, title: a.textContent.trim() });
+      });
+    }
+    toc.querySelectorAll('a').forEach((a) => { a.innerHTML = '<span class="t">' + a.innerHTML + '</span>'; });
+    if (chapters.length) toc.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer = el('dialog', { class: 'nb-drawer', 'aria-label': 'もくじ' },
+      '<div class="nb-dialog-head"><strong>もくじ</strong><button type="button" class="nb-btn nb-close" aria-label="もくじを閉じる">' + ICON.close + '</button></div>');
+    const nav = el('nav', { 'aria-label': 'もくじ' });
+    if (list) nav.appendChild(list.cloneNode(true));
+    if (chapters.length) nav.appendChild(el('p', { class: 'nb-toc-note' }, '読んだ章にチェックが付きます'));
+    drawer.appendChild(nav);
+    d.body.appendChild(drawer);
+    bar.querySelector('.nb-toc-btn').addEventListener('click', () => {
+      drawer.showModal();
+      const act = drawer.querySelector('a.is-active');
+      if (act) act.scrollIntoView({ block: 'center' });
+    });
+    drawer.querySelector('.nb-close').addEventListener('click', () => drawer.close());
+    drawer.addEventListener('click', (e) => {
+      if (e.target === drawer || e.target.closest('a')) drawer.close();
+    });
+    [toc, drawer].forEach((box) => box.addEventListener('click', (e) => {
+      const b = e.target.closest('.nb-check');
+      if (b) setRead(b.dataset.id, !readSet.has(b.dataset.id), true);
+    }));
+  }
+  const checkBtns = (id) => d.querySelectorAll('.nb-check[data-id="' + CSS.escape(id) + '"]');
+  const titleOf = (id) => (chapters.find((c) => c.id === id) || {}).title || '';
+  const renderRead = (id) => {
+    const on = readSet.has(id);
+    checkBtns(id).forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-label', '「' + titleOf(id) + '」' + (on ? 'を読んだ（押すとチェックを外す）' : 'はまだ読んでいない（押すとチェックを付ける）'));
+      b.closest('li').classList.toggle('is-read', on);
+    });
+  };
+  function setRead(id, on, byHand) {
+    if (on === readSet.has(id)) return;
+    on ? readSet.add(id) : readSet.delete(id);
+    store.set(READ_KEY, readSet.size ? JSON.stringify([...readSet]) : null);
+    store.set(DONE_KEY, chapters.length && chapters.every((c) => readSet.has(c.id)) ? '1' : null);
+    renderRead(id);
+    if (byHand) say(on ? 'チェックを付けました' : 'チェックを外しました');
+  }
+  chapters.forEach((c) => renderRead(c.id));
+
+  const tocLinks = toc ? [...toc.querySelectorAll('a[href^="#"]'), ...drawer.querySelectorAll('a[href^="#"]')] : [];
+  const targets = [];
+  const seen = new Set();
+  tocLinks.forEach((a) => {
+    const id = decodeURIComponent(a.getAttribute('href').slice(1));
+    const h = d.getElementById(id);
+    if (h && !seen.has(id)) { seen.add(id); targets.push({ id, h }); }
+  });
+  targets.sort((x, y) => (x.h.compareDocumentPosition(y.h) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  const h2s = [...main.querySelectorAll('h2')];
+  let activeId = null, activeH2 = null;
+  const setActive = (id) => {
+    if (id === activeId) return;
+    activeId = id;
+    tocLinks.forEach((a) => {
+      const on = id && a.getAttribute('href') === '#' + id;
+      a.classList.toggle('is-active', !!on);
+      on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
+    });
+    const a = toc && toc.querySelector('a.is-active');
+    if (a && toc.scrollHeight > toc.clientHeight + 4) {
+      const r = a.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if (r.top < tr.top + 24 || r.bottom > tr.bottom - 24) toc.scrollTop += r.top - tr.top - tr.height / 3;
+    }
+  };
+
+  /* ---- 先頭へ戻る ---- */
+  const fab = el('button', { type: 'button', class: 'nb-btn nb-fab', 'aria-label': 'ページの先頭へ戻る', title: 'ページの先頭へ' }, ICON.up);
+  fab.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    bar.querySelector('.nb-home').focus({ preventScroll: true });
+  });
+  d.body.append(fab, toast);
+
+  /* ---- スクロールに連動する部品（読了バー・現在地・読んだ章のチェック） ---- */
+  let userMoved = false;
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((t) => addEventListener(t, () => { userMoved = true; }, { once: true, passive: true }));
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY, vh = window.innerHeight, max = root.scrollHeight - vh;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    const barH = bar.offsetHeight, line = barH + 48;
+    whereBox.classList.toggle('is-shown', !!cover && cover.getBoundingClientRect().bottom < barH);
+    fab.classList.toggle('is-shown', y > 800);
+
+    let cur = null;
+    if (max > 0 && y >= max - 2 && targets.length) cur = targets[targets.length - 1];
+    else for (const t of targets) { if (t.h.getBoundingClientRect().top <= line) cur = t; else break; }
+    setActive(cur ? cur.id : null);
+
+    let sec = null;
+    for (const h of h2s) { if (h.getBoundingClientRect().top <= line) sec = h; else break; }
+    if (cur && h2s.includes(cur.h)) sec = cur.h;
+    if (sec !== activeH2) { activeH2 = sec; whereSec.textContent = sec ? headText.get(sec) : ''; }
+
+    // 章の末尾（次の章の見出し、最後の章は本文の終わり）が画面に入ったら、その章を読んだことにする
+    if (userMoved) {
+      chapters.forEach((c, i) => {
+        if (readSet.has(c.id)) return;
+        const end = chapters[i + 1] ? chapters[i + 1].h.getBoundingClientRect().top : main.getBoundingClientRect().bottom;
+        const start = c.h.getBoundingClientRect().top;
+        if (start < vh && end >= -vh * 1.5 && end <= vh) setRead(c.id, true);
+      });
+    }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+
+  /* ---- 表: 用語列の判定と、横にはみ出すときの案内 ---- */
+  const scrollers = [];
+  main.querySelectorAll('.table-wrap').forEach((w) => {
+    const t = w.querySelector('table');
+    const firsts = t ? [...t.querySelectorAll('tbody tr > :first-child')] : [];
+    if (firsts.length && firsts.every((c) => c.textContent.trim().length <= 16)) t.classList.add('nb-term');
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 表は横にスクロールできます →');
+    w.after(hint);
+    scrollers.push({ w, hint, mask: true });
+  });
+
+  /* ---- 図: 拡大表示 ---- */
+  const lightbox = el('dialog', { class: 'nb-lightbox', 'aria-label': '図の拡大表示' },
+    '<div class="nb-dialog-head"><strong></strong><button type="button" class="nb-btn nb-close" aria-label="拡大表示を閉じる">' + ICON.close + '</button></div>');
+  lightbox.querySelector('.nb-close').addEventListener('click', () => lightbox.close());
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.close(); });
+  lightbox.addEventListener('close', () => { const f = lightbox.querySelector('figure'); if (f) f.remove(); });
+  d.body.appendChild(lightbox);
+  main.querySelectorAll('figure').forEach((fig) => {
+    const pic = fig.querySelector(':scope > svg');
+    if (!pic) return;
+    const wrap = el('div', { class: 'nb-fig' });
+    fig.before(wrap);
+    wrap.appendChild(fig);
+    const cap = fig.querySelector('figcaption');
+    const label = (cap ? cap.textContent : (pic.querySelector('title') || {}).textContent || '図').trim();
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-expand', 'aria-label': '図を拡大表示: ' + label }, ICON.expand + '<span>拡大</span>');
+    btn.addEventListener('click', () => {
+      const f = el('figure', { class: fig.className });
+      f.appendChild(pic.cloneNode(true));
+      lightbox.querySelector('.nb-dialog-head strong').textContent = label;
+      lightbox.appendChild(f);
+      lightbox.showModal();
+    });
+    wrap.appendChild(btn);
+    const hint = el('p', { class: 'nb-scroll-hint', 'aria-hidden': 'true' }, '← 図は横にスクロールできます（「拡大」で全体表示）→');
+    wrap.after(hint);
+    scrollers.push({ w: fig, hint, mask: false });
+  });
+  const updateScroller = (s) => {
+    const max = s.w.scrollWidth - s.w.clientWidth;
+    const can = max > 4;
+    s.hint.classList.toggle('is-shown', can);
+    if (s.mask) {
+      s.w.classList.toggle('nb-more-right', can && s.w.scrollLeft < max - 4);
+      s.w.classList.toggle('nb-more-left', can && s.w.scrollLeft > 4);
+    }
+  };
+  scrollers.forEach((s) => s.w.addEventListener('scroll', () => updateScroller(s), { passive: true }));
+  const updateScrollers = () => scrollers.forEach(updateScroller);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(updateScrollers);
+    scrollers.forEach((s) => ro.observe(s.w));
+  } else addEventListener('resize', updateScrollers);
+
+  /* ---- コードのコピー ---- */
+  main.querySelectorAll('pre').forEach((pre) => {
+    const wrap = el('div', { class: 'nb-code' });
+    pre.before(wrap);
+    wrap.appendChild(pre);
+    const btn = el('button', { type: 'button', class: 'nb-btn nb-copy', 'aria-label': 'コードをコピー' }, ICON.copy + '<span>コピー</span>');
+    btn.addEventListener('click', () => {
+      copyText(pre.innerText.replace(/\n$/, '')).then(() => {
+        btn.innerHTML = ICON.check + '<span>コピー済み</span>';
+        say('コードをコピーしました');
+        setTimeout(() => { btn.innerHTML = ICON.copy + '<span>コピー</span>'; }, 1600);
+      }, () => say('コピーできませんでした'));
+    });
+    wrap.appendChild(btn);
+  });
+
+  /* ---- 確認問題: 答えの一括表示 ---- */
+  const quizzes = [...main.querySelectorAll('.quiz')];
+  const answers = [...main.querySelectorAll('details.quiz, .quiz details')];
+  if (answers.length >= 2) {
+    const tools = el('div', { class: 'nb-quiz-tools' },
+      '<span>全' + quizzes.length + '問。問題を押すと答えが開きます</span><button type="button" class="nb-btn"></button>');
+    const tbtn = tools.querySelector('button');
+    const render = () => {
+      const allOpen = answers.every((x) => x.open);
+      tbtn.textContent = allOpen ? '答えをすべて隠す' : '答えをすべて表示';
+      tbtn.setAttribute('aria-pressed', String(allOpen));
+    };
+    tbtn.addEventListener('click', () => {
+      const open = !answers.every((x) => x.open);
+      answers.forEach((x) => { x.open = open; });
+      render();
+    });
+    answers.forEach((x) => x.addEventListener('toggle', render));
+    quizzes[0].before(tools);
+    render();
+  }
+
+  /* ---- 印刷時は答えも含めてすべて開く ---- */
+  let closedForPrint = [];
+  addEventListener('beforeprint', () => {
+    closedForPrint = [...d.querySelectorAll('details:not([open])')];
+    closedForPrint.forEach((x) => { x.open = true; });
+  });
+  addEventListener('afterprint', () => { closedForPrint.forEach((x) => { x.open = false; }); closedForPrint = []; });
+
+  /* ---- シリーズの前後移動・関連ノート ----
+     トップページ（index.html）の一覧を台帳として読み込み、
+     同じシリーズ（data-series / data-order）と同じ分野（data-topic）のノートへのリンクを末尾に出す。
+     ファイルを直接開いた場合（file://）は読み込めないので何も出さない */
+  const TOPIC = { ai: 'AI', infra: 'インフラ', security: 'セキュリティ', dev: '開発' };
+  const node = (tag, cls, text) => {
+    const n = d.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const item = (n) => {
+    const li = node('li');
+    const a = node('a', '', n.title);
+    a.href = n.url;
+    li.append(node('span', 'm', [n.date, n.topics.map((t) => TOPIC[t] || t).join('・')].filter(Boolean).join('　')), a);
+    if (n.summary) li.appendChild(node('span', 's', n.summary));
+    return li;
+  };
+  const loadRelated = async () => {
+    if (!/^https?:$/.test(location.protocol) || !here) return;
+    const base = new URL(indexHref, location.href);
+    const res = await fetch(base, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const notes = [...doc.querySelectorAll('article.entry')].map((e) => {
+      const a = e.querySelector('h3 a');
+      if (!a) return null;
+      const url = new URL(a.getAttribute('href'), base);
+      return {
+        url: url.href,
+        file: decodeURIComponent(url.pathname.split('/').pop()),
+        title: a.textContent.trim(),
+        summary: ((e.querySelector('p') || {}).textContent || '').trim(),
+        topics: (e.dataset.topic || '').split(/\s+/).filter(Boolean),
+        date: e.dataset.date || '',
+        series: (e.dataset.series || '').trim(),
+        order: Number(e.dataset.order) || 0,
+      };
+    }).filter(Boolean);
+    const me = notes.find((n) => n.file === here);
+    if (!me) return;
+
+    const aside = node('aside', 'nb-related');
+    aside.setAttribute('aria-label', '次に読む');
+    let members = [];
+    if (me.series) {
+      members = notes.filter((n) => n.series === me.series)
+        .sort((a, b) => (a.order - b.order) || a.date.localeCompare(b.date));
+      const i = members.indexOf(me);
+      const seriesUrl = new URL(base);
+      seriesUrl.searchParams.set('series', me.series);
+      if (meta) {
+        const li = node('li');
+        const a = node('a', '', 'シリーズ「' + me.series + '」 ' + (i + 1) + '/' + members.length);
+        a.href = seriesUrl.href;
+        li.appendChild(a);
+        meta.prepend(li);
+      }
+      const box = node('section', 'nb-series');
+      const ol = node('ol');
+      members.forEach((n) => {
+        const li = node('li');
+        if (n === me) {
+          li.appendChild(node('span', 'is-current', n.title + '（このページ）'));
+          li.firstChild.setAttribute('aria-current', 'page');
+        } else {
+          const a = node('a', '', n.title);
+          a.href = n.url;
+          li.appendChild(a);
+        }
+        ol.appendChild(li);
+      });
+      box.append(node('h2', '', 'シリーズ「' + me.series + '」'), ol);
+      const pn = node('div', 'nb-pn');
+      [[members[i - 1], '← 前の回: ', 'is-prev'], [members[i + 1], '次の回: ', 'is-next']].forEach(([n, label, cls]) => {
+        if (!n) return;
+        const a = node('a', cls, label + n.title + (cls === 'is-next' ? ' →' : ''));
+        a.href = n.url;
+        pn.appendChild(a);
+      });
+      if (pn.children.length) box.appendChild(pn);
+      aside.appendChild(box);
+    }
+
+    // 関連ノート: 分野が重なるものを、重なりの多い順・新しい順に最大4件（シリーズの回は除く）
+    const mine = new Set(me.topics);
+    const related = notes
+      .filter((n) => n !== me && !members.includes(n))
+      .map((n) => ({ n, score: n.topics.filter((t) => mine.has(t)).length }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => (b.score - a.score) || b.n.date.localeCompare(a.n.date))
+      .slice(0, 4)
+      .map((x) => x.n);
+    if (related.length) {
+      const box = node('section', 'nb-also');
+      const ul = node('ul', 'nb-list');
+      related.forEach((n) => ul.appendChild(item(n)));
+      box.append(node('h2', '', '関連ノート'), ul);
+      aside.appendChild(box);
+    }
+    if (!aside.children.length) return;
+    const footer = sheet.querySelector(':scope > footer');
+    footer ? footer.before(aside) : sheet.appendChild(aside);
+    onScroll();
+  };
+  loadRelated().catch(() => {});
+
+  // #付きURLで開いたとき、上部バーの追加やフォント読み込みで見出しの位置がずれるので合わせ直す
+  const realignHash = () => {
+    if (userMoved || !location.hash) return;
+    let t = null;
+    try { t = d.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) {}
+    if (t) t.scrollIntoView({ behavior: 'instant' });
+  };
+
+  realignHash();
+  update();
+  updateScrollers();
+  if (d.fonts && d.fonts.ready) d.fonts.ready.then(() => { realignHash(); onScroll(); updateScrollers(); });
+  addEventListener('load', () => { realignHash(); onScroll(); }, { once: true });
+})();
+</script>
+<!-- notebook-ui-js:end -->
+</body>
+</html>
