@@ -1,4 +1,4 @@
-run_id,timestamp,theme,file,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,cost_usd
+run_id,timestamp,theme,file,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,cost_usd,output_estimated_tokens
 "907e90f7-e3e1-5f21-8679-36ada47ce6f1@2026-09-18T03:09:14.505Z","2026-09-18T03:16:53.130Z","Dockerとは何か","reports/what-is-docker.html","claude-sonnet-5","44","10580","82502","835319","0.4792"
 "907e90f7-e3e1-5f21-8679-36ada47ce6f1@2026-09-18T03:09:14.505Z","2026-09-18T03:16:53.130Z","Dockerとは何か","reports/what-is-docker.html","claude-opus-5","12","24770","49704","82575","0.9712"
 "907e90f7-e3e1-5f21-8679-36ada47ce6f1@2026-09-18T03:33:13.011Z","2026-09-18T03:43:18.793Z","ネットワーク: OSI参照モデル、TCP/IP、IPアドレスとサブネット、ルーティング、DNS","reports/networking-basics.html","claude-sonnet-5","31","14921","42611","731691","0.4021"
@@ -26,3 +26,5 @@ run_id,timestamp,theme,file,model,input_tokens,output_tokens,cache_write_tokens,
 "bbc473be-d8f7-4842-85d4-494b3b6b659b@2026-10-03T13:37:38.579Z","2026-10-03T13:43:59.543Z","Graph Engineeringについて","reports/graph-engineering.html","claude-opus-5-5","26","424","120809","1257630","1.1157"
 "88bdc8ea-6abe-4900-a05c-32ddb08239d8@2026-10-05T04:41:53.147Z","2026-10-05T04:49:20.313Z","Claude MODについて、そもそもMODとは何なのか、どのような仕組み、機能なのか、実際のユースケースや活用方法などを調べて","reports/claude-mod.html","claude-sonnet-5-5","46","17908","111075","1677166","0.7923"
 "88bdc8ea-6abe-4900-a05c-32ddb08239d8@2026-10-05T04:41:53.147Z","2026-10-05T04:49:20.313Z","Claude MODについて、そもそもMODとは何なのか、どのような仕組み、機能なのか、実際のユースケースや活用方法などを調べて","reports/claude-mod.html","claude-opus-5-5","32","636","125145","1627194","1.2895"
+"4e249441-2791-4379-81b3-d3336342ca53@2026-10-06T04:36:49.567Z","2026-10-06T04:44:52.194Z","Microsoft 365 Copilot の便利な機能について、IT企業のビジネスシーンにおける活用方法とかエージェントとかどういうことができるのか知りたいから教えてほしい","reports/microsoft-365-copilot-it-business.html","claude-sonnet-5-5","44","12862","102480","1205543","0.6260","748"
+"4e249441-2791-4379-81b3-d3336342ca53@2026-10-06T04:36:49.567Z","2026-10-06T04:44:52.194Z","Microsoft 365 Copilot の便利な機能について、IT企業のビジネスシーンにおける活用方法とかエージェントとかどういうことができるのか知りたいから教えてほしい","reports/microsoft-365-copilot-it-business.html","claude-opus-5-5","48","28185","119506","2251611","2.0621","26009"
